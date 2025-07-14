@@ -2276,3 +2276,137 @@
     
     <script id="html_notice_dialog_script" src="https://www.genspark.ai/notice_dialog.js"></script>
     
+    <script>
+        // ... 既存の<script>内 ...
+        // 認証UI・ロジック強化
+        const loginBtn = document.getElementById('login-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const authModal = document.getElementById('auth-modal');
+        const authModalClose = document.getElementById('auth-modal-close');
+        const authForm = document.getElementById('auth-form');
+        const signupForm = document.getElementById('signup-form');
+        const switchToSignup = document.getElementById('switch-to-signup');
+        const switchToLogin = document.getElementById('switch-to-login');
+        const authError = document.getElementById('auth-error');
+        const signupError = document.getElementById('signup-error');
+        const authModalTitle = document.getElementById('auth-modal-title');
+
+        function showAuthModal(mode = 'login') {
+          authModal.classList.remove('hidden');
+          if (mode === 'login') {
+            authForm.classList.remove('hidden');
+            signupForm.classList.add('hidden');
+            authModalTitle.textContent = 'ログイン';
+            authError.classList.add('hidden');
+          } else {
+            authForm.classList.add('hidden');
+            signupForm.classList.remove('hidden');
+            authModalTitle.textContent = '新規登録';
+            signupError.classList.add('hidden');
+          }
+        }
+        function hideAuthModal() {
+          authModal.classList.add('hidden');
+        }
+        loginBtn.addEventListener('click', () => showAuthModal('login'));
+        switchToSignup.addEventListener('click', () => showAuthModal('signup'));
+        switchToLogin.addEventListener('click', () => showAuthModal('login'));
+        authModalClose.addEventListener('click', hideAuthModal);
+        window.addEventListener('keydown', e => { if (e.key === 'Escape') hideAuthModal(); });
+
+        // ログイン処理
+        if (authForm) {
+          authForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            authError.classList.add('hidden');
+            const email = document.getElementById('auth-email').value.trim();
+            const password = document.getElementById('auth-password').value;
+            if (!email || !password) {
+              authError.textContent = 'メールアドレスとパスワードを入力してください。';
+              authError.classList.remove('hidden');
+              return;
+            }
+            if (password.length < 6) {
+              authError.textContent = 'パスワードは6文字以上で入力してください。';
+              authError.classList.remove('hidden');
+              return;
+            }
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'ログイン中...';
+            try {
+              const { error } = await supabase.auth.signInWithPassword({ email, password });
+              if (error) {
+                let msg = error.message;
+                if (msg.includes('Invalid login credentials')) msg = 'メールアドレスまたはパスワードが正しくありません。';
+                authError.textContent = msg;
+                authError.classList.remove('hidden');
+              } else {
+                hideAuthModal();
+                updateAuthUI();
+              }
+            } catch (err) {
+              authError.textContent = '通信エラーが発生しました。';
+              authError.classList.remove('hidden');
+            }
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'ログイン';
+          });
+        }
+        // 新規登録処理
+        if (signupForm) {
+          signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            signupError.classList.add('hidden');
+            const email = document.getElementById('signup-email').value.trim();
+            const password = document.getElementById('signup-password').value;
+            if (!email || !password) {
+              signupError.textContent = 'メールアドレスとパスワードを入力してください。';
+              signupError.classList.remove('hidden');
+              return;
+            }
+            if (password.length < 6) {
+              signupError.textContent = 'パスワードは6文字以上で入力してください。';
+              signupError.classList.remove('hidden');
+              return;
+            }
+            switchToSignup.disabled = true;
+            try {
+              const { error } = await supabase.auth.signUp({ email, password });
+              if (error) {
+                let msg = error.message;
+                if (msg.includes('User already registered')) msg = 'このメールアドレスは既に登録されています。';
+                signupError.textContent = msg;
+                signupError.classList.remove('hidden');
+              } else {
+                hideAuthModal();
+                alert('登録確認メールを送信しました。メールをご確認ください。');
+                updateAuthUI();
+              }
+            } catch (err) {
+              signupError.textContent = '通信エラーが発生しました。';
+              signupError.classList.remove('hidden');
+            }
+            switchToSignup.disabled = false;
+          });
+        }
+        // ログアウト処理
+        logoutBtn.addEventListener('click', async () => {
+          await supabase.auth.signOut();
+          updateAuthUI();
+        });
+        // 認証状態によるUI切り替え
+        async function updateAuthUI() {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            loginBtn.classList.add('hidden');
+            logoutBtn.classList.remove('hidden');
+          } else {
+            loginBtn.classList.remove('hidden');
+            logoutBtn.classList.add('hidden');
+          }
+        }
+        updateAuthUI();
+        supabase.auth.onAuthStateChange(updateAuthUI);
+        // ... 既存のscript ...
+    </script>
+    
