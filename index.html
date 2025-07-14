@@ -1,0 +1,2296 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>筋トレ部位ローテーション管理システム - MuscleRotationManager</title>
+    <meta name="description" content="効率的な筋トレ部位ローテーションを科学的に管理。回復期間を考慮した最適なトレーニングスケジュール提案で理想のボディメイクをサポート">
+    <meta name="keywords" content="筋トレ,トレーニング,部位ローテーション,回復期間,ワークアウト,フィットネス">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#1f2937">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="MuscleRotationManager">
+    
+    <!-- OGP Tags -->
+    <meta property="og:title" content="筋トレ部位ローテーション管理システム">
+    <meta property="og:description" content="効率的な筋トレ部位ローテーションを科学的に管理">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://appadaycreator.github.io/muscle-rotation-manager/">
+    <meta property="og:image" content="https://appadaycreator.github.io/muscle-rotation-manager/assets/ogp-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="筋トレ部位ローテーション管理システム">
+    <meta name="twitter:description" content="効率的な筋トレ部位ローテーションを科学的に管理">
+    <meta name="twitter:image" content="https://appadaycreator.github.io/muscle-rotation-manager/assets/ogp-image.png">
+    
+    <!-- CDN Links -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-TXQGZRF9');</script>
+    <!-- End Google Tag Manager -->
+    
+    <style>
+        body {
+            font-family: 'Noto Sans JP', 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        .font-size-xs { font-size: 0.625rem; }
+        .font-size-sm { font-size: 0.75rem; }
+        .font-size-base { font-size: 1rem; }
+        .font-size-lg { font-size: 1.125rem; }
+        .font-size-xl { font-size: 1.5rem; }
+        
+        .muscle-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .muscle-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .recovery-bar {
+            height: 8px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+        
+        .recovery-excellent { background: linear-gradient(90deg, #10b981, #34d399); }
+        .recovery-good { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+        .recovery-warning { background: linear-gradient(90deg, #ef4444, #f87171); }
+        
+        .muscle-part {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .muscle-part:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .muscle-part.active {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .hidden { display: none; }
+        
+        .calendar-day {
+            min-height: 80px;
+            border: 1px solid #e5e7eb;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .calendar-day:hover {
+            background: #f9fafb;
+        }
+        
+        .calendar-day.has-workout {
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .workout-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin: 1px;
+        }
+        
+        .chest-color { background: #ef4444; }
+        .back-color { background: #10b981; }
+        .shoulder-color { background: #f59e0b; }
+        .arm-color { background: #8b5cf6; }
+        .leg-color { background: #3b82f6; }
+        .core-color { background: #ec4899; }
+        
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+        
+        .progress-ring-circle {
+            stroke-dasharray: 0 100;
+            stroke-dashoffset: 0;
+            transition: stroke-dasharray 0.3s ease;
+        }
+        
+        @media (max-width: 768px) {
+            .desktop-sidebar { display: none; }
+            .mobile-menu { display: block; }
+        }
+        
+        @media (min-width: 769px) {
+            .desktop-sidebar { display: block; }
+            .mobile-menu { display: none; }
+        }
+        
+        .sidebar-transition {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .sidebar-transition.open {
+            transform: translateX(0);
+        }
+        
+        .loading-spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success { background: #10b981; }
+        .notification.error { background: #ef4444; }
+        .notification.warning { background: #f59e0b; }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin: 20px 0;
+        }
+        
+        .modal {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .exercise-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 8px 0;
+            transition: all 0.2s ease;
+        }
+        
+        .exercise-card:hover {
+            background: #f1f5f9;
+            border-color: #667eea;
+        }
+        
+        .difficulty-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .difficulty-beginner { background: #dcfce7; color: #166534; }
+        .difficulty-intermediate { background: #fef3c7; color: #92400e; }
+        .difficulty-advanced { background: #fee2e2; color: #991b1b; }
+        
+        .lang-switch {
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+        
+        .lang-switch:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .lang-switch.active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .affiliate-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+            text-align: center;
+        }
+        
+        .affiliate-banner a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            border: 1px solid white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            display: inline-block;
+            margin-top: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .affiliate-banner a:hover {
+            background: white;
+            color: #667eea;
+        }
+        
+        .print-hidden { display: none; }
+        
+         {
+            .print-hidden { display: block; }
+            .no-print { display: none; }
+            body { font-size: 12px; }
+            .container { max-width: none; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TXQGZRF9"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+
+    <div id="app" class="min-h-screen">
+        <!-- Header -->
+        <header class="muscle-gradient text-white shadow-lg">
+            <div class="container mx-auto px-4 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <button id="mobile-menu-btn" class="md:hidden">
+                            <i class="fas fa-bars text-xl"></i>
+                        </button>
+                        <h1 class="text-2xl font-bold">
+                            <i class="fas fa-dumbbell mr-2"></i>
+                            <span data-i18n="app.title">MuscleRotationManager</span>
+                        </h1>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <!-- Language Switch -->
+                        <div class="flex items-center space-x-2">
+                            <button class="lang-switch active" data-lang="ja">🇯🇵</button>
+                            <button class="lang-switch" data-lang="en">🇺🇸</button>
+                        </div>
+                        
+                        <!-- Font Size Control -->
+                        <div class="flex items-center space-x-2">
+                            <button id="font-size-down" class="text-sm hover:bg-white hover:bg-opacity-20 p-2 rounded">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <span id="font-size-indicator" class="text-sm">A</span>
+                            <button id="font-size-up" class="text-sm hover:bg-white hover:bg-opacity-20 p-2 rounded">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- User Menu -->
+                        <div class="relative">
+                            <button id="user-menu-btn" class="flex items-center space-x-2 hover:bg-white hover:bg-opacity-20 p-2 rounded">
+                                <i class="fas fa-user-circle text-2xl"></i>
+                                <span id="user-name" data-i18n="auth.guest">ゲスト</span>
+                            </button>
+                            <div id="user-menu" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 hidden">
+                                <button id="login-btn" class="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100" data-i18n="auth.login">ログイン</button>
+                                <button id="register-btn" class="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100" data-i18n="auth.register">登録</button>
+                                <button id="logout-btn" class="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 hidden" data-i18n="auth.logout">ログアウト</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="flex">
+            <!-- Desktop Sidebar -->
+            <aside class="desktop-sidebar w-64 bg-white shadow-lg h-screen sticky top-0 overflow-y-auto">
+                <nav class="p-4">
+                    <ul class="space-y-2">
+                        <li>
+                            <button class="nav-item w-full flex items-center space-x-3 p-3 text-gray-700 hover:bg-gray-100 rounded-lg active" data-page="dashboard">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span data-i18n="nav.dashboard">ダッシュボード</span>
+                            </button>
+                        </li>
+                        <li>
+                            <button class="nav-item w-full flex items-center space-x-3 p-3 text-gray-700 hover:bg-gray-100 rounded-lg" data-page="workout">
+                                <i class="fas fa-dumbbell"></i>
+                                <span data-i18n="nav.workout">ワークアウト</span>
+                            </button>
+                        </li>
+                        <li>
+                            <button class="nav-item w-full flex items-center space-x-3 p-3 text-gray-700 hover:bg-gray-100 rounded-lg" data-page="calendar">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span data-i18n="nav.calendar">カレンダー</span>
+                            </button>
+                        </li>
+                        <li>
+                            <button class="nav-item w-full flex items-center space-x-3 p-3 text-gray-700 hover:bg-gray-100 rounded-lg" data-page="analytics">
+                                <i class="fas fa-chart-line"></i>
+                                <span data-i18n="nav.analytics">分析</span>
+                            </button>
+                        </li>
+                        <li>
+                            <button class="nav-item w-full flex items-center space-x-3 p-3 text-gray-700 hover:bg-gray-100 rounded-lg" data-page="exercises">
+                                <i class="fas fa-list"></i>
+                                <span data-i18n="nav.exercises">エクササイズ</span>
+                            </button>
+                        </li>
+                        <li>
+                            <button class="nav-item w-full flex items-center space-x-3 p-3 text-gray-700 hover:bg-gray-100 rounded-lg" data-page="settings">
+                                <i class="fas fa-cog"></i>
+                                <span data-i18n="nav.settings">設定</span>
+                            </button>
+                        </li>
+                    </ul>
+                </nav>
+            </aside>
+
+            <!-- Mobile Sidebar -->
+            <aside id="mobile-sidebar" class="mobile-menu fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-50 sidebar-transition">
+                <div class="p-4">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-xl font-bold text-gray-800">メニュー</h2>
+                        <button id="mobile-sidebar-close" class="text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    <nav>
+                        <ul class="space-y-2">
+                            <li>
+                                <button class="nav-item w-full flex items-center space-x-3 p-3 text-gray-700 hover:bg-gray-100 rounded-lg active" data-page="dashboard">
+                                    <i class="fas fa-tachometer-alt"></i>
+                                    <span data-i18n="nav.dashboard">ダッシュボード</span>
+                                </button>
+                            </li>
+                            <li>
+                                <button class="nav-item w-full flex items-center space-x-3 p-3 text-gray-700 hover:bg-gray-100 rounded-lg" data-page="workout">
+                                    <i class="fas fa-dumbbell"></i>
+                                    <span data-i18n="nav.workout">ワークアウト</span>
+                                </button>
+                            </li>
+                            <li>
+                                <button class="nav-item w-full flex items-center space-x-3 p-3 text-gray-700 hover:bg-gray-100 rounded-lg" data-page="calendar">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <span data-i18n="nav.calendar">カレンダー</span>
+                                </button>
+                            </li>
+                            <li>
+                                <button class="nav-item w-full flex items-center space-x-3 p-3 text-gray-700 hover:bg-gray-100 rounded-lg" data-page="analytics">
+                                    <i class="fas fa-chart-line"></i>
+                                    <span data-i18n="nav.analytics">分析</span>
+                                </button>
+                            </li>
+                            <li>
+                                <button class="nav-item w-full flex items-center space-x-3 p-3 text-gray-700 hover:bg-gray-100 rounded-lg" data-page="exercises">
+                                    <i class="fas fa-list"></i>
+                                    <span data-i18n="nav.exercises">エクササイズ</span>
+                                </button>
+                            </li>
+                            <li>
+                                <button class="nav-item w-full flex items-center space-x-3 p-3 text-gray-700 hover:bg-gray-100 rounded-lg" data-page="settings">
+                                    <i class="fas fa-cog"></i>
+                                    <span data-i18n="nav.settings">設定</span>
+                                </button>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="flex-1 p-6">
+                <!-- Dashboard Page -->
+                <div id="dashboard-page" class="page-content">
+                    <div class="mb-6">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-2" data-i18n="dashboard.title">ダッシュボード</h2>
+                        <p class="text-gray-600" data-i18n="dashboard.subtitle">今日のトレーニング状況と部位別回復度をチェックしましょう</p>
+                    </div>
+
+                    <!-- Today's Recommendations -->
+                    <div class="muscle-card rounded-lg p-6 mb-6">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">
+                            <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>
+                            <span data-i18n="dashboard.recommendations">今日のおすすめ</span>
+                        </h3>
+                        <div id="today-recommendations" class="space-y-3">
+                            <div class="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
+                                <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                                <span class="text-green-800" data-i18n="dashboard.rec1">胸筋: 完全回復 - 高強度トレーニング推奨</span>
+                            </div>
+                            <div class="flex items-center space-x-3 p-3 bg-yellow-50 rounded-lg">
+                                <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                                <span class="text-yellow-800" data-i18n="dashboard.rec2">背筋: 軽度疲労 - 軽めのトレーニング推奨</span>
+                            </div>
+                            <div class="flex items-center space-x-3 p-3 bg-red-50 rounded-lg">
+                                <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                                <span class="text-red-800" data-i18n="dashboard.rec3">肩: 回復中 - 休息推奨</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Muscle Groups Recovery Status -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                        <div class="muscle-card muscle-part rounded-lg p-6" data-muscle="chest">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-gray-800">
+                                    <i class="fas fa-male text-red-500 mr-2"></i>
+                                    <span data-i18n="muscle.chest">胸筋</span>
+                                </h3>
+                                <span class="text-sm text-gray-500" data-i18n="dashboard.last_trained">最終: 2日前</span>
+                            </div>
+                            <div class="mb-3">
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span data-i18n="dashboard.recovery">回復度</span>
+                                    <span class="font-semibold text-green-600">95%</span>
+                                </div>
+                                <div class="recovery-bar recovery-excellent rounded-full"></div>
+                            </div>
+                            <div class="text-sm text-gray-600" data-i18n="dashboard.next_recommended">次回推奨: 今日</div>
+                        </div>
+
+                        <div class="muscle-card muscle-part rounded-lg p-6" data-muscle="back">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-gray-800">
+                                    <i class="fas fa-male text-green-500 mr-2"></i>
+                                    <span data-i18n="muscle.back">背筋</span>
+                                </h3>
+                                <span class="text-sm text-gray-500" data-i18n="dashboard.last_trained">最終: 1日前</span>
+                            </div>
+                            <div class="mb-3">
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span data-i18n="dashboard.recovery">回復度</span>
+                                    <span class="font-semibold text-yellow-600">65%</span>
+                                </div>
+                                <div class="recovery-bar recovery-good rounded-full" style="width: 65%;"></div>
+                            </div>
+                            <div class="text-sm text-gray-600" data-i18n="dashboard.next_recommended">次回推奨: 明日</div>
+                        </div>
+
+                        <div class="muscle-card muscle-part rounded-lg p-6" data-muscle="shoulder">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-gray-800">
+                                    <i class="fas fa-male text-yellow-500 mr-2"></i>
+                                    <span data-i18n="muscle.shoulder">肩</span>
+                                </h3>
+                                <span class="text-sm text-gray-500" data-i18n="dashboard.last_trained">最終: 1日前</span>
+                            </div>
+                            <div class="mb-3">
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span data-i18n="dashboard.recovery">回復度</span>
+                                    <span class="font-semibold text-red-600">35%</span>
+                                </div>
+                                <div class="recovery-bar recovery-warning rounded-full" style="width: 35%;"></div>
+                            </div>
+                            <div class="text-sm text-gray-600" data-i18n="dashboard.next_recommended">次回推奨: 2日後</div>
+                        </div>
+
+                        <div class="muscle-card muscle-part rounded-lg p-6" data-muscle="arm">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-gray-800">
+                                    <i class="fas fa-male text-purple-500 mr-2"></i>
+                                    <span data-i18n="muscle.arm">腕</span>
+                                </h3>
+                                <span class="text-sm text-gray-500" data-i18n="dashboard.last_trained">最終: 3日前</span>
+                            </div>
+                            <div class="mb-3">
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span data-i18n="dashboard.recovery">回復度</span>
+                                    <span class="font-semibold text-green-600">100%</span>
+                                </div>
+                                <div class="recovery-bar recovery-excellent rounded-full"></div>
+                            </div>
+                            <div class="text-sm text-gray-600" data-i18n="dashboard.next_recommended">次回推奨: 今日</div>
+                        </div>
+
+                        <div class="muscle-card muscle-part rounded-lg p-6" data-muscle="leg">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-gray-800">
+                                    <i class="fas fa-male text-blue-500 mr-2"></i>
+                                    <span data-i18n="muscle.leg">脚</span>
+                                </h3>
+                                <span class="text-sm text-gray-500" data-i18n="dashboard.last_trained">最終: 2日前</span>
+                            </div>
+                            <div class="mb-3">
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span data-i18n="dashboard.recovery">回復度</span>
+                                    <span class="font-semibold text-yellow-600">80%</span>
+                                </div>
+                                <div class="recovery-bar recovery-good rounded-full" style="width: 80%;"></div>
+                            </div>
+                            <div class="text-sm text-gray-600" data-i18n="dashboard.next_recommended">次回推奨: 今日</div>
+                        </div>
+
+                        <div class="muscle-card muscle-part rounded-lg p-6" data-muscle="core">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-gray-800">
+                                    <i class="fas fa-male text-pink-500 mr-2"></i>
+                                    <span data-i18n="muscle.core">体幹</span>
+                                </h3>
+                                <span class="text-sm text-gray-500" data-i18n="dashboard.last_trained">最終: 1日前</span>
+                            </div>
+                            <div class="mb-3">
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span data-i18n="dashboard.recovery">回復度</span>
+                                    <span class="font-semibold text-green-600">90%</span>
+                                </div>
+                                <div class="recovery-bar recovery-excellent rounded-full" style="width: 90%;"></div>
+                            </div>
+                            <div class="text-sm text-gray-600" data-i18n="dashboard.next_recommended">次回推奨: 今日</div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Workouts -->
+                    <div class="muscle-card rounded-lg p-6">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">
+                            <i class="fas fa-history text-gray-500 mr-2"></i>
+                            <span data-i18n="dashboard.recent_workouts">最近のワークアウト</span>
+                        </h3>
+                        <div id="recent-workouts" class="space-y-3">
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <div class="workout-dot chest-color"></div>
+                                    <div>
+                                        <div class="font-medium text-gray-800">胸筋トレーニング</div>
+                                        <div class="text-sm text-gray-500">ベンチプレス 3セット × 10回</div>
+                                    </div>
+                                </div>
+                                <div class="text-sm text-gray-500">2024/01/15</div>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <div class="workout-dot back-color"></div>
+                                    <div>
+                                        <div class="font-medium text-gray-800">背筋トレーニング</div>
+                                        <div class="text-sm text-gray-500">デッドリフト 3セット × 8回</div>
+                                    </div>
+                                </div>
+                                <div class="text-sm text-gray-500">2024/01/14</div>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <div class="workout-dot leg-color"></div>
+                                    <div>
+                                        <div class="font-medium text-gray-800">脚トレーニング</div>
+                                        <div class="text-sm text-gray-500">スクワット 3セット × 15回</div>
+                                    </div>
+                                </div>
+                                <div class="text-sm text-gray-500">2024/01/13</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Affiliate Banner -->
+                    <div class="affiliate-banner">
+                        <h3 class="text-lg font-semibold mb-2">
+                            <i class="fas fa-star mr-2"></i>
+                            おすすめのトレーニング用品
+                        </h3>
+                        <p class="text-sm mb-3">効果的なトレーニングのために厳選されたアイテムをご紹介</p>
+                        <a href="#" id="affiliate-link-1" target="_blank" rel="noopener">
+                            <i class="fas fa-external-link-alt mr-2"></i>
+                            プロテイン・サプリメントを見る
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Workout Page -->
+                <div id="workout-page" class="page-content hidden">
+                    <div class="mb-6">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-2" data-i18n="workout.title">ワークアウト</h2>
+                        <p class="text-gray-600" data-i18n="workout.subtitle">今日のトレーニングを記録しましょう</p>
+                    </div>
+
+                    <!-- Quick Start -->
+                    <div class="muscle-card rounded-lg p-6 mb-6">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">
+                            <i class="fas fa-play-circle text-green-500 mr-2"></i>
+                            <span data-i18n="workout.quick_start">クイックスタート</span>
+                        </h3>
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                            <button class="quick-start-btn flex flex-col items-center space-y-2 p-4 bg-red-50 hover:bg-red-100 rounded-lg transition-colors" data-muscle="chest">
+                                <i class="fas fa-male text-red-500 text-2xl"></i>
+                                <span class="text-sm font-medium text-red-800" data-i18n="muscle.chest">胸筋</span>
+                            </button>
+                            <button class="quick-start-btn flex flex-col items-center space-y-2 p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors" data-muscle="back">
+                                <i class="fas fa-male text-green-500 text-2xl"></i>
+                                <span class="text-sm font-medium text-green-800" data-i18n="muscle.back">背筋</span>
+                            </button>
+                            <button class="quick-start-btn flex flex-col items-center space-y-2 p-4 bg-yellow-50 hover:bg-yellow-100 rounded-lg transition-colors" data-muscle="shoulder">
+                                <i class="fas fa-male text-yellow-500 text-2xl"></i>
+                                <span class="text-sm font-medium text-yellow-800" data-i18n="muscle.shoulder">肩</span>
+                            </button>
+                            <button class="quick-start-btn flex flex-col items-center space-y-2 p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors" data-muscle="arm">
+                                <i class="fas fa-male text-purple-500 text-2xl"></i>
+                                <span class="text-sm font-medium text-purple-800" data-i18n="muscle.arm">腕</span>
+                            </button>
+                            <button class="quick-start-btn flex flex-col items-center space-y-2 p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors" data-muscle="leg">
+                                <i class="fas fa-male text-blue-500 text-2xl"></i>
+                                <span class="text-sm font-medium text-blue-800" data-i18n="muscle.leg">脚</span>
+                            </button>
+                            <button class="quick-start-btn flex flex-col items-center space-y-2 p-4 bg-pink-50 hover:bg-pink-100 rounded-lg transition-colors" data-muscle="core">
+                                <i class="fas fa-male text-pink-500 text-2xl"></i>
+                                <span class="text-sm font-medium text-pink-800" data-i18n="muscle.core">体幹</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Current Workout -->
+                    <div id="current-workout" class="muscle-card rounded-lg p-6 mb-6 hidden">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-semibold text-gray-800">
+                                <i class="fas fa-dumbbell text-blue-500 mr-2"></i>
+                                <span data-i18n="workout.current">現在のワークアウト</span>
+                            </h3>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-sm text-gray-500" data-i18n="workout.duration">時間:</span>
+                                <span id="workout-timer" class="text-lg font-bold text-blue-600">00:00</span>
+                            </div>
+                        </div>
+                        
+                        <div id="workout-exercises" class="space-y-4">
+                            <!-- Exercises will be populated here -->
+                        </div>
+                        
+                        <div class="flex justify-between mt-6">
+                            <button id="add-exercise-btn" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                                <i class="fas fa-plus mr-2"></i>
+                                <span data-i18n="workout.add_exercise">エクササイズを追加</span>
+                            </button>
+                            <div class="space-x-2">
+                                <button id="pause-workout-btn" class="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition-colors">
+                                    <i class="fas fa-pause mr-2"></i>
+                                    <span data-i18n="workout.pause">一時停止</span>
+                                </button>
+                                <button id="finish-workout-btn" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
+                                    <i class="fas fa-check mr-2"></i>
+                                    <span data-i18n="workout.finish">完了</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Workout Templates -->
+                    <div class="muscle-card rounded-lg p-6">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">
+                            <i class="fas fa-bookmark text-purple-500 mr-2"></i>
+                            <span data-i18n="workout.templates">ワークアウトテンプレート</span>
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                                <h4 class="font-semibold text-gray-800 mb-2">胸筋強化プログラム</h4>
+                                <p class="text-sm text-gray-600 mb-3">初心者向けの胸筋トレーニング</p>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs text-gray-500">45分 | 初級</span>
+                                    <button class="text-blue-500 hover:text-blue-700 text-sm font-medium">使用する</button>
+                                </div>
+                            </div>
+                            <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                                <h4 class="font-semibold text-gray-800 mb-2">背筋強化プログラム</h4>
+                                <p class="text-sm text-gray-600 mb-3">背中の筋肉を効果的に鍛える</p>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs text-gray-500">50分 | 中級</span>
+                                    <button class="text-blue-500 hover:text-blue-700 text-sm font-medium">使用する</button>
+                                </div>
+                            </div>
+                            <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                                <h4 class="font-semibold text-gray-800 mb-2">脚強化プログラム</h4>
+                                <p class="text-sm text-gray-600 mb-3">下半身の筋力向上</p>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs text-gray-500">60分 | 中級</span>
+                                    <button class="text-blue-500 hover:text-blue-700 text-sm font-medium">使用する</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calendar Page -->
+                <div id="calendar-page" class="page-content hidden">
+                    <div class="mb-6">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-2" data-i18n="calendar.title">カレンダー</h2>
+                        <p class="text-gray-600" data-i18n="calendar.subtitle">トレーニングスケジュールを確認・管理しましょう</p>
+                    </div>
+
+                    <!-- Calendar Controls -->
+                    <div class="muscle-card rounded-lg p-4 mb-6">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <button id="prev-month" class="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <h3 id="current-month" class="text-xl font-semibold text-gray-800">2024年1月</h3>
+                                <button id="next-month" class="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button id="today-btn" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                                    <span data-i18n="calendar.today">今日</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Calendar Grid -->
+                    <div class="muscle-card rounded-lg p-6">
+                        <div class="grid grid-cols-7 gap-1 mb-4">
+                            <div class="text-center text-sm font-medium text-gray-600 py-2" data-i18n="calendar.sun">日</div>
+                            <div class="text-center text-sm font-medium text-gray-600 py-2" data-i18n="calendar.mon">月</div>
+                            <div class="text-center text-sm font-medium text-gray-600 py-2" data-i18n="calendar.tue">火</div>
+                            <div class="text-center text-sm font-medium text-gray-600 py-2" data-i18n="calendar.wed">水</div>
+                            <div class="text-center text-sm font-medium text-gray-600 py-2" data-i18n="calendar.thu">木</div>
+                            <div class="text-center text-sm font-medium text-gray-600 py-2" data-i18n="calendar.fri">金</div>
+                            <div class="text-center text-sm font-medium text-gray-600 py-2" data-i18n="calendar.sat">土</div>
+                        </div>
+                        <div id="calendar-grid" class="grid grid-cols-7 gap-1">
+                            <!-- Calendar days will be populated here -->
+                        </div>
+                    </div>
+
+                    <!-- Calendar Legend -->
+                    <div class="muscle-card rounded-lg p-4 mt-6">
+                        <h4 class="font-semibold text-gray-800 mb-3" data-i18n="calendar.legend">凡例</h4>
+                        <div class="flex flex-wrap gap-4">
+                            <div class="flex items-center space-x-2">
+                                <div class="workout-dot chest-color"></div>
+                                <span class="text-sm text-gray-600" data-i18n="muscle.chest">胸筋</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <div class="workout-dot back-color"></div>
+                                <span class="text-sm text-gray-600" data-i18n="muscle.back">背筋</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <div class="workout-dot shoulder-color"></div>
+                                <span class="text-sm text-gray-600" data-i18n="muscle.shoulder">肩</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <div class="workout-dot arm-color"></div>
+                                <span class="text-sm text-gray-600" data-i18n="muscle.arm">腕</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <div class="workout-dot leg-color"></div>
+                                <span class="text-sm text-gray-600" data-i18n="muscle.leg">脚</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <div class="workout-dot core-color"></div>
+                                <span class="text-sm text-gray-600" data-i18n="muscle.core">体幹</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics Page -->
+                <div id="analytics-page" class="page-content hidden">
+                    <div class="mb-6">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-2" data-i18n="analytics.title">分析</h2>
+                        <p class="text-gray-600" data-i18n="analytics.subtitle">トレーニングの進捗と統計を確認しましょう</p>
+                    </div>
+
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                        <div class="muscle-card rounded-lg p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-600 mb-1" data-i18n="analytics.total_workouts">総ワークアウト数</p>
+                                    <p class="text-2xl font-bold text-gray-800">127</p>
+                                </div>
+                                <div class="bg-blue-100 p-3 rounded-full">
+                                    <i class="fas fa-dumbbell text-blue-600 text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="muscle-card rounded-lg p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-600 mb-1" data-i18n="analytics.this_month">今月のワークアウト</p>
+                                    <p class="text-2xl font-bold text-gray-800">15</p>
+                                </div>
+                                <div class="bg-green-100 p-3 rounded-full">
+                                    <i class="fas fa-calendar-check text-green-600 text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="muscle-card rounded-lg p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-600 mb-1" data-i18n="analytics.avg_duration">平均時間</p>
+                                    <p class="text-2xl font-bold text-gray-800">52分</p>
+                                </div>
+                                <div class="bg-yellow-100 p-3 rounded-full">
+                                    <i class="fas fa-clock text-yellow-600 text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="muscle-card rounded-lg p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-600 mb-1" data-i18n="analytics.streak">連続日数</p>
+                                    <p class="text-2xl font-bold text-gray-800">7日</p>
+                                </div>
+                                <div class="bg-purple-100 p-3 rounded-full">
+                                    <i class="fas fa-fire text-purple-600 text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        <!-- Workout Frequency Chart -->
+                        <div class="muscle-card rounded-lg p-6">
+                            <h3 class="text-xl font-semibold text-gray-800 mb-4">
+                                <i class="fas fa-chart-bar text-blue-500 mr-2"></i>
+                                <span data-i18n="analytics.workout_frequency">ワークアウト頻度</span>
+                            </h3>
+                            <div class="chart-container">
+                                <canvas id="workout-frequency-chart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Muscle Group Distribution -->
+                        <div class="muscle-card rounded-lg p-6">
+                            <h3 class="text-xl font-semibold text-gray-800 mb-4">
+                                <i class="fas fa-chart-pie text-green-500 mr-2"></i>
+                                <span data-i18n="analytics.muscle_distribution">部位別分布</span>
+                            </h3>
+                            <div class="chart-container">
+                                <canvas id="muscle-distribution-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Progress Chart -->
+                    <div class="muscle-card rounded-lg p-6">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">
+                            <i class="fas fa-chart-line text-purple-500 mr-2"></i>
+                            <span data-i18n="analytics.progress_chart">進捗チャート</span>
+                        </h3>
+                        <div class="chart-container">
+                            <canvas id="progress-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exercises Page -->
+                <div id="exercises-page" class="page-content hidden">
+                    <div class="mb-6">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-2" data-i18n="exercises.title">エクササイズ</h2>
+                        <p class="text-gray-600" data-i18n="exercises.subtitle">豊富なエクササイズライブラリから最適なトレーニングを選びましょう</p>
+                    </div>
+
+                    <!-- Exercise Filters -->
+                    <div class="muscle-card rounded-lg p-6 mb-6">
+                        <div class="flex flex-wrap gap-4 mb-4">
+                            <div class="flex items-center space-x-2">
+                                <label class="text-sm font-medium text-gray-700" data-i18n="exercises.filter_muscle">部位:</label>
+                                <select id="muscle-filter" class="border border-gray-300 rounded-lg px-3 py-2">
+                                    <option value="">すべて</option>
+                                    <option value="chest">胸筋</option>
+                                    <option value="back">背筋</option>
+                                    <option value="shoulder">肩</option>
+                                    <option value="arm">腕</option>
+                                    <option value="leg">脚</option>
+                                    <option value="core">体幹</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <label class="text-sm font-medium text-gray-700" data-i18n="exercises.filter_difficulty">難易度:</label>
+                                <select id="difficulty-filter" class="border border-gray-300 rounded-lg px-3 py-2">
+                                    <option value="">すべて</option>
+                                    <option value="beginner">初級</option>
+                                    <option value="intermediate">中級</option>
+                                    <option value="advanced">上級</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <label class="text-sm font-medium text-gray-700" data-i18n="exercises.filter_equipment">器具:</label>
+                                <select id="equipment-filter" class="border border-gray-300 rounded-lg px-3 py-2">
+                                    <option value="">すべて</option>
+                                    <option value="bodyweight">自重</option>
+                                    <option value="dumbbell">ダンベル</option>
+                                    <option value="barbell">バーベル</option>
+                                    <option value="machine">マシン</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-search text-gray-400"></i>
+                            <input type="text" id="exercise-search" placeholder="エクササイズを検索..." class="flex-1 border border-gray-300 rounded-lg px-3 py-2">
+                        </div>
+                    </div>
+
+                    <!-- Exercise List -->
+                    <div id="exercise-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Exercises will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Settings Page -->
+                <div id="settings-page" class="page-content hidden">
+                    <div class="mb-6">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-2" data-i18n="settings.title">設定</h2>
+                        <p class="text-gray-600" data-i18n="settings.subtitle">アプリの設定をカスタマイズしましょう</p>
+                    </div>
+
+                    <!-- Profile Settings -->
+                    <div class="muscle-card rounded-lg p-6 mb-6">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">
+                            <i class="fas fa-user text-blue-500 mr-2"></i>
+                            <span data-i18n="settings.profile">プロフィール</span>
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="settings.name">名前</label>
+                                <input type="text" id="user-name-input" class="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="あなたの名前">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="settings.email">メールアドレス</label>
+                                <input type="email" id="user-email-input" class="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="email@example.com">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Workout Settings -->
+                    <div class="muscle-card rounded-lg p-6 mb-6">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">
+                            <i class="fas fa-dumbbell text-green-500 mr-2"></i>
+                            <span data-i18n="settings.workout">ワークアウト設定</span>
+                        </h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="settings.rest_periods">休憩時間設定</label>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-1" data-i18n="settings.chest_rest">胸筋 (時間)</label>
+                                        <input type="number" id="chest-rest" class="w-full border border-gray-300 rounded-lg px-3 py-2" value="72" min="24" max="168">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-1" data-i18n="settings.back_rest">背筋 (時間)</label>
+                                        <input type="number" id="back-rest" class="w-full border border-gray-300 rounded-lg px-3 py-2" value="72" min="24" max="168">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-1" data-i18n="settings.shoulder_rest">肩 (時間)</label>
+                                        <input type="number" id="shoulder-rest" class="w-full border border-gray-300 rounded-lg px-3 py-2" value="48" min="24" max="168">
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="settings.weekly_goal">週間目標</label>
+                                <input type="number" id="weekly-goal" class="w-full border border-gray-300 rounded-lg px-3 py-2" value="4" min="1" max="7">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notification Settings -->
+                    <div class="muscle-card rounded-lg p-6 mb-6">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">
+                            <i class="fas fa-bell text-yellow-500 mr-2"></i>
+                            <span data-i18n="settings.notifications">通知設定</span>
+                        </h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700" data-i18n="settings.workout_reminders">ワークアウト通知</label>
+                                    <p class="text-xs text-gray-500" data-i18n="settings.workout_reminders_desc">トレーニング時間をお知らせします</p>
+                                </div>
+                                <input type="checkbox" id="workout-notifications" class="rounded border-gray-300">
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700" data-i18n="settings.recovery_alerts">回復アラート</label>
+                                    <p class="text-xs text-gray-500" data-i18n="settings.recovery_alerts_desc">筋肉の回復状況をお知らせします</p>
+                                </div>
+                                <input type="checkbox" id="recovery-notifications" class="rounded border-gray-300">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Data Management -->
+                    <div class="muscle-card rounded-lg p-6">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">
+                            <i class="fas fa-database text-purple-500 mr-2"></i>
+                            <span data-i18n="settings.data">データ管理</span>
+                        </h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700" data-i18n="settings.export_data">データエクスポート</label>
+                                    <p class="text-xs text-gray-500" data-i18n="settings.export_data_desc">トレーニングデータをJSONファイルで保存</p>
+                                </div>
+                                <button id="export-data-btn" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                                    <i class="fas fa-download mr-2"></i>
+                                    <span data-i18n="settings.export">エクスポート</span>
+                                </button>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700" data-i18n="settings.import_data">データインポート</label>
+                                    <p class="text-xs text-gray-500" data-i18n="settings.import_data_desc">以前のデータを読み込み</p>
+                                </div>
+                                <button id="import-data-btn" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
+                                    <i class="fas fa-upload mr-2"></i>
+                                    <span data-i18n="settings.import">インポート</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <div class="flex items-center justify-between mb-4">
+                <h3 id="auth-modal-title" class="text-xl font-semibold text-gray-800">ログイン</h3>
+                <button id="auth-modal-close" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="auth-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">メールアドレス</label>
+                    <input type="email" id="auth-email" class="w-full border border-gray-300 rounded-lg px-3 py-2" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">パスワード</label>
+                    <input type="password" id="auth-password" class="w-full border border-gray-300 rounded-lg px-3 py-2" required>
+                </div>
+                <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                    <span id="auth-submit-text">ログイン</span>
+                </button>
+            </form>
+            <div class="mt-4 text-center">
+                <button id="auth-switch" class="text-blue-500 hover:text-blue-700 text-sm">
+                    <span id="auth-switch-text">アカウントを作成</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exercise Modal -->
+    <div id="exercise-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-90vh overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h3 id="exercise-modal-title" class="text-xl font-semibold text-gray-800">エクササイズ詳細</h3>
+                <button id="exercise-modal-close" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="exercise-modal-content">
+                <!-- Exercise details will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notification-container"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        // Initialize app
+        console.log('🏋️ MuscleRotationManager - Starting Application');
+        
+        // Global variables
+        let currentUser = null;
+        let currentWorkout = null;
+        let workoutTimer = null;
+        let workoutStartTime = null;
+        let currentLanguage = 'ja';
+        let currentFontSize = 'base';
+        
+        // Sample data
+        const sampleWorkouts = [
+            {
+                id: 1,
+                date: '2024-01-15',
+                muscle: 'chest',
+                exercises: [
+                    { name: 'ベンチプレス', sets: 3, reps: 10, weight: 80 },
+                    { name: 'インクラインプレス', sets: 3, reps: 8, weight: 60 }
+                ],
+                duration: 45
+            },
+            {
+                id: 2,
+                date: '2024-01-14',
+                muscle: 'back',
+                exercises: [
+                    { name: 'デッドリフト', sets: 3, reps: 8, weight: 100 },
+                    { name: 'ラットプルダウン', sets: 3, reps: 12, weight: 50 }
+                ],
+                duration: 50
+            }
+        ];
+        
+        const exerciseDatabase = {
+            chest: [
+                {
+                    name: 'ベンチプレス',
+                    nameEn: 'Bench Press',
+                    difficulty: 'intermediate',
+                    equipment: 'barbell',
+                    description: '胸筋を効果的に鍛える基本種目',
+                    descriptionEn: 'Fundamental exercise for chest development',
+                    instructions: ['バーベルを胸に下ろす', '力強く押し上げる', '肘を適度に曲げる'],
+                    instructionsEn: ['Lower the barbell to chest', 'Press up forcefully', 'Keep elbows slightly bent'],
+                    targetMuscles: ['大胸筋', '三角筋前部', '上腕三頭筋']
+                },
+                {
+                    name: 'プッシュアップ',
+                    nameEn: 'Push-up',
+                    difficulty: 'beginner',
+                    equipment: 'bodyweight',
+                    description: '自重で行う胸筋トレーニング',
+                    descriptionEn: 'Bodyweight chest exercise',
+                    instructions: ['うつ伏せの状態で手を肩幅に開く', '体を一直線に保つ', '胸を床に近づけて押し上げる'],
+                    instructionsEn: ['Start in plank position', 'Keep body straight', 'Lower chest to floor and push up'],
+                    targetMuscles: ['大胸筋', '三角筋前部', '上腕三頭筋']
+                }
+            ],
+            back: [
+                {
+                    name: 'デッドリフト',
+                    nameEn: 'Deadlift',
+                    difficulty: 'advanced',
+                    equipment: 'barbell',
+                    description: '背筋群を総合的に鍛える複合種目',
+                    descriptionEn: 'Compound exercise for overall back development',
+                    instructions: ['足幅を肩幅に開く', '腰を曲げてバーを握る', '背筋を使って立ち上がる'],
+                    instructionsEn: ['Stand with feet hip-width apart', 'Bend at hips to grip bar', 'Stand up using back muscles'],
+                    targetMuscles: ['広背筋', '僧帽筋', '脊柱起立筋']
+                },
+                {
+                    name: 'ラットプルダウン',
+                    nameEn: 'Lat Pulldown',
+                    difficulty: 'intermediate',
+                    equipment: 'machine',
+                    description: '広背筋を集中的に鍛える',
+                    descriptionEn: 'Targeted latissimus dorsi exercise',
+                    instructions: ['座位でバーを握る', '肩甲骨を寄せながら引く', 'ゆっくりと戻す'],
+                    instructionsEn: ['Sit and grip the bar', 'Pull down squeezing shoulder blades', 'Return slowly'],
+                    targetMuscles: ['広背筋', '僧帽筋', '上腕二頭筋']
+                }
+            ],
+            shoulder: [
+                {
+                    name: 'ショルダープレス',
+                    nameEn: 'Shoulder Press',
+                    difficulty: 'intermediate',
+                    equipment: 'dumbbell',
+                    description: '肩の筋肉を全体的に鍛える',
+                    descriptionEn: 'Complete shoulder muscle development',
+                    instructions: ['ダンベルを肩の高さで構える', '頭上に押し上げる', 'ゆっくりと下ろす'],
+                    instructionsEn: ['Hold dumbbells at shoulder height', 'Press overhead', 'Lower slowly'],
+                    targetMuscles: ['三角筋', '僧帽筋', '上腕三頭筋']
+                }
+            ],
+            arm: [
+                {
+                    name: 'バイセップカール',
+                    nameEn: 'Bicep Curl',
+                    difficulty: 'beginner',
+                    equipment: 'dumbbell',
+                    description: '上腕二頭筋を集中的に鍛える',
+                    descriptionEn: 'Targeted bicep exercise',
+                    instructions: ['ダンベルを持って腕を下ろす', '肘を固定して曲げる', 'ゆっくりと戻す'],
+                    instructionsEn: ['Hold dumbbells with arms down', 'Keep elbows fixed and curl', 'Return slowly'],
+                    targetMuscles: ['上腕二頭筋', '前腕筋']
+                }
+            ],
+            leg: [
+                {
+                    name: 'スクワット',
+                    nameEn: 'Squat',
+                    difficulty: 'intermediate',
+                    equipment: 'bodyweight',
+                    description: '下半身の筋肉を総合的に鍛える',
+                    descriptionEn: 'Comprehensive lower body exercise',
+                    instructions: ['足を肩幅に開く', '腰を下ろす', '膝を曲げて立ち上がる'],
+                    instructionsEn: ['Stand with feet shoulder-width apart', 'Lower hips', 'Bend knees and stand up'],
+                    targetMuscles: ['大腿四頭筋', '臀筋', 'ハムストリング']
+                }
+            ],
+            core: [
+                {
+                    name: 'プランク',
+                    nameEn: 'Plank',
+                    difficulty: 'beginner',
+                    equipment: 'bodyweight',
+                    description: '体幹を安定させる基本種目',
+                    descriptionEn: 'Basic core stabilization exercise',
+                    instructions: ['肘とつま先で体を支える', '体を一直線に保つ', '30秒〜1分間キープ'],
+                    instructionsEn: ['Support body on elbows and toes', 'Keep body straight', 'Hold for 30 seconds to 1 minute'],
+                    targetMuscles: ['腹直筋', '腹横筋', '脊柱起立筋']
+                }
+            ]
+        };
+        
+        // Internationalization
+        const i18n = {
+            ja: {
+                'app.title': 'MuscleRotationManager',
+                'nav.dashboard': 'ダッシュボード',
+                'nav.workout': 'ワークアウト',
+                'nav.calendar': 'カレンダー',
+                'nav.analytics': '分析',
+                'nav.exercises': 'エクササイズ',
+                'nav.settings': '設定',
+                'auth.guest': 'ゲスト',
+                'auth.login': 'ログイン',
+                'auth.register': '登録',
+                'auth.logout': 'ログアウト',
+                'dashboard.title': 'ダッシュボード',
+                'dashboard.subtitle': '今日のトレーニング状況と部位別回復度をチェックしましょう',
+                'dashboard.recommendations': '今日のおすすめ',
+                'dashboard.rec1': '胸筋: 完全回復 - 高強度トレーニング推奨',
+                'dashboard.rec2': '背筋: 軽度疲労 - 軽めのトレーニング推奨',
+                'dashboard.rec3': '肩: 回復中 - 休息推奨',
+                'dashboard.last_trained': '最終: 2日前',
+                'dashboard.recovery': '回復度',
+                'dashboard.next_recommended': '次回推奨: 今日',
+                'dashboard.recent_workouts': '最近のワークアウト',
+                'muscle.chest': '胸筋',
+                'muscle.back': '背筋',
+                'muscle.shoulder': '肩',
+                'muscle.arm': '腕',
+                'muscle.leg': '脚',
+                'muscle.core': '体幹',
+                'workout.title': 'ワークアウト',
+                'workout.subtitle': '今日のトレーニングを記録しましょう',
+                'workout.quick_start': 'クイックスタート',
+                'workout.current': '現在のワークアウト',
+                'workout.duration': '時間',
+                'workout.add_exercise': 'エクササイズを追加',
+                'workout.pause': '一時停止',
+                'workout.finish': '完了',
+                'workout.templates': 'ワークアウトテンプレート',
+                'calendar.title': 'カレンダー',
+                'calendar.subtitle': 'トレーニングスケジュールを確認・管理しましょう',
+                'calendar.today': '今日',
+                'calendar.sun': '日',
+                'calendar.mon': '月',
+                'calendar.tue': '火',
+                'calendar.wed': '水',
+                'calendar.thu': '木',
+                'calendar.fri': '金',
+                'calendar.sat': '土',
+                'calendar.legend': '凡例',
+                'analytics.title': '分析',
+                'analytics.subtitle': 'トレーニングの進捗と統計を確認しましょう',
+                'analytics.total_workouts': '総ワークアウト数',
+                'analytics.this_month': '今月のワークアウト',
+                'analytics.avg_duration': '平均時間',
+                'analytics.streak': '連続日数',
+                'analytics.workout_frequency': 'ワークアウト頻度',
+                'analytics.muscle_distribution': '部位別分布',
+                'analytics.progress_chart': '進捗チャート',
+                'exercises.title': 'エクササイズ',
+                'exercises.subtitle': '豊富なエクササイズライブラリから最適なトレーニングを選びましょう',
+                'exercises.filter_muscle': '部位',
+                'exercises.filter_difficulty': '難易度',
+                'exercises.filter_equipment': '器具',
+                'settings.title': '設定',
+                'settings.subtitle': 'アプリの設定をカスタマイズしましょう',
+                'settings.profile': 'プロフィール',
+                'settings.name': '名前',
+                'settings.email': 'メールアドレス',
+                'settings.workout': 'ワークアウト設定',
+                'settings.rest_periods': '休憩時間設定',
+                'settings.chest_rest': '胸筋 (時間)',
+                'settings.back_rest': '背筋 (時間)',
+                'settings.shoulder_rest': '肩 (時間)',
+                'settings.weekly_goal': '週間目標',
+                'settings.notifications': '通知設定',
+                'settings.workout_reminders': 'ワークアウト通知',
+                'settings.workout_reminders_desc': 'トレーニング時間をお知らせします',
+                'settings.recovery_alerts': '回復アラート',
+                'settings.recovery_alerts_desc': '筋肉の回復状況をお知らせします',
+                'settings.data': 'データ管理',
+                'settings.export_data': 'データエクスポート',
+                'settings.export_data_desc': 'トレーニングデータをJSONファイルで保存',
+                'settings.export': 'エクスポート',
+                'settings.import_data': 'データインポート',
+                'settings.import_data_desc': '以前のデータを読み込み',
+                'settings.import': 'インポート'
+            },
+            en: {
+                'app.title': 'MuscleRotationManager',
+                'nav.dashboard': 'Dashboard',
+                'nav.workout': 'Workout',
+                'nav.calendar': 'Calendar',
+                'nav.analytics': 'Analytics',
+                'nav.exercises': 'Exercises',
+                'nav.settings': 'Settings',
+                'auth.guest': 'Guest',
+                'auth.login': 'Login',
+                'auth.register': 'Register',
+                'auth.logout': 'Logout',
+                'dashboard.title': 'Dashboard',
+                'dashboard.subtitle': 'Check today\'s training status and muscle recovery',
+                'dashboard.recommendations': 'Today\'s Recommendations',
+                'dashboard.rec1': 'Chest: Fully recovered - High intensity training recommended',
+                'dashboard.rec2': 'Back: Mild fatigue - Light training recommended',
+                'dashboard.rec3': 'Shoulder: Recovering - Rest recommended',
+                'dashboard.last_trained': 'Last: 2 days ago',
+                'dashboard.recovery': 'Recovery',
+                'dashboard.next_recommended': 'Next recommended: Today',
+                'dashboard.recent_workouts': 'Recent Workouts',
+                'muscle.chest': 'Chest',
+                'muscle.back': 'Back',
+                'muscle.shoulder': 'Shoulder',
+                'muscle.arm': 'Arm',
+                'muscle.leg': 'Leg',
+                'muscle.core': 'Core',
+                'workout.title': 'Workout',
+                'workout.subtitle': 'Record today\'s training',
+                'workout.quick_start': 'Quick Start',
+                'workout.current': 'Current Workout',
+                'workout.duration': 'Duration',
+                'workout.add_exercise': 'Add Exercise',
+                'workout.pause': 'Pause',
+                'workout.finish': 'Finish',
+                'workout.templates': 'Workout Templates',
+                'calendar.title': 'Calendar',
+                'calendar.subtitle': 'View and manage your training schedule',
+                'calendar.today': 'Today',
+                'calendar.sun': 'Sun',
+                'calendar.mon': 'Mon',
+                'calendar.tue': 'Tue',
+                'calendar.wed': 'Wed',
+                'calendar.thu': 'Thu',
+                'calendar.fri': 'Fri',
+                'calendar.sat': 'Sat',
+                'calendar.legend': 'Legend',
+                'analytics.title': 'Analytics',
+                'analytics.subtitle': 'Track your training progress and statistics',
+                'analytics.total_workouts': 'Total Workouts',
+                'analytics.this_month': 'This Month',
+                'analytics.avg_duration': 'Average Duration',
+                'analytics.streak': 'Streak',
+                'analytics.workout_frequency': 'Workout Frequency',
+                'analytics.muscle_distribution': 'Muscle Distribution',
+                'analytics.progress_chart': 'Progress Chart',
+                'exercises.title': 'Exercises',
+                'exercises.subtitle': 'Choose optimal training from our comprehensive exercise library',
+                'exercises.filter_muscle': 'Muscle',
+                'exercises.filter_difficulty': 'Difficulty',
+                'exercises.filter_equipment': 'Equipment',
+                'settings.title': 'Settings',
+                'settings.subtitle': 'Customize your app settings',
+                'settings.profile': 'Profile',
+                'settings.name': 'Name',
+                'settings.email': 'Email',
+                'settings.workout': 'Workout Settings',
+                'settings.rest_periods': 'Rest Periods',
+                'settings.chest_rest': 'Chest (hours)',
+                'settings.back_rest': 'Back (hours)',
+                'settings.shoulder_rest': 'Shoulder (hours)',
+                'settings.weekly_goal': 'Weekly Goal',
+                'settings.notifications': 'Notifications',
+                'settings.workout_reminders': 'Workout Reminders',
+                'settings.workout_reminders_desc': 'Get notified about training time',
+                'settings.recovery_alerts': 'Recovery Alerts',
+                'settings.recovery_alerts_desc': 'Get notified about muscle recovery status',
+                'settings.data': 'Data Management',
+                'settings.export_data': 'Export Data',
+                'settings.export_data_desc': 'Save training data as JSON file',
+                'settings.export': 'Export',
+                'settings.import_data': 'Import Data',
+                'settings.import_data_desc': 'Load previous data',
+                'settings.import': 'Import'
+            }
+        };
+        
+        // Utility functions
+        function $(selector) {
+            return document.querySelector(selector);
+        }
+        
+        function $$(selector) {
+            return document.querySelectorAll(selector);
+        }
+        
+        function showNotification(message, type = 'success') {
+            console.log(`📢 Notification: ${message} (${type})`);
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            const container = $('#notification-container');
+            container.appendChild(notification);
+            
+            // Show notification
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            // Hide and remove notification
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    container.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+        
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString(currentLanguage === 'ja' ? 'ja-JP' : 'en-US');
+        }
+        
+        function getRecoveryStatus(muscle, lastWorkoutDate) {
+            const now = new Date();
+            const lastWorkout = new Date(lastWorkoutDate);
+            const hoursSinceLastWorkout = (now - lastWorkout) / (1000 * 60 * 60);
+            
+            const recoveryTimes = {
+                chest: 72,
+                back: 72,
+                shoulder: 48,
+                arm: 48,
+                leg: 72,
+                core: 24
+            };
+            
+            const recoveryTime = recoveryTimes[muscle] || 48;
+            const recoveryPercentage = Math.min(100, (hoursSinceLastWorkout / recoveryTime) * 100);
+            
+            return {
+                percentage: Math.round(recoveryPercentage),
+                status: recoveryPercentage >= 90 ? 'excellent' : recoveryPercentage >= 60 ? 'good' : 'warning'
+            };
+        }
+        
+        function updateLanguage(lang) {
+            console.log(`🌐 Switching language to: ${lang}`);
+            currentLanguage = lang;
+            
+            // Update language switches
+            $$('.lang-switch').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.lang === lang) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Update all i18n elements
+            $$('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (i18n[lang] && i18n[lang][key]) {
+                    element.textContent = i18n[lang][key];
+                }
+            });
+            
+            // Update charts if they exist
+            if (window.workoutFrequencyChart) {
+                updateCharts();
+            }
+            
+            // Update exercise list
+            renderExercises();
+        }
+        
+        function updateFontSize(size) {
+            console.log(`🔤 Changing font size to: ${size}`);
+            currentFontSize = size;
+            
+            // Remove existing font size classes
+            document.body.classList.remove('font-size-xs', 'font-size-sm', 'font-size-base', 'font-size-lg', 'font-size-xl');
+            
+            // Add new font size class
+            document.body.classList.add(`font-size-${size}`);
+            
+            // Update indicator
+            const indicator = $('#font-size-indicator');
+            const sizes = { xs: 'A', sm: 'A', base: 'A', lg: 'A', xl: 'A' };
+            indicator.textContent = sizes[size];
+            indicator.style.fontSize = size === 'xs' ? '0.75rem' : size === 'sm' ? '0.875rem' : size === 'base' ? '1rem' : size === 'lg' ? '1.125rem' : '1.25rem';
+            
+            // Save to localStorage
+            localStorage.setItem('fontSize', size);
+        }
+        
+        function showPage(pageName) {
+            console.log(`📄 Showing page: ${pageName}`);
+            
+            // Hide all pages
+            $$('.page-content').forEach(page => {
+                page.classList.add('hidden');
+            });
+            
+            // Show selected page
+            const targetPage = $(`#${pageName}-page`);
+            if (targetPage) {
+                targetPage.classList.remove('hidden');
+            }
+            
+            // Update navigation
+            $$('.nav-item').forEach(item => {
+                item.classList.remove('active', 'bg-gray-100');
+                if (item.dataset.page === pageName) {
+                    item.classList.add('active', 'bg-gray-100');
+                }
+            });
+            
+            // Close mobile sidebar
+            const mobileSidebar = $('#mobile-sidebar');
+            if (mobileSidebar) {
+                mobileSidebar.classList.remove('open');
+            }
+            
+            // Page-specific initialization
+            switch (pageName) {
+                case 'calendar':
+                    renderCalendar();
+                    break;
+                case 'analytics':
+                    renderAnalytics();
+                    break;
+                case 'exercises':
+                    renderExercises();
+                    break;
+            }
+        }
+        
+        function renderCalendar() {
+            console.log('📅 Rendering calendar');
+            const calendarGrid = $('#calendar-grid');
+            const currentMonth = $('#current-month');
+            
+            if (!calendarGrid || !currentMonth) return;
+            
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth();
+            
+            // Update month display
+            currentMonth.textContent = currentLanguage === 'ja' ? 
+                `${year}年${month + 1}月` : 
+                `${now.toLocaleString('en-US', { month: 'long', year: 'numeric' })}`;
+            
+            // Clear existing calendar
+            calendarGrid.innerHTML = '';
+            
+            // Get first day of month and number of days
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const firstDayOfWeek = firstDay.getDay();
+            const daysInMonth = lastDay.getDate();
+            
+            // Add empty cells for days before the first day of the month
+            for (let i = 0; i < firstDayOfWeek; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'calendar-day';
+                calendarGrid.appendChild(emptyDay);
+            }
+            
+            // Add days of the month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day';
+                dayElement.innerHTML = `
+                    <div class="text-sm font-medium mb-1">${day}</div>
+                    <div class="flex flex-wrap gap-1" id="workouts-${day}">
+                        <!-- Workout dots will be added here -->
+                    </div>
+                `;
+                
+                // Add sample workout data
+                const dateString = `${year}-${(month + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+                const dayWorkouts = sampleWorkouts.filter(w => w.date === dateString);
+                
+                if (dayWorkouts.length > 0) {
+                    dayElement.classList.add('has-workout');
+                    const workoutContainer = dayElement.querySelector(`#workouts-${day}`);
+                    dayWorkouts.forEach(workout => {
+                        const dot = document.createElement('div');
+                        dot.className = `workout-dot ${workout.muscle}-color`;
+                        dot.title = workout.muscle;
+                        workoutContainer.appendChild(dot);
+                    });
+                }
+                
+                calendarGrid.appendChild(dayElement);
+            }
+        }
+        
+        function renderAnalytics() {
+            console.log('📊 Rendering analytics');
+            
+            // Initialize charts
+            setTimeout(() => {
+                initializeCharts();
+            }, 100);
+        }
+        
+        function initializeCharts() {
+            console.log('📈 Initializing charts');
+            
+            // Workout Frequency Chart
+            const workoutFrequencyCtx = $('#workout-frequency-chart');
+            if (workoutFrequencyCtx && !window.workoutFrequencyChart) {
+                window.workoutFrequencyChart = new Chart(workoutFrequencyCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: currentLanguage === 'ja' ? 
+                            ['月', '火', '水', '木', '金', '土', '日'] : 
+                            ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                        datasets: [{
+                            label: currentLanguage === 'ja' ? 'ワークアウト回数' : 'Workout Count',
+                            data: [3, 2, 4, 1, 3, 2, 1],
+                            backgroundColor: '#667eea',
+                            borderColor: '#667eea',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Muscle Distribution Chart
+            const muscleDistributionCtx = $('#muscle-distribution-chart');
+            if (muscleDistributionCtx && !window.muscleDistributionChart) {
+                window.muscleDistributionChart = new Chart(muscleDistributionCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: currentLanguage === 'ja' ? 
+                            ['胸筋', '背筋', '肩', '腕', '脚', '体幹'] : 
+                            ['Chest', 'Back', 'Shoulder', 'Arm', 'Leg', 'Core'],
+                        datasets: [{
+                            data: [20, 25, 15, 12, 20, 8],
+                            backgroundColor: [
+                                '#ef4444',
+                                '#10b981',
+                                '#f59e0b',
+                                '#8b5cf6',
+                                '#3b82f6',
+                                '#ec4899'
+                            ],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Progress Chart
+            const progressCtx = $('#progress-chart');
+            if (progressCtx && !window.progressChart) {
+                window.progressChart = new Chart(progressCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
+                        datasets: [{
+                            label: currentLanguage === 'ja' ? '総ワークアウト時間' : 'Total Workout Time',
+                            data: [120, 180, 240, 200, 280, 320],
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: currentLanguage === 'ja' ? '時間（分）' : 'Time (minutes)'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        function updateCharts() {
+            console.log('🔄 Updating charts');
+            
+            // Update chart labels for current language
+            if (window.workoutFrequencyChart) {
+                window.workoutFrequencyChart.data.labels = currentLanguage === 'ja' ? 
+                    ['月', '火', '水', '木', '金', '土', '日'] : 
+                    ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                window.workoutFrequencyChart.data.datasets[0].label = currentLanguage === 'ja' ? 'ワークアウト回数' : 'Workout Count';
+                window.workoutFrequencyChart.update();
+            }
+            
+            if (window.muscleDistributionChart) {
+                window.muscleDistributionChart.data.labels = currentLanguage === 'ja' ? 
+                    ['胸筋', '背筋', '肩', '腕', '脚', '体幹'] : 
+                    ['Chest', 'Back', 'Shoulder', 'Arm', 'Leg', 'Core'];
+                window.muscleDistributionChart.update();
+            }
+            
+            if (window.progressChart) {
+                window.progressChart.data.datasets[0].label = currentLanguage === 'ja' ? '総ワークアウト時間' : 'Total Workout Time';
+                window.progressChart.options.scales.y.title.text = currentLanguage === 'ja' ? '時間（分）' : 'Time (minutes)';
+                window.progressChart.update();
+            }
+        }
+        
+        function renderExercises() {
+            console.log('🏋️ Rendering exercises');
+            const exerciseList = $('#exercise-list');
+            if (!exerciseList) return;
+            
+            exerciseList.innerHTML = '';
+            
+            // Get all exercises from database
+            const allExercises = [];
+            Object.keys(exerciseDatabase).forEach(muscle => {
+                exerciseDatabase[muscle].forEach(exercise => {
+                    allExercises.push({ ...exercise, muscle });
+                });
+            });
+            
+            // Filter exercises based on current filters
+            const muscleFilter = $('#muscle-filter')?.value || '';
+            const difficultyFilter = $('#difficulty-filter')?.value || '';
+            const equipmentFilter = $('#equipment-filter')?.value || '';
+            const searchFilter = $('#exercise-search')?.value?.toLowerCase() || '';
+            
+            const filteredExercises = allExercises.filter(exercise => {
+                const matchesMuscle = !muscleFilter || exercise.muscle === muscleFilter;
+                const matchesDifficulty = !difficultyFilter || exercise.difficulty === difficultyFilter;
+                const matchesEquipment = !equipmentFilter || exercise.equipment === equipmentFilter;
+                const matchesSearch = !searchFilter || 
+                    exercise.name.toLowerCase().includes(searchFilter) ||
+                    exercise.nameEn.toLowerCase().includes(searchFilter);
+                
+                return matchesMuscle && matchesDifficulty && matchesEquipment && matchesSearch;
+            });
+            
+            // Render filtered exercises
+            filteredExercises.forEach(exercise => {
+                const exerciseCard = document.createElement('div');
+                exerciseCard.className = 'exercise-card';
+                
+                const name = currentLanguage === 'ja' ? exercise.name : exercise.nameEn;
+                const description = currentLanguage === 'ja' ? exercise.description : exercise.descriptionEn;
+                const muscleName = currentLanguage === 'ja' ? 
+                    i18n.ja[`muscle.${exercise.muscle}`] : 
+                    i18n.en[`muscle.${exercise.muscle}`];
+                
+                exerciseCard.innerHTML = `
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-lg font-semibold text-gray-800">${name}</h3>
+                        <div class="flex items-center space-x-2">
+                            <span class="difficulty-badge difficulty-${exercise.difficulty}">
+                                ${exercise.difficulty === 'beginner' ? (currentLanguage === 'ja' ? '初級' : 'Beginner') :
+                                  exercise.difficulty === 'intermediate' ? (currentLanguage === 'ja' ? '中級' : 'Intermediate') :
+                                  (currentLanguage === 'ja' ? '上級' : 'Advanced')}
+                            </span>
+                            <span class="text-sm text-gray-500">${muscleName}</span>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 mb-3">${description}</p>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-dumbbell text-gray-400"></i>
+                            <span class="text-sm text-gray-500">
+                                ${exercise.equipment === 'bodyweight' ? (currentLanguage === 'ja' ? '自重' : 'Bodyweight') :
+                                  exercise.equipment === 'dumbbell' ? (currentLanguage === 'ja' ? 'ダンベル' : 'Dumbbell') :
+                                  exercise.equipment === 'barbell' ? (currentLanguage === 'ja' ? 'バーベル' : 'Barbell') :
+                                  (currentLanguage === 'ja' ? 'マシン' : 'Machine')}
+                            </span>
+                        </div>
+                        <button class="text-blue-500 hover:text-blue-700 text-sm font-medium" onclick="showExerciseDetails('${exercise.muscle}', '${exercise.name}')">
+                            ${currentLanguage === 'ja' ? '詳細を見る' : 'View Details'}
+                        </button>
+                    </div>
+                `;
+                
+                exerciseList.appendChild(exerciseCard);
+            });
+        }
+        
+        function showExerciseDetails(muscle, exerciseName) {
+            console.log(`📋 Showing exercise details: ${muscle} - ${exerciseName}`);
+            
+            const exercise = exerciseDatabase[muscle]?.find(ex => ex.name === exerciseName);
+            if (!exercise) return;
+            
+            const modal = $('#exercise-modal');
+            const modalTitle = $('#exercise-modal-title');
+            const modalContent = $('#exercise-modal-content');
+            
+            if (!modal || !modalTitle || !modalContent) return;
+            
+            const name = currentLanguage === 'ja' ? exercise.name : exercise.nameEn;
+            const description = currentLanguage === 'ja' ? exercise.description : exercise.descriptionEn;
+            const instructions = currentLanguage === 'ja' ? exercise.instructions : exercise.instructionsEn;
+            
+            modalTitle.textContent = name;
+            modalContent.innerHTML = `
+                <div class="space-y-4">
+                    <div>
+                        <h4 class="font-semibold text-gray-800 mb-2">${currentLanguage === 'ja' ? '説明' : 'Description'}</h4>
+                        <p class="text-gray-600">${description}</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800 mb-2">${currentLanguage === 'ja' ? '実行方法' : 'Instructions'}</h4>
+                        <ol class="list-decimal list-inside space-y-1 text-gray-600">
+                            ${instructions.map(instruction => `<li>${instruction}</li>`).join('')}
+                        </ol>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800 mb-2">${currentLanguage === 'ja' ? '対象筋肉' : 'Target Muscles'}</h4>
+                        <div class="flex flex-wrap gap-2">
+                            ${exercise.targetMuscles.map(muscle => `
+                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm">${muscle}</span>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between pt-4">
+                        <div class="flex items-center space-x-4">
+                            <span class="difficulty-badge difficulty-${exercise.difficulty}">
+                                ${exercise.difficulty === 'beginner' ? (currentLanguage === 'ja' ? '初級' : 'Beginner') :
+                                  exercise.difficulty === 'intermediate' ? (currentLanguage === 'ja' ? '中級' : 'Intermediate') :
+                                  (currentLanguage === 'ja' ? '上級' : 'Advanced')}
+                            </span>
+                            <span class="text-sm text-gray-500">
+                                ${exercise.equipment === 'bodyweight' ? (currentLanguage === 'ja' ? '自重' : 'Bodyweight') :
+                                  exercise.equipment === 'dumbbell' ? (currentLanguage === 'ja' ? 'ダンベル' : 'Dumbbell') :
+                                  exercise.equipment === 'barbell' ? (currentLanguage === 'ja' ? 'バーベル' : 'Barbell') :
+                                  (currentLanguage === 'ja' ? 'マシン' : 'Machine')}
+                            </span>
+                        </div>
+                        <button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors" onclick="addToWorkout('${muscle}', '${exercise.name}')">
+                            ${currentLanguage === 'ja' ? 'ワークアウトに追加' : 'Add to Workout'}
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+        }
+        
+        function addToWorkout(muscle, exerciseName) {
+            console.log(`➕ Adding exercise to workout: ${muscle} - ${exerciseName}`);
+            showNotification(currentLanguage === 'ja' ? 'エクササイズを追加しました' : 'Exercise added to workout');
+            $('#exercise-modal').classList.add('hidden');
+        }
+        
+        function startWorkout(muscle) {
+            console.log(`🏃 Starting workout for: ${muscle}`);
+            
+            currentWorkout = {
+                muscle: muscle,
+                exercises: [],
+                startTime: new Date(),
+                duration: 0
+            };
+            
+            // Show current workout section
+            $('#current-workout').classList.remove('hidden');
+            
+            // Start timer
+            workoutStartTime = Date.now();
+            workoutTimer = setInterval(updateWorkoutTimer, 1000);
+            
+            // Switch to workout page
+            showPage('workout');
+            
+            showNotification(currentLanguage === 'ja' ? 
+                `${i18n.ja[`muscle.${muscle}`]}のワークアウトを開始しました` : 
+                `Started ${i18n.en[`muscle.${muscle}`]} workout`);
+        }
+        
+        function updateWorkoutTimer() {
+            if (!workoutStartTime) return;
+            
+            const elapsed = Math.floor((Date.now() - workoutStartTime) / 1000);
+            const timerElement = $('#workout-timer');
+            if (timerElement) {
+                timerElement.textContent = formatTime(elapsed);
+            }
+        }
+        
+        function finishWorkout() {
+            if (!currentWorkout) return;
+            
+            console.log('✅ Finishing workout');
+            
+            // Stop timer
+            if (workoutTimer) {
+                clearInterval(workoutTimer);
+                workoutTimer = null;
+            }
+            
+            // Calculate duration
+            const duration = Math.floor((Date.now() - workoutStartTime) / 1000 / 60);
+            currentWorkout.duration = duration;
+            
+            // Save workout
+            saveWorkout(currentWorkout);
+            
+            // Hide current workout section
+            $('#current-workout').classList.add('hidden');
+            
+            // Reset workout state
+            currentWorkout = null;
+            workoutStartTime = null;
+            
+            showNotification(currentLanguage === 'ja' ? 
+                'ワークアウトを完了しました！' : 
+                'Workout completed!');
+            
+            // Switch to dashboard
+            showPage('dashboard');
+        }
+        
+        function saveWorkout(workout) {
+            console.log('💾 Saving workout:', workout);
+            
+            // Save to localStorage
+            const workouts = JSON.parse(localStorage.getItem('workouts') || '[]');
+            workouts.push({
+                ...workout,
+                id: Date.now(),
+                date: new Date().toISOString().split('T')[0]
+            });
+            localStorage.setItem('workouts', JSON.stringify(workouts));
+        }
+        
+        function exportData() {
+            console.log('📤 Exporting data');
+            
+            const data = {
+                workouts: JSON.parse(localStorage.getItem('workouts') || '[]'),
+                settings: {
+                    language: currentLanguage,
+                    fontSize: currentFontSize,
+                    restPeriods: {
+                        chest: $('#chest-rest')?.value || 72,
+                        back: $('#back-rest')?.value || 72,
+                        shoulder: $('#shoulder-rest')?.value || 48
+                    },
+                    weeklyGoal: $('#weekly-goal')?.value || 4
+                },
+                exportDate: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `muscle-rotation-manager-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showNotification(currentLanguage === 'ja' ? 
+                'データをエクスポートしました' : 
+                'Data exported successfully');
+        }
+        
+        function importData() {
+            console.log('📥 Importing data');
+            
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        
+                        // Import workouts
+                        if (data.workouts) {
+                            localStorage.setItem('workouts', JSON.stringify(data.workouts));
+                        }
+                        
+                        // Import settings
+                        if (data.settings) {
+                            if (data.settings.language) {
+                                updateLanguage(data.settings.language);
+                            }
+                            if (data.settings.fontSize) {
+                                updateFontSize(data.settings.fontSize);
+                            }
+                            if (data.settings.restPeriods) {
+                                const { chest, back, shoulder } = data.settings.restPeriods;
+                                if ($('#chest-rest')) $('#chest-rest').value = chest;
+                                if ($('#back-rest')) $('#back-rest').value = back;
+                                if ($('#shoulder-rest')) $('#shoulder-rest').value = shoulder;
+                            }
+                            if (data.settings.weeklyGoal && $('#weekly-goal')) {
+                                $('#weekly-goal').value = data.settings.weeklyGoal;
+                            }
+                        }
+                        
+                        showNotification(currentLanguage === 'ja' ? 
+                            'データをインポートしました' : 
+                            'Data imported successfully');
+                        
+                    } catch (error) {
+                        console.error('Error importing data:', error);
+                        showNotification(currentLanguage === 'ja' ? 
+                            'データのインポートに失敗しました' : 
+                            'Failed to import data', 'error');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+        
+        // Event listeners
+        function initializeEventListeners() {
+            console.log('🔧 Initializing event listeners');
+            
+            // Navigation
+            $$('.nav-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const page = item.dataset.page;
+                    if (page) {
+                        showPage(page);
+                    }
+                });
+            });
+            
+            // Mobile menu
+            $('#mobile-menu-btn')?.addEventListener('click', () => {
+                $('#mobile-sidebar')?.classList.add('open');
+            });
+            
+            $('#mobile-sidebar-close')?.addEventListener('click', () => {
+                $('#mobile-sidebar')?.classList.remove('open');
+            });
+            
+            // User menu
+            $('#user-menu-btn')?.addEventListener('click', () => {
+                $('#user-menu')?.classList.toggle('hidden');
+            });
+            
+            // Language switch
+            $$('.lang-switch').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const lang = btn.dataset.lang;
+                    if (lang) {
+                        updateLanguage(lang);
+                    }
+                });
+            });
+            
+            // Font size controls
+            $('#font-size-up')?.addEventListener('click', () => {
+                const sizes = ['xs', 'sm', 'base', 'lg', 'xl'];
+                const currentIndex = sizes.indexOf(currentFontSize);
+                if (currentIndex < sizes.length - 1) {
+                    updateFontSize(sizes[currentIndex + 1]);
+                }
+            });
+            
+            $('#font-size-down')?.addEventListener('click', () => {
+                const sizes = ['xs', 'sm', 'base', 'lg', 'xl'];
+                const currentIndex = sizes.indexOf(currentFontSize);
+                if (currentIndex > 0) {
+                    updateFontSize(sizes[currentIndex - 1]);
+                }
+            });
+            
+            // Quick start buttons
+            $$('.quick-start-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const muscle = btn.dataset.muscle;
+                    if (muscle) {
+                        startWorkout(muscle);
+                    }
+                });
+            });
+            
+            // Workout controls
+            $('#finish-workout-btn')?.addEventListener('click', finishWorkout);
+            $('#pause-workout-btn')?.addEventListener('click', () => {
+                if (workoutTimer) {
+                    clearInterval(workoutTimer);
+                    workoutTimer = null;
+                    showNotification(currentLanguage === 'ja' ? 
+                        'ワークアウトを一時停止しました' : 
+                        'Workout paused');
+                } else {
+                    workoutTimer = setInterval(updateWorkoutTimer, 1000);
+                    showNotification(currentLanguage === 'ja' ? 
+                        'ワークアウトを再開しました' : 
+                        'Workout resumed');
+                }
+            });
+            
+            // Exercise filters
+            $('#muscle-filter')?.addEventListener('change', renderExercises);
+            $('#difficulty-filter')?.addEventListener('change', renderExercises);
+            $('#equipment-filter')?.addEventListener('change', renderExercises);
+            $('#exercise-search')?.addEventListener('input', renderExercises);
+            
+            // Modal close buttons
+            $('#auth-modal-close')?.addEventListener('click', () => {
+                $('#auth-modal')?.classList.add('hidden');
+            });
+            
+            $('#exercise-modal-close')?.addEventListener('click', () => {
+                $('#exercise-modal')?.classList.add('hidden');
+            });
+            
+            // Auth buttons
+            $('#login-btn')?.addEventListener('click', () => {
+                // Show login modal
+                $('#auth-modal')?.classList.remove('hidden');
+            });
+            
+            // Data management
+            $('#export-data-btn')?.addEventListener('click', exportData);
+            $('#import-data-btn')?.addEventListener('click', importData);
+            
+            // Calendar navigation
+            $('#prev-month')?.addEventListener('click', () => {
+                // Previous month logic
+                renderCalendar();
+            });
+            
+            $('#next-month')?.addEventListener('click', () => {
+                // Next month logic
+                renderCalendar();
+            });
+            
+            $('#today-btn')?.addEventListener('click', () => {
+                // Go to today
+                renderCalendar();
+            });
+            
+            // Affiliate link
+            $('#affiliate-link-1')?.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('🛒 Affiliate link clicked');
+                // Replace with actual affiliate URL
+                window.open('https://example.com/affiliate-link', '_blank');
+            });
+            
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('#user-menu-btn')) {
+                    $('#user-menu')?.classList.add('hidden');
+                }
+            });
+        }
+        
+        // Initialize PWA
+        function initializePWA() {
+            console.log('📱 Initializing PWA');
+            
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('✅ Service Worker registered:', registration);
+                    })
+                    .catch(error => {
+                        console.log('❌ Service Worker registration failed:', error);
+                    });
+            }
+            
+            // Web App Manifest
+            const manifest = {
+                name: 'MuscleRotationManager',
+                short_name: 'MRM',
+                description: '筋トレ部位ローテーション管理システム',
+                start_url: '/',
+                display: 'standalone',
+                theme_color: '#1f2937',
+                background_color: '#f9fafb',
+                icons: [
+                    {
+                        src: '/icon-192.png',
+                        sizes: '192x192',
+                        type: 'image/png'
+                    },
+                    {
+                        src
+    <script id="html_badge_script1">
+        window.__genspark_remove_badge_link = "https://www.genspark.ai/api/html_badge/" +
+            "remove_badge?token=To%2FBnjzloZ3UfQdcSaYfDm6bbQAf%2F5NqH1hLneeuVdMVsRAtJL2enq%2FannlNQaVw7u8ZCbHwMSvdUAQoNK1SDPMPEJY5wUmoqcuxfKzRr1gbOzoV6cM3ayu%2FXDunvzNJ6AK4ar0mg1HD9T45vW%2BPZxDqbffktlXe6iWX%2BxP1lg9rYKVjQaPOIH02%2FrXsN45re9j0FHhykz1XjhcxmKpP61V6xJw5wR5ihJSfB8j%2Fbu1KsDoilyZMywxbRSaqPXnuEdAnsQo7OnKzQIRrzyGRH2D0LlsM5ARxuMI5gLIOSOGkGQFbv6jK8uUDqtwCf1XiwMnYF4JC%2B0D%2BsOdGwqKnrHoz96TijAfMvNNDSkzG3wgCxmZZzU3h60pG%2Fj1EK3TB%2B1%2FZY7cKzBd6mI9ki%2FDUqYYCrZa7WB40AXUDe5WUop3LGYEcpf4iEBUCbrKHFam22ZLMINi7oG9%2FPL8WITAokRVLzLHb2bxtdOx6r%2Fx3COuKAtZts1sU6aKF2IiPPmpKnaWcr3nMdDXFBOlVTT5eNNh3zzh86zTe8VSoolRB9Yk%3D";
+        window.__genspark_locale = "ja-JP";
+        window.__genspark_token = "To/BnjzloZ3UfQdcSaYfDm6bbQAf/5NqH1hLneeuVdMVsRAtJL2enq/annlNQaVw7u8ZCbHwMSvdUAQoNK1SDPMPEJY5wUmoqcuxfKzRr1gbOzoV6cM3ayu/XDunvzNJ6AK4ar0mg1HD9T45vW+PZxDqbffktlXe6iWX+xP1lg9rYKVjQaPOIH02/rXsN45re9j0FHhykz1XjhcxmKpP61V6xJw5wR5ihJSfB8j/bu1KsDoilyZMywxbRSaqPXnuEdAnsQo7OnKzQIRrzyGRH2D0LlsM5ARxuMI5gLIOSOGkGQFbv6jK8uUDqtwCf1XiwMnYF4JC+0D+sOdGwqKnrHoz96TijAfMvNNDSkzG3wgCxmZZzU3h60pG/j1EK3TB+1/ZY7cKzBd6mI9ki/DUqYYCrZa7WB40AXUDe5WUop3LGYEcpf4iEBUCbrKHFam22ZLMINi7oG9/PL8WITAokRVLzLHb2bxtdOx6r/x3COuKAtZts1sU6aKF2IiPPmpKnaWcr3nMdDXFBOlVTT5eNNh3zzh86zTe8VSoolRB9Yk=";
+    </script>
+    
+    <script id="html_notice_dialog_script" src="https://www.genspark.ai/notice_dialog.js"></script>
+    
