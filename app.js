@@ -333,7 +333,8 @@ async function getRecentWorkouts() {
 function initializeWorkout() {
     // Load workout data
     loadWorkoutData();
-    
+    // ワークアウト履歴も明示的に更新
+    loadWorkoutHistory();
     // Initialize workout timer and controls
     initializeWorkoutControls();
 }
@@ -375,24 +376,21 @@ function startWorkout(muscleGroup) {
 // Stop workout
 function stopWorkout() {
     console.log('Stopping workout');
-    
     // Stop timer
     stopWorkoutTimer();
-    
     // Hide current workout section
     const currentWorkoutElement = document.getElementById('current-workout');
     if (currentWorkoutElement) {
         currentWorkoutElement.classList.add('hidden');
     }
-    
     // Save workout data
     if (currentWorkout) {
-        saveWorkoutData();
+        saveWorkoutData().then(() => {
+            loadWorkoutHistory();
+        });
     }
-    
     // Reset current workout
     currentWorkout = null;
-    
     showNotification('ワークアウトを終了しました', 'success');
 }
 
