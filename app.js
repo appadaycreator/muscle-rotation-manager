@@ -101,6 +101,9 @@ function initializePage(pageName) {
         case 'settings':
             initializeSettings();
             break;
+        case 'help':
+            initializeHelp();
+            break;
     }
 }
 
@@ -415,6 +418,12 @@ function initializeExercises() {
 function initializeSettings() {
     // Settings functionality will be added here
     console.log('Settings page initialized');
+}
+
+// Initialize help page
+function initializeHelp() {
+    console.log('Help page initialized');
+    // Help page doesn't need specific data loading as it's static content
 }
 
 // Show notification
