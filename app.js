@@ -193,7 +193,34 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Initialize mobile menu
     initializeMobileMenu();
     
+    // Debug: Log current auth state
     console.log('App initialization complete');
+    console.log('Current user:', currentUser);
+    console.log('Supabase configured:', !!supabase);
+    
+    // Add debug button to check auth state
+    setTimeout(() => {
+        const debugBtn = document.createElement('button');
+        debugBtn.textContent = 'Debug Auth';
+        debugBtn.style.position = 'fixed';
+        debugBtn.style.bottom = '10px';
+        debugBtn.style.right = '10px';
+        debugBtn.style.zIndex = '9999';
+        debugBtn.style.padding = '5px 10px';
+        debugBtn.style.backgroundColor = '#333';
+        debugBtn.style.color = 'white';
+        debugBtn.style.border = 'none';
+        debugBtn.style.borderRadius = '4px';
+        debugBtn.onclick = () => {
+            console.log('=== DEBUG AUTH STATE ===');
+            console.log('Current user:', currentUser);
+            console.log('Supabase client:', supabase);
+            console.log('Login button:', document.getElementById('login-btn'));
+            console.log('Logout button:', document.getElementById('logout-btn'));
+            console.log('=======================');
+        };
+        document.body.appendChild(debugBtn);
+    }, 1000);
 });
 
 // Load header
@@ -273,6 +300,22 @@ function initializeAuth() {
     
     // Check current session
     checkCurrentSession();
+    
+    // Listen for auth state changes
+    if (supabase) {
+        supabase.auth.onAuthStateChange((event, session) => {
+            console.log('Auth state changed:', event, session);
+            if (event === 'SIGNED_IN' && session) {
+                currentUser = session.user;
+                updateAuthUI();
+                showNotification('ログインしました', 'success');
+            } else if (event === 'SIGNED_OUT') {
+                currentUser = null;
+                updateAuthUI();
+                showNotification('ログアウトしました', 'success');
+            }
+        });
+    }
 }
 
 // Initialize mobile menu
@@ -309,16 +352,24 @@ async function checkCurrentSession() {
     }
     
     try {
+        console.log('Checking current session...');
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) throw error;
         
         if (session) {
+            console.log('Session found, user:', session.user);
             currentUser = session.user;
             updateAuthUI();
             showNotification('ログイン済みです', 'success');
+        } else {
+            console.log('No active session found');
+            currentUser = null;
+            updateAuthUI();
         }
     } catch (error) {
         console.error('Session check error:', error);
+        currentUser = null;
+        updateAuthUI();
     }
 }
 
@@ -327,12 +378,28 @@ function updateAuthUI() {
     const loginBtn = document.getElementById('login-btn');
     const logoutBtn = document.getElementById('logout-btn');
     
+    console.log('Updating auth UI, currentUser:', currentUser);
+    
     if (currentUser) {
-        if (loginBtn) loginBtn.classList.add('hidden');
-        if (logoutBtn) logoutBtn.classList.remove('hidden');
+        console.log('User is logged in, hiding login button, showing logout button');
+        if (loginBtn) {
+            loginBtn.classList.add('hidden');
+            console.log('Login button hidden');
+        }
+        if (logoutBtn) {
+            logoutBtn.classList.remove('hidden');
+            console.log('Logout button shown');
+        }
     } else {
-        if (loginBtn) loginBtn.classList.remove('hidden');
-        if (logoutBtn) logoutBtn.classList.add('hidden');
+        console.log('User is not logged in, showing login button, hiding logout button');
+        if (loginBtn) {
+            loginBtn.classList.remove('hidden');
+            console.log('Login button shown');
+        }
+        if (logoutBtn) {
+            logoutBtn.classList.add('hidden');
+            console.log('Logout button hidden');
+        }
     }
 }
 
@@ -425,6 +492,7 @@ async function handleLogin(e) {
     const errorDiv = document.getElementById('auth-error');
     
     try {
+        console.log('Attempting login with email:', email);
         const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password
@@ -432,7 +500,16 @@ async function handleLogin(e) {
         
         if (error) throw error;
         
+        console.log('Login successful, user data:', data.user);
         currentUser = data.user;
+        
+        // Clear any previous errors
+        if (errorDiv) {
+            errorDiv.textContent = '';
+            errorDiv.classList.add('hidden');
+        }
+        
+        // Update UI
         updateAuthUI();
         hideAuthModal();
         showNotification('ログインしました', 'success');
