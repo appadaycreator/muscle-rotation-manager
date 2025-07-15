@@ -14,9 +14,14 @@ let currentLanguage = 'ja';
 let currentFontSize = 'base';
 
 // Supabase configuration
-const supabaseUrl = 'https://your-project.supabase.co';
-const supabaseKey = 'your-anon-key';
+// TODO: Replace with your actual Supabase project URL and anon key
+// Get these from your Supabase project dashboard: Settings → API
+const supabaseUrl = 'https://mwwlqpokfgduxyjbqoff.supabase.co'; // Replace with your actual URL
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13d2xxcG9rZmdkdXh5amJxb2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1MTU3MTIsImV4cCI6MjA2ODA5MTcxMn0.0vyxxQ7zBfRKrH-JhpHMor_UvuBbQu3wE9HStGjsfGQ'; // Replace with your actual anon key
 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+// For development/testing without Supabase, you can comment out the above and use this:
+// const supabase = null;
 
 // Page management
 let currentPage = 'dashboard';
@@ -237,12 +242,21 @@ function initializeAuth() {
     
     if (loginBtn) {
         loginBtn.addEventListener('click', () => {
+            if (!supabase) {
+                showNotification('Supabaseが設定されていません。設定を確認してください。', 'error');
+                return;
+            }
             showAuthModal('login');
         });
     }
     
     if (logoutBtn) {
         logoutBtn.addEventListener('click', async () => {
+            if (!supabase) {
+                showNotification('Supabaseが設定されていません。', 'error');
+                return;
+            }
+            
             try {
                 const { error } = await supabase.auth.signOut();
                 if (error) throw error;
@@ -289,6 +303,11 @@ function initializeMobileMenu() {
 
 // Check current session
 async function checkCurrentSession() {
+    if (!supabase) {
+        console.log('Supabase not configured, skipping session check');
+        return;
+    }
+    
     try {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) throw error;
@@ -396,6 +415,11 @@ function hideAuthModal() {
 async function handleLogin(e) {
     e.preventDefault();
     
+    if (!supabase) {
+        showNotification('Supabaseが設定されていません。設定を確認してください。', 'error');
+        return;
+    }
+    
     const email = document.getElementById('auth-email').value;
     const password = document.getElementById('auth-password').value;
     const errorDiv = document.getElementById('auth-error');
@@ -416,7 +440,7 @@ async function handleLogin(e) {
     } catch (error) {
         console.error('Login error:', error);
         if (errorDiv) {
-            errorDiv.textContent = error.message;
+            errorDiv.textContent = error.message || 'ログインに失敗しました';
             errorDiv.classList.remove('hidden');
         }
     }
@@ -425,6 +449,11 @@ async function handleLogin(e) {
 // Handle signup
 async function handleSignup(e) {
     e.preventDefault();
+    
+    if (!supabase) {
+        showNotification('Supabaseが設定されていません。設定を確認してください。', 'error');
+        return;
+    }
     
     const email = document.getElementById('signup-email').value;
     const password = document.getElementById('signup-password').value;
@@ -444,7 +473,7 @@ async function handleSignup(e) {
     } catch (error) {
         console.error('Signup error:', error);
         if (errorDiv) {
-            errorDiv.textContent = error.message;
+            errorDiv.textContent = error.message || '新規登録に失敗しました';
             errorDiv.classList.remove('hidden');
         }
     }
