@@ -315,9 +315,9 @@ function startWorkout(muscleGroup) {
     console.log(`Starting workout for: ${muscleGroup}`);
     
     // Show current workout section
-    const currentWorkout = document.getElementById('current-workout');
-    if (currentWorkout) {
-        currentWorkout.classList.remove('hidden');
+    const currentWorkoutElement = document.getElementById('current-workout');
+    if (currentWorkoutElement) {
+        currentWorkoutElement.classList.remove('hidden');
     }
     
     // Start timer
@@ -344,9 +344,9 @@ function stopWorkout() {
     stopWorkoutTimer();
     
     // Hide current workout section
-    const currentWorkout = document.getElementById('current-workout');
-    if (currentWorkout) {
-        currentWorkout.classList.add('hidden');
+    const currentWorkoutElement = document.getElementById('current-workout');
+    if (currentWorkoutElement) {
+        currentWorkoutElement.classList.add('hidden');
     }
     
     // Save workout data
