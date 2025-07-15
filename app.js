@@ -2069,11 +2069,16 @@ function initializeAuth() {
                 showNotification('Supabaseが設定されていません。', 'error');
                 return;
             }
-            
+            // ログアウト前にワークアウト履歴をlocalStorageに保存
+            try {
+                const history = await getWorkoutHistory();
+                localStorage.setItem('workoutHistory', JSON.stringify(history));
+            } catch (e) {
+                console.warn('ワークアウト履歴のlocalStorage保存に失敗:', e);
+            }
             try {
                 const { error } = await supabase.auth.signOut();
                 if (error) throw error;
-                
                 currentUser = null;
                 updateAuthUI();
                 showNotification('ログアウトしました', 'success');
