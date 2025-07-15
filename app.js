@@ -1542,11 +1542,135 @@ async function loadExercisesForCategory(category) {
 function initializeSettings() {
     console.log('Settings page initialized');
     
+    // プロフィール編集フォーム初期化
+    initializeProfileEdit();
     // Initialize settings controls
     initializeSettingsControls();
-    
     // Load user settings
     loadUserSettings();
+}
+
+// プロフィール編集フォーム初期化
+function initializeProfileEdit() {
+    const form = document.getElementById('profile-edit-form');
+    const avatarInput = document.getElementById('profile-avatar');
+    const avatarPreview = document.getElementById('profile-avatar-preview');
+    const nicknameInput = document.getElementById('profile-nickname');
+    const emailInput = document.getElementById('profile-email');
+    const messageDiv = document.getElementById('profile-edit-message');
+
+    // プロフィール情報を取得してフォームに反映
+    loadUserProfile();
+
+    // アバター画像プレビュー
+    if (avatarInput) {
+        avatarInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    avatarPreview.src = ev.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    // フォーム送信
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            messageDiv.textContent = '';
+            messageDiv.className = 'text-sm mt-2';
+            // バリデーション
+            if (!nicknameInput.value.trim()) {
+                messageDiv.textContent = 'ニックネームを入力してください';
+                messageDiv.classList.add('text-red-600');
+                return;
+            }
+            if (!emailInput.value.trim() || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emailInput.value)) {
+                messageDiv.textContent = '正しいメールアドレスを入力してください';
+                messageDiv.classList.add('text-red-600');
+                return;
+            }
+            // 保存処理
+            messageDiv.textContent = '保存中...';
+            messageDiv.classList.remove('text-red-600');
+            messageDiv.classList.add('text-gray-600');
+            try {
+                let avatarUrl = avatarPreview.src;
+                if (avatarInput.files[0]) {
+                    avatarUrl = await uploadAvatarImage(avatarInput.files[0]);
+                }
+                await saveUserProfile({
+                    nickname: nicknameInput.value.trim(),
+                    email: emailInput.value.trim(),
+                    avatar_url: avatarUrl
+                });
+                messageDiv.textContent = 'プロフィールを保存しました';
+                messageDiv.classList.remove('text-red-600');
+                messageDiv.classList.add('text-green-600');
+            } catch (error) {
+                messageDiv.textContent = '保存に失敗しました: ' + (error.message || error);
+                messageDiv.classList.remove('text-green-600');
+                messageDiv.classList.add('text-red-600');
+            }
+        });
+    }
+}
+
+// プロフィール情報取得
+async function loadUserProfile() {
+    if (!supabase || !currentUser) return;
+    const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', currentUser.id)
+        .single();
+    if (error) {
+        console.error('プロフィール取得エラー', error);
+        return;
+    }
+    const nicknameInput = document.getElementById('profile-nickname');
+    const emailInput = document.getElementById('profile-email');
+    const avatarPreview = document.getElementById('profile-avatar-preview');
+    if (nicknameInput) nicknameInput.value = data.display_name || '';
+    if (emailInput) emailInput.value = data.email || '';
+    if (avatarPreview && data.avatar_url) avatarPreview.src = data.avatar_url;
+}
+
+// プロフィール保存
+async function saveUserProfile({ nickname, email, avatar_url }) {
+    if (!supabase || !currentUser) throw new Error('認証情報がありません');
+    // プロフィールテーブル更新
+    const { error } = await supabase
+        .from('user_profiles')
+        .upsert({
+            id: currentUser.id,
+            display_name: nickname,
+            email: email,
+            avatar_url: avatar_url
+        });
+    if (error) throw error;
+    // メールアドレス変更はAuthにも反映
+    if (email !== currentUser.email) {
+        const { error: authError } = await supabase.auth.updateUser({ email });
+        if (authError) throw authError;
+    }
+}
+
+// アバター画像アップロード
+async function uploadAvatarImage(file) {
+    if (!supabase || !currentUser) throw new Error('認証情報がありません');
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${currentUser.id}_${Date.now()}.${fileExt}`;
+    const { data, error } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, { upsert: true, contentType: file.type });
+    if (error) throw error;
+    // 公開URL取得
+    const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
+    return publicUrlData.publicUrl;
 }
 
 // Initialize settings controls
