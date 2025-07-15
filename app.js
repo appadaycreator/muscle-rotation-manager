@@ -783,40 +783,24 @@ async function getExercisesForMuscleGroup(muscleGroup) {
 
 // Get calendar events
 async function getCalendarEvents() {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    // Return mock calendar events
-    return [
-        {
-            id: 1,
-            name: '胸筋トレーニング',
-            exercises: 'ベンチプレス, インクラインプレス',
-            date: '2024-01-15',
-            color: 'chest-color'
-        },
-        {
-            id: 2,
-            name: '背筋トレーニング',
-            exercises: 'デッドリフト, ラットプルダウン',
-            date: '2024-01-17',
-            color: 'back-color'
-        },
-        {
-            id: 3,
-            name: '脚トレーニング',
-            exercises: 'スクワット, レッグプレス',
-            date: '2024-01-19',
-            color: 'leg-color'
-        },
-        {
-            id: 4,
-            name: '肩トレーニング',
-            exercises: 'ショルダープレス, サイドレイズ',
-            date: '2024-01-21',
-            color: 'shoulder-color'
-        }
-    ];
+    if (!supabase || !currentUser) return [];
+    try {
+        const { data, error } = await supabase
+            .from('workouts')
+            .select('*')
+            .eq('user_id', currentUser.id);
+        if (error) throw error;
+        // カレンダー用に日付・種目などを整形
+        return data.map(workout => ({
+            date: workout.date,
+            name: workout.name,
+            id: workout.id,
+            // 必要に応じて他の情報も
+        }));
+    } catch (error) {
+        console.error('Error fetching calendar events:', error);
+        return [];
+    }
 }
 
 // Get progress data
