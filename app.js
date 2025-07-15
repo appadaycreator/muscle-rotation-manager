@@ -1626,14 +1626,23 @@ async function loadUserProfile() {
         .from('user_profiles')
         .select('*')
         .eq('id', currentUser.id)
-        .single();
-    if (error) {
-        console.error('プロフィール取得エラー', error);
-        return;
-    }
+        .maybeSingle(); // 0件でもエラーにしない
     const nicknameInput = document.getElementById('profile-nickname');
     const emailInput = document.getElementById('profile-email');
     const avatarPreview = document.getElementById('profile-avatar-preview');
+    if (error) {
+        console.error('プロフィール取得エラー', error);
+        if (nicknameInput) nicknameInput.value = '';
+        if (emailInput) emailInput.value = '';
+        if (avatarPreview) avatarPreview.src = 'assets/default-avatar.png';
+        return;
+    }
+    if (!data) {
+        if (nicknameInput) nicknameInput.value = '';
+        if (emailInput) emailInput.value = '';
+        if (avatarPreview) avatarPreview.src = 'assets/default-avatar.png';
+        return;
+    }
     if (nicknameInput) nicknameInput.value = data.display_name || '';
     if (emailInput) emailInput.value = data.email || '';
     if (avatarPreview && data.avatar_url) avatarPreview.src = data.avatar_url;
@@ -1699,11 +1708,14 @@ function initializeSettingsControls() {
         });
     }
     
-    // Data management buttons
-    const exportBtn = document.querySelector('button:contains("データをエクスポート")');
-    const importBtn = document.querySelector('button:contains("データをインポート")');
-    const deleteBtn = document.querySelector('button:contains("データを削除")');
-    
+    // Data management buttons（textContentで判定）
+    const buttons = document.querySelectorAll('button');
+    let exportBtn = null, importBtn = null, deleteBtn = null;
+    buttons.forEach(btn => {
+        if (btn.textContent.includes('データをエクスポート')) exportBtn = btn;
+        if (btn.textContent.includes('データをインポート')) importBtn = btn;
+        if (btn.textContent.includes('データを削除')) deleteBtn = btn;
+    });
     if (exportBtn) {
         exportBtn.addEventListener('click', exportData);
     }
