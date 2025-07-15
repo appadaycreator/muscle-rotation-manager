@@ -434,12 +434,37 @@ async function loadExercisesForMuscleGroup(muscleGroup) {
 
 // Save workout data
 async function saveWorkoutData() {
-    if (!currentWorkout) return;
+    if (!currentWorkout || !supabase || !currentUser) return;
     
     try {
-        // TODO: Save to Supabase
-        console.log('Saving workout data:', currentWorkout);
+        // Calculate workout duration
+        const endTime = new Date();
+        const duration = Math.floor((endTime - currentWorkout.startTime) / 60000); // minutes
+        
+        // Prepare workout data
+        const workoutData = {
+            user_id: currentUser.id,
+            date: new Date().toISOString().split('T')[0],
+            name: `${currentWorkout.muscleGroup}トレーニング`,
+            exercises: JSON.stringify(currentWorkout.exercises || []),
+            duration: `${duration}分`,
+            total_sets: currentWorkout.exercises?.length || 0,
+            max_weight: '0kg' // TODO: Calculate from exercises
+        };
+        
+        // Save to Supabase
+        const { data, error } = await supabase
+            .from('workouts')
+            .insert([workoutData]);
+            
+        if (error) throw error;
+        
+        console.log('Workout saved:', data);
         showNotification('ワークアウトデータを保存しました', 'success');
+        
+        // Refresh workout history
+        await loadWorkoutHistory();
+        
     } catch (error) {
         console.error('Error saving workout data:', error);
         showNotification('ワークアウトデータの保存に失敗しました', 'error');
@@ -617,112 +642,57 @@ async function getMuscleGroups() {
 }
 
 async function getWorkoutHistory() {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
+    if (!supabase || !currentUser) {
+        console.log('Supabase or user not available, returning empty array');
+        return [];
+    }
     
-    // Return mock workout history data with more realistic details
-    return [
-        {
-            id: 1,
-            name: '胸筋・三頭筋トレーニング',
-            exercises: 'ベンチプレス, インクラインプレス, ディップス, トライセップスプッシュダウン',
-            date: '2024-01-20',
-            color: 'chest-color',
-            duration: '65分',
-            totalSets: 16,
-            maxWeight: '100kg'
-        },
-        {
-            id: 2,
-            name: '背筋・二頭筋トレーニング',
-            exercises: 'デッドリフト, ラットプルダウン, シーテッドロウ, バーベルカール',
-            date: '2024-01-18',
-            color: 'back-color',
-            duration: '70分',
-            totalSets: 18,
-            maxWeight: '140kg'
-        },
-        {
-            id: 3,
-            name: '脚トレーニング',
-            exercises: 'スクワット, レッグプレス, レッグエクステンション, カーフレイズ',
-            date: '2024-01-16',
-            color: 'leg-color',
-            duration: '55分',
-            totalSets: 14,
-            maxWeight: '120kg'
-        },
-        {
-            id: 4,
-            name: '肩・腕トレーニング',
-            exercises: 'ショルダープレス, サイドレイズ, リアデルトフライ, ダンベルカール',
-            date: '2024-01-14',
-            color: 'shoulder-color',
-            duration: '60分',
-            totalSets: 15,
-            maxWeight: '80kg'
-        },
-        {
-            id: 5,
-            name: '胸筋・三頭筋トレーニング',
-            exercises: 'ベンチプレス, インクラインプレス, ディップス, ケーブルクロスオーバー',
-            date: '2024-01-12',
-            color: 'chest-color',
-            duration: '62分',
-            totalSets: 16,
-            maxWeight: '95kg'
-        },
-        {
-            id: 6,
-            name: '背筋・二頭筋トレーニング',
-            exercises: 'デッドリフト, ラットプルダウン, プルアップ, ダンベルカール',
-            date: '2024-01-10',
-            color: 'back-color',
-            duration: '68分',
-            totalSets: 17,
-            maxWeight: '135kg'
-        },
-        {
-            id: 7,
-            name: '脚トレーニング',
-            exercises: 'スクワット, レッグプレス, レッグカール, カーフレイズ',
-            date: '2024-01-08',
-            color: 'leg-color',
-            duration: '58分',
-            totalSets: 15,
-            maxWeight: '115kg'
-        },
-        {
-            id: 8,
-            name: '肩・腕トレーニング',
-            exercises: 'ショルダープレス, サイドレイズ, リアデルトフライ, トライセップスプッシュダウン',
-            date: '2024-01-06',
-            color: 'shoulder-color',
-            duration: '55分',
-            totalSets: 14,
-            maxWeight: '75kg'
-        },
-        {
-            id: 9,
-            name: '胸筋・三頭筋トレーニング',
-            exercises: 'ベンチプレス, インクラインプレス, ディップス, オーバーヘッドエクステンション',
-            date: '2024-01-04',
-            color: 'chest-color',
-            duration: '60分',
-            totalSets: 15,
-            maxWeight: '90kg'
-        },
-        {
-            id: 10,
-            name: '背筋・二頭筋トレーニング',
-            exercises: 'デッドリフト, ラットプルダウン, シーテッドロウ, バーベルカール',
-            date: '2024-01-02',
-            color: 'back-color',
-            duration: '65分',
-            totalSets: 16,
-            maxWeight: '130kg'
-        }
-    ];
+    try {
+        // Get workout history from Supabase
+        const { data, error } = await supabase
+            .from('workouts')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .order('date', { ascending: false })
+            .limit(20); // Limit to last 20 workouts
+            
+        if (error) throw error;
+        
+        // Transform data to match display format
+        return data.map(workout => {
+            // Parse exercises JSON and convert to display format
+            let exercises = [];
+            try {
+                exercises = JSON.parse(workout.exercises || '[]');
+            } catch (e) {
+                exercises = [];
+            }
+            
+            // Determine color based on workout name
+            let color = 'chest-color';
+            if (workout.name.includes('背筋')) color = 'back-color';
+            else if (workout.name.includes('肩')) color = 'shoulder-color';
+            else if (workout.name.includes('腕')) color = 'arm-color';
+            else if (workout.name.includes('脚')) color = 'leg-color';
+            else if (workout.name.includes('体幹')) color = 'core-color';
+            
+            return {
+                id: workout.id,
+                name: workout.name,
+                exercises: Array.isArray(exercises) ? exercises.join(', ') : exercises,
+                date: workout.date,
+                color: color,
+                duration: workout.duration || '0分',
+                totalSets: workout.total_sets || 0,
+                maxWeight: workout.max_weight || '0kg'
+            };
+        });
+        
+    } catch (error) {
+        console.error('Error fetching workout history:', error);
+        showNotification('ワークアウト履歴の取得に失敗しました', 'error');
+        return [];
+    }
 }
 
 // Get exercises for muscle group
