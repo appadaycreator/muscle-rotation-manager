@@ -277,14 +277,152 @@ function initializeWorkout() {
     // Load workout data
     loadWorkoutData();
     
-    // Quick start button handlers
-    document.querySelectorAll('.quick-start-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const muscle = btn.dataset.muscle;
-            console.log(`Quick start workout for: ${muscle}`);
-            // Add workout start functionality here
-        });
-    });
+    // Initialize workout timer and controls
+    initializeWorkoutControls();
+}
+
+// Initialize workout controls
+function initializeWorkoutControls() {
+    const stopWorkoutBtn = document.getElementById('stop-workout');
+    if (stopWorkoutBtn) {
+        stopWorkoutBtn.addEventListener('click', stopWorkout);
+    }
+}
+
+// Start workout
+function startWorkout(muscleGroup) {
+    console.log(`Starting workout for: ${muscleGroup}`);
+    
+    // Show current workout section
+    const currentWorkout = document.getElementById('current-workout');
+    if (currentWorkout) {
+        currentWorkout.classList.remove('hidden');
+    }
+    
+    // Start timer
+    startWorkoutTimer();
+    
+    // Set current workout
+    currentWorkout = {
+        muscleGroup: muscleGroup,
+        startTime: new Date(),
+        exercises: []
+    };
+    
+    // Load exercises for muscle group
+    loadExercisesForMuscleGroup(muscleGroup);
+    
+    showNotification(`${muscleGroup}のワークアウトを開始しました`, 'success');
+}
+
+// Stop workout
+function stopWorkout() {
+    console.log('Stopping workout');
+    
+    // Stop timer
+    stopWorkoutTimer();
+    
+    // Hide current workout section
+    const currentWorkout = document.getElementById('current-workout');
+    if (currentWorkout) {
+        currentWorkout.classList.add('hidden');
+    }
+    
+    // Save workout data
+    if (currentWorkout) {
+        saveWorkoutData();
+    }
+    
+    // Reset current workout
+    currentWorkout = null;
+    
+    showNotification('ワークアウトを終了しました', 'success');
+}
+
+// Start workout timer
+function startWorkoutTimer() {
+    workoutStartTime = new Date();
+    workoutTimer = setInterval(updateWorkoutTimer, 1000);
+}
+
+// Stop workout timer
+function stopWorkoutTimer() {
+    if (workoutTimer) {
+        clearInterval(workoutTimer);
+        workoutTimer = null;
+    }
+}
+
+// Update workout timer display
+function updateWorkoutTimer() {
+    if (!workoutStartTime) return;
+    
+    const now = new Date();
+    const diff = now - workoutStartTime;
+    const minutes = Math.floor(diff / 60000);
+    const seconds = Math.floor((diff % 60000) / 1000);
+    
+    const timerDisplay = document.getElementById('workout-timer');
+    if (timerDisplay) {
+        timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+}
+
+// Load exercises for muscle group
+async function loadExercisesForMuscleGroup(muscleGroup) {
+    const container = document.getElementById('workout-exercises');
+    if (!container) return;
+    
+    try {
+        const exercises = await getExercisesForMuscleGroup(muscleGroup);
+        
+        container.innerHTML = exercises.map(exercise => `
+            <div class="exercise-item bg-gray-50 rounded-lg p-4">
+                <div class="flex items-center justify-between mb-3">
+                    <h4 class="font-medium text-gray-800">${exercise.name}</h4>
+                    <button class="text-blue-600 hover:text-blue-800 text-sm">
+                        <i class="fas fa-plus mr-1"></i>追加
+                    </button>
+                </div>
+                <div class="grid grid-cols-3 gap-2 text-sm">
+                    <div>
+                        <label class="block text-gray-600 mb-1">セット</label>
+                        <input type="number" class="w-full border border-gray-300 rounded px-2 py-1" min="1" max="10" value="3">
+                    </div>
+                    <div>
+                        <label class="block text-gray-600 mb-1">重量(kg)</label>
+                        <input type="number" class="w-full border border-gray-300 rounded px-2 py-1" min="0" step="0.5">
+                    </div>
+                    <div>
+                        <label class="block text-gray-600 mb-1">回数</label>
+                        <input type="number" class="w-full border border-gray-300 rounded px-2 py-1" min="1" max="50" value="10">
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        
+    } catch (error) {
+        container.innerHTML = `
+            <div class="text-center text-gray-500 py-4">
+                <i class="fas fa-exclamation-triangle text-xl mb-2"></i>
+                <p>エクササイズの読み込みに失敗しました</p>
+            </div>
+        `;
+    }
+}
+
+// Save workout data
+async function saveWorkoutData() {
+    if (!currentWorkout) return;
+    
+    try {
+        // TODO: Save to Supabase
+        console.log('Saving workout data:', currentWorkout);
+        showNotification('ワークアウトデータを保存しました', 'success');
+    } catch (error) {
+        console.error('Error saving workout data:', error);
+        showNotification('ワークアウトデータの保存に失敗しました', 'error');
+    }
 }
 
 // Load workout data
@@ -322,8 +460,7 @@ async function loadQuickStartButtons() {
         document.querySelectorAll('.quick-start-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const muscle = btn.dataset.muscle;
-                console.log(`Quick start workout for: ${muscle}`);
-                // Add workout start functionality here
+                startWorkout(muscle);
             });
         });
         
@@ -382,42 +519,1187 @@ async function loadWorkoutHistory() {
 // Mock API functions for workout data
 async function getMuscleGroups() {
     // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 500));
     
-    // Return empty array for now - will be replaced with actual data
-    return [];
+    // Return mock muscle groups data
+    return [
+        {
+            id: 'chest',
+            name: '胸筋',
+            bgColor: 'bg-red-100',
+            hoverColor: 'bg-red-200',
+            iconColor: 'text-red-500',
+            textColor: 'text-red-700'
+        },
+        {
+            id: 'back',
+            name: '背筋',
+            bgColor: 'bg-green-100',
+            hoverColor: 'bg-green-200',
+            iconColor: 'text-green-500',
+            textColor: 'text-green-700'
+        },
+        {
+            id: 'shoulder',
+            name: '肩',
+            bgColor: 'bg-yellow-100',
+            hoverColor: 'bg-yellow-200',
+            iconColor: 'text-yellow-500',
+            textColor: 'text-yellow-700'
+        },
+        {
+            id: 'arm',
+            name: '腕',
+            bgColor: 'bg-purple-100',
+            hoverColor: 'bg-purple-200',
+            iconColor: 'text-purple-500',
+            textColor: 'text-purple-700'
+        },
+        {
+            id: 'leg',
+            name: '脚',
+            bgColor: 'bg-blue-100',
+            hoverColor: 'bg-blue-200',
+            iconColor: 'text-blue-500',
+            textColor: 'text-blue-700'
+        },
+        {
+            id: 'core',
+            name: '体幹',
+            bgColor: 'bg-pink-100',
+            hoverColor: 'bg-pink-200',
+            iconColor: 'text-pink-500',
+            textColor: 'text-pink-700'
+        }
+    ];
 }
 
 async function getWorkoutHistory() {
     // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 500));
     
-    // Return empty array for now - will be replaced with actual data
-    return [];
+    // Return mock workout history data
+    return [
+        {
+            id: 1,
+            name: '胸筋トレーニング',
+            exercises: 'ベンチプレス, インクラインプレス, ディップス',
+            date: '2024-01-15',
+            color: 'chest-color'
+        },
+        {
+            id: 2,
+            name: '背筋トレーニング',
+            exercises: 'デッドリフト, ラットプルダウン, ロウ',
+            date: '2024-01-13',
+            color: 'back-color'
+        },
+        {
+            id: 3,
+            name: '脚トレーニング',
+            exercises: 'スクワット, レッグプレス, カーフレイズ',
+            date: '2024-01-11',
+            color: 'leg-color'
+        },
+        {
+            id: 4,
+            name: '肩トレーニング',
+            exercises: 'ショルダープレス, サイドレイズ, リアデルト',
+            date: '2024-01-09',
+            color: 'shoulder-color'
+        }
+    ];
+}
+
+// Get exercises for muscle group
+async function getExercisesForMuscleGroup(muscleGroup) {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    const exercises = {
+        chest: [
+            { id: 1, name: 'ベンチプレス', category: 'compound' },
+            { id: 2, name: 'インクラインプレス', category: 'compound' },
+            { id: 3, name: 'ディップス', category: 'compound' },
+            { id: 4, name: 'ダンベルフライ', category: 'isolation' },
+            { id: 5, name: 'ケーブルクロスオーバー', category: 'isolation' }
+        ],
+        back: [
+            { id: 6, name: 'デッドリフト', category: 'compound' },
+            { id: 7, name: 'ラットプルダウン', category: 'compound' },
+            { id: 8, name: 'ロウ', category: 'compound' },
+            { id: 9, name: 'プルアップ', category: 'compound' },
+            { id: 10, name: 'シーテッドロウ', category: 'compound' }
+        ],
+        shoulder: [
+            { id: 11, name: 'ショルダープレス', category: 'compound' },
+            { id: 12, name: 'サイドレイズ', category: 'isolation' },
+            { id: 13, name: 'リアデルトフライ', category: 'isolation' },
+            { id: 14, name: 'フロントレイズ', category: 'isolation' }
+        ],
+        arm: [
+            { id: 15, name: 'バーベルカール', category: 'isolation' },
+            { id: 16, name: 'ダンベルカール', category: 'isolation' },
+            { id: 17, name: 'トライセップスプッシュダウン', category: 'isolation' },
+            { id: 18, name: 'オーバーヘッドエクステンション', category: 'isolation' }
+        ],
+        leg: [
+            { id: 19, name: 'スクワット', category: 'compound' },
+            { id: 20, name: 'レッグプレス', category: 'compound' },
+            { id: 21, name: 'カーフレイズ', category: 'isolation' },
+            { id: 22, name: 'レッグエクステンション', category: 'isolation' },
+            { id: 23, name: 'レッグカール', category: 'isolation' }
+        ],
+        core: [
+            { id: 24, name: 'クランチ', category: 'isolation' },
+            { id: 25, name: 'プランク', category: 'isolation' },
+            { id: 26, name: 'サイドプランク', category: 'isolation' },
+            { id: 27, name: 'レッグレイズ', category: 'isolation' }
+        ]
+    };
+    
+    return exercises[muscleGroup] || [];
+}
+
+// Get calendar events
+async function getCalendarEvents() {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    // Return mock calendar events
+    return [
+        {
+            id: 1,
+            name: '胸筋トレーニング',
+            exercises: 'ベンチプレス, インクラインプレス',
+            date: '2024-01-15',
+            color: 'chest-color'
+        },
+        {
+            id: 2,
+            name: '背筋トレーニング',
+            exercises: 'デッドリフト, ラットプルダウン',
+            date: '2024-01-17',
+            color: 'back-color'
+        },
+        {
+            id: 3,
+            name: '脚トレーニング',
+            exercises: 'スクワット, レッグプレス',
+            date: '2024-01-19',
+            color: 'leg-color'
+        },
+        {
+            id: 4,
+            name: '肩トレーニング',
+            exercises: 'ショルダープレス, サイドレイズ',
+            date: '2024-01-21',
+            color: 'shoulder-color'
+        }
+    ];
+}
+
+// Get progress data
+async function getProgressData() {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    return [
+        {
+            value: '12',
+            label: '今月のワークアウト',
+            trend: 8,
+            color: 'text-blue-600'
+        },
+        {
+            value: '85%',
+            label: '目標達成率',
+            trend: 5,
+            color: 'text-green-600'
+        },
+        {
+            value: '4.2',
+            label: '平均重量(kg)',
+            trend: -2,
+            color: 'text-purple-600'
+        }
+    ];
+}
+
+// Get weekly training data
+async function getWeeklyTrainingData() {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    return {
+        labels: ['月', '火', '水', '木', '金', '土', '日'],
+        data: [2, 1, 3, 0, 2, 1, 0]
+    };
+}
+
+// Get muscle distribution data
+async function getMuscleDistributionData() {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    return {
+        labels: ['胸筋', '背筋', '肩', '腕', '脚', '体幹'],
+        data: [25, 20, 15, 15, 15, 10]
+    };
+}
+
+// Get performance metrics
+async function getPerformanceMetrics() {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    return [
+        {
+            value: '120kg',
+            label: '最大重量',
+            description: 'ベンチプレス'
+        },
+        {
+            value: '45分',
+            label: '平均時間',
+            description: 'ワークアウト'
+        },
+        {
+            value: '8種目',
+            label: '平均種目数',
+            description: '1回のワークアウト'
+        },
+        {
+            value: '95%',
+            label: '継続率',
+            description: '今月'
+        }
+    ];
+}
+
+// Get exercises for category
+async function getExercisesForCategory(category) {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    const exercises = {
+        chest: [
+            {
+                id: 1,
+                name: 'ベンチプレス',
+                category: 'compound',
+                description: '大胸筋を鍛える基本的な複合エクササイズ',
+                muscles: '大胸筋、三角筋前部、上腕三頭筋',
+                difficulty: '中級'
+            },
+            {
+                id: 2,
+                name: 'インクラインプレス',
+                category: 'compound',
+                description: '大胸筋上部を重点的に鍛える',
+                muscles: '大胸筋上部、三角筋前部',
+                difficulty: '中級'
+            },
+            {
+                id: 3,
+                name: 'ディップス',
+                category: 'compound',
+                description: '自重で大胸筋下部を鍛える',
+                muscles: '大胸筋下部、上腕三頭筋',
+                difficulty: '初級'
+            },
+            {
+                id: 4,
+                name: 'ダンベルフライ',
+                category: 'isolation',
+                description: '大胸筋を単独で鍛える単関節エクササイズ',
+                muscles: '大胸筋',
+                difficulty: '初級'
+            }
+        ],
+        back: [
+            {
+                id: 5,
+                name: 'デッドリフト',
+                category: 'compound',
+                description: '全身を鍛える基本的な複合エクササイズ',
+                muscles: '広背筋、脊柱起立筋、臀筋',
+                difficulty: '上級'
+            },
+            {
+                id: 6,
+                name: 'ラットプルダウン',
+                category: 'compound',
+                description: '広背筋を鍛える基本的なエクササイズ',
+                muscles: '広背筋、上腕二頭筋',
+                difficulty: '初級'
+            },
+            {
+                id: 7,
+                name: 'ロウ',
+                category: 'compound',
+                description: '背中の厚みを作るエクササイズ',
+                muscles: '広背筋、菱形筋',
+                difficulty: '中級'
+            }
+        ],
+        shoulder: [
+            {
+                id: 8,
+                name: 'ショルダープレス',
+                category: 'compound',
+                description: '三角筋全体を鍛える基本的なエクササイズ',
+                muscles: '三角筋前部・中部、上腕三頭筋',
+                difficulty: '中級'
+            },
+            {
+                id: 9,
+                name: 'サイドレイズ',
+                category: 'isolation',
+                description: '三角筋中部を重点的に鍛える',
+                muscles: '三角筋中部',
+                difficulty: '初級'
+            }
+        ],
+        arm: [
+            {
+                id: 10,
+                name: 'バーベルカール',
+                category: 'isolation',
+                description: '上腕二頭筋を鍛える基本的なエクササイズ',
+                muscles: '上腕二頭筋',
+                difficulty: '初級'
+            },
+            {
+                id: 11,
+                name: 'トライセップスプッシュダウン',
+                category: 'isolation',
+                description: '上腕三頭筋を鍛えるエクササイズ',
+                muscles: '上腕三頭筋',
+                difficulty: '初級'
+            }
+        ],
+        leg: [
+            {
+                id: 12,
+                name: 'スクワット',
+                category: 'compound',
+                description: '脚を鍛える基本的な複合エクササイズ',
+                muscles: '大腿四頭筋、臀筋、ハムストリング',
+                difficulty: '中級'
+            },
+            {
+                id: 13,
+                name: 'レッグプレス',
+                category: 'compound',
+                description: 'マシンで脚を鍛えるエクササイズ',
+                muscles: '大腿四頭筋、臀筋',
+                difficulty: '初級'
+            }
+        ],
+        core: [
+            {
+                id: 14,
+                name: 'クランチ',
+                category: 'isolation',
+                description: '腹直筋を鍛える基本的なエクササイズ',
+                muscles: '腹直筋',
+                difficulty: '初級'
+            },
+            {
+                id: 15,
+                name: 'プランク',
+                category: 'isolation',
+                description: '体幹を安定させる静的エクササイズ',
+                muscles: '腹直筋、腹斜筋、脊柱起立筋',
+                difficulty: '初級'
+            }
+        ]
+    };
+    
+    return exercises[category] || [];
 }
 
 // Initialize calendar page
 function initializeCalendar() {
-    // Calendar functionality will be added here
     console.log('Calendar page initialized');
+    
+    // Initialize calendar controls
+    initializeCalendarControls();
+    
+    // Load calendar data
+    loadCalendarData();
+}
+
+// Initialize calendar controls
+function initializeCalendarControls() {
+    const prevMonthBtn = document.getElementById('prev-month');
+    const nextMonthBtn = document.getElementById('next-month');
+    
+    if (prevMonthBtn) {
+        prevMonthBtn.addEventListener('click', () => {
+            changeMonth(-1);
+        });
+    }
+    
+    if (nextMonthBtn) {
+        nextMonthBtn.addEventListener('click', () => {
+            changeMonth(1);
+        });
+    }
+}
+
+// Calendar state
+let currentCalendarDate = new Date();
+let calendarData = {};
+
+// Change month
+function changeMonth(delta) {
+    currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
+    loadCalendarData();
+}
+
+// Load calendar data
+async function loadCalendarData() {
+    try {
+        // Update month display
+        updateMonthDisplay();
+        
+        // Generate calendar days
+        generateCalendarDays();
+        
+        // Load workout events
+        await loadWorkoutEvents();
+        
+    } catch (error) {
+        console.error('Error loading calendar data:', error);
+        showNotification('カレンダーデータの読み込みに失敗しました', 'error');
+    }
+}
+
+// Update month display
+function updateMonthDisplay() {
+    const monthDisplay = document.querySelector('[data-i18n="calendar.month"]');
+    if (monthDisplay) {
+        const year = currentCalendarDate.getFullYear();
+        const month = currentCalendarDate.getMonth() + 1;
+        monthDisplay.textContent = `${year}年${month}月`;
+    }
+}
+
+// Generate calendar days
+function generateCalendarDays() {
+    const container = document.getElementById('calendar-days');
+    if (!container) return;
+    
+    const year = currentCalendarDate.getFullYear();
+    const month = currentCalendarDate.getMonth();
+    
+    // Get first day of month and number of days
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startDate = new Date(firstDay);
+    startDate.setDate(startDate.getDate() - firstDay.getDay());
+    
+    let html = '';
+    
+    // Generate 6 weeks of days
+    for (let week = 0; week < 6; week++) {
+        for (let day = 0; day < 7; day++) {
+            const currentDate = new Date(startDate);
+            currentDate.setDate(startDate.getDate() + (week * 7) + day);
+            
+            const isCurrentMonth = currentDate.getMonth() === month;
+            const isToday = isTodayDate(currentDate);
+            const hasWorkout = hasWorkoutOnDate(currentDate);
+            
+            const dayClass = `p-2 text-center text-sm border border-gray-200 ${
+                isCurrentMonth ? 'bg-white' : 'bg-gray-50 text-gray-400'
+            } ${isToday ? 'bg-blue-100 font-bold' : ''} ${
+                hasWorkout ? 'workout-day' : ''
+            }`;
+            
+            html += `
+                <div class="${dayClass}" data-date="${currentDate.toISOString().split('T')[0]}">
+                    <div class="relative">
+                        ${currentDate.getDate()}
+                        ${hasWorkout ? '<div class="workout-dot absolute -top-1 -right-1"></div>' : ''}
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    container.innerHTML = html;
+    
+    // Add click handlers for days
+    container.querySelectorAll('[data-date]').forEach(day => {
+        day.addEventListener('click', () => {
+            const date = day.dataset.date;
+            showDayDetails(date);
+        });
+    });
+}
+
+// Check if date is today
+function isTodayDate(date) {
+    const today = new Date();
+    return date.toDateString() === today.toDateString();
+}
+
+// Check if date has workout
+function hasWorkoutOnDate(date) {
+    const dateString = date.toISOString().split('T')[0];
+    return calendarData[dateString] && calendarData[dateString].length > 0;
+}
+
+// Load workout events
+async function loadWorkoutEvents() {
+    try {
+        // TODO: Replace with actual API call
+        const events = await getCalendarEvents();
+        
+        // Process events
+        calendarData = {};
+        events.forEach(event => {
+            const date = event.date;
+            if (!calendarData[date]) {
+                calendarData[date] = [];
+            }
+            calendarData[date].push(event);
+        });
+        
+        // Regenerate calendar to show events
+        generateCalendarDays();
+        
+    } catch (error) {
+        console.error('Error loading workout events:', error);
+    }
+}
+
+// Show day details
+function showDayDetails(date) {
+    const events = calendarData[date] || [];
+    
+    // Create modal or update existing UI
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    modal.innerHTML = `
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold">${formatDate(date)}</h3>
+                <button class="text-gray-500 hover:text-gray-700" onclick="this.closest('.fixed').remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="space-y-3">
+                ${events.length > 0 ? 
+                    events.map(event => `
+                        <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                            <div class="workout-dot ${event.color}"></div>
+                            <div>
+                                <div class="font-medium">${event.name}</div>
+                                <div class="text-sm text-gray-500">${event.exercises}</div>
+                            </div>
+                        </div>
+                    `).join('') :
+                    '<p class="text-gray-500 text-center py-4">予定はありません</p>'
+                }
+            </div>
+            <div class="mt-4 flex space-x-2">
+                <button class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
+                    ワークアウト追加
+                </button>
+                <button class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400">
+                    閉じる
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Close modal when clicking outside
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+}
+
+// Format date for display
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][date.getDay()];
+    
+    return `${year}年${month}月${day}日 (${dayOfWeek})`;
 }
 
 // Initialize analytics page
 function initializeAnalytics() {
-    // Analytics functionality will be added here
     console.log('Analytics page initialized');
+    
+    // Load analytics data
+    loadAnalyticsData();
+}
+
+// Load analytics data
+async function loadAnalyticsData() {
+    try {
+        // Load progress overview
+        await loadProgressOverview();
+        
+        // Load charts
+        await loadCharts();
+        
+        // Load performance metrics
+        await loadPerformanceMetrics();
+        
+    } catch (error) {
+        console.error('Error loading analytics data:', error);
+        showNotification('分析データの読み込みに失敗しました', 'error');
+    }
+}
+
+// Load progress overview
+async function loadProgressOverview() {
+    const container = document.getElementById('progress-overview');
+    if (!container) return;
+    
+    try {
+        const progressData = await getProgressData();
+        
+        container.innerHTML = progressData.map(metric => `
+            <div class="muscle-card rounded-lg p-6 text-center">
+                <div class="text-3xl font-bold ${metric.color} mb-2">${metric.value}</div>
+                <div class="text-gray-600 mb-1">${metric.label}</div>
+                <div class="text-sm ${metric.trend > 0 ? 'text-green-500' : 'text-red-500'}">
+                    ${metric.trend > 0 ? '+' : ''}${metric.trend}% 先週比
+                </div>
+            </div>
+        `).join('');
+        
+    } catch (error) {
+        container.innerHTML = `
+            <div class="text-center text-gray-500 py-8">
+                <i class="fas fa-exclamation-triangle text-xl mb-2"></i>
+                <p>進捗データの読み込みに失敗しました</p>
+            </div>
+        `;
+    }
+}
+
+// Load charts
+async function loadCharts() {
+    try {
+        // Load weekly training frequency chart
+        await loadWeeklyChart();
+        
+        // Load muscle group distribution chart
+        await loadMuscleChart();
+        
+    } catch (error) {
+        console.error('Error loading charts:', error);
+    }
+}
+
+// Load weekly chart
+async function loadWeeklyChart() {
+    const canvas = document.getElementById('weekly-chart');
+    if (!canvas) return;
+    
+    try {
+        const weeklyData = await getWeeklyTrainingData();
+        
+        // Create chart using Chart.js (if available)
+        if (window.Chart) {
+            new Chart(canvas, {
+                type: 'line',
+                data: {
+                    labels: weeklyData.labels,
+                    datasets: [{
+                        label: 'トレーニング回数',
+                        data: weeklyData.data,
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        } else {
+            // Fallback if Chart.js is not available
+            canvas.style.display = 'none';
+            canvas.parentElement.innerHTML = `
+                <div class="text-center text-gray-500 py-8">
+                    <i class="fas fa-chart-line text-xl mb-2"></i>
+                    <p>チャート機能は利用できません</p>
+                </div>
+            `;
+        }
+        
+    } catch (error) {
+        console.error('Error loading weekly chart:', error);
+    }
+}
+
+// Load muscle chart
+async function loadMuscleChart() {
+    const canvas = document.getElementById('muscle-chart');
+    if (!canvas) return;
+    
+    try {
+        const muscleData = await getMuscleDistributionData();
+        
+        // Create chart using Chart.js (if available)
+        if (window.Chart) {
+            new Chart(canvas, {
+                type: 'doughnut',
+                data: {
+                    labels: muscleData.labels,
+                    datasets: [{
+                        data: muscleData.data,
+                        backgroundColor: [
+                            '#ef4444', '#10b981', '#f59e0b',
+                            '#8b5cf6', '#3b82f6', '#ec4899'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        } else {
+            // Fallback if Chart.js is not available
+            canvas.style.display = 'none';
+            canvas.parentElement.innerHTML = `
+                <div class="text-center text-gray-500 py-8">
+                    <i class="fas fa-chart-pie text-xl mb-2"></i>
+                    <p>チャート機能は利用できません</p>
+                </div>
+            `;
+        }
+        
+    } catch (error) {
+        console.error('Error loading muscle chart:', error);
+    }
+}
+
+// Load performance metrics
+async function loadPerformanceMetrics() {
+    const container = document.getElementById('performance-metrics');
+    if (!container) return;
+    
+    try {
+        const metrics = await getPerformanceMetrics();
+        
+        container.innerHTML = metrics.map(metric => `
+            <div class="text-center p-4 bg-gray-50 rounded-lg">
+                <div class="text-2xl font-bold text-gray-800 mb-1">${metric.value}</div>
+                <div class="text-sm text-gray-600">${metric.label}</div>
+                <div class="text-xs text-gray-500 mt-1">${metric.description}</div>
+            </div>
+        `).join('');
+        
+    } catch (error) {
+        container.innerHTML = `
+            <div class="text-center text-gray-500 py-4">
+                <i class="fas fa-exclamation-triangle text-xl mb-2"></i>
+                <p>パフォーマンス指標の読み込みに失敗しました</p>
+            </div>
+        `;
+    }
 }
 
 // Initialize exercises page
 function initializeExercises() {
-    // Exercises functionality will be added here
     console.log('Exercises page initialized');
+    
+    // Initialize exercise category handlers
+    initializeExerciseCategories();
+}
+
+// Initialize exercise categories
+function initializeExerciseCategories() {
+    // Add click handlers for exercise categories
+    document.querySelectorAll('[data-category]').forEach(category => {
+        category.addEventListener('click', () => {
+            const categoryName = category.dataset.category;
+            showExerciseList(categoryName);
+        });
+    });
+    
+    // Add back button handler
+    const backBtn = document.getElementById('back-to-categories');
+    if (backBtn) {
+        backBtn.addEventListener('click', showExerciseCategories);
+    }
+}
+
+// Show exercise list for category
+async function showExerciseList(category) {
+    const categoryContainer = document.querySelector('.grid.grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-3');
+    const listContainer = document.getElementById('exercise-list');
+    
+    if (!categoryContainer || !listContainer) return;
+    
+    try {
+        // Hide categories, show list
+        categoryContainer.classList.add('hidden');
+        listContainer.classList.remove('hidden');
+        
+        // Update title
+        const title = document.getElementById('exercise-category-title');
+        if (title) {
+            const categoryNames = {
+                chest: '胸筋',
+                back: '背筋',
+                shoulder: '肩',
+                arm: '腕',
+                leg: '脚',
+                core: '体幹'
+            };
+            title.textContent = `${categoryNames[category]}エクササイズ`;
+        }
+        
+        // Load exercises
+        await loadExercisesForCategory(category);
+        
+    } catch (error) {
+        console.error('Error showing exercise list:', error);
+        showNotification('エクササイズリストの読み込みに失敗しました', 'error');
+    }
+}
+
+// Show exercise categories
+function showExerciseCategories() {
+    const categoryContainer = document.querySelector('.grid.grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-3');
+    const listContainer = document.getElementById('exercise-list');
+    
+    if (!categoryContainer || !listContainer) return;
+    
+    // Show categories, hide list
+    categoryContainer.classList.remove('hidden');
+    listContainer.classList.add('hidden');
+}
+
+// Load exercises for category
+async function loadExercisesForCategory(category) {
+    const container = document.getElementById('exercise-items');
+    if (!container) return;
+    
+    try {
+        const exercises = await getExercisesForCategory(category);
+        
+        container.innerHTML = exercises.map(exercise => `
+            <div class="exercise-item bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex items-center justify-between mb-3">
+                    <h4 class="font-medium text-gray-800">${exercise.name}</h4>
+                    <span class="text-xs px-2 py-1 rounded-full ${
+                        exercise.category === 'compound' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
+                    }">
+                        ${exercise.category === 'compound' ? '複合' : '単関節'}
+                    </span>
+                </div>
+                <p class="text-sm text-gray-600 mb-3">${exercise.description}</p>
+                <div class="grid grid-cols-2 gap-2 text-xs text-gray-500">
+                    <div>
+                        <span class="font-medium">主な筋肉:</span> ${exercise.muscles}
+                    </div>
+                    <div>
+                        <span class="font-medium">難易度:</span> ${exercise.difficulty}
+                    </div>
+                </div>
+                <div class="mt-3 flex space-x-2">
+                    <button class="flex-1 bg-blue-600 text-white py-2 rounded text-sm hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-plus mr-1"></i>ワークアウトに追加
+                    </button>
+                    <button class="px-3 py-2 text-gray-600 hover:text-gray-800 transition-colors">
+                        <i class="fas fa-info-circle"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+        
+    } catch (error) {
+        container.innerHTML = `
+            <div class="text-center text-gray-500 py-8">
+                <i class="fas fa-exclamation-triangle text-xl mb-2"></i>
+                <p>エクササイズの読み込みに失敗しました</p>
+            </div>
+        `;
+    }
 }
 
 // Initialize settings page
 function initializeSettings() {
-    // Settings functionality will be added here
     console.log('Settings page initialized');
+    
+    // Initialize settings controls
+    initializeSettingsControls();
+    
+    // Load user settings
+    loadUserSettings();
+}
+
+// Initialize settings controls
+function initializeSettingsControls() {
+    // Dark mode toggle
+    const darkModeToggle = document.querySelector('input[type="checkbox"]');
+    if (darkModeToggle) {
+        darkModeToggle.addEventListener('change', (e) => {
+            toggleDarkMode(e.target.checked);
+        });
+    }
+    
+    // Notification toggle
+    const notificationToggle = document.querySelectorAll('input[type="checkbox"]')[1];
+    if (notificationToggle) {
+        notificationToggle.addEventListener('change', (e) => {
+            toggleNotifications(e.target.checked);
+        });
+    }
+    
+    // Voice guide toggle
+    const voiceGuideToggle = document.querySelectorAll('input[type="checkbox"]')[2];
+    if (voiceGuideToggle) {
+        voiceGuideToggle.addEventListener('change', (e) => {
+            toggleVoiceGuide(e.target.checked);
+        });
+    }
+    
+    // Data management buttons
+    const exportBtn = document.querySelector('button:contains("データをエクスポート")');
+    const importBtn = document.querySelector('button:contains("データをインポート")');
+    const deleteBtn = document.querySelector('button:contains("データを削除")');
+    
+    if (exportBtn) {
+        exportBtn.addEventListener('click', exportData);
+    }
+    if (importBtn) {
+        importBtn.addEventListener('click', importData);
+    }
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', deleteData);
+    }
+}
+
+// Load user settings
+async function loadUserSettings() {
+    try {
+        const settings = await getUserSettings();
+        
+        // Update form fields
+        const displayNameInput = document.querySelector('input[placeholder="あなたの名前"]');
+        const emailInput = document.querySelector('input[placeholder="your@email.com"]');
+        const goalSelect = document.querySelector('select');
+        
+        if (displayNameInput && settings.displayName) {
+            displayNameInput.value = settings.displayName;
+        }
+        if (emailInput && settings.email) {
+            emailInput.value = settings.email;
+        }
+        if (goalSelect && settings.goal) {
+            goalSelect.value = settings.goal;
+        }
+        
+        // Update toggles
+        const toggles = document.querySelectorAll('input[type="checkbox"]');
+        if (toggles[0] && settings.darkMode !== undefined) {
+            toggles[0].checked = settings.darkMode;
+        }
+        if (toggles[1] && settings.notifications !== undefined) {
+            toggles[1].checked = settings.notifications;
+        }
+        if (toggles[2] && settings.voiceGuide !== undefined) {
+            toggles[2].checked = settings.voiceGuide;
+        }
+        
+    } catch (error) {
+        console.error('Error loading user settings:', error);
+        showNotification('設定の読み込みに失敗しました', 'error');
+    }
+}
+
+// Toggle dark mode
+function toggleDarkMode(enabled) {
+    if (enabled) {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('darkMode', 'true');
+    } else {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('darkMode', 'false');
+    }
+    
+    showNotification(`ダークモードを${enabled ? '有効' : '無効'}にしました`, 'success');
+}
+
+// Toggle notifications
+function toggleNotifications(enabled) {
+    if (enabled) {
+        // Request notification permission
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+    }
+    
+    showNotification(`通知を${enabled ? '有効' : '無効'}にしました`, 'success');
+}
+
+// Toggle voice guide
+function toggleVoiceGuide(enabled) {
+    showNotification(`音声ガイドを${enabled ? '有効' : '無効'}にしました`, 'success');
+}
+
+// Export data
+async function exportData() {
+    try {
+        const data = await exportUserData();
+        
+        // Create download link
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `muscle-rotation-data-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        showNotification('データをエクスポートしました', 'success');
+    } catch (error) {
+        console.error('Error exporting data:', error);
+        showNotification('データのエクスポートに失敗しました', 'error');
+    }
+}
+
+// Import data
+async function importData() {
+    try {
+        // Create file input
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const text = await file.text();
+                const data = JSON.parse(text);
+                await importUserData(data);
+                showNotification('データをインポートしました', 'success');
+            }
+        };
+        input.click();
+    } catch (error) {
+        console.error('Error importing data:', error);
+        showNotification('データのインポートに失敗しました', 'error');
+    }
+}
+
+// Delete data
+async function deleteData() {
+    if (confirm('本当にすべてのデータを削除しますか？この操作は取り消せません。')) {
+        try {
+            await deleteUserData();
+            showNotification('データを削除しました', 'success');
+        } catch (error) {
+            console.error('Error deleting data:', error);
+            showNotification('データの削除に失敗しました', 'error');
+        }
+    }
+}
+
+// Get user settings
+async function getUserSettings() {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    return {
+        displayName: 'ユーザー',
+        email: 'user@example.com',
+        goal: '筋力向上',
+        darkMode: false,
+        notifications: true,
+        voiceGuide: false
+    };
+}
+
+// Export user data
+async function exportUserData() {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    return {
+        user: {
+            displayName: 'ユーザー',
+            email: 'user@example.com',
+            goal: '筋力向上'
+        },
+        workouts: [
+            {
+                id: 1,
+                name: '胸筋トレーニング',
+                date: '2024-01-15',
+                exercises: [
+                    {
+                        name: 'ベンチプレス',
+                        sets: 3,
+                        weight: 80,
+                        reps: 10
+                    }
+                ]
+            }
+        ],
+        settings: {
+            darkMode: false,
+            notifications: true,
+            voiceGuide: false
+        },
+        exportDate: new Date().toISOString()
+    };
+}
+
+// Import user data
+async function importUserData(data) {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    console.log('Importing user data:', data);
+    // TODO: Implement actual data import logic
+}
+
+// Delete user data
+async function deleteUserData() {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    console.log('Deleting user data');
+    // TODO: Implement actual data deletion logic
 }
 
 // Initialize help page
