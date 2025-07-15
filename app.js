@@ -225,17 +225,38 @@ async function loadRecentWorkouts() {
         }
         
         container.innerHTML = workouts.map(workout => `
-            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div class="flex items-center space-x-3">
+            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                <div class="flex items-center space-x-3 flex-1">
                     <div class="workout-dot ${workout.color}"></div>
-                    <div>
+                    <div class="flex-1">
                         <div class="font-medium text-gray-800">${workout.name}</div>
-                        <div class="text-sm text-gray-500">${workout.exercises}</div>
+                        <div class="text-sm text-gray-500 mb-1">${workout.exercises}</div>
+                        <div class="flex items-center space-x-4 text-xs text-gray-400">
+                            <span><i class="fas fa-clock mr-1"></i>${workout.duration}</span>
+                            <span><i class="fas fa-dumbbell mr-1"></i>${workout.totalSets}セット</span>
+                            <span><i class="fas fa-weight-hanging mr-1"></i>最大${workout.maxWeight}</span>
+                        </div>
                     </div>
                 </div>
-                <div class="text-sm text-gray-500">${workout.date}</div>
+                <div class="text-right">
+                    <div class="text-sm font-medium text-gray-700">${formatWorkoutDate(workout.date)}</div>
+                    <div class="text-xs text-gray-400">${getDaysAgo(workout.date)}</div>
+                </div>
             </div>
         `).join('');
+
+        function formatWorkoutDate(dateStr) {
+            const d = new Date(dateStr);
+            return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+        }
+        function getDaysAgo(dateStr) {
+            const d = new Date(dateStr);
+            const now = new Date();
+            const diff = Math.floor((now - d) / (1000 * 60 * 60 * 24));
+            if (diff === 0) return '今日';
+            if (diff === 1) return '昨日';
+            return `${diff}日前`;
+        }
         
     } catch (error) {
         container.innerHTML = `
@@ -494,17 +515,38 @@ async function loadWorkoutHistory() {
         }
         
         container.innerHTML = workouts.map(workout => `
-            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div class="flex items-center space-x-3">
+            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                <div class="flex items-center space-x-3 flex-1">
                     <div class="workout-dot ${workout.color}"></div>
-                    <div>
+                    <div class="flex-1">
                         <div class="font-medium text-gray-800">${workout.name}</div>
-                        <div class="text-sm text-gray-500">${workout.exercises}</div>
+                        <div class="text-sm text-gray-500 mb-1">${workout.exercises}</div>
+                        <div class="flex items-center space-x-4 text-xs text-gray-400">
+                            <span><i class="fas fa-clock mr-1"></i>${workout.duration}</span>
+                            <span><i class="fas fa-dumbbell mr-1"></i>${workout.totalSets}セット</span>
+                            <span><i class="fas fa-weight-hanging mr-1"></i>最大${workout.maxWeight}</span>
+                        </div>
                     </div>
                 </div>
-                <div class="text-sm text-gray-500">${workout.date}</div>
+                <div class="text-right">
+                    <div class="text-sm font-medium text-gray-700">${formatWorkoutDate(workout.date)}</div>
+                    <div class="text-xs text-gray-400">${getDaysAgo(workout.date)}</div>
+                </div>
             </div>
         `).join('');
+
+        function formatWorkoutDate(dateStr) {
+            const d = new Date(dateStr);
+            return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+        }
+        function getDaysAgo(dateStr) {
+            const d = new Date(dateStr);
+            const now = new Date();
+            const diff = Math.floor((now - d) / (1000 * 60 * 60 * 24));
+            if (diff === 0) return '今日';
+            if (diff === 1) return '昨日';
+            return `${diff}日前`;
+        }
         
     } catch (error) {
         container.innerHTML = `
@@ -578,35 +620,107 @@ async function getWorkoutHistory() {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    // Return mock workout history data
+    // Return mock workout history data with more realistic details
     return [
         {
             id: 1,
-            name: '胸筋トレーニング',
-            exercises: 'ベンチプレス, インクラインプレス, ディップス',
-            date: '2024-01-15',
-            color: 'chest-color'
+            name: '胸筋・三頭筋トレーニング',
+            exercises: 'ベンチプレス, インクラインプレス, ディップス, トライセップスプッシュダウン',
+            date: '2024-01-20',
+            color: 'chest-color',
+            duration: '65分',
+            totalSets: 16,
+            maxWeight: '100kg'
         },
         {
             id: 2,
-            name: '背筋トレーニング',
-            exercises: 'デッドリフト, ラットプルダウン, ロウ',
-            date: '2024-01-13',
-            color: 'back-color'
+            name: '背筋・二頭筋トレーニング',
+            exercises: 'デッドリフト, ラットプルダウン, シーテッドロウ, バーベルカール',
+            date: '2024-01-18',
+            color: 'back-color',
+            duration: '70分',
+            totalSets: 18,
+            maxWeight: '140kg'
         },
         {
             id: 3,
             name: '脚トレーニング',
-            exercises: 'スクワット, レッグプレス, カーフレイズ',
-            date: '2024-01-11',
-            color: 'leg-color'
+            exercises: 'スクワット, レッグプレス, レッグエクステンション, カーフレイズ',
+            date: '2024-01-16',
+            color: 'leg-color',
+            duration: '55分',
+            totalSets: 14,
+            maxWeight: '120kg'
         },
         {
             id: 4,
-            name: '肩トレーニング',
-            exercises: 'ショルダープレス, サイドレイズ, リアデルト',
-            date: '2024-01-09',
-            color: 'shoulder-color'
+            name: '肩・腕トレーニング',
+            exercises: 'ショルダープレス, サイドレイズ, リアデルトフライ, ダンベルカール',
+            date: '2024-01-14',
+            color: 'shoulder-color',
+            duration: '60分',
+            totalSets: 15,
+            maxWeight: '80kg'
+        },
+        {
+            id: 5,
+            name: '胸筋・三頭筋トレーニング',
+            exercises: 'ベンチプレス, インクラインプレス, ディップス, ケーブルクロスオーバー',
+            date: '2024-01-12',
+            color: 'chest-color',
+            duration: '62分',
+            totalSets: 16,
+            maxWeight: '95kg'
+        },
+        {
+            id: 6,
+            name: '背筋・二頭筋トレーニング',
+            exercises: 'デッドリフト, ラットプルダウン, プルアップ, ダンベルカール',
+            date: '2024-01-10',
+            color: 'back-color',
+            duration: '68分',
+            totalSets: 17,
+            maxWeight: '135kg'
+        },
+        {
+            id: 7,
+            name: '脚トレーニング',
+            exercises: 'スクワット, レッグプレス, レッグカール, カーフレイズ',
+            date: '2024-01-08',
+            color: 'leg-color',
+            duration: '58分',
+            totalSets: 15,
+            maxWeight: '115kg'
+        },
+        {
+            id: 8,
+            name: '肩・腕トレーニング',
+            exercises: 'ショルダープレス, サイドレイズ, リアデルトフライ, トライセップスプッシュダウン',
+            date: '2024-01-06',
+            color: 'shoulder-color',
+            duration: '55分',
+            totalSets: 14,
+            maxWeight: '75kg'
+        },
+        {
+            id: 9,
+            name: '胸筋・三頭筋トレーニング',
+            exercises: 'ベンチプレス, インクラインプレス, ディップス, オーバーヘッドエクステンション',
+            date: '2024-01-04',
+            color: 'chest-color',
+            duration: '60分',
+            totalSets: 15,
+            maxWeight: '90kg'
+        },
+        {
+            id: 10,
+            name: '背筋・二頭筋トレーニング',
+            exercises: 'デッドリフト, ラットプルダウン, シーテッドロウ, バーベルカール',
+            date: '2024-01-02',
+            color: 'back-color',
+            duration: '65分',
+            totalSets: 16,
+            maxWeight: '130kg'
         }
     ];
 }
