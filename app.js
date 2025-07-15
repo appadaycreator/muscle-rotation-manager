@@ -1110,36 +1110,31 @@ function updateMonthDisplay() {
 function generateCalendarDays() {
     const container = document.getElementById('calendar-days');
     if (!container) return;
-    
     const year = currentCalendarDate.getFullYear();
     const month = currentCalendarDate.getMonth();
-    
     // Get first day of month and number of days
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const startDate = new Date(firstDay);
     startDate.setDate(startDate.getDate() - firstDay.getDay());
-    
     let html = '';
-    
     // Generate 6 weeks of days
     for (let week = 0; week < 6; week++) {
         for (let day = 0; day < 7; day++) {
             const currentDate = new Date(startDate);
             currentDate.setDate(startDate.getDate() + (week * 7) + day);
-            
+            // 日付をYYYY-MM-DD文字列で統一
+            const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`;
             const isCurrentMonth = currentDate.getMonth() === month;
-            const isToday = isTodayDate(currentDate);
-            const hasWorkout = hasWorkoutOnDate(currentDate);
-            
+            const isToday = isTodayDate(dateStr);
+            const hasWorkout = hasWorkoutOnDate(dateStr);
             const dayClass = `p-2 text-center text-sm border border-gray-200 ${
                 isCurrentMonth ? 'bg-white' : 'bg-gray-50 text-gray-400'
             } ${isToday ? 'bg-blue-100 font-bold' : ''} ${
                 hasWorkout ? 'workout-day' : ''
             }`;
-            
             html += `
-                <div class="${dayClass}" data-date="${currentDate.toISOString().split('T')[0]}">
+                <div class="${dayClass}" data-date="${dateStr}">
                     <div class="relative">
                         ${currentDate.getDate()}
                         ${hasWorkout ? '<div class="workout-dot absolute -top-1 -right-1"></div>' : ''}
@@ -1148,9 +1143,7 @@ function generateCalendarDays() {
             `;
         }
     }
-    
     container.innerHTML = html;
-    
     // Add click handlers for days
     container.querySelectorAll('[data-date]').forEach(day => {
         day.addEventListener('click', () => {
@@ -1161,15 +1154,18 @@ function generateCalendarDays() {
 }
 
 // Check if date is today
-function isTodayDate(date) {
+function isTodayDate(dateStr) {
+    // dateStr: 'YYYY-MM-DD'
     const today = new Date();
-    return date.toDateString() === today.toDateString();
+    const y = today.getFullYear();
+    const m = String(today.getMonth() + 1).padStart(2, '0');
+    const d = String(today.getDate()).padStart(2, '0');
+    return dateStr === `${y}-${m}-${d}`;
 }
 
 // Check if date has workout
-function hasWorkoutOnDate(date) {
-    const dateString = date.toISOString().split('T')[0];
-    return calendarData[dateString] && calendarData[dateString].length > 0;
+function hasWorkoutOnDate(dateStr) {
+    return calendarData[dateStr] && calendarData[dateStr].length > 0;
 }
 
 // Load workout events
@@ -1197,16 +1193,15 @@ async function loadWorkoutEvents() {
 }
 
 // Show day details
-function showDayDetails(date) {
-    const events = calendarData[date] || [];
-    
+function showDayDetails(dateStr) {
+    const events = calendarData[dateStr] || [];
     // Create modal or update existing UI
     const modal = document.createElement('div');
     modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
     modal.innerHTML = `
         <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold">${formatDate(date)}</h3>
+                <h3 class="text-lg font-semibold">${formatDate(dateStr)}</h3>
                 <button class="text-gray-500 hover:text-gray-700" onclick="this.closest('.fixed').remove()">
                     <i class="fas fa-times"></i>
                 </button>
@@ -1218,7 +1213,7 @@ function showDayDetails(date) {
                             <div class="workout-dot ${event.color}"></div>
                             <div>
                                 <div class="font-medium">${event.name}</div>
-                                <div class="text-sm text-gray-500">${event.exercises}</div>
+                                <div class="text-sm text-gray-500">${event.exercises || ''}</div>
                             </div>
                         </div>
                     `).join('') :
@@ -1235,25 +1230,15 @@ function showDayDetails(date) {
             </div>
         </div>
     `;
-    
     document.body.appendChild(modal);
-    
-    // Close modal when clicking outside
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.remove();
-        }
-    });
 }
 
 // Format date for display
 function formatDate(dateString) {
-    const date = new Date(dateString);
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
+    // dateString: 'YYYY-MM-DD' 形式
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
     const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][date.getDay()];
-    
     return `${year}年${month}月${day}日 (${dayOfWeek})`;
 }
 
