@@ -788,12 +788,13 @@ async function getCalendarEvents() {
             .select('*')
             .eq('user_id', currentUser.id);
         if (error) throw error;
-        // カレンダー用に日付・種目などを整形
+        // カレンダー用に日付・種目などを整形（dateは必ずYYYY-MM-DD）
         return data.map(workout => ({
-            date: workout.date,
+            date: (workout.date || '').split('T')[0],
             name: workout.name,
             id: workout.id,
-            // 必要に応じて他の情報も
+            color: workout.color || '',
+            exercises: workout.exercises || ''
         }));
     } catch (error) {
         console.error('Error fetching calendar events:', error);
@@ -1171,22 +1172,18 @@ function hasWorkoutOnDate(dateStr) {
 // Load workout events
 async function loadWorkoutEvents() {
     try {
-        // TODO: Replace with actual API call
         const events = await getCalendarEvents();
-        
         // Process events
         calendarData = {};
         events.forEach(event => {
-            const date = event.date;
+            const date = (event.date || '').split('T')[0]; // 必ずYYYY-MM-DD
             if (!calendarData[date]) {
                 calendarData[date] = [];
             }
             calendarData[date].push(event);
         });
-        
         // Regenerate calendar to show events
         generateCalendarDays();
-        
     } catch (error) {
         console.error('Error loading workout events:', error);
     }
