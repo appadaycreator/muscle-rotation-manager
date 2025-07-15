@@ -286,11 +286,47 @@ async function getMuscleRecoveryData() {
 }
 
 async function getRecentWorkouts() {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Return empty array for now - will be replaced with actual data
-    return [];
+    if (!supabase || !currentUser) {
+        return [];
+    }
+    try {
+        const { data, error } = await supabase
+            .from('workouts')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .order('date', { ascending: false })
+            .limit(5);
+        if (error) throw error;
+        // データ整形（必要に応じて）
+        return data.map(workout => {
+            let exercises = [];
+            try {
+                exercises = JSON.parse(workout.exercises || '[]');
+            } catch (e) {
+                exercises = [];
+            }
+            let color = 'chest-color';
+            if (workout.name.includes('背筋')) color = 'back-color';
+            else if (workout.name.includes('肩')) color = 'shoulder-color';
+            else if (workout.name.includes('腕')) color = 'arm-color';
+            else if (workout.name.includes('脚')) color = 'leg-color';
+            else if (workout.name.includes('体幹')) color = 'core-color';
+            return {
+                id: workout.id,
+                name: workout.name,
+                exercises: Array.isArray(exercises) ? exercises.join(', ') : exercises,
+                date: workout.date,
+                color: color,
+                duration: workout.duration || '0分',
+                totalSets: workout.total_sets || 0,
+                maxWeight: workout.max_weight || '0kg'
+            };
+        });
+    } catch (error) {
+        console.error('Error fetching recent workouts:', error);
+        showNotification('最近のワークアウトの取得に失敗しました', 'error');
+        return [];
+    }
 }
 
 // Initialize workout page
