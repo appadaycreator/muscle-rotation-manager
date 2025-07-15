@@ -805,80 +805,97 @@ async function getCalendarEvents() {
 
 // Get progress data
 async function getProgressData() {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    return [
-        {
-            value: '12',
-            label: '今月のワークアウト',
-            trend: 8,
-            color: 'text-blue-600'
-        },
-        {
-            value: '85%',
-            label: '目標達成率',
-            trend: 5,
-            color: 'text-green-600'
-        },
-        {
-            value: '4.2',
-            label: '平均重量(kg)',
-            trend: -2,
-            color: 'text-purple-600'
-        }
-    ];
+    if (!supabase || !currentUser) return [];
+    try {
+        const { data, error } = await supabase
+            .from('workouts')
+            .select('date')
+            .eq('user_id', currentUser.id);
+        if (error) throw error;
+        // 日付ごとに集計
+        const totalWorkouts = data.length;
+        const lastWorkout = data.length > 0 ? data[0].date : null;
+        return [
+            { label: '総ワークアウト数', value: totalWorkouts },
+            { label: '最終ワークアウト日', value: lastWorkout || 'なし' }
+        ];
+    } catch (error) {
+        console.error('Error fetching progress data:', error);
+        return [];
+    }
 }
 
 // Get weekly training data
 async function getWeeklyTrainingData() {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    return {
-        labels: ['月', '火', '水', '木', '金', '土', '日'],
-        data: [2, 1, 3, 0, 2, 1, 0]
-    };
+    if (!supabase || !currentUser) return [];
+    try {
+        const { data, error } = await supabase
+            .from('workouts')
+            .select('date')
+            .eq('user_id', currentUser.id);
+        if (error) throw error;
+        // 直近7日間の日付ごとにカウント
+        const today = new Date();
+        const week = Array.from({length: 7}, (_, i) => {
+            const d = new Date(today);
+            d.setDate(today.getDate() - (6 - i));
+            return d.toISOString().slice(0, 10);
+        });
+        const counts = week.map(dateStr =>
+            data.filter(w => w.date === dateStr).length
+        );
+        return { labels: week, data: counts };
+    } catch (error) {
+        console.error('Error fetching weekly training data:', error);
+        return { labels: [], data: [] };
+    }
 }
 
 // Get muscle distribution data
 async function getMuscleDistributionData() {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    return {
-        labels: ['胸筋', '背筋', '肩', '腕', '脚', '体幹'],
-        data: [25, 20, 15, 15, 15, 10]
-    };
+    if (!supabase || !currentUser) return [];
+    try {
+        const { data, error } = await supabase
+            .from('workouts')
+            .select('name')
+            .eq('user_id', currentUser.id);
+        if (error) throw error;
+        // nameから部位名を抽出してカウント
+        const parts = {};
+        data.forEach(w => {
+            const key = w.name.replace('トレーニング', '');
+            parts[key] = (parts[key] || 0) + 1;
+        });
+        return Object.entries(parts).map(([label, value]) => ({ label, value }));
+    } catch (error) {
+        console.error('Error fetching muscle distribution data:', error);
+        return [];
+    }
 }
 
 // Get performance metrics
 async function getPerformanceMetrics() {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    return [
-        {
-            value: '120kg',
-            label: '最大重量',
-            description: 'ベンチプレス'
-        },
-        {
-            value: '45分',
-            label: '平均時間',
-            description: 'ワークアウト'
-        },
-        {
-            value: '8種目',
-            label: '平均種目数',
-            description: '1回のワークアウト'
-        },
-        {
-            value: '95%',
-            label: '継続率',
-            description: '今月'
-        }
-    ];
+    if (!supabase || !currentUser) return [];
+    try {
+        const { data, error } = await supabase
+            .from('workouts')
+            .select('total_sets, max_weight')
+            .eq('user_id', currentUser.id);
+        if (error) throw error;
+        // 合計セット数・最大重量
+        const totalSets = data.reduce((sum, w) => sum + (w.total_sets || 0), 0);
+        const maxWeight = data.reduce((max, w) => {
+            const num = parseFloat((w.max_weight || '0').replace('kg',''));
+            return num > max ? num : max;
+        }, 0);
+        return [
+            { label: '総セット数', value: totalSets },
+            { label: '最大重量(kg)', value: maxWeight }
+        ];
+    } catch (error) {
+        console.error('Error fetching performance metrics:', error);
+        return [];
+    }
 }
 
 // Get exercises for category
@@ -1378,9 +1395,9 @@ async function loadMuscleChart() {
             new Chart(canvas, {
                 type: 'doughnut',
                 data: {
-                    labels: muscleData.labels,
+                    labels: muscleData.map(d => d.label),
                     datasets: [{
-                        data: muscleData.data,
+                        data: muscleData.map(d => d.value),
                         backgroundColor: [
                             '#ef4444', '#10b981', '#f59e0b',
                             '#8b5cf6', '#3b82f6', '#ec4899'
