@@ -788,14 +788,29 @@ async function getCalendarEvents() {
             .select('*')
             .eq('user_id', currentUser.id);
         if (error) throw error;
-        // カレンダー用に日付・種目などを整形（dateは必ずYYYY-MM-DD）
-        return data.map(workout => ({
-            date: (workout.date || '').split('T')[0],
-            name: workout.name,
-            id: workout.id,
-            color: workout.color || '',
-            exercises: workout.exercises || ''
-        }));
+        // カレンダー用に日付・種目・色などを整形
+        return data.map(workout => {
+            // 色判定
+            let color = 'chest-color';
+            if (workout.name.includes('背筋')) color = 'back-color';
+            else if (workout.name.includes('肩')) color = 'shoulder-color';
+            else if (workout.name.includes('腕')) color = 'arm-color';
+            else if (workout.name.includes('脚')) color = 'leg-color';
+            else if (workout.name.includes('体幹')) color = 'core-color';
+            // 種目名
+            let exercises = '';
+            try {
+                const arr = JSON.parse(workout.exercises || '[]');
+                exercises = Array.isArray(arr) ? arr.join(', ') : arr;
+            } catch (e) {}
+            return {
+                date: (workout.date || '').split('T')[0],
+                name: workout.name,
+                id: workout.id,
+                color,
+                exercises
+            };
+        });
     } catch (error) {
         console.error('Error fetching calendar events:', error);
         return [];
