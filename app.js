@@ -106,6 +106,9 @@ function initializePage(pageName) {
 
 // Initialize dashboard
 function initializeDashboard() {
+    // Load dashboard data
+    loadDashboardData();
+    
     // Muscle part click handlers
     document.querySelectorAll('.muscle-part').forEach(part => {
         part.addEventListener('click', () => {
@@ -116,8 +119,161 @@ function initializeDashboard() {
     });
 }
 
+// Load dashboard data
+async function loadDashboardData() {
+    try {
+        // Load recommendations
+        await loadRecommendations();
+        
+        // Load muscle recovery data
+        await loadMuscleRecoveryData();
+        
+        // Load recent workouts
+        await loadRecentWorkouts();
+        
+    } catch (error) {
+        console.error('Error loading dashboard data:', error);
+        showNotification('データの読み込みに失敗しました', 'error');
+    }
+}
+
+// Load recommendations
+async function loadRecommendations() {
+    const container = document.getElementById('today-recommendations');
+    if (!container) return;
+    
+    try {
+        // TODO: Replace with actual API call
+        const recommendations = await getRecommendations();
+        
+        container.innerHTML = recommendations.map(rec => `
+            <div class="flex items-center space-x-3 p-3 ${rec.bgColor} rounded-lg">
+                <div class="w-3 h-3 ${rec.dotColor} rounded-full"></div>
+                <span class="${rec.textColor}">${rec.message}</span>
+            </div>
+        `).join('');
+        
+    } catch (error) {
+        container.innerHTML = `
+            <div class="text-center text-gray-500 py-4">
+                <i class="fas fa-exclamation-triangle text-xl mb-2"></i>
+                <p>おすすめの読み込みに失敗しました</p>
+            </div>
+        `;
+    }
+}
+
+// Load muscle recovery data
+async function loadMuscleRecoveryData() {
+    const container = document.getElementById('muscle-recovery-grid');
+    if (!container) return;
+    
+    try {
+        // TODO: Replace with actual API call
+        const muscleData = await getMuscleRecoveryData();
+        
+        container.innerHTML = muscleData.map(muscle => `
+            <div class="muscle-card muscle-part rounded-lg p-6" data-muscle="${muscle.id}">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800">
+                        <i class="fas fa-male ${muscle.iconColor} mr-2"></i>
+                        <span data-i18n="muscle.${muscle.id}">${muscle.name}</span>
+                    </h3>
+                    <span class="text-sm text-gray-500">最終: ${muscle.lastTrained}</span>
+                </div>
+                <div class="mb-3">
+                    <div class="flex justify-between text-sm mb-1">
+                        <span data-i18n="dashboard.recovery">回復度</span>
+                        <span class="font-semibold ${muscle.recoveryColor}">${muscle.recovery}%</span>
+                    </div>
+                    <div class="recovery-bar ${muscle.recoveryClass} rounded-full" style="width: ${muscle.recovery}%;"></div>
+                </div>
+                <div class="text-sm text-gray-600">次回推奨: ${muscle.nextRecommended}</div>
+            </div>
+        `).join('');
+        
+    } catch (error) {
+        container.innerHTML = `
+            <div class="text-center text-gray-500 py-8">
+                <i class="fas fa-exclamation-triangle text-xl mb-2"></i>
+                <p>回復度データの読み込みに失敗しました</p>
+            </div>
+        `;
+    }
+}
+
+// Load recent workouts
+async function loadRecentWorkouts() {
+    const container = document.getElementById('recent-workouts');
+    if (!container) return;
+    
+    try {
+        // TODO: Replace with actual API call
+        const workouts = await getRecentWorkouts();
+        
+        if (workouts.length === 0) {
+            container.innerHTML = `
+                <div class="text-center text-gray-500 py-4">
+                    <i class="fas fa-info-circle text-xl mb-2"></i>
+                    <p>まだワークアウトが記録されていません</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = workouts.map(workout => `
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div class="flex items-center space-x-3">
+                    <div class="workout-dot ${workout.color}"></div>
+                    <div>
+                        <div class="font-medium text-gray-800">${workout.name}</div>
+                        <div class="text-sm text-gray-500">${workout.exercises}</div>
+                    </div>
+                </div>
+                <div class="text-sm text-gray-500">${workout.date}</div>
+            </div>
+        `).join('');
+        
+    } catch (error) {
+        container.innerHTML = `
+            <div class="text-center text-gray-500 py-4">
+                <i class="fas fa-exclamation-triangle text-xl mb-2"></i>
+                <p>最近のワークアウトの読み込みに失敗しました</p>
+            </div>
+        `;
+    }
+}
+
+// Mock API functions (replace with actual API calls)
+async function getRecommendations() {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Return empty array for now - will be replaced with actual data
+    return [];
+}
+
+async function getMuscleRecoveryData() {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Return empty array for now - will be replaced with actual data
+    return [];
+}
+
+async function getRecentWorkouts() {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Return empty array for now - will be replaced with actual data
+    return [];
+}
+
 // Initialize workout page
 function initializeWorkout() {
+    // Load workout data
+    loadWorkoutData();
+    
     // Quick start button handlers
     document.querySelectorAll('.quick-start-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -126,6 +282,115 @@ function initializeWorkout() {
             // Add workout start functionality here
         });
     });
+}
+
+// Load workout data
+async function loadWorkoutData() {
+    try {
+        // Load quick start buttons
+        await loadQuickStartButtons();
+        
+        // Load workout history
+        await loadWorkoutHistory();
+        
+    } catch (error) {
+        console.error('Error loading workout data:', error);
+        showNotification('ワークアウトデータの読み込みに失敗しました', 'error');
+    }
+}
+
+// Load quick start buttons
+async function loadQuickStartButtons() {
+    const container = document.getElementById('quick-start-grid');
+    if (!container) return;
+    
+    try {
+        // TODO: Replace with actual API call
+        const muscleGroups = await getMuscleGroups();
+        
+        container.innerHTML = muscleGroups.map(muscle => `
+            <button class="quick-start-btn flex flex-col items-center space-y-2 p-4 ${muscle.bgColor} hover:${muscle.hoverColor} rounded-lg transition-colors" data-muscle="${muscle.id}">
+                <i class="fas fa-male ${muscle.iconColor} text-2xl"></i>
+                <span class="text-sm font-medium ${muscle.textColor}" data-i18n="muscle.${muscle.id}">${muscle.name}</span>
+            </button>
+        `).join('');
+        
+        // Re-attach event listeners
+        document.querySelectorAll('.quick-start-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const muscle = btn.dataset.muscle;
+                console.log(`Quick start workout for: ${muscle}`);
+                // Add workout start functionality here
+            });
+        });
+        
+    } catch (error) {
+        container.innerHTML = `
+            <div class="text-center text-gray-500 py-4">
+                <i class="fas fa-exclamation-triangle text-xl mb-2"></i>
+                <p>クイックスタートボタンの読み込みに失敗しました</p>
+            </div>
+        `;
+    }
+}
+
+// Load workout history
+async function loadWorkoutHistory() {
+    const container = document.getElementById('workout-history');
+    if (!container) return;
+    
+    try {
+        // TODO: Replace with actual API call
+        const workouts = await getWorkoutHistory();
+        
+        if (workouts.length === 0) {
+            container.innerHTML = `
+                <div class="text-center text-gray-500 py-4">
+                    <i class="fas fa-info-circle text-xl mb-2"></i>
+                    <p>まだワークアウト履歴がありません</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = workouts.map(workout => `
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div class="flex items-center space-x-3">
+                    <div class="workout-dot ${workout.color}"></div>
+                    <div>
+                        <div class="font-medium text-gray-800">${workout.name}</div>
+                        <div class="text-sm text-gray-500">${workout.exercises}</div>
+                    </div>
+                </div>
+                <div class="text-sm text-gray-500">${workout.date}</div>
+            </div>
+        `).join('');
+        
+    } catch (error) {
+        container.innerHTML = `
+            <div class="text-center text-gray-500 py-4">
+                <i class="fas fa-exclamation-triangle text-xl mb-2"></i>
+                <p>ワークアウト履歴の読み込みに失敗しました</p>
+            </div>
+        `;
+    }
+}
+
+// Mock API functions for workout data
+async function getMuscleGroups() {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Return empty array for now - will be replaced with actual data
+    return [];
+}
+
+async function getWorkoutHistory() {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Return empty array for now - will be replaced with actual data
+    return [];
 }
 
 // Initialize calendar page
@@ -193,34 +458,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Initialize mobile menu
     initializeMobileMenu();
     
-    // Debug: Log current auth state
     console.log('App initialization complete');
     console.log('Current user:', currentUser);
     console.log('Supabase configured:', !!supabase);
-    
-    // Add debug button to check auth state
-    setTimeout(() => {
-        const debugBtn = document.createElement('button');
-        debugBtn.textContent = 'Debug Auth';
-        debugBtn.style.position = 'fixed';
-        debugBtn.style.bottom = '10px';
-        debugBtn.style.right = '10px';
-        debugBtn.style.zIndex = '9999';
-        debugBtn.style.padding = '5px 10px';
-        debugBtn.style.backgroundColor = '#333';
-        debugBtn.style.color = 'white';
-        debugBtn.style.border = 'none';
-        debugBtn.style.borderRadius = '4px';
-        debugBtn.onclick = () => {
-            console.log('=== DEBUG AUTH STATE ===');
-            console.log('Current user:', currentUser);
-            console.log('Supabase client:', supabase);
-            console.log('Login button:', document.getElementById('login-btn'));
-            console.log('Logout button:', document.getElementById('logout-btn'));
-            console.log('=======================');
-        };
-        document.body.appendChild(debugBtn);
-    }, 1000);
 });
 
 // Load header
