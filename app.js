@@ -104,6 +104,9 @@ function initializePage(pageName) {
         case 'help':
             initializeHelp();
             break;
+        case 'privacy':
+            initializePrivacy();
+            break;
     }
 }
 
@@ -1236,13 +1239,26 @@ function showDayDetails(dateStr) {
                 <button class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
                     ワークアウト追加
                 </button>
-                <button class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400">
+                <button class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400" id="calendar-modal-close-btn">
                     閉じる
                 </button>
             </div>
         </div>
     `;
     document.body.appendChild(modal);
+    // 閉じるボタン
+    const closeBtn = modal.querySelector('#calendar-modal-close-btn');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            modal.remove();
+        });
+    }
+    // モーダル外クリックでも閉じる
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
 }
 
 // Format date for display
@@ -1958,6 +1974,11 @@ async function deleteUserData() {
 function initializeHelp() {
     console.log('Help page initialized');
     // Help page doesn't need specific data loading as it's static content
+}
+
+function initializePrivacy() {
+    console.log('Privacy policy page initialized');
+    // Privacy policy page doesn't need specific data loading as it's static content
 }
 
 // Show notification
