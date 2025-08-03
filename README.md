@@ -22,6 +22,7 @@
 - **スタイリング**: Tailwind CSS
 - **バックエンド**: Supabase (Database & Authentication)
 - **PWA**: Service Worker, Web App Manifest
+- **自動化**: GitHub Actions (Supabaseキープアライブ、CI/CD、セキュリティ監査)
 
 ## データプライバシー
 
