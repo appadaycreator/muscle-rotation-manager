@@ -808,10 +808,14 @@ class ExercisePage {
      * @param {string} categoryName - カテゴリ名
      */
     applyCategoryFilter(categoryName) {
+        console.log('applyCategoryFilter called with:', categoryName);
         const muscleGroupFilter = document.getElementById('muscle-group-filter');
         if (muscleGroupFilter) {
+            console.log('Setting muscle group filter to:', categoryName);
             muscleGroupFilter.value = categoryName;
             this.applyFilters();
+        } else {
+            console.error('muscle-group-filter element not found');
         }
     }
 

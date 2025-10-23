@@ -28,6 +28,12 @@ class SettingsPage {
             return;
         }
 
+        // 認証UIを更新
+        await authManager.updateAuthUI();
+
+        // 認証状態の変更を監視
+        this.setupAuthStateListener();
+
         await safeAsync(
             async () => {
                 // 設定ページのコンテンツを表示
@@ -39,6 +45,22 @@ class SettingsPage {
             },
             '設定ページの初期化'
         );
+    }
+
+    /**
+     * 認証状態の変更を監視
+     */
+    setupAuthStateListener() {
+        // 認証状態が変更されたときにUIを更新
+        supabaseService.onAuthStateChange(async (event, session) => {
+            console.log('Auth state changed in settings page:', event);
+            await authManager.updateAuthUI();
+            
+            // ログアウトされた場合はログインプロンプトを表示
+            if (event === 'SIGNED_OUT') {
+                this.showLoginPrompt();
+            }
+        });
     }
 
     /**
