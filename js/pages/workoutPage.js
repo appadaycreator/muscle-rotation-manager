@@ -1,7 +1,13 @@
 // workoutPage.js - ワークアウトページの機能
 
 import { supabaseService } from '../services/supabaseService.js';
-import { showNotification } from '../utils/helpers.js';
+import {
+    showNotification,
+    safeAsync,
+    safeGetElement,
+    safeGetElements,
+    debounce
+} from '../utils/helpers.js';
 import { MUSCLE_GROUPS } from '../utils/constants.js';
 
 class WorkoutPage {
@@ -19,21 +25,24 @@ class WorkoutPage {
     async initialize() {
         console.log('Workout page initialized');
 
-        try {
-            await this.setupWorkoutInterface();
-            this.setupEventListeners();
-        } catch (error) {
-            console.error('Error initializing workout page:', error);
-            showNotification('ワークアウトページの初期化に失敗しました', 'error');
-        }
+        await safeAsync(
+            async () => {
+                await this.setupWorkoutInterface();
+                this.setupEventListeners();
+            },
+            'ワークアウトページの初期化'
+        );
     }
 
     /**
      * ワークアウトインターフェースを設定
      */
     async setupWorkoutInterface() {
-        const container = document.getElementById('workout-container');
-        if (!container) {return;}
+        const container = safeGetElement('#workout-container');
+        if (!container) {
+            console.warn('Workout container not found');
+            return;
+        }
 
         // 筋肉部位選択セクション
         const muscleGroupsHtml = MUSCLE_GROUPS.map(group => `
@@ -129,28 +138,32 @@ class WorkoutPage {
      * イベントリスナーを設定
      */
     setupEventListeners() {
-        // 筋肉部位選択
-        document.querySelectorAll('.muscle-group-card').forEach(card => {
+        // 筋肉部位選択（デバウンス付き）
+        const debouncedToggle = debounce((muscleId, card) => {
+            this.toggleMuscleGroup(muscleId, card);
+        }, 100);
+
+        safeGetElements('.muscle-group-card').forEach(card => {
             card.addEventListener('click', () => {
                 const muscleId = card.dataset.muscle;
-                this.toggleMuscleGroup(muscleId, card);
+                debouncedToggle(muscleId, card);
             });
         });
 
         // ワークアウト開始
-        const startBtn = document.getElementById('start-workout-btn');
+        const startBtn = safeGetElement('#start-workout-btn');
         if (startBtn) {
             startBtn.addEventListener('click', () => this.startWorkout());
         }
 
         // ワークアウト終了
-        const stopBtn = document.getElementById('stop-workout-btn');
+        const stopBtn = safeGetElement('#stop-workout-btn');
         if (stopBtn) {
             stopBtn.addEventListener('click', () => this.stopWorkout());
         }
 
         // エクササイズ追加
-        const addExerciseBtn = document.getElementById('add-exercise-btn');
+        const addExerciseBtn = safeGetElement('#add-exercise-btn');
         if (addExerciseBtn) {
             addExerciseBtn.addEventListener('click', () => this.showAddExerciseModal());
         }
@@ -182,10 +195,13 @@ class WorkoutPage {
      * 選択された筋肉部位の表示を更新
      */
     updateSelectedMusclesDisplay() {
-        const container = document.getElementById('selected-muscles');
-        const listContainer = document.getElementById('selected-muscles-list');
+        const container = safeGetElement('#selected-muscles');
+        const listContainer = safeGetElement('#selected-muscles-list');
 
-        if (!container || !listContainer) {return;}
+        if (!container || !listContainer) {
+            console.warn('Selected muscles display containers not found');
+            return;
+        }
 
         if (this.selectedMuscleGroups.length === 0) {
             container.classList.add('hidden');
@@ -210,8 +226,11 @@ class WorkoutPage {
      * 開始ボタンの状態を更新
      */
     updateStartButtonState() {
-        const startBtn = document.getElementById('start-workout-btn');
-        if (!startBtn) {return;}
+        const startBtn = safeGetElement('#start-workout-btn');
+        if (!startBtn) {
+            console.warn('Start workout button not found');
+            return;
+        }
 
         startBtn.disabled = this.selectedMuscleGroups.length === 0;
     }
@@ -237,7 +256,10 @@ class WorkoutPage {
         this.startWorkoutTimer();
 
         // UIを更新
-        document.getElementById('current-workout-section').classList.remove('hidden');
+        const workoutSection = safeGetElement('#current-workout-section');
+        if (workoutSection) {
+            workoutSection.classList.remove('hidden');
+        }
 
         showNotification(
             `${this.selectedMuscleGroups.length}部位のワークアウトを開始しました`,
@@ -267,7 +289,7 @@ class WorkoutPage {
         const minutes = Math.floor(elapsed / 60);
         const seconds = elapsed % 60;
 
-        const timerElement = document.getElementById('workout-timer');
+        const timerElement = safeGetElement('#workout-timer');
         if (timerElement) {
             timerElement.textContent =
                 `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
@@ -291,17 +313,20 @@ class WorkoutPage {
             (this.currentWorkout.endTime - this.currentWorkout.startTime) / 1000
         );
 
-        try {
-            // ワークアウトデータを保存
-            await this.saveWorkoutData({
-                ...this.currentWorkout,
-                duration
-            });
+        const success = await safeAsync(
+            async () => {
+                await this.saveWorkoutData({
+                    ...this.currentWorkout,
+                    duration
+                });
+                return true;
+            },
+            'ワークアウトの保存',
+            false
+        );
 
+        if (success) {
             showNotification('ワークアウトを完了しました', 'success');
-        } catch (error) {
-            console.error('Error saving workout:', error);
-            showNotification('ワークアウトの保存に失敗しました', 'error');
         }
 
         // リセット
@@ -335,8 +360,12 @@ class WorkoutPage {
         this.startTime = null;
 
         // UI をリセット
-        document.getElementById('current-workout-section').classList.add('hidden');
-        document.querySelectorAll('.muscle-group-card').forEach(card => {
+        const workoutSection = safeGetElement('#current-workout-section');
+        if (workoutSection) {
+            workoutSection.classList.add('hidden');
+        }
+
+        safeGetElements('.muscle-group-card').forEach(card => {
             card.classList.remove('border-blue-500', 'bg-blue-50');
         });
 

@@ -1,7 +1,11 @@
 // settingsPage.js - 設定ページの機能
 
 import { supabaseService } from '../services/supabaseService.js';
-import { showNotification } from '../utils/helpers.js';
+import {
+    showNotification,
+    safeAsync,
+    safeGetElement
+} from '../utils/helpers.js';
 
 class SettingsPage {
     constructor() {
@@ -15,14 +19,14 @@ class SettingsPage {
     async initialize() {
         console.log('Settings page initialized');
 
-        try {
-            await this.loadUserProfile();
-            this.setupSettingsInterface();
-            this.setupEventListeners();
-        } catch (error) {
-            console.error('Error initializing settings page:', error);
-            showNotification('設定ページの初期化に失敗しました', 'error');
-        }
+        await safeAsync(
+            async () => {
+                await this.loadUserProfile();
+                this.setupSettingsInterface();
+                this.setupEventListeners();
+            },
+            '設定ページの初期化'
+        );
     }
 
     /**
@@ -47,8 +51,11 @@ class SettingsPage {
      * 設定インターフェースを設定
      */
     setupSettingsInterface() {
-        const container = document.getElementById('settings-container');
-        if (!container) {return;}
+        const container = safeGetElement('#settings-container');
+        if (!container) {
+            console.warn('Settings container not found');
+            return;
+        }
 
         const currentUser = supabaseService.getCurrentUser();
         const userEmail = currentUser?.email || this.userProfile.email || '';
@@ -243,33 +250,33 @@ class SettingsPage {
      */
     setupEventListeners() {
         // プロフィールフォーム
-        const profileForm = document.getElementById('profile-form');
+        const profileForm = safeGetElement('#profile-form');
         if (profileForm) {
             profileForm.addEventListener('submit', (e) => this.handleProfileSave(e));
         }
 
         // 表示設定フォーム
-        const displayForm = document.getElementById('display-form');
+        const displayForm = safeGetElement('#display-form');
         if (displayForm) {
             displayForm.addEventListener('submit', (e) => this.handleDisplaySave(e));
         }
 
         // アバターアップロード
-        const avatarUploadBtn = document.getElementById('avatar-upload-btn');
-        const avatarInput = document.getElementById('avatar');
+        const avatarUploadBtn = safeGetElement('#avatar-upload-btn');
+        const avatarInput = safeGetElement('#avatar');
         if (avatarUploadBtn && avatarInput) {
             avatarUploadBtn.addEventListener('click', () => avatarInput.click());
             avatarInput.addEventListener('change', (e) => this.handleAvatarUpload(e));
         }
 
         // データエクスポート
-        const exportBtn = document.getElementById('export-data-btn');
+        const exportBtn = safeGetElement('#export-data-btn');
         if (exportBtn) {
             exportBtn.addEventListener('click', () => this.exportData());
         }
 
         // データ削除
-        const deleteBtn = document.getElementById('delete-data-btn');
+        const deleteBtn = safeGetElement('#delete-data-btn');
         if (deleteBtn) {
             deleteBtn.addEventListener('click', () => this.deleteAllData());
         }
@@ -291,15 +298,20 @@ class SettingsPage {
             email: formData.get('email')
         };
 
-        try {
-            await this.saveProfile(profileData);
+        const success = await safeAsync(
+            async () => {
+                await this.saveProfile(profileData);
+                return true;
+            },
+            'プロフィールの保存',
+            false
+        );
+
+        if (success) {
             showNotification('プロフィールを保存しました', 'success');
-        } catch (error) {
-            console.error('Profile save error:', error);
-            showNotification('プロフィールの保存に失敗しました', 'error');
-        } finally {
-            this.isLoading = false;
         }
+
+        this.isLoading = false;
     }
 
     /**
@@ -315,13 +327,18 @@ class SettingsPage {
             language: formData.get('language')
         };
 
-        try {
-            await this.saveProfile(displaySettings);
-            this.applyDisplaySettings(displaySettings);
+        const success = await safeAsync(
+            async () => {
+                await this.saveProfile(displaySettings);
+                this.applyDisplaySettings(displaySettings);
+                return true;
+            },
+            '表示設定の保存',
+            false
+        );
+
+        if (success) {
             showNotification('表示設定を保存しました', 'success');
-        } catch (error) {
-            console.error('Display settings save error:', error);
-            showNotification('表示設定の保存に失敗しました', 'error');
         }
     }
 
@@ -362,7 +379,7 @@ class SettingsPage {
             // プレビュー表示
             const reader = new FileReader();
             reader.onload = (e) => {
-                const preview = document.getElementById('avatar-preview');
+                const preview = safeGetElement('#avatar-preview');
                 if (preview) {
                     preview.innerHTML = `
                         <img src="${e.target.result}" 

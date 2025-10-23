@@ -119,20 +119,46 @@ export function simulateApiDelay(ms = 500) {
 
 /**
  * 安全にDOMエレメントを取得
- * @param {string} id - エレメントID
+ * @param {string} selector - セレクター（ID、クラス、要素名など）
+ * @param {Element|Document} context - 検索コンテキスト（デフォルト: document）
  * @returns {Element|null} DOMエレメント
  */
-export function safeGetElement(id) {
-    return document.getElementById(id);
+export function safeGetElement(selector, context = document) {
+    try {
+        return selector.startsWith('#')
+            ? context.getElementById(selector.slice(1))
+            : context.querySelector(selector);
+    } catch (error) {
+        console.warn(`Invalid selector: ${selector}`, error);
+        return null;
+    }
+}
+
+/**
+ * 安全に複数のDOMエレメントを取得
+ * @param {string} selector - セレクター
+ * @param {Element|Document} context - 検索コンテキスト（デフォルト: document）
+ * @returns {NodeList} DOMエレメントのリスト
+ */
+export function safeGetElements(selector, context = document) {
+    try {
+        return context.querySelectorAll(selector);
+    } catch (error) {
+        console.warn(`Invalid selector: ${selector}`, error);
+        return [];
+    }
 }
 
 /**
  * 安全にDOMエレメントのテキストを設定
- * @param {string} id - エレメントID
+ * @param {string|Element} target - エレメントIDまたはエレメント
  * @param {string} text - 設定するテキスト
+ * @param {Element|Document} context - 検索コンテキスト
  */
-export function safeSetText(id, text) {
-    const element = safeGetElement(id);
+export function safeSetText(target, text, context = document) {
+    const element = typeof target === 'string'
+        ? safeGetElement(target, context)
+        : target;
     if (element) {
         element.textContent = text;
     }
@@ -140,11 +166,14 @@ export function safeSetText(id, text) {
 
 /**
  * 安全にDOMエレメントのHTMLを設定
- * @param {string} id - エレメントID
+ * @param {string|Element} target - エレメントIDまたはエレメント
  * @param {string} html - 設定するHTML
+ * @param {Element|Document} context - 検索コンテキスト
  */
-export function safeSetHTML(id, html) {
-    const element = safeGetElement(id);
+export function safeSetHTML(target, html, context = document) {
+    const element = typeof target === 'string'
+        ? safeGetElement(target, context)
+        : target;
     if (element) {
         element.innerHTML = html;
     }
@@ -163,4 +192,78 @@ export function createErrorHTML(message, icon = 'fas fa-exclamation-triangle') {
             <p>${message}</p>
         </div>
     `;
+}
+
+/**
+ * 統一されたエラーハンドリング
+ * @param {Error} error - エラーオブジェクト
+ * @param {string} context - エラーが発生したコンテキスト
+ * @param {boolean} showNotification - 通知を表示するか
+ * @returns {string} エラーメッセージ
+ */
+export function handleError(error, context = 'Unknown', showNotification = true) {
+    const errorMessage = error?.message || 'Unknown error occurred';
+    const fullMessage = `${context}: ${errorMessage}`;
+
+    console.error(fullMessage, error);
+
+    if (showNotification) {
+        showNotification(
+            `${context}でエラーが発生しました`,
+            'error'
+        );
+    }
+
+    return fullMessage;
+}
+
+/**
+ * 非同期関数を安全に実行
+ * @param {Function} asyncFn - 非同期関数
+ * @param {string} context - エラーコンテキスト
+ * @param {*} fallbackValue - エラー時のフォールバック値
+ * @returns {Promise<*>} 実行結果またはフォールバック値
+ */
+export async function safeAsync(asyncFn, context = 'Async operation', fallbackValue = null) {
+    try {
+        return await asyncFn();
+    } catch (error) {
+        handleError(error, context);
+        return fallbackValue;
+    }
+}
+
+/**
+ * デバウンス関数
+ * @param {Function} func - 実行する関数
+ * @param {number} wait - 待機時間（ミリ秒）
+ * @returns {Function} デバウンスされた関数
+ */
+export function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+/**
+ * スロットル関数
+ * @param {Function} func - 実行する関数
+ * @param {number} limit - 制限時間（ミリ秒）
+ * @returns {Function} スロットルされた関数
+ */
+export function throttle(func, limit) {
+    let inThrottle;
+    return function executedFunction(...args) {
+        if (!inThrottle) {
+            func.apply(this, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    };
 }
