@@ -219,14 +219,17 @@ class ExercisePage {
         try {
             // 筋肉部位サービスから筋肉部位を取得
             const muscleGroups = await muscleGroupService.getMuscleGroups();
-            console.log('Loaded muscle groups:', muscleGroups);
+            console.log('Loaded muscle groups for filter:', muscleGroups);
             
             muscleGroups.forEach(group => {
                 const option = document.createElement('option');
                 option.value = group.id;
                 option.textContent = group.name_ja || group.name_en;
                 select.appendChild(option);
+                console.log('Added filter option:', { id: group.id, name_ja: group.name_ja, name_en: group.name_en });
             });
+            
+            console.log('Muscle group filter setup complete. Total options:', select.options.length);
         } catch (error) {
             console.error('Failed to load muscle groups:', error);
         }
@@ -330,6 +333,7 @@ class ExercisePage {
 
         // セレクトボックスフィルター
         const muscleGroup = document.getElementById('muscle-group-filter')?.value;
+        console.log('Muscle group filter value:', muscleGroup);
         if (muscleGroup) {
             filters.muscleGroupId = muscleGroup;
         }
@@ -357,6 +361,7 @@ class ExercisePage {
         const sortBy = document.getElementById('exercise-sort')?.value;
         if (sortBy) {filters.sortBy = sortBy;}
 
+        console.log('Final filters object:', filters);
         return filters;
     }
 
@@ -393,6 +398,9 @@ class ExercisePage {
      * フィルターを適用
      */
     async applyFilters() {
+        console.log('Applying filters...');
+        const currentFilters = this.getCurrentFilters();
+        console.log('Current filters:', currentFilters);
         await this.loadExercises();
     }
 
@@ -749,22 +757,80 @@ class ExercisePage {
      */
     async applyCategoryFilter(categoryName) {
         try {
+            console.log('Applying category filter for:', categoryName);
+            
+            // 筋肉部位名のマッピング（カテゴリ詳細の名前からデータベースの筋肉部位名へ）
+            const categoryNameMapping = {
+                '胸筋': '胸',
+                '背筋': '背中',
+                '脚筋': '脚',
+                '肩筋': '肩',
+                '腕筋': '腕',
+                '腹': '腹',
+                '体幹': '腹'
+            };
+            
+            const mappedName = categoryNameMapping[categoryName] || categoryName;
+            console.log('Mapped category name:', mappedName);
+            
             // 筋肉部位サービスから筋肉部位を取得
-            const muscleGroup = await muscleGroupService.getMuscleGroupByName(categoryName);
+            const muscleGroup = await muscleGroupService.getMuscleGroupByName(mappedName);
+            console.log('Found muscle group:', muscleGroup);
             
             if (muscleGroup) {
                 const muscleGroupFilter = document.getElementById('muscle-group-filter');
                 if (muscleGroupFilter) {
+                    console.log('Setting muscle group filter to:', muscleGroup.id);
                     muscleGroupFilter.value = muscleGroup.id;
+                    
+                    // フィルターを適用
                     await this.applyFilters();
                     this.updateExerciseCount();
                     
                     // フィルター適用の通知を表示
                     showNotification(`${muscleGroup.name_ja}のエクササイズで絞り込みました`, 'success');
+                } else {
+                    console.error('Muscle group filter element not found');
+                    showNotification('フィルター要素が見つかりませんでした', 'error');
                 }
             } else {
-                console.warn('Muscle group not found:', categoryName);
-                showNotification(`筋肉部位「${categoryName}」が見つかりませんでした`, 'error');
+                console.warn('Muscle group not found for category:', categoryName, 'mapped to:', mappedName);
+                
+                // フォールバック: 直接筋肉部位IDで検索
+                const directMapping = {
+                    '胸筋': 'chest',
+                    '背筋': 'back',
+                    '脚筋': 'legs',
+                    '肩筋': 'shoulders',
+                    '腕筋': 'arms',
+                    '腹': 'abs',
+                    '体幹': 'abs'
+                };
+                
+                const directId = directMapping[categoryName];
+                if (directId) {
+                    console.log('Trying direct ID mapping:', directId);
+                    const muscleGroupFilter = document.getElementById('muscle-group-filter');
+                    if (muscleGroupFilter) {
+                        // 筋肉部位フィルターのオプションを確認
+                        const options = Array.from(muscleGroupFilter.options);
+                        console.log('Available filter options:', options.map(opt => ({ value: opt.value, text: opt.text })));
+                        
+                        // 筋肉部位IDで直接検索
+                        const targetOption = options.find(opt => opt.value === directId);
+                        if (targetOption) {
+                            muscleGroupFilter.value = directId;
+                            await this.applyFilters();
+                            this.updateExerciseCount();
+                            showNotification(`${targetOption.text}のエクササイズで絞り込みました`, 'success');
+                        } else {
+                            console.error('Target option not found:', directId);
+                            showNotification(`筋肉部位「${categoryName}」のフィルターが見つかりませんでした`, 'error');
+                        }
+                    }
+                } else {
+                    showNotification(`筋肉部位「${categoryName}」が見つかりませんでした`, 'error');
+                }
             }
         } catch (error) {
             console.error('Failed to apply category filter:', error);

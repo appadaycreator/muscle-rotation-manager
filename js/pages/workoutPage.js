@@ -20,6 +20,7 @@ export class WorkoutPage extends BasePage {
         this.muscleGroups = ['胸', '背中', '肩', '腕', '脚', '腹筋'];
         this.selectedMuscles = [];
         this.selectedExercises = [];
+        this.eventListenersSetup = false;
         
         console.log('WorkoutPage constructor called');
         console.log('Muscle groups initialized:', this.muscleGroups);
@@ -66,7 +67,11 @@ export class WorkoutPage extends BasePage {
                 console.log(`Button ${index}:`, btn.dataset.muscle, btn);
             });
             
-        this.setupEventListeners();
+            // イベントリスナーが既に設定されている場合はスキップ
+            if (!this.eventListenersSetup) {
+                this.setupEventListeners();
+                this.eventListenersSetup = true;
+            }
             this.updateQuickStartButton();
             console.log('Event listeners setup complete');
         }, 100);
@@ -145,9 +150,8 @@ export class WorkoutPage extends BasePage {
                 workoutHistory = await supabaseService.getWorkoutHistory();
                 console.log('Workout history loaded from Supabase:', workoutHistory);
             } else {
-                console.log('Loading workout history from localStorage...');
-                workoutHistory = this.loadFromLocalStorage('workoutHistory');
-                console.log('Workout history loaded from localStorage:', workoutHistory);
+                console.log('Supabase not available, showing empty history');
+                workoutHistory = [];
             }
 
             this.updateWorkoutHistory(workoutHistory);
@@ -165,8 +169,11 @@ export class WorkoutPage extends BasePage {
     setupEventListeners() {
         console.log('Setting up event listeners...');
 
+        // 既存のイベントリスナーを削除
+        this.removeEventListeners();
+
         // 筋肉部位ボタンのクリック
-        document.addEventListener('click', (e) => {
+        this.muscleGroupClickHandler = (e) => {
             console.log('Click event detected on:', e.target);
             console.log('Event target classList:', e.target.classList);
             console.log('Closest muscle-group-btn:', e.target.closest('.muscle-group-btn'));
@@ -178,31 +185,55 @@ export class WorkoutPage extends BasePage {
             } else {
                 console.log('Click was not on a muscle group button');
             }
-        });
+        };
 
         // クイックスタートワークアウトボタン
-        document.addEventListener('click', (e) => {
+        this.quickStartClickHandler = (e) => {
             if (e.target.id === 'quick-start-workout') {
                 e.preventDefault();
                 this.startQuickWorkout();
             }
-        });
+        };
 
         // ワークアウト終了ボタン
-        document.addEventListener('click', (e) => {
+        this.stopWorkoutClickHandler = (e) => {
             if (e.target.id === 'stop-workout') {
                 e.preventDefault();
-            this.stopWorkout();
+                this.stopWorkout();
             }
-        });
+        };
 
         // エクササイズ追加ボタン
-        document.addEventListener('click', (e) => {
+        this.addExerciseClickHandler = (e) => {
             if (e.target.id === 'add-exercise-btn') {
                 e.preventDefault();
-            this.addExercise();
+                this.addExercise();
             }
-        });
+        };
+
+        // イベントリスナーを追加
+        document.addEventListener('click', this.muscleGroupClickHandler);
+        document.addEventListener('click', this.quickStartClickHandler);
+        document.addEventListener('click', this.stopWorkoutClickHandler);
+        document.addEventListener('click', this.addExerciseClickHandler);
+    }
+
+    /**
+     * イベントリスナーを削除
+     */
+    removeEventListeners() {
+        if (this.muscleGroupClickHandler) {
+            document.removeEventListener('click', this.muscleGroupClickHandler);
+        }
+        if (this.quickStartClickHandler) {
+            document.removeEventListener('click', this.quickStartClickHandler);
+        }
+        if (this.stopWorkoutClickHandler) {
+            document.removeEventListener('click', this.stopWorkoutClickHandler);
+        }
+        if (this.addExerciseClickHandler) {
+            document.removeEventListener('click', this.addExerciseClickHandler);
+        }
     }
 
     /**
@@ -384,13 +415,25 @@ export class WorkoutPage extends BasePage {
      * ワークアウト履歴に保存
      */
     saveWorkoutToHistory() {
-        if (!this.currentWorkout) return;
+        if (!this.currentWorkout) {
+            console.log('No current workout to save');
+            return;
+        }
+
+        // 重複保存を防ぐためのチェック
+        if (this.currentWorkout.saved) {
+            console.log('Workout already saved, skipping duplicate save');
+            return;
+        }
 
         const workoutData = {
             ...this.currentWorkout,
             endTime: new Date(),
-            duration: Math.floor((new Date() - this.currentWorkout.startTime) / 60000)
+            duration: Math.floor((new Date() - this.currentWorkout.startTime) / 60000),
+            saved: true // 保存済みフラグを追加
         };
+
+        console.log('Saving workout to history:', workoutData);
 
         // ローカルストレージに保存
         const history = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
@@ -399,6 +442,9 @@ export class WorkoutPage extends BasePage {
 
         // 履歴を更新
         this.updateWorkoutHistory(history);
+        
+        // 現在のワークアウトに保存済みフラグを設定
+        this.currentWorkout.saved = true;
     }
 
     /**
