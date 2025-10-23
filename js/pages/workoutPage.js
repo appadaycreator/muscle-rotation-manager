@@ -616,6 +616,25 @@ export class WorkoutPage extends BasePage {
      * ワークアウトウィザードの次のステップに進む
      */
     nextStep(stepNumber) {
+        // ステップ2（エクササイズ選択）の場合は、エクササイズページに遷移
+        if (stepNumber === 2) {
+            // 選択された筋肉部位を保存
+            const selectedMuscles = Array.from(document.querySelectorAll('.muscle-group-btn.selected'))
+                .map(btn => btn.dataset.muscle);
+            
+            if (selectedMuscles.length === 0) {
+                showNotification('筋肉部位を選択してください', 'warning');
+                return;
+            }
+
+            // 選択された筋肉部位をセッションストレージに保存
+            sessionStorage.setItem('selectedMuscleGroups', JSON.stringify(selectedMuscles));
+            
+            // エクササイズページに遷移
+            window.location.href = '/exercises.html';
+            return;
+        }
+
         // 現在のステップを非表示
         document.querySelectorAll('.wizard-step').forEach(step => {
             step.classList.remove('active');
@@ -638,9 +657,7 @@ export class WorkoutPage extends BasePage {
         }
 
         // ステップ固有の処理
-        if (stepNumber === 2) {
-            this.loadExercisePresets();
-        } else if (stepNumber === 3) {
+        if (stepNumber === 3) {
             this.updateWorkoutSummary();
         }
     }
@@ -705,6 +722,9 @@ export class WorkoutPage extends BasePage {
      * エクササイズプリセットを読み込み
      */
     loadExercisePresets() {
+        // エクササイズページから選択されたエクササイズをチェック
+        this.checkSelectedExercises();
+
         const selectedMuscles = Array.from(document.querySelectorAll('.muscle-group-btn.selected'))
             .map(btn => btn.dataset.muscle);
 
@@ -725,6 +745,33 @@ export class WorkoutPage extends BasePage {
                     this.addExerciseToSelection(e.currentTarget.dataset.exercise);
                 });
             });
+        }
+    }
+
+    /**
+     * エクササイズページから選択されたエクササイズをチェック
+     */
+    checkSelectedExercises() {
+        try {
+            const selectedExercises = sessionStorage.getItem('selectedExercises');
+            if (selectedExercises) {
+                const exercises = JSON.parse(selectedExercises);
+                
+                // 選択されたエクササイズを自動的に追加
+                exercises.forEach(exercise => {
+                    this.addExerciseToSelection(exercise.name);
+                });
+
+                // 通知を表示
+                if (exercises.length > 0) {
+                    showNotification(`${exercises.length}個のエクササイズを追加しました`, 'success');
+                }
+
+                // セッションストレージから削除
+                sessionStorage.removeItem('selectedExercises');
+            }
+        } catch (error) {
+            console.error('Failed to check selected exercises:', error);
         }
     }
 

@@ -83,6 +83,23 @@ class ExercisePage {
             addCustomBtn.addEventListener('click', () => this.showCustomExerciseModal());
         }
 
+        // カテゴリ詳細ボタン
+        document.querySelectorAll('.category-detail-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const muscle = btn.dataset.muscle;
+                this.showCategoryDetail(muscle);
+            });
+        });
+
+        // ワークアウトに戻るボタン
+        const returnToWorkoutBtn = document.getElementById('return-to-workout');
+        if (returnToWorkoutBtn) {
+            returnToWorkoutBtn.addEventListener('click', () => {
+                this.returnToWorkout();
+            });
+        }
+
         // モーダル関連
         this.setupModalEventListeners();
     }
@@ -171,6 +188,9 @@ class ExercisePage {
             // 器具フィルターを設定
             await this.setupEquipmentFilter();
 
+            // ワークアウトページから選択された筋肉部位をチェック
+            this.checkWorkoutSelection();
+
             // 初期エクササイズを読み込み
             await this.loadExercises();
 
@@ -244,6 +264,105 @@ class ExercisePage {
             'resistance band': 'レジスタンスバンド'
         };
         return names[equipment] || equipment;
+    }
+
+    /**
+     * ワークアウトページから選択された筋肉部位をチェック
+     */
+    checkWorkoutSelection() {
+        try {
+            const selectedMuscleGroups = sessionStorage.getItem('selectedMuscleGroups');
+            if (selectedMuscleGroups) {
+                const muscles = JSON.parse(selectedMuscleGroups);
+                
+                // 筋肉部位フィルターを設定
+                const muscleGroupFilter = document.getElementById('muscle-group-filter');
+                if (muscleGroupFilter && muscles.length > 0) {
+                    // 最初の筋肉部位でフィルターを設定
+                    const firstMuscle = muscles[0];
+                    const muscleGroupId = this.getMuscleGroupId(firstMuscle);
+                    if (muscleGroupId) {
+                        muscleGroupFilter.value = muscleGroupId;
+                    }
+                }
+
+                // 選択された筋肉部位の通知を表示
+                if (muscles.length > 0) {
+                    showNotification(`${muscles.join(', ')}のエクササイズを表示中`, 'info');
+                    
+                    // ワークアウトに戻るボタンを表示
+                    const returnSection = document.getElementById('workout-return-section');
+                    if (returnSection) {
+                        returnSection.classList.remove('hidden');
+                    }
+                }
+
+                // セッションストレージから削除（一度だけ適用）
+                sessionStorage.removeItem('selectedMuscleGroups');
+            }
+        } catch (error) {
+            console.error('Failed to check workout selection:', error);
+        }
+    }
+
+    /**
+     * 筋肉部位名からIDを取得
+     * @param {string} muscleName - 筋肉部位名
+     * @returns {string} 筋肉部位ID
+     */
+    getMuscleGroupId(muscleName) {
+        const muscleGroupMap = {
+            '胸': 'chest',
+            '背中': 'back',
+            '肩': 'shoulders',
+            '腕': 'arms',
+            '脚': 'legs',
+            '腹筋': 'core'
+        };
+        return muscleGroupMap[muscleName];
+    }
+
+    /**
+     * ワークアウトに戻る
+     */
+    returnToWorkout() {
+        // 選択されたエクササイズを保存
+        const selectedExercises = this.getSelectedExercises();
+        if (selectedExercises.length > 0) {
+            sessionStorage.setItem('selectedExercises', JSON.stringify(selectedExercises));
+            showNotification(`${selectedExercises.length}個のエクササイズを選択しました`, 'success');
+        }
+
+        // ワークアウトページに戻る
+        window.location.href = '/workout.html';
+    }
+
+    /**
+     * 選択されたエクササイズを取得
+     * @returns {Array} 選択されたエクササイズの配列
+     */
+    getSelectedExercises() {
+        // 現在表示されているエクササイズから選択されたものを取得
+        // 実際の実装では、ユーザーが選択したエクササイズを追跡する必要があります
+        const selectedExercises = [];
+        
+        // 簡単な実装として、現在フィルタリングされている筋肉部位のエクササイズを返す
+        const muscleGroupFilter = document.getElementById('muscle-group-filter');
+        if (muscleGroupFilter && muscleGroupFilter.value) {
+            // 現在のフィルター条件に基づいてエクササイズを取得
+            const filteredExercises = this.currentExercises.filter(exercise => {
+                return exercise.muscle_groups && exercise.muscle_groups.id === muscleGroupFilter.value;
+            });
+            
+            // 最大5個のエクササイズを選択
+            selectedExercises.push(...filteredExercises.slice(0, 5).map(exercise => ({
+                id: exercise.id,
+                name: exercise.name_ja,
+                muscle_group: exercise.muscle_groups?.name_ja || '未設定'
+            })));
+        }
+
+        return selectedExercises;
     }
 
     /**
@@ -440,6 +559,367 @@ class ExercisePage {
                 </div>
             </div>
         `;
+    }
+
+    /**
+     * カテゴリ詳細を表示
+     * @param {string} muscleGroup - 筋肉部位
+     */
+    showCategoryDetail(muscleGroup) {
+        const categoryInfo = this.getCategoryInfo(muscleGroup);
+        this.renderCategoryDetail(categoryInfo);
+        this.showDetailModal();
+    }
+
+    /**
+     * カテゴリ情報を取得
+     * @param {string} muscleGroup - 筋肉部位
+     * @returns {Object} カテゴリ情報
+     */
+    getCategoryInfo(muscleGroup) {
+        const categories = {
+            chest: {
+                name: '胸筋',
+                nameEn: 'Chest',
+                icon: 'fas fa-heart',
+                color: 'text-red-500',
+                description: '大胸筋、小胸筋、前鋸筋を鍛えるエクササイズ',
+                benefits: [
+                    '胸筋の厚みと幅を向上',
+                    '上半身の安定性向上',
+                    '姿勢の改善',
+                    'プッシュ系動作の強化'
+                ],
+                exercises: [
+                    'プッシュアップ（腕立て伏せ）',
+                    'ベンチプレス',
+                    'ダンベルフライ',
+                    'インクラインプレス',
+                    'ディップス',
+                    'ケーブルクロスオーバー',
+                    'プッシュアップバリエーション',
+                    'ダンベルプレス'
+                ],
+                tips: [
+                    '胸筋を意識して動作を行う',
+                    '肩甲骨を安定させる',
+                    '適切な可動域を保つ',
+                    '呼吸を意識する'
+                ],
+                commonMistakes: [
+                    '肩が前に出すぎる',
+                    '可動域が狭い',
+                    '反動を使いすぎる',
+                    '呼吸を止める'
+                ]
+            },
+            back: {
+                name: '背筋',
+                nameEn: 'Back',
+                icon: 'fas fa-user',
+                color: 'text-green-500',
+                description: '広背筋、僧帽筋、菱形筋、脊柱起立筋を鍛えるエクササイズ',
+                benefits: [
+                    '背中の厚みと幅を向上',
+                    '姿勢の改善',
+                    '肩甲骨の安定性向上',
+                    '引く動作の強化'
+                ],
+                exercises: [
+                    'プルアップ（懸垂）',
+                    'ラットプルダウン',
+                    'ベントオーバーロウ',
+                    'ワンハンドダンベルロウ',
+                    'シーテッドロウ',
+                    'フェイスプル',
+                    'デッドリフト',
+                    'リバースフライ'
+                ],
+                tips: [
+                    '肩甲骨を寄せる動作を意識',
+                    '胸を張って姿勢を保つ',
+                    '背筋を意識して動作',
+                    '適切な重量を選択'
+                ],
+                commonMistakes: [
+                    '肩が上がる',
+                    '腰が丸まる',
+                    '反動を使いすぎる',
+                    '可動域が狭い'
+                ]
+            },
+            legs: {
+                name: '脚筋',
+                nameEn: 'Legs',
+                icon: 'fas fa-running',
+                color: 'text-purple-500',
+                description: '大腿四頭筋、ハムストリングス、臀筋、ふくらはぎを鍛えるエクササイズ',
+                benefits: [
+                    '下半身の筋力向上',
+                    'バランス能力向上',
+                    '代謝の向上',
+                    '日常動作の改善'
+                ],
+                exercises: [
+                    'スクワット',
+                    'ランジ',
+                    'デッドリフト',
+                    'レッグプレス',
+                    'レッグカール',
+                    'レッグエクステンション',
+                    'カーフレイズ',
+                    'ブルガリアンスクワット'
+                ],
+                tips: [
+                    '膝の向きに注意',
+                    '重心を安定させる',
+                    '深い可動域を意識',
+                    '呼吸を意識する'
+                ],
+                commonMistakes: [
+                    '膝が内側に入る',
+                    '腰が丸まる',
+                    '可動域が浅い',
+                    '反動を使いすぎる'
+                ]
+            },
+            shoulders: {
+                name: '肩筋',
+                nameEn: 'Shoulders',
+                icon: 'fas fa-dumbbell',
+                color: 'text-blue-500',
+                description: '三角筋（前部・中部・後部）を鍛えるエクササイズ',
+                benefits: [
+                    '肩の幅と厚みを向上',
+                    '肩の安定性向上',
+                    '姿勢の改善',
+                    'オーバーヘッド動作の強化'
+                ],
+                exercises: [
+                    'ショルダープレス',
+                    'サイドレイズ',
+                    'フロントレイズ',
+                    'リアデルトフライ',
+                    'アーノルドプレス',
+                    'アップライトロウ',
+                    'フェイスプル',
+                    'バックフライ'
+                ],
+                tips: [
+                    '肩甲骨を安定させる',
+                    '適切な重量を選択',
+                    '可動域を意識',
+                    'バランスよく鍛える'
+                ],
+                commonMistakes: [
+                    '重量が重すぎる',
+                    '肩が上がる',
+                    '可動域が狭い',
+                    '前部ばかり鍛える'
+                ]
+            },
+            arms: {
+                name: '腕筋',
+                nameEn: 'Arms',
+                icon: 'fas fa-fist-raised',
+                color: 'text-orange-500',
+                description: '上腕二頭筋、上腕三頭筋、前腕筋を鍛えるエクササイズ',
+                benefits: [
+                    '腕の筋力向上',
+                    '握力の向上',
+                    '腕の太さと形の改善',
+                    'プッシュ・プル動作の強化'
+                ],
+                exercises: [
+                    'ダンベルカール',
+                    'ハンマーカール',
+                    'トライセップディップス',
+                    'トライセッププッシュダウン',
+                    'オーバーヘッドエクステンション',
+                    'クローズグリッププッシュアップ',
+                    'リバースカール',
+                    'プリーチャーカール'
+                ],
+                tips: [
+                    '適切な重量を選択',
+                    '可動域を意識',
+                    '反動を使わない',
+                    'バランスよく鍛える'
+                ],
+                commonMistakes: [
+                    '反動を使いすぎる',
+                    '重量が重すぎる',
+                    '可動域が狭い',
+                    '片方ばかり鍛える'
+                ]
+            },
+            core: {
+                name: '体幹',
+                nameEn: 'Core',
+                icon: 'fas fa-circle',
+                color: 'text-yellow-500',
+                description: '腹筋、背筋、横腹筋、深層筋を鍛えるエクササイズ',
+                benefits: [
+                    '体幹の安定性向上',
+                    '姿勢の改善',
+                    '腰痛の予防',
+                    'パフォーマンス向上'
+                ],
+                exercises: [
+                    'プランク',
+                    'クランチ',
+                    'サイドプランク',
+                    'ロシアンツイスト',
+                    'マウンテンクライマー',
+                    'デッドバグ',
+                    'バードドッグ',
+                    'レッグレイズ'
+                ],
+                tips: [
+                    '呼吸を意識する',
+                    '正しい姿勢を保つ',
+                    'ゆっくりと動作',
+                    '継続的に行う'
+                ],
+                commonMistakes: [
+                    '呼吸を止める',
+                    '腰を反らしすぎる',
+                    '反動を使う',
+                    '継続しない'
+                ]
+            }
+        };
+
+        return categories[muscleGroup] || categories.chest;
+    }
+
+    /**
+     * カテゴリ詳細を描画
+     * @param {Object} categoryInfo - カテゴリ情報
+     */
+    renderCategoryDetail(categoryInfo) {
+        const modal = document.getElementById('exercise-detail-modal');
+        if (!modal) {return;}
+
+        const content = modal.querySelector('.modal-content');
+        if (!content) {return;}
+
+        content.innerHTML = `
+            <div class="modal-header flex justify-between items-center p-6 border-b">
+                <div class="flex items-center">
+                    <i class="${categoryInfo.icon} ${categoryInfo.color} text-3xl mr-4"></i>
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900">${categoryInfo.name}エクササイズ</h2>
+                        <p class="text-gray-600">${categoryInfo.nameEn} Exercises</p>
+                    </div>
+                </div>
+                <button class="modal-close text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body p-6 max-h-96 overflow-y-auto">
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">概要</h3>
+                    <p class="text-gray-700">${categoryInfo.description}</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">効果・メリット</h3>
+                        <ul class="space-y-2">
+                            ${categoryInfo.benefits.map(benefit => `
+                                <li class="flex items-start">
+                                    <i class="fas fa-check text-green-500 mr-2 mt-1"></i>
+                                    <span class="text-gray-700">${benefit}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">代表的なエクササイズ</h3>
+                        <ul class="space-y-2">
+                            ${categoryInfo.exercises.map(exercise => `
+                                <li class="flex items-start">
+                                    <i class="fas fa-dumbbell text-blue-500 mr-2 mt-1"></i>
+                                    <span class="text-gray-700">${exercise}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">コツ・ポイント</h3>
+                        <ul class="space-y-2">
+                            ${categoryInfo.tips.map(tip => `
+                                <li class="flex items-start">
+                                    <i class="fas fa-lightbulb text-yellow-500 mr-2 mt-1"></i>
+                                    <span class="text-gray-700">${tip}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">よくある間違い</h3>
+                        <ul class="space-y-2">
+                            ${categoryInfo.commonMistakes.map(mistake => `
+                                <li class="flex items-start">
+                                    <i class="fas fa-exclamation-triangle text-red-500 mr-2 mt-1"></i>
+                                    <span class="text-gray-700">${mistake}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer p-6 border-t bg-gray-50">
+                <div class="flex justify-between items-center">
+                    <div class="text-sm text-gray-500">
+                        この部位のエクササイズをフィルターで表示できます
+                    </div>
+                    <div class="space-x-2">
+                        <button class="filter-category-btn px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            この部位のエクササイズを表示
+                        </button>
+                        <button class="modal-close px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                            閉じる
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // イベントリスナーを再設定
+        const closeButtons = content.querySelectorAll('.modal-close');
+        closeButtons.forEach(btn => {
+            btn.addEventListener('click', () => this.closeDetailModal());
+        });
+
+        // フィルターボタンのイベントリスナー
+        const filterBtn = content.querySelector('.filter-category-btn');
+        if (filterBtn) {
+            filterBtn.addEventListener('click', () => {
+                this.applyCategoryFilter(categoryInfo.name.toLowerCase());
+                this.closeDetailModal();
+            });
+        }
+    }
+
+    /**
+     * カテゴリフィルターを適用
+     * @param {string} categoryName - カテゴリ名
+     */
+    applyCategoryFilter(categoryName) {
+        const muscleGroupFilter = document.getElementById('muscle-group-filter');
+        if (muscleGroupFilter) {
+            muscleGroupFilter.value = categoryName;
+            this.applyFilters();
+        }
     }
 
     /**
