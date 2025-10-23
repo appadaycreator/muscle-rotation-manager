@@ -228,6 +228,23 @@ class ExercisePage {
     }
 
     /**
+     * 筋肉部位の文字列をデータベースの値にマッピング
+     * @param {string} muscleGroupString - 筋肉部位の文字列
+     * @returns {string|null} 筋肉部位名
+     */
+    getMuscleGroupName(muscleGroupString) {
+        const muscleGroupMap = {
+            'chest': '胸',
+            'back': '背中', 
+            'legs': '脚',
+            'shoulders': '肩',
+            'arms': '腕',
+            'core': '体幹'
+        };
+        return muscleGroupMap[muscleGroupString] || null;
+    }
+
+    /**
      * 器具フィルターの設定
      */
     async setupEquipmentFilter() {
@@ -303,7 +320,16 @@ class ExercisePage {
 
         // セレクトボックスフィルター
         const muscleGroup = document.getElementById('muscle-group-filter')?.value;
-        if (muscleGroup) {filters.muscleGroupId = muscleGroup;}
+        if (muscleGroup) {
+            // UUID形式かどうかをチェック
+            const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(muscleGroup);
+            if (isUUID) {
+                filters.muscleGroupId = muscleGroup;
+            } else {
+                // 文字列値の場合は筋肉部位名でフィルター
+                filters.muscleGroupName = muscleGroup;
+            }
+        }
 
         const difficulty = document.getElementById('difficulty-filter')?.value;
         if (difficulty) {filters.difficulty = parseInt(difficulty);}

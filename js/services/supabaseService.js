@@ -76,10 +76,21 @@ export class SupabaseService {
         }
 
         try {
-            // Supabaseクライアントから現在のセッションを取得
-            // 注意: これは非同期メソッドなので、実際の実装では非同期にする必要がある
-            // 現在は簡易的な実装として、認証状態をチェック
-            return null; // 一時的にnullを返す（認証が必要な場合は非同期メソッドを使用）
+            // Supabaseのセッション情報をローカルストレージから取得
+            const sessionData = localStorage.getItem('sb-mwwlqpokfgduxyjbqoff-auth-token');
+            if (sessionData) {
+                const session = JSON.parse(sessionData);
+                return session?.user || null;
+            }
+            
+            // 別のキーでも試行
+            const altSessionData = localStorage.getItem('supabase.auth.token');
+            if (altSessionData) {
+                const session = JSON.parse(altSessionData);
+                return session?.user || null;
+            }
+            
+            return null;
         } catch (error) {
             console.error('Failed to get current user:', error);
             return null;
@@ -611,12 +622,36 @@ export class SupabaseService {
                 return false;
             }
 
-            // プロフィールデータをローカルストレージに保存（実際の実装ではデータベースに保存）
+            // プロフィールデータにユーザーIDを追加
+            const profileWithUserId = {
+                ...profileData,
+                id: user.id,  // user_profilesテーブルのidフィールドはauth.users.idと一致
+                updated_at: new Date().toISOString()
+            };
+
+            // Supabaseデータベースに保存
+            const { data, error } = await this.client
+                .from('user_profiles')
+                .upsert([profileWithUserId])
+                .select();
+
+            if (error) {
+                console.error('Database save error:', error);
+                throw new Error(error.message);
+            }
+
+            console.log('User profile saved to Supabase:', data);
+            
+            // ローカルストレージにもバックアップ保存
             localStorage.setItem('userProfile', JSON.stringify(profileData));
-            console.log('User profile saved to localStorage:', profileData);
+            console.log('User profile also saved to localStorage as backup');
+            
             return true;
         } catch (error) {
             console.error('Failed to save user profile:', error);
+            // エラーが発生した場合はローカルストレージに保存
+            localStorage.setItem('userProfile', JSON.stringify(profileData));
+            console.log('Fallback: User profile saved to localStorage only');
             return false;
         }
     }
@@ -637,12 +672,27 @@ export class SupabaseService {
                 return null;
             }
 
-            // ローカルストレージからプロフィールを取得（実際の実装ではデータベースから取得）
-            const profileData = localStorage.getItem('userProfile');
-            return profileData ? JSON.parse(profileData) : {};
+            // Supabaseデータベースからプロフィールを取得
+            const { data, error } = await this.client
+                .from('user_profiles')
+                .select('*')
+                .eq('id', user.id)
+                .single();
+
+            if (error) {
+                console.warn('Failed to get profile from database:', error);
+                // データベースから取得できない場合はローカルストレージから取得
+                const profileData = localStorage.getItem('userProfile');
+                return profileData ? JSON.parse(profileData) : {};
+            }
+
+            console.log('User profile loaded from Supabase:', data);
+            return data || {};
         } catch (error) {
             console.error('Failed to get user profile:', error);
-            return null;
+            // エラーが発生した場合はローカルストレージから取得
+            const profileData = localStorage.getItem('userProfile');
+            return profileData ? JSON.parse(profileData) : {};
         }
     }
 

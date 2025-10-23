@@ -134,20 +134,27 @@ class SettingsPage {
     async loadUserProfile() {
         console.log('Loading user profile...');
         
-        if (!supabaseService.isAvailable() || !supabaseService.getCurrentUser()) {
-            // ローカルストレージからプロフィールを読み込み
-            this.userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
-            console.log('Profile loaded from localStorage:', this.userProfile);
-            return;
-        }
-
-        try {
-            this.userProfile = await supabaseService.getUserProfile() || {};
-            console.log('Profile loaded from Supabase:', this.userProfile);
-        } catch (error) {
-            console.error('Error loading user profile:', error);
-            this.userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
-            console.log('Fallback to localStorage profile:', this.userProfile);
+        // まずローカルストレージから読み込み（即座に表示するため）
+        this.userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+        console.log('Profile loaded from localStorage:', this.userProfile);
+        
+        // Supabaseが利用可能でユーザーが認証されている場合は、データベースから最新データを取得
+        if (supabaseService.isAvailable() && supabaseService.getCurrentUser()) {
+            try {
+                const supabaseProfile = await supabaseService.getUserProfile();
+                if (supabaseProfile && Object.keys(supabaseProfile).length > 0) {
+                    this.userProfile = supabaseProfile;
+                    console.log('Profile updated from Supabase:', this.userProfile);
+                    
+                    // ローカルストレージも更新
+                    localStorage.setItem('userProfile', JSON.stringify(this.userProfile));
+                }
+            } catch (error) {
+                console.error('Error loading user profile from Supabase:', error);
+                console.log('Using localStorage profile as fallback');
+            }
+        } else {
+            console.log('Supabase not available or user not authenticated, using localStorage');
         }
     }
 
@@ -999,27 +1006,24 @@ class SettingsPage {
         localStorage.setItem('userProfile', JSON.stringify(this.userProfile));
         console.log('Profile saved to localStorage:', this.userProfile);
 
-        // 保存されたプロフィールを確認
-        const savedProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
-        console.log('Verification - saved profile:', savedProfile);
-
-        // Supabaseに保存（利用可能な場合）
-        if (supabaseService.isAvailable()) {
+        // Supabaseに保存（利用可能でユーザーが認証されている場合）
+        if (supabaseService.isAvailable() && supabaseService.getCurrentUser()) {
             try {
-                const currentUser = await supabaseService.getCurrentUser();
-                console.log('Current user for Supabase save:', currentUser);
-                
-                if (currentUser) {
-                    const result = await supabaseService.saveUserProfile(profileData);
-                    console.log('Profile saved to Supabase:', result);
+                const result = await supabaseService.saveUserProfile(profileData);
+                if (result) {
+                    console.log('Profile successfully saved to Supabase');
+                    showNotification('設定をSupabaseに保存しました', 'success');
                 } else {
-                    console.log('No authenticated user, skipping Supabase save');
+                    console.warn('Supabase save returned false, but localStorage saved');
+                    showNotification('設定をローカルに保存しました（Supabase同期に失敗）', 'warning');
                 }
             } catch (error) {
-                console.warn('Supabase profile save failed, using localStorage:', error);
+                console.warn('Supabase profile save failed:', error);
+                showNotification('設定をローカルに保存しました（Supabase同期に失敗）', 'warning');
             }
         } else {
-            console.log('Supabase not available, using localStorage only');
+            console.log('Supabase not available or user not authenticated, using localStorage only');
+            showNotification('設定をローカルに保存しました', 'info');
         }
     }
 

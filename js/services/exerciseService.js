@@ -202,9 +202,21 @@ class ExerciseService {
         }
 
         try {
-            let query = supabaseService.client
-                .from('exercises')
-                .select('*');
+            // 筋肉部位名でのフィルタリングの場合はJOINを使用
+            let query;
+            if (filters.muscleGroupName) {
+                query = supabaseService.client
+                    .from('exercises')
+                    .select(`
+                        *,
+                        muscle_groups!inner(name_ja, name_en)
+                    `)
+                    .eq('muscle_groups.name_ja', filters.muscleGroupName);
+            } else {
+                query = supabaseService.client
+                    .from('exercises')
+                    .select('*');
+            }
 
             // テキスト検索
             if (searchTerm && searchTerm.trim()) {
