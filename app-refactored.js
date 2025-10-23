@@ -4,6 +4,8 @@ import { pageManager } from './js/modules/pageManager.js';
 import { authManager } from './js/modules/authManager.js';
 import { supabaseService } from './js/services/supabaseService.js';
 import { showNotification } from './js/utils/helpers.js';
+import { resourceOptimizer } from './js/utils/resourceOptimizer.js';
+import { databaseOptimizer } from './js/utils/databaseOptimizer.js';
 import { handleError, watchOnlineStatus } from './js/utils/errorHandler.js';
 
 class MuscleRotationApp {
@@ -18,14 +20,21 @@ class MuscleRotationApp {
     }
 
     /**
-     * アプリケーションを初期化
+     * アプリケーションを初期化（パフォーマンス最適化版）
      */
     async initialize() {
         if (this.isInitialized) {return;}
 
-        console.log('🏋️ MuscleRotationManager - Starting Application');
+        console.log('🚀 MuscleRotationManager v2.0 - Starting Application with Performance Optimizations');
+        const initStartTime = performance.now();
 
         try {
+            // パフォーマンス最適化を並行実行
+            const optimizationPromises = [
+                resourceOptimizer.initializeOptimizations(),
+                this.setupPerformanceMonitoring()
+            ];
+
             // オンライン状態の監視を開始
             this.setupOnlineStatusMonitoring();
 
@@ -47,9 +56,22 @@ class MuscleRotationApp {
             // オフライン同期機能を初期化
             this.initializeOfflineSync();
 
-            this.isInitialized = true;
-            console.log('✅ App initialization complete');
+            // 最適化処理の完了を待つ
+            await Promise.allSettled(optimizationPromises);
+
+            // 定期的なメンテナンスを設定
+            this.setupPeriodicMaintenance();
+
+            const initTime = performance.now() - initStartTime;
+            console.log(`✅ App initialization complete (${initTime.toFixed(2)}ms)`);
             console.log('Current user:', authManager.getCurrentUser());
+
+            this.isInitialized = true;
+
+            // 初期化完了イベントを発火
+            window.dispatchEvent(new CustomEvent('appInitialized', {
+                detail: { initTime }
+            }));
 
         } catch (error) {
             handleError(error, {
@@ -62,6 +84,87 @@ class MuscleRotationApp {
     /**
      * オンライン状態の監視を設定
      */
+    /**
+     * パフォーマンス監視を設定
+     */
+    async setupPerformanceMonitoring() {
+        // Service Workerからパフォーマンス統計を取得
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+            try {
+                const messageChannel = new MessageChannel();
+                messageChannel.port1.onmessage = (event) => {
+                    if (event.data.stats) {
+                        console.log('📊 Service Worker Stats:', event.data.stats);
+                    }
+                };
+
+                navigator.serviceWorker.controller.postMessage(
+                    { type: 'GET_PERFORMANCE_STATS' },
+                    [messageChannel.port2]
+                );
+            } catch (error) {
+                console.warn('Service Worker統計取得に失敗:', error);
+            }
+        }
+
+        // パフォーマンスオブザーバーを設定
+        if ('PerformanceObserver' in window) {
+            // Long Task の監視
+            try {
+                const longTaskObserver = new PerformanceObserver((list) => {
+                    const entries = list.getEntries();
+                    entries.forEach(entry => {
+                        if (entry.duration > 50) { // 50ms以上のタスク
+                            console.warn('⚠️ Long Task detected:', entry.duration.toFixed(2), 'ms');
+                        }
+                    });
+                });
+                longTaskObserver.observe({ entryTypes: ['longtask'] });
+            } catch (error) {
+                console.log('Long Task監視は利用できません');
+            }
+        }
+    }
+
+    /**
+     * 定期的なメンテナンスを設定
+     */
+    setupPeriodicMaintenance() {
+        // 5分ごとにキャッシュ最適化
+        setInterval(() => {
+            databaseOptimizer.optimizeCache();
+        }, 5 * 60 * 1000);
+
+        // 30分ごとにService Workerキャッシュ最適化
+        setInterval(() => {
+            if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                const messageChannel = new MessageChannel();
+                messageChannel.port1.onmessage = (event) => {
+                    console.log('🧹 Service Worker cache optimization:', event.data);
+                };
+
+                navigator.serviceWorker.controller.postMessage(
+                    { type: 'OPTIMIZE_CACHES' },
+                    [messageChannel.port2]
+                );
+            }
+        }, 30 * 60 * 1000);
+
+        // 1時間ごとにパフォーマンス統計をログ出力
+        setInterval(() => {
+            const resourceStats = resourceOptimizer.getPerformanceStats();
+            const dbStats = databaseOptimizer.getPerformanceStats();
+
+            console.log('📊 Performance Report:', {
+                resource: resourceStats,
+                database: dbStats,
+                timestamp: new Date().toISOString()
+            });
+        }, 60 * 60 * 1000);
+
+        console.log('🔧 定期メンテナンスを設定しました');
+    }
+
     setupOnlineStatusMonitoring() {
         this.onlineStatusCleanup = watchOnlineStatus(
             // オンライン時のコールバック

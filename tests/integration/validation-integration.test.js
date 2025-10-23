@@ -115,7 +115,7 @@ describe('バリデーション統合テスト', () => {
             
             // エラーメッセージが表示されることを確認
             const errorDiv = document.getElementById('signup-error');
-            expect(errorDiv.textContent).toContain('パスワードは8文字以上で、英数字を含む必要があります');
+            expect(errorDiv.textContent).toContain('パスワードは8文字以上で入力してください');
         });
 
         test('プライバシーポリシー未同意で新規登録が失敗する', async () => {

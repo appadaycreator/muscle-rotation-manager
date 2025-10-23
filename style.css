@@ -99,6 +99,84 @@ body {
     .mobile-menu { display: none; }
 }
 
+/* 遅延ローディング対応スタイル */
+img[data-src] {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading-shimmer 1.5s infinite;
+}
+
+img[data-src].loaded {
+    opacity: 1;
+    background: none;
+    animation: none;
+}
+
+img[data-src].error {
+    opacity: 0.5;
+    background: #f8f9fa;
+    animation: none;
+}
+
+@keyframes loading-shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+/* 遅延ロードコンポーネントのローディング状態 */
+[data-lazy-component] {
+    min-height: 100px;
+    position: relative;
+}
+
+[data-lazy-component]:not(.loaded) {
+    background: linear-gradient(90deg, #f8f9fa 25%, #e9ecef 50%, #f8f9fa 75%);
+    background-size: 200% 100%;
+    animation: loading-shimmer 1.5s infinite;
+}
+
+[data-lazy-component].loaded {
+    background: none;
+    animation: none;
+}
+
+/* パフォーマンス最適化: GPU加速 */
+.muscle-part,
+.recovery-bar,
+.progress-ring-circle {
+    will-change: transform;
+    transform: translateZ(0);
+}
+
+/* スクロール最適化 */
+.calendar-day,
+.muscle-card {
+    contain: layout style paint;
+}
+
+/* オフラインモード表示 */
+body.offline-mode::before {
+    content: "オフラインモード";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: #f59e0b;
+    color: white;
+    text-align: center;
+    padding: 4px 8px;
+    font-size: 12px;
+    z-index: 9999;
+    animation: offline-pulse 2s infinite;
+}
+
+@keyframes offline-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
 .sidebar-transition {
     transform: translateX(-100%);
     transition: transform 0.3s ease;
@@ -481,4 +559,919 @@ body {
     .workout-dot {
         background: #000 !important;
     }
+}
+
+/* ワークアウトウィザードスタイル */
+.workout-wizard {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* ステップインジケーター */
+.step-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    opacity: 0.5;
+    transition: all 0.3s ease;
+}
+
+.step-indicator.active {
+    opacity: 1;
+}
+
+.step-indicator.completed {
+    opacity: 1;
+}
+
+.step-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: #6b7280;
+    transition: all 0.3s ease;
+    margin-bottom: 8px;
+}
+
+.step-indicator.active .step-circle {
+    background: #3b82f6;
+    color: white;
+}
+
+.step-indicator.completed .step-circle {
+    background: #10b981;
+    color: white;
+}
+
+.step-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #6b7280;
+}
+
+.step-indicator.active .step-label,
+.step-indicator.completed .step-label {
+    color: #374151;
+}
+
+.step-connector {
+    width: 60px;
+    height: 2px;
+    background: #e5e7eb;
+    margin: 0 16px;
+    margin-top: 20px;
+}
+
+/* ウィザードステップ */
+.wizard-step {
+    display: none;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.wizard-step.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* プリセットボタン */
+.preset-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 12px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    background: white;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    text-align: center;
+    min-height: 120px;
+}
+
+.preset-btn:hover {
+    border-color: #3b82f6;
+    background: #f8fafc;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.preset-btn.selected {
+    border-color: #3b82f6;
+    background: #eff6ff;
+}
+
+.preset-btn i {
+    font-size: 1.5rem;
+    display: block;
+}
+
+.preset-btn span {
+    font-weight: 600;
+    color: #374151;
+    margin: 4px 0;
+    display: block;
+}
+
+.preset-btn small {
+    font-size: 0.75rem;
+    color: #6b7280;
+    line-height: 1.2;
+}
+
+/* 筋肉部位選択ボタン */
+.muscle-group-btn {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    background: white;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    min-height: 60px;
+}
+
+.muscle-group-btn:hover {
+    border-color: #3b82f6;
+    background: #f8fafc;
+}
+
+.muscle-group-btn.selected {
+    border-color: #3b82f6;
+    background: #eff6ff;
+}
+
+.muscle-group-btn i {
+    font-size: 1.25rem;
+    margin-right: 12px;
+    width: 20px;
+    text-align: center;
+}
+
+.muscle-group-btn .muscle-name {
+    font-weight: 600;
+    color: #374151;
+}
+
+/* エクササイズプリセットボタン */
+.exercise-preset-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 8px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    background: white;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    text-align: center;
+    min-height: 80px;
+}
+
+.exercise-preset-btn:hover {
+    border-color: #10b981;
+    background: #f0fdf4;
+}
+
+.exercise-preset-btn.selected {
+    border-color: #10b981;
+    background: #dcfce7;
+}
+
+.exercise-preset-btn i {
+    font-size: 1.25rem;
+    color: #10b981;
+    margin-bottom: 4px;
+}
+
+.exercise-preset-btn span {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+}
+
+/* 選択されたエクササイズリスト */
+.selected-exercise-item {
+    display: flex;
+    align-items: center;
+    justify-content: between;
+    padding: 8px 12px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 6px;
+    margin-bottom: 8px;
+}
+
+.selected-exercise-item .exercise-name {
+    font-weight: 500;
+    color: #166534;
+    flex: 1;
+}
+
+.selected-exercise-item .remove-btn {
+    color: #dc2626;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: background 0.2s ease;
+}
+
+.selected-exercise-item .remove-btn:hover {
+    background: rgba(220, 38, 38, 0.1);
+}
+
+/* ボタンスタイル */
+.btn-primary {
+    background: #3b82f6;
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: #2563eb;
+    transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-secondary {
+    background: #6b7280;
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+}
+
+.btn-secondary:hover {
+    background: #4b5563;
+    transform: translateY(-1px);
+}
+
+.btn-success {
+    background: #10b981;
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+}
+
+.btn-success:hover {
+    background: #059669;
+    transform: translateY(-1px);
+}
+
+.btn-warning {
+    background: #f59e0b;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-warning:hover {
+    background: #d97706;
+}
+
+.btn-danger {
+    background: #ef4444;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+}
+
+/* モバイル最適化 */
+@media (max-width: 768px) {
+    .step-connector {
+        width: 40px;
+        margin: 0 8px;
+        margin-top: 20px;
+    }
+    
+    .step-circle {
+        width: 36px;
+        height: 36px;
+        font-size: 0.875rem;
+    }
+    
+    .step-label {
+        font-size: 0.75rem;
+    }
+    
+    .preset-btn {
+        min-height: 100px;
+        padding: 12px 8px;
+    }
+    
+    .preset-btn i {
+        font-size: 1.25rem;
+    }
+    
+    .preset-btn span {
+        font-size: 0.875rem;
+    }
+    
+    .preset-btn small {
+        font-size: 0.625rem;
+    }
+    
+    .muscle-group-btn {
+        min-height: 50px;
+        padding: 8px 12px;
+    }
+    
+    .exercise-preset-btn {
+        min-height: 70px;
+        padding: 8px 6px;
+    }
+    
+    .btn-primary,
+    .btn-secondary,
+    .btn-success {
+        padding: 10px 20px;
+        font-size: 0.875rem;
+        min-height: 44px;
+    }
+}
+
+/* タッチターゲット最適化 */
+.preset-btn,
+.muscle-group-btn,
+.exercise-preset-btn,
+.btn-primary,
+.btn-secondary,
+.btn-success,
+.btn-warning,
+.btn-danger {
+    min-height: 44px;
+    min-width: 44px;
+}
+
+/* アクセシビリティ対応 */
+@media (prefers-reduced-motion: reduce) {
+    .wizard-step,
+    .preset-btn,
+    .muscle-group-btn,
+    .exercise-preset-btn,
+    .step-indicator,
+    .step-circle {
+        animation: none;
+        transition: none;
+    }
+    
+    .preset-btn:hover,
+    .muscle-group-btn:hover,
+    .exercise-preset-btn:hover {
+        transform: none;
+    }
+}
+
+/* フォーカス対応 */
+.preset-btn:focus,
+.muscle-group-btn:focus,
+.exercise-preset-btn:focus,
+.btn-primary:focus,
+.btn-secondary:focus,
+.btn-success:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* ワークアウト進行中のスタイル */
+.workout-active {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+}
+
+.exercise-item {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    transition: all 0.2s ease;
+}
+
+.exercise-item:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.exercise-item.completed {
+    background: #f0fdf4;
+    border-color: #10b981;
+}
+
+.set-input {
+    width: 60px;
+    padding: 4px 8px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    text-align: center;
+    font-weight: 500;
+}
+
+.set-input:focus {
+    border-color: #3b82f6;
+    outline: none;
+}
+
+/* 休憩タイマー */
+.rest-timer {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #1f2937;
+    color: white;
+    padding: 16px;
+    border-radius: 12px;
+    z-index: 1000;
+    min-width: 200px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.rest-timer.active {
+    background: #10b981;
+}
+
+.rest-timer .timer-display {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.rest-timer .timer-controls {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.rest-timer button {
+    padding: 4px 8px;
+    border: none;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    cursor: pointer;
+    font-size: 0.75rem;
+}
+
+.rest-timer button:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* エラー通知スタイル */
+.error-notification {
+    position: fixed;
+    z-index: 9999;
+    max-width: 400px;
+    min-width: 300px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    border-left: 4px solid;
+    animation: slideInRight 0.3s ease-out;
+    font-family: 'Noto Sans JP', sans-serif;
+}
+
+.error-notification.top-right {
+    top: 20px;
+    right: 20px;
+}
+
+.error-notification.top-left {
+    top: 20px;
+    left: 20px;
+}
+
+.error-notification.bottom-right {
+    bottom: 20px;
+    right: 20px;
+}
+
+.error-notification.bottom-left {
+    bottom: 20px;
+    left: 20px;
+}
+
+/* 重要度別の色分け */
+.error-notification.error {
+    border-left-color: #ef4444;
+}
+
+.error-notification.warning {
+    border-left-color: #f59e0b;
+}
+
+.error-notification.info {
+    border-left-color: #3b82f6;
+}
+
+.error-notification.success {
+    border-left-color: #10b981;
+}
+
+.error-content {
+    padding: 16px;
+}
+
+.error-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.error-icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.error-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.error-title {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #1f2937;
+    margin: 0 0 4px 0;
+    line-height: 1.4;
+}
+
+.error-description {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.error-close {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    margin-top: -2px;
+}
+
+.error-close:hover {
+    color: #6b7280;
+    background: #f3f4f6;
+}
+
+.error-solutions {
+    border-top: 1px solid #f3f4f6;
+    padding-top: 12px;
+    margin-top: 12px;
+}
+
+.error-solutions p {
+    font-weight: 500;
+    color: #374151;
+    margin: 0 0 8px 0;
+    font-size: 0.75rem;
+}
+
+.error-solutions ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.error-solutions li {
+    font-size: 0.75rem;
+    color: #4b5563;
+    line-height: 1.5;
+    margin-bottom: 6px;
+}
+
+.error-solutions li:last-child {
+    margin-bottom: 0;
+}
+
+.error-solutions i {
+    font-size: 0.625rem;
+}
+
+/* アニメーション */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.error-notification.fade-out {
+    animation: fadeOut 0.3s ease-out forwards;
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+}
+
+/* モバイル対応 */
+@media (max-width: 768px) {
+    .error-notification {
+        left: 16px !important;
+        right: 16px !important;
+        max-width: none;
+        min-width: auto;
+    }
+    
+    .error-notification.top-right,
+    .error-notification.top-left {
+        top: 16px;
+    }
+    
+    .error-notification.bottom-right,
+    .error-notification.bottom-left {
+        bottom: 16px;
+    }
+    
+    .error-content {
+        padding: 12px;
+    }
+    
+    .error-title {
+        font-size: 0.8125rem;
+    }
+    
+    .error-description {
+        font-size: 0.6875rem;
+    }
+    
+    .error-solutions li {
+        font-size: 0.6875rem;
+    }
+}
+
+/* アクセシビリティ対応 */
+@media (prefers-reduced-motion: reduce) {
+    .error-notification {
+        animation: none;
+    }
+    
+    .error-notification.fade-out {
+        animation: none;
+        opacity: 0;
+    }
+}
+
+/* ダークモード対応 */
+@media (prefers-color-scheme: dark) {
+    .error-notification {
+        background: #1f2937;
+        color: #f9fafb;
+    }
+    
+    .error-title {
+        color: #f9fafb;
+    }
+    
+    .error-description {
+        color: #d1d5db;
+    }
+    
+    .error-solutions {
+        border-top-color: #374151;
+    }
+    
+    .error-solutions p {
+        color: #e5e7eb;
+    }
+    
+    .error-solutions li {
+        color: #d1d5db;
+    }
+    
+    .error-close {
+        color: #9ca3af;
+    }
+    
+    .error-close:hover {
+        color: #d1d5db;
+        background: #374151;
+    }
+}
+
+/* 高コントラストモード対応 */
+@media (prefers-contrast: high) {
+    .error-notification {
+        border: 2px solid;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    
+    .error-notification.error {
+        border-color: #dc2626;
+    }
+    
+    .error-notification.warning {
+        border-color: #d97706;
+    }
+    
+    .error-notification.info {
+        border-color: #2563eb;
+    }
+    
+    .error-notification.success {
+        border-color: #059669;
+    }
+}
+
+/* フォーカス対応 */
+.error-notification:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* 複数エラー表示時のスタック */
+.error-notification:nth-of-type(n+2) {
+    margin-top: 8px;
+}
+
+/* エラー統計表示（開発者向け） */
+.error-stats {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-family: monospace;
+    z-index: 10000;
+    display: none;
+}
+
+.error-stats.show {
+    display: block;
+}
+
+/* オフラインモード対応 */
+.offline-mode {
+    position: relative;
+}
+
+.offline-mode::before {
+    content: '🔴 オフラインモード';
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: #ff4444;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    z-index: 10000;
+    animation: pulse 2s infinite;
+}
+
+.offline-mode .sync-indicator {
+    display: inline-block;
+    margin-left: 8px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* 接続状態インジケーター */
+.connection-status {
+    position: fixed;
+    top: 60px;
+    right: 10px;
+    padding: 6px 10px;
+    border-radius: 15px;
+    font-size: 11px;
+    font-weight: bold;
+    z-index: 9999;
+    transition: all 0.3s ease;
+}
+
+.connection-status.online {
+    background: #4CAF50;
+    color: white;
+}
+
+.connection-status.offline {
+    background: #f44336;
+    color: white;
+}
+
+.connection-status.syncing {
+    background: #FF9800;
+    color: white;
+}
+
+/* オフラインキュー表示 */
+.offline-queue-indicator {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #2196F3;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 25px;
+    font-size: 12px;
+    font-weight: bold;
+    z-index: 9998;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.offline-queue-indicator:hover {
+    background: #1976D2;
+    transform: scale(1.05);
+}
+
+.offline-queue-indicator.hidden {
+    display: none;
 } 

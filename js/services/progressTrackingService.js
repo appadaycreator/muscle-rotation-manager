@@ -191,26 +191,166 @@ class ProgressTrackingService {
      */
     async setGoal(goalData) {
         try {
+            const goalRecord = {
+                user_id: goalData.userId,
+                exercise_id: goalData.exerciseId,
+                goal_type: goalData.goalType, // 'weight', 'reps', 'one_rm'
+                target_value: goalData.targetValue,
+                current_value: goalData.currentValue,
+                target_date: goalData.targetDate,
+                description: goalData.description,
+                priority: goalData.priority || 'medium',
+                strategy: goalData.strategy || null,
+                is_active: true,
+                created_at: new Date().toISOString()
+            };
+
+            // 通知設定がある場合は追加
+            if (goalData.notifications) {
+                goalRecord.notifications = JSON.stringify(goalData.notifications);
+            }
+
             const { data, error } = await this.supabase
                 .from('user_goals')
-                .upsert({
-                    user_id: goalData.userId,
-                    exercise_id: goalData.exerciseId,
-                    goal_type: goalData.goalType, // 'weight', 'reps', 'one_rm'
-                    target_value: goalData.targetValue,
-                    current_value: goalData.currentValue,
-                    target_date: goalData.targetDate,
-                    description: goalData.description,
-                    is_active: true,
-                    created_at: new Date().toISOString()
-                });
+                .upsert(goalRecord);
 
             if (error) {throw error;}
+
+            // 目標設定通知を送信
+            if (goalData.notifications?.progress) {
+                await this.scheduleGoalNotifications(goalData);
+            }
 
             return { success: true, data };
         } catch (error) {
             errorHandler.handleError(error, 'ProgressTrackingService.setGoal');
             return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * 目標通知をスケジュール
+     * @param {Object} goalData - 目標データ
+     */
+    async scheduleGoalNotifications(goalData) {
+        try {
+            // ブラウザ通知の許可を要求
+            if ('Notification' in window && Notification.permission === 'default') {
+                await Notification.requestPermission();
+            }
+
+            // 期限前リマインダーの設定
+            if (goalData.notifications?.deadline) {
+                const targetDate = new Date(goalData.targetDate);
+                const reminderDate = new Date(targetDate);
+                reminderDate.setDate(targetDate.getDate() - 7); // 1週間前
+
+                if (reminderDate > new Date()) {
+                    // LocalStorageに通知スケジュールを保存
+                    const notifications = JSON.parse(localStorage.getItem('goalNotifications') || '[]');
+                    notifications.push({
+                        goalId: `${goalData.userId}_${goalData.exerciseId}_${goalData.goalType}`,
+                        type: 'deadline_reminder',
+                        scheduledDate: reminderDate.toISOString(),
+                        message: `目標「${goalData.description}」の期限が1週間後に迫っています`,
+                        goalData
+                    });
+                    localStorage.setItem('goalNotifications', JSON.stringify(notifications));
+                }
+            }
+        } catch (error) {
+            errorHandler.handleError(error, 'ProgressTrackingService.scheduleGoalNotifications');
+        }
+    }
+
+    /**
+     * 目標の進捗を確認し、通知を送信
+     * @param {string} userId - ユーザーID
+     * @param {string} exerciseId - エクササイズID
+     * @param {Object} _newRecord - 新しい記録（将来の拡張用）
+     */
+    async checkGoalProgress(userId, exerciseId, _newRecord) {
+        try {
+            const goalProgress = await this.calculateGoalProgress(userId, exerciseId);
+
+            if (!goalProgress.hasGoals || !goalProgress.progress) {
+                return;
+            }
+
+            for (const goal of goalProgress.progress) {
+                const notifications = goal.notifications ? JSON.parse(goal.notifications) : {};
+
+                // マイルストーン通知（25%, 50%, 75%, 90%達成時）
+                if (notifications.milestone) {
+                    const milestones = [25, 50, 75, 90];
+                    const currentMilestone = milestones.find(m =>
+                        goal.progress_percentage >= m &&
+                        goal.progress_percentage < m + 5 // 5%の範囲内
+                    );
+
+                    if (currentMilestone) {
+                        this.sendGoalNotification(
+                            '🎯 マイルストーン達成！',
+                            `目標「${goal.description}」の${currentMilestone}%を達成しました！`
+                        );
+                    }
+                }
+
+                // 目標達成通知
+                if (goal.is_achieved && notifications.progress) {
+                    this.sendGoalNotification(
+                        '🎉 目標達成！',
+                        `おめでとうございます！目標「${goal.description}」を達成しました！`
+                    );
+
+                    // 達成済み目標を非アクティブ化
+                    await this.deactivateGoal(goal.id);
+                }
+            }
+        } catch (error) {
+            errorHandler.handleError(error, 'ProgressTrackingService.checkGoalProgress');
+        }
+    }
+
+    /**
+     * 目標通知を送信
+     * @param {string} title - 通知タイトル
+     * @param {string} message - 通知メッセージ
+     */
+    sendGoalNotification(title, message) {
+        try {
+            // ブラウザ通知
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(title, {
+                    body: message,
+                    icon: '/favicon-32x32.png',
+                    tag: 'goal-progress'
+                });
+            }
+
+            // アプリ内通知
+            window.dispatchEvent(new CustomEvent('showNotification', {
+                detail: { message: `${title}\n${message}`, type: 'success' }
+            }));
+        } catch (error) {
+            errorHandler.handleError(error, 'ProgressTrackingService.sendGoalNotification');
+        }
+    }
+
+    /**
+     * 目標を非アクティブ化
+     * @param {string} goalId - 目標ID
+     */
+    async deactivateGoal(goalId) {
+        try {
+            const { error } = await this.supabase
+                .from('user_goals')
+                .update({ is_active: false, completed_at: new Date().toISOString() })
+                .eq('id', goalId);
+
+            if (error) {throw error;}
+        } catch (error) {
+            errorHandler.handleError(error, 'ProgressTrackingService.deactivateGoal');
         }
     }
 

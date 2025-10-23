@@ -627,42 +627,15 @@ class WorkoutPage {
         try {
             // リアルタイム保存とオフライン対応
             if (supabaseService.isAvailable() && supabaseService.getCurrentUser()) {
-                // Supabaseに保存
-                const sessionData = {
-                    session_name: `ワークアウト ${new Date().toLocaleDateString()}`,
-                    workout_date: workoutData.startTime.toISOString().split('T')[0],
-                    start_time: workoutData.startTime.toISOString(),
-                    end_time: workoutData.endTime.toISOString(),
-                    total_duration_minutes: workoutData.duration,
-                    muscle_groups_trained: workoutData.muscleGroups,
-                    session_type: 'strength',
-                    is_completed: true,
-                    notes: `${workoutData.exercises.length}種目のワークアウト`
-                };
+                // トランザクション処理でSupabaseに保存
+                const result = await supabaseService.saveWorkoutWithTransaction(workoutData);
 
-                const savedSession = await supabaseService.saveWorkout(sessionData);
-                const sessionId = savedSession[0]?.id;
-
-                // 各エクササイズをtraining_logsに保存
-                if (sessionId && workoutData.exercises.length > 0) {
-                    const trainingLogs = workoutData.exercises.map(exercise => ({
-                        workout_session_id: sessionId,
-                        muscle_group_id: this.getMuscleGroupId(workoutData.muscleGroups[0]),
-                        exercise_name: exercise.name,
-                        sets: exercise.sets,
-                        reps: [exercise.reps],
-                        weights: [exercise.weight],
-                        workout_date: workoutData.startTime.toISOString().split('T')[0],
-                        notes: exercise.notes || null
-                    }));
-
-                    await supabaseService.saveTrainingLogs(trainingLogs);
+                if (result.success) {
+                    console.log('✅ ワークアウトデータをSupabaseにトランザクション保存しました:', result.sessionId);
+                    showNotification(result.message, 'success');
+                } else {
+                    throw new Error('トランザクション保存に失敗しました');
                 }
-
-                // 統計情報を更新
-                await this.updateWorkoutStatistics(workoutData);
-
-                console.log('✅ ワークアウトデータをSupabaseに保存しました');
             } else {
                 // オフライン時はローカルストレージに保存
                 await this.saveToLocalStorage(workoutData);
@@ -678,7 +651,14 @@ class WorkoutPage {
 
         } catch (error) {
             console.error('❌ ワークアウト保存エラー:', error);
-            // フォールバック: ローカルストレージに保存
+
+            // 重複エラーの場合は特別な処理
+            if (error.message.includes('重複するワークアウト')) {
+                showNotification(error.message, 'warning');
+                return false;
+            }
+
+            // その他のエラーの場合はフォールバック: ローカルストレージに保存
             await this.saveToLocalStorage(workoutData);
             showNotification('オンライン保存に失敗しました。ローカルに保存されました。', 'warning');
             return false;
@@ -808,6 +788,7 @@ class WorkoutPage {
                                 エクササイズ名
                             </label>
                             <input id="exercise-name" name="exerciseName" type="text" required 
+                                   maxlength="100"
                                    class="w-full border border-gray-300 rounded px-3 py-2 
                                           focus:border-blue-500 focus:outline-none"
                                    placeholder="例: ベンチプレス">
@@ -820,8 +801,8 @@ class WorkoutPage {
                                        class="block text-gray-700 font-medium mb-1">
                                     重量 (kg)
                                 </label>
-                                <input id="exercise-weight" name="weight" type="number" 
-                                       min="0" max="1000" step="0.5" required
+                            <input id="exercise-weight" name="weight" type="number" 
+                                   min="0.1" max="500" step="0.1" required
                                        class="w-full border border-gray-300 rounded px-3 py-2 
                                               focus:border-blue-500 focus:outline-none"
                                        placeholder="80">
@@ -847,7 +828,7 @@ class WorkoutPage {
                                     セット数
                                 </label>
                                 <input id="exercise-sets" name="sets" type="number" 
-                                       min="1" max="20" required
+                                       min="1" max="10" required
                                        class="w-full border border-gray-300 rounded px-3 py-2 
                                               focus:border-blue-500 focus:outline-none"
                                        placeholder="3">

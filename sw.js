@@ -1,22 +1,46 @@
 // Service Worker for Muscle Rotation Manager
-// Version: 1.0.0
+// Version: 2.0.0 - Performance Optimized
 
-const CACHE_NAME = 'muscle-rotation-v1.0.0';
-const STATIC_CACHE = 'muscle-rotation-static-v1.0.0';
-const DYNAMIC_CACHE = 'muscle-rotation-dynamic-v1.0.0';
+const CACHE_VERSION = '2.0.0';
+const CACHE_NAME = `muscle-rotation-v${CACHE_VERSION}`;
+const STATIC_CACHE = `muscle-rotation-static-v${CACHE_VERSION}`;
+const DYNAMIC_CACHE = `muscle-rotation-dynamic-v${CACHE_VERSION}`;
+const IMAGE_CACHE = `muscle-rotation-images-v${CACHE_VERSION}`;
+const API_CACHE = `muscle-rotation-api-v${CACHE_VERSION}`;
 
-// Files to cache immediately - 最適化されたキャッシュリスト
-const STATIC_FILES = [
+// 最適化されたキャッシュリスト - 優先度別に分類
+const CRITICAL_FILES = [
     '/',
     '/index.html',
-    '/lp.html',
     '/manifest.json',
     '/style.css',
-    '/app-refactored.js',
+    '/app-refactored.js'
+];
+
+const STATIC_FILES = [
+    ...CRITICAL_FILES,
+    '/lp.html',
+    '/js/utils/lazyLoader.js',
+    '/js/modules/pageManager.js',
+    '/js/modules/authManager.js',
+    '/js/utils/constants.js',
+    '/js/utils/helpers.js',
+    '/js/utils/errorHandler.js'
+];
+
+const IMAGE_FILES = [
     '/assets/default-avatar.png',
     '/android-chrome-192x192.png',
     '/android-chrome-512x512.png',
-    '/favicon.ico'
+    '/favicon.ico',
+    '/icons/icon-192x192.png',
+    '/icons/icon-512x512.png'
+];
+
+const PARTIAL_FILES = [
+    '/partials/header.html',
+    '/partials/sidebar.html',
+    '/partials/dashboard.html'
 ];
 
 // API endpoints to cache
@@ -25,104 +49,142 @@ const API_CACHE_PATTERNS = [
     /^https:\/\/.*\.supabase\.co\/auth\/v1\//
 ];
 
-// Install event - cache static files
+// Install event - 段階的キャッシュ戦略
 self.addEventListener('install', event => {
-    console.log('[SW] Installing Service Worker...');
+    console.log('[SW] Installing Service Worker v2.0.0...');
 
     event.waitUntil(
-        caches.open(STATIC_CACHE)
-            .then(cache => {
-                console.log('[SW] Caching static files');
-                return cache.addAll(STATIC_FILES);
+        Promise.all([
+            // 1. クリティカルファイルを最優先でキャッシュ
+            caches.open(STATIC_CACHE).then(cache => {
+                console.log('[SW] Caching critical files');
+                return cache.addAll(CRITICAL_FILES);
+            }),
+            
+            // 2. 画像ファイルを並行してキャッシュ
+            caches.open(IMAGE_CACHE).then(cache => {
+                console.log('[SW] Caching image files');
+                return cache.addAll(IMAGE_FILES).catch(error => {
+                    console.warn('[SW] Some images failed to cache:', error);
+                    // 画像キャッシュ失敗は致命的ではない
+                });
+            }),
+            
+            // 3. パーシャルファイルをキャッシュ
+            caches.open(STATIC_CACHE).then(cache => {
+                console.log('[SW] Caching partial files');
+                return Promise.allSettled(
+                    PARTIAL_FILES.map(file => cache.add(file))
+                ).then(results => {
+                    const failed = results.filter(r => r.status === 'rejected');
+                    if (failed.length > 0) {
+                        console.warn('[SW] Some partials failed to cache:', failed);
+                    }
+                });
             })
-            .then(() => {
-                console.log('[SW] Static files cached successfully');
-                return self.skipWaiting();
-            })
-            .catch(error => {
-                console.error('[SW] Failed to cache static files:', error);
-            })
+        ])
+        .then(() => {
+            console.log('[SW] Installation completed successfully');
+            return self.skipWaiting();
+        })
+        .catch(error => {
+            console.error('[SW] Installation failed:', error);
+            throw error;
+        })
     );
 });
 
-// Activate event - clean up old caches
+// Activate event - 改善されたキャッシュクリーンアップ
 self.addEventListener('activate', event => {
-    console.log('[SW] Activating Service Worker...');
+    console.log('[SW] Activating Service Worker v2.0.0...');
 
     event.waitUntil(
-        caches.keys()
-            .then(cacheNames => {
+        Promise.all([
+            // 1. 古いキャッシュを削除
+            caches.keys().then(cacheNames => {
+                const currentCaches = [STATIC_CACHE, DYNAMIC_CACHE, IMAGE_CACHE, API_CACHE];
                 return Promise.all(
                     cacheNames.map(cacheName => {
-                        if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
+                        if (!currentCaches.includes(cacheName)) {
                             console.log('[SW] Deleting old cache:', cacheName);
                             return caches.delete(cacheName);
                         }
                     })
                 );
-            })
-            .then(() => {
-                console.log('[SW] Service Worker activated');
-                return self.clients.claim();
-            })
+            }),
+            
+            // 2. キャッシュサイズを最適化
+            optimizeCacheSize(),
+            
+            // 3. パフォーマンスメトリクスを初期化
+            initializePerformanceTracking()
+        ])
+        .then(() => {
+            console.log('[SW] Service Worker activated successfully');
+            return self.clients.claim();
+        })
+        .catch(error => {
+            console.error('[SW] Activation failed:', error);
+        })
     );
 });
 
-// Fetch event - serve cached content with network fallback
+// Fetch event - 最適化されたリクエストハンドリング
 self.addEventListener('fetch', event => {
     const { request } = event;
     const url = new URL(request.url);
 
-    // Skip non-GET requests
-    if (request.method !== 'GET') {
+    // Skip non-GET requests and chrome-extension
+    if (request.method !== 'GET' || url.protocol === 'chrome-extension:') {
         return;
     }
 
-    // Handle different types of requests
-    if (isStaticFile(request.url)) {
-    // Static files: Cache First strategy
-        event.respondWith(cacheFirst(request));
+    // パフォーマンストラッキング開始
+    const startTime = performance.now();
+
+    // リクエストタイプに応じた最適化された戦略
+    if (isImageRequest(request.url)) {
+        // 画像: 専用キャッシュでCache First
+        event.respondWith(imageHandler(request, startTime));
+    } else if (isStaticFile(request.url)) {
+        // 静的ファイル: Cache First
+        event.respondWith(cacheFirst(request, startTime));
     } else if (isAPIRequest(request.url)) {
-    // API requests: Network First strategy
-        event.respondWith(networkFirst(request));
+        // API: Network First with intelligent caching
+        event.respondWith(apiHandler(request, startTime));
     } else if (isNavigationRequest(request)) {
-    // Navigation requests: Network First with offline fallback
-        event.respondWith(navigationHandler(request));
+        // ナビゲーション: Network First with offline fallback
+        event.respondWith(navigationHandler(request, startTime));
     } else {
-    // Other requests: Stale While Revalidate
-        event.respondWith(staleWhileRevalidate(request));
+        // その他: Stale While Revalidate
+        event.respondWith(staleWhileRevalidate(request, startTime));
     }
 });
 
-// Cache First Strategy (for static files)
-async function cacheFirst(request) {
+// Cache First Strategy (for static files) - 最適化版
+async function cacheFirst(request, startTime) {
     try {
-        // chrome-extension スキームはサポートされていないため、スキップ
-        const url = new URL(request.url);
-        if (url.protocol === 'chrome-extension:') {
-            console.log('[SW] Skipping chrome-extension request:', request.url);
-            return fetch(request);
-        }
-
-        const cachedResponse = await caches.match(request);
+        const cache = await caches.open(STATIC_CACHE);
+        const cachedResponse = await cache.match(request);
+        
         if (cachedResponse) {
-            console.log('[SW] Serving from cache:', request.url);
+            recordPerformanceMetric('static_cache_hit', request.url, startTime);
             return cachedResponse;
         }
 
         const networkResponse = await fetch(request);
         if (networkResponse && networkResponse.ok && networkResponse.status === 200) {
-            const cache = await caches.open(STATIC_CACHE);
             // レスポンスが有効かチェック
             if (networkResponse.headers.get('content-type')) {
-                await cache.put(request, networkResponse.clone());
-                console.log('[SW] Cached new static file:', request.url);
+                const responseClone = networkResponse.clone();
+                await cache.put(request, responseClone);
+                recordPerformanceMetric('static_network', request.url, startTime);
             }
         }
         return networkResponse;
     } catch (error) {
         console.error('[SW] Cache First failed:', error);
-        // 適切な Response オブジェクトを返す
+        recordPerformanceMetric('static_error', request.url, startTime);
         return new Response('Offline - File not available', { 
             status: 503,
             statusText: 'Service Unavailable',
@@ -154,28 +216,43 @@ async function networkFirst(request) {
     }
 }
 
-// Navigation Handler (for page requests)
-async function navigationHandler(request) {
+// Navigation Handler (for page requests) - 最適化版
+async function navigationHandler(request, startTime) {
     try {
         const networkResponse = await fetch(request);
+        recordPerformanceMetric('navigation_network', request.url, startTime);
         return networkResponse;
     } catch (error) {
         console.log('[SW] Navigation offline, serving cached page');
-        const cachedResponse = await caches.match('/index.html');
-        return cachedResponse || new Response('Offline', { status: 503 });
+        const cache = await caches.open(STATIC_CACHE);
+        const cachedResponse = await cache.match('/index.html');
+        
+        if (cachedResponse) {
+            recordPerformanceMetric('navigation_cache_fallback', request.url, startTime);
+            return cachedResponse;
+        }
+        
+        recordPerformanceMetric('navigation_error', request.url, startTime);
+        return new Response(`
+            <!DOCTYPE html>
+            <html>
+            <head><title>オフライン</title></head>
+            <body>
+                <h1>オフラインモード</h1>
+                <p>インターネット接続を確認してください。</p>
+                <button onclick="location.reload()">再試行</button>
+            </body>
+            </html>
+        `, { 
+            status: 503,
+            headers: { 'Content-Type': 'text/html; charset=utf-8' }
+        });
     }
 }
 
-// Stale While Revalidate Strategy
-async function staleWhileRevalidate(request) {
+// Stale While Revalidate Strategy - 最適化版
+async function staleWhileRevalidate(request, startTime) {
     try {
-        // chrome-extension スキームはサポートされていないため、スキップ
-        const url = new URL(request.url);
-        if (url.protocol === 'chrome-extension:') {
-            console.log('[SW] Skipping chrome-extension request:', request.url);
-            return fetch(request);
-        }
-
         const cache = await caches.open(DYNAMIC_CACHE);
         const cachedResponse = await cache.match(request);
 
@@ -183,15 +260,28 @@ async function staleWhileRevalidate(request) {
             if (networkResponse && networkResponse.ok && networkResponse.status === 200) {
                 // レスポンスが有効かチェック
                 if (networkResponse.headers.get('content-type')) {
-                    cache.put(request, networkResponse.clone());
+                    const responseClone = networkResponse.clone();
+                    cache.put(request, responseClone);
+                    recordPerformanceMetric('swr_network_update', request.url, startTime);
                 }
             }
             return networkResponse;
-        }).catch(() => cachedResponse);
+        }).catch(() => {
+            recordPerformanceMetric('swr_network_failed', request.url, startTime);
+            return cachedResponse;
+        });
 
-        return cachedResponse || fetchPromise;
+        if (cachedResponse) {
+            recordPerformanceMetric('swr_cache_served', request.url, startTime);
+            // バックグラウンドで更新
+            fetchPromise.catch(() => {}); // エラーを無視
+            return cachedResponse;
+        }
+
+        return fetchPromise;
     } catch (error) {
         console.error('[SW] Stale While Revalidate failed:', error);
+        recordPerformanceMetric('swr_error', request.url, startTime);
         return new Response('Service temporarily unavailable', { 
             status: 503,
             statusText: 'Service Unavailable',
@@ -200,13 +290,158 @@ async function staleWhileRevalidate(request) {
     }
 }
 
+// 新しいハンドラー関数
+
+// 画像専用ハンドラー
+async function imageHandler(request, startTime) {
+    try {
+        const cache = await caches.open(IMAGE_CACHE);
+        const cachedResponse = await cache.match(request);
+        
+        if (cachedResponse) {
+            recordPerformanceMetric('image_cache_hit', request.url, startTime);
+            return cachedResponse;
+        }
+
+        const networkResponse = await fetch(request);
+        if (networkResponse && networkResponse.ok) {
+            // 画像は長期キャッシュ
+            const responseClone = networkResponse.clone();
+            await cache.put(request, responseClone);
+            recordPerformanceMetric('image_network', request.url, startTime);
+        }
+        return networkResponse;
+    } catch (error) {
+        console.warn('[SW] Image handler failed:', error);
+        return new Response('', { status: 404 });
+    }
+}
+
+// API専用ハンドラー
+async function apiHandler(request, startTime) {
+    try {
+        // Network First with intelligent caching
+        const networkResponse = await fetch(request);
+        if (networkResponse.ok) {
+            const cache = await caches.open(API_CACHE);
+            
+            // GET リクエストのみキャッシュ（短期間）
+            if (request.method === 'GET') {
+                const responseClone = networkResponse.clone();
+                await cache.put(request, responseClone);
+                
+                // 5分後に期限切れ
+                setTimeout(() => {
+                    cache.delete(request);
+                }, 5 * 60 * 1000);
+            }
+            
+            recordPerformanceMetric('api_network', request.url, startTime);
+        }
+        return networkResponse;
+    } catch (error) {
+        console.log('[SW] API network failed, trying cache:', request.url);
+        const cache = await caches.open(API_CACHE);
+        const cachedResponse = await cache.match(request);
+        
+        if (cachedResponse) {
+            recordPerformanceMetric('api_cache_fallback', request.url, startTime);
+            return cachedResponse;
+        }
+        
+        return new Response(JSON.stringify({ 
+            error: 'Offline - API not available',
+            offline: true 
+        }), {
+            status: 503,
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
+}
+
+// キャッシュサイズ最適化
+async function optimizeCacheSize() {
+    const cacheNames = [DYNAMIC_CACHE, API_CACHE, IMAGE_CACHE];
+    const maxSizes = { 
+        [DYNAMIC_CACHE]: 50, 
+        [API_CACHE]: 30, 
+        [IMAGE_CACHE]: 100 
+    };
+
+    for (const cacheName of cacheNames) {
+        try {
+            const cache = await caches.open(cacheName);
+            const keys = await cache.keys();
+            const maxSize = maxSizes[cacheName];
+            
+            if (keys.length > maxSize) {
+                const keysToDelete = keys.slice(0, keys.length - maxSize);
+                await Promise.all(keysToDelete.map(key => cache.delete(key)));
+                console.log(`[SW] Optimized ${cacheName}: removed ${keysToDelete.length} entries`);
+            }
+        } catch (error) {
+            console.warn(`[SW] Failed to optimize cache ${cacheName}:`, error);
+        }
+    }
+}
+
+// パフォーマンストラッキング初期化
+async function initializePerformanceTracking() {
+    // パフォーマンスメトリクスをリセット
+    self.performanceMetrics = {
+        cacheHits: 0,
+        networkRequests: 0,
+        totalRequests: 0,
+        averageResponseTime: 0
+    };
+    console.log('[SW] Performance tracking initialized');
+}
+
+// パフォーマンスメトリクス記録
+function recordPerformanceMetric(type, url, startTime) {
+    const duration = performance.now() - startTime;
+    
+    if (!self.performanceMetrics) {
+        self.performanceMetrics = {
+            cacheHits: 0,
+            networkRequests: 0,
+            totalRequests: 0,
+            averageResponseTime: 0
+        };
+    }
+    
+    self.performanceMetrics.totalRequests++;
+    
+    if (type.includes('cache')) {
+        self.performanceMetrics.cacheHits++;
+    } else if (type.includes('network')) {
+        self.performanceMetrics.networkRequests++;
+    }
+    
+    // 移動平均でレスポンス時間を更新
+    const currentAvg = self.performanceMetrics.averageResponseTime;
+    const newAvg = (currentAvg * (self.performanceMetrics.totalRequests - 1) + duration) / self.performanceMetrics.totalRequests;
+    self.performanceMetrics.averageResponseTime = newAvg;
+    
+    // 閾値チェック
+    if (duration > 3000) {
+        console.warn(`[SW] Slow response: ${type} ${url} took ${duration.toFixed(2)}ms`);
+    }
+}
+
 // Helper functions
+function isImageRequest(url) {
+    return /\.(jpg|jpeg|png|gif|webp|svg|ico)(\?.*)?$/i.test(url) ||
+           url.includes('/assets/') ||
+           url.includes('/icons/');
+}
+
 function isStaticFile(url) {
     return STATIC_FILES.some(file => url.endsWith(file)) ||
          url.includes('/css/') ||
          url.includes('/js/') ||
-         url.includes('/icons/') ||
-         url.includes('/images/');
+         url.includes('/partials/') ||
+         url.endsWith('.html');
 }
 
 function isAPIRequest(url) {
@@ -215,7 +450,7 @@ function isAPIRequest(url) {
 
 function isNavigationRequest(request) {
     return request.mode === 'navigate' ||
-         (request.method === 'GET' && request.headers.get('accept').includes('text/html'));
+         (request.method === 'GET' && request.headers.get('accept')?.includes('text/html'));
 }
 
 // Background Sync for offline data
@@ -368,7 +603,7 @@ self.addEventListener('notificationclick', event => {
     );
 });
 
-// Message handler for communication with main thread
+// Message handler for communication with main thread - 拡張版
 self.addEventListener('message', event => {
     console.log('[SW] Message received:', event.data);
 
@@ -384,6 +619,25 @@ self.addEventListener('message', event => {
                 );
             }).then(() => {
                 event.ports[0].postMessage({ success: true });
+            })
+        );
+    } else if (event.data && event.data.type === 'GET_PERFORMANCE_STATS') {
+        // パフォーマンス統計を返す
+        const stats = {
+            ...self.performanceMetrics,
+            cacheHitRate: self.performanceMetrics.totalRequests > 0 
+                ? (self.performanceMetrics.cacheHits / self.performanceMetrics.totalRequests * 100).toFixed(2)
+                : 0,
+            version: CACHE_VERSION
+        };
+        event.ports[0].postMessage({ stats });
+    } else if (event.data && event.data.type === 'OPTIMIZE_CACHES') {
+        // 手動でキャッシュ最適化を実行
+        event.waitUntil(
+            optimizeCacheSize().then(() => {
+                event.ports[0].postMessage({ success: true, message: 'Caches optimized' });
+            }).catch(error => {
+                event.ports[0].postMessage({ success: false, error: error.message });
             })
         );
     }

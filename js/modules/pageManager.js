@@ -2,6 +2,7 @@
 
 import { showNotification } from '../utils/helpers.js';
 import onboardingManager from './onboardingManager.js';
+import { lazyLoader } from '../utils/lazyLoader.js';
 
 class PageManager {
     constructor() {
@@ -93,28 +94,50 @@ class PageManager {
     }
 
     /**
-     * ページモジュールを動的に読み込み
+     * ページモジュールを動的に読み込み（遅延ローディング対応）
      * @param {string} pageName - ページ名
      */
     async loadPageModule(pageName) {
         try {
-            let module;
+            console.log(`🔄 ページモジュール読み込み開始: ${pageName}`);
+            const startTime = performance.now();
 
-            // エクササイズ管理ページの特別処理
-            if (pageName === 'exercises-management' || pageName === 'exercises') {
-                module = await import('../pages/exercisePage.js');
-            } else {
-                module = await import(`../pages/${pageName}Page.js`);
-            }
+            // 遅延ローダーを使用してモジュールを読み込み
+            const module = await lazyLoader.loadPageModule(pageName);
 
             if (module.default && typeof module.default.initialize === 'function') {
-                module.default.initialize();
+                await module.default.initialize();
             }
+
+            const loadTime = performance.now() - startTime;
+            console.log(`✅ ページモジュール読み込み完了: ${pageName} (${loadTime.toFixed(2)}ms)`);
+
+            // 遅延ロード対象の画像とコンポーネントを監視
+            this.observeLazyElements();
+
         } catch (error) {
             console.warn(`Page module for ${pageName} not found or failed to load:`, error);
             // フォールバック処理
             this.initializePageFallback(pageName);
         }
+    }
+
+    /**
+     * 遅延ロード対象の要素を監視
+     */
+    observeLazyElements() {
+        // 遅延ロード対象の画像を監視
+        const lazyImages = document.querySelectorAll('img[data-src], img[loading="lazy"]');
+        lazyImages.forEach(img => {
+            lazyLoader.observeImage(img);
+        });
+
+        // 遅延ロード対象のコンポーネントを監視
+        const lazyComponents = document.querySelectorAll('[data-lazy-component]');
+        lazyComponents.forEach(element => {
+            const componentType = element.dataset.lazyComponent;
+            lazyLoader.observeComponent(element, componentType);
+        });
     }
 
     /**

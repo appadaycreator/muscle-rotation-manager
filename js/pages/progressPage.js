@@ -6,6 +6,7 @@
 import { progressTrackingService } from '../services/progressTrackingService.js';
 import { chartService } from '../services/chartService.js';
 import { supabaseService } from '../services/supabaseService.js';
+import { reportService } from '../services/reportService.js';
 import { errorHandler } from '../utils/errorHandler.js';
 import { safeGetElement, safeGetElements } from '../utils/helpers.js';
 
@@ -194,10 +195,20 @@ class ProgressPage {
                     <div class="bg-white rounded-lg shadow-md p-6">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-lg font-semibold text-gray-800">詳細分析レポート</h3>
-                            <button id="export-report-btn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors">
-                                <i class="fas fa-download mr-2"></i>
-                                レポート出力
-                            </button>
+                            <div class="flex space-x-2">
+                                <button id="export-pdf-btn" class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors">
+                                    <i class="fas fa-file-pdf mr-2"></i>
+                                    PDF出力
+                                </button>
+                                <button id="export-csv-btn" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors">
+                                    <i class="fas fa-file-csv mr-2"></i>
+                                    CSV出力
+                                </button>
+                                <button id="export-report-btn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors">
+                                    <i class="fas fa-download mr-2"></i>
+                                    JSON出力
+                                </button>
+                            </div>
                         </div>
                         <div id="analysis-report" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <!-- 分析データがここに表示される -->
@@ -228,46 +239,129 @@ class ProgressPage {
                             </button>
                         </div>
                         <form id="goal-form">
+                            <!-- SMART目標設定の説明 -->
+                            <div class="mb-4 p-3 bg-blue-50 rounded-lg">
+                                <h4 class="text-sm font-semibold text-blue-800 mb-2">SMART目標設定</h4>
+                                <p class="text-xs text-blue-600">
+                                    <strong>S</strong>pecific（具体的）、<strong>M</strong>easurable（測定可能）、
+                                    <strong>A</strong>chievable（達成可能）、<strong>R</strong>elevant（関連性）、
+                                    <strong>T</strong>ime-bound（期限付き）な目標を設定しましょう
+                                </p>
+                            </div>
+
                             <div class="mb-4">
                                 <label for="goal-type" class="block text-sm font-medium text-gray-700 mb-2">
-                                    目標タイプ
+                                    目標タイプ <span class="text-red-500">*</span>
                                 </label>
                                 <select id="goal-type" 
                                         class="w-full px-3 py-2 border border-gray-300 rounded-md 
                                                focus:outline-none focus:ring-2 focus:ring-blue-500" 
                                         required>
-                                    <option value="weight">最大重量</option>
-                                    <option value="reps">最大回数</option>
-                                    <option value="one_rm">1RM</option>
+                                    <option value="">目標タイプを選択</option>
+                                    <option value="weight">最大重量（kg）</option>
+                                    <option value="reps">最大回数（回）</option>
+                                    <option value="one_rm">1RM（kg）</option>
                                 </select>
+                                <p class="text-xs text-gray-500 mt-1">測定可能な指標を選択してください</p>
                             </div>
+
+                            <div class="grid grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label for="current-value" class="block text-sm font-medium text-gray-700 mb-2">
+                                        現在の値
+                                    </label>
+                                    <input type="number" id="current-value" step="0.1" min="0" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md 
+                                                  focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50" 
+                                           readonly>
+                                    <p class="text-xs text-gray-500 mt-1">最新の記録から自動設定</p>
+                                </div>
+                                <div>
+                                    <label for="target-value" class="block text-sm font-medium text-gray-700 mb-2">
+                                        目標値 <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="number" id="target-value" step="0.1" min="0" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md 
+                                                  focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                           required>
+                                    <p class="text-xs text-gray-500 mt-1">達成可能な目標を設定</p>
+                                </div>
+                            </div>
+
                             <div class="mb-4">
-                                <label for="target-value" class="block text-sm font-medium text-gray-700 mb-2">
-                                    目標値
+                                <label for="target-date" class="block text-sm font-medium text-gray-700 mb-2">
+                                    目標達成日 <span class="text-red-500">*</span>
                                 </label>
-                                <input type="number" id="target-value" step="0.1" min="0" 
+                                <input type="date" id="target-date" 
                                        class="w-full px-3 py-2 border border-gray-300 rounded-md 
                                               focus:outline-none focus:ring-2 focus:ring-blue-500" 
                                        required>
+                                <p class="text-xs text-gray-500 mt-1">現実的な期限を設定してください（推奨：4-12週間）</p>
                             </div>
+
                             <div class="mb-4">
-                                <label for="target-date" class="block text-sm font-medium text-gray-700 mb-2">
-                                    目標達成日
+                                <label for="goal-priority" class="block text-sm font-medium text-gray-700 mb-2">
+                                    優先度
                                 </label>
-                                <input type="date" id="target-date" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                <select id="goal-priority" 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md 
+                                               focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="medium">中（標準）</option>
+                                    <option value="high">高（重要）</option>
+                                    <option value="low">低（参考）</option>
+                                </select>
                             </div>
+
+                            <div class="mb-4">
+                                <label for="goal-strategy" class="block text-sm font-medium text-gray-700 mb-2">
+                                    達成戦略（任意）
+                                </label>
+                                <textarea id="goal-strategy" rows="2" 
+                                          class="w-full px-3 py-2 border border-gray-300 rounded-md 
+                                                 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                          placeholder="例：週3回のトレーニング、プログレッシブオーバーロード適用"></textarea>
+                                <p class="text-xs text-gray-500 mt-1">目標達成のための具体的な方法を記載</p>
+                            </div>
+
                             <div class="mb-6">
                                 <label for="goal-description" class="block text-sm font-medium text-gray-700 mb-2">
-                                    説明（任意）
+                                    目標の説明（任意）
                                 </label>
-                                <textarea id="goal-description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="目標の詳細説明"></textarea>
+                                <textarea id="goal-description" rows="2" 
+                                          class="w-full px-3 py-2 border border-gray-300 rounded-md 
+                                                 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                          placeholder="この目標を達成する理由や意義を記載"></textarea>
                             </div>
+
+                            <!-- 通知設定 -->
+                            <div class="mb-6 p-3 bg-gray-50 rounded-lg">
+                                <h4 class="text-sm font-semibold text-gray-700 mb-3">通知設定</h4>
+                                <div class="space-y-2">
+                                    <label class="flex items-center">
+                                        <input type="checkbox" id="notify-progress" class="mr-2" checked>
+                                        <span class="text-sm text-gray-600">進捗更新時に通知</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" id="notify-milestone" class="mr-2" checked>
+                                        <span class="text-sm text-gray-600">マイルストーン達成時に通知</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" id="notify-deadline" class="mr-2" checked>
+                                        <span class="text-sm text-gray-600">期限前のリマインダー</span>
+                                    </label>
+                                </div>
+                            </div>
+
                             <div class="flex space-x-3">
-                                <button type="button" id="cancel-goal" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors">
+                                <button type="button" id="cancel-goal" 
+                                        class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 
+                                               rounded-md hover:bg-gray-50 transition-colors">
                                     キャンセル
                                 </button>
-                                <button type="submit" class="flex-1 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors">
-                                    設定
+                                <button type="submit" 
+                                        class="flex-1 px-4 py-2 bg-blue-500 text-white 
+                                               rounded-md hover:bg-blue-600 transition-colors">
+                                    目標を設定
                                 </button>
                             </div>
                         </form>
@@ -334,8 +428,17 @@ class ProgressPage {
 
             // レポート出力
             const exportReportBtn = safeGetElement('export-report-btn');
+            const exportPdfBtn = safeGetElement('export-pdf-btn');
+            const exportCsvBtn = safeGetElement('export-csv-btn');
+
             if (exportReportBtn) {
                 exportReportBtn.addEventListener('click', () => this.exportReport());
+            }
+            if (exportPdfBtn) {
+                exportPdfBtn.addEventListener('click', () => this.exportToPDF());
+            }
+            if (exportCsvBtn) {
+                exportCsvBtn.addEventListener('click', () => this.exportToCSV());
             }
 
             // ワークアウト開始
@@ -689,13 +792,66 @@ class ProgressPage {
         if (modal) {
             modal.classList.remove('hidden');
 
-            // 目標達成日のデフォルト値を30日後に設定
+            // 目標達成日のデフォルト値を8週間後に設定
             const targetDate = safeGetElement('target-date');
             if (targetDate) {
                 const date = new Date();
-                date.setDate(date.getDate() + 30);
+                date.setDate(date.getDate() + 56); // 8週間
                 targetDate.value = date.toISOString().split('T')[0];
             }
+
+            // 目標タイプ変更時の現在値自動設定
+            const goalType = safeGetElement('goal-type');
+            const currentValue = safeGetElement('current-value');
+            const targetValue = safeGetElement('target-value');
+
+            if (goalType && currentValue && targetValue) {
+                goalType.addEventListener('change', () => {
+                    this.updateCurrentValue(goalType.value, currentValue, targetValue);
+                });
+            }
+        }
+    }
+
+    /**
+     * 現在の値を更新
+     * @param {string} goalType - 目標タイプ
+     * @param {HTMLElement} currentValueEl - 現在値要素
+     * @param {HTMLElement} targetValueEl - 目標値要素
+     */
+    updateCurrentValue(goalType, currentValueEl, targetValueEl) {
+        try {
+            if (!goalType || this.progressData.length === 0) {
+                currentValueEl.value = '';
+                targetValueEl.value = '';
+                return;
+            }
+
+            const latestRecord = this.progressData[this.progressData.length - 1];
+            let currentVal = 0;
+
+            switch (goalType) {
+                case 'weight':
+                    currentVal = Math.max(...latestRecord.weights);
+                    break;
+                case 'reps':
+                    currentVal = Math.max(...latestRecord.reps);
+                    break;
+                case 'one_rm':
+                    currentVal = latestRecord.one_rm;
+                    break;
+            }
+
+            currentValueEl.value = currentVal.toFixed(1);
+
+            // 推奨目標値を設定（現在値の5-15%増加）
+            const recommendedIncrease = currentVal * 0.1; // 10%増加
+            const suggestedTarget = currentVal + recommendedIncrease;
+            targetValueEl.value = suggestedTarget.toFixed(1);
+            targetValueEl.placeholder = `推奨: ${suggestedTarget.toFixed(1)}`;
+
+        } catch (error) {
+            errorHandler.handleError(error, 'ProgressPage.updateCurrentValue');
         }
     }
 
@@ -726,27 +882,39 @@ class ProgressPage {
 
             const goalType = safeGetElement('goal-type')?.value;
             const targetValue = parseFloat(safeGetElement('target-value')?.value || '0');
+            const currentValue = parseFloat(safeGetElement('current-value')?.value || '0');
             const targetDate = safeGetElement('target-date')?.value;
+            const priority = safeGetElement('goal-priority')?.value || 'medium';
+            const strategy = safeGetElement('goal-strategy')?.value;
             const description = safeGetElement('goal-description')?.value;
 
+            // 通知設定
+            const notifyProgress = safeGetElement('notify-progress')?.checked || false;
+            const notifyMilestone = safeGetElement('notify-milestone')?.checked || false;
+            const notifyDeadline = safeGetElement('notify-deadline')?.checked || false;
+
+            // バリデーション
             if (!goalType || !targetValue || !targetDate) {
                 throw new Error('必須項目を入力してください');
             }
 
-            // 現在の値を取得
-            let currentValue = 0;
-            if (this.progressData.length > 0) {
-                const latestRecord = this.progressData[this.progressData.length - 1];
-                switch (goalType) {
-                    case 'weight':
-                        currentValue = Math.max(...latestRecord.weights);
-                        break;
-                    case 'reps':
-                        currentValue = Math.max(...latestRecord.reps);
-                        break;
-                    case 'one_rm':
-                        currentValue = latestRecord.one_rm;
-                        break;
+            if (targetValue <= currentValue) {
+                throw new Error('目標値は現在の値より大きく設定してください');
+            }
+
+            const targetDateObj = new Date(targetDate);
+            const today = new Date();
+            if (targetDateObj <= today) {
+                throw new Error('目標達成日は今日より後の日付を設定してください');
+            }
+
+            // 達成可能性チェック（現在値の50%以上の増加は警告）
+            const increasePercentage = ((targetValue - currentValue) / currentValue) * 100;
+            if (increasePercentage > 50) {
+                const confirmMessage = `目標値が現在値より${increasePercentage.toFixed(1)}%高く設定されています。達成可能な目標ですか？`;
+                // eslint-disable-next-line no-alert
+                if (!window.confirm(confirmMessage)) {
+                    return;
                 }
             }
 
@@ -757,7 +925,14 @@ class ProgressPage {
                 targetValue,
                 currentValue,
                 targetDate,
-                description: description || `${goalType}目標`
+                priority,
+                strategy,
+                description: description || this.generateGoalDescription(goalType, targetValue, targetDate),
+                notifications: {
+                    progress: notifyProgress,
+                    milestone: notifyMilestone,
+                    deadline: notifyDeadline
+                }
             };
 
             const result = await progressTrackingService.setGoal(goalData);
@@ -767,7 +942,10 @@ class ProgressPage {
                 await this.loadProgressData(); // データを再読み込み
 
                 // 成功通知
-                this.showNotification('目標が設定されました', 'success');
+                this.showNotification('SMART目標が設定されました！', 'success');
+
+                // 目標達成のヒントを表示
+                this.showGoalTips(goalType, increasePercentage);
             } else {
                 throw new Error(result.error || '目標設定に失敗しました');
             }
@@ -778,7 +956,69 @@ class ProgressPage {
     }
 
     /**
-     * レポートを出力
+     * 目標の説明文を自動生成
+     * @param {string} goalType - 目標タイプ
+     * @param {number} targetValue - 目標値
+     * @param {string} targetDate - 目標日
+     * @returns {string} 説明文
+     */
+    generateGoalDescription(goalType, targetValue, targetDate) {
+        const typeNames = {
+            weight: '最大重量',
+            reps: '最大回数',
+            one_rm: '1RM'
+        };
+
+        const units = {
+            weight: 'kg',
+            reps: '回',
+            one_rm: 'kg'
+        };
+
+        const typeName = typeNames[goalType] || goalType;
+        const unit = units[goalType] || '';
+        const date = new Date(targetDate).toLocaleDateString('ja-JP');
+
+        return `${date}までに${typeName}${targetValue}${unit}を達成する`;
+    }
+
+    /**
+     * 目標達成のヒントを表示
+     * @param {string} goalType - 目標タイプ
+     * @param {number} increasePercentage - 増加率
+     */
+    showGoalTips(goalType, increasePercentage) {
+        const tips = [];
+
+        if (increasePercentage > 25) {
+            tips.push('大きな目標です！段階的な中間目標を設定することをお勧めします');
+        }
+
+        switch (goalType) {
+            case 'weight':
+                tips.push('重量増加には適切なフォームの維持が重要です');
+                tips.push('週2-3回の頻度でプログレッシブオーバーロードを適用しましょう');
+                break;
+            case 'reps':
+                tips.push('回数増加には筋持久力の向上が必要です');
+                tips.push('セット間の休息時間を調整してみてください');
+                break;
+            case 'one_rm':
+                tips.push('1RM向上には重量とフォームのバランスが重要です');
+                tips.push('定期的な1RMテストで進捗を確認しましょう');
+                break;
+        }
+
+        if (tips.length > 0) {
+            const tipMessage = tips.join('\n• ');
+            setTimeout(() => {
+                this.showNotification(`💡 目標達成のヒント:\n• ${tipMessage}`, 'info');
+            }, 2000);
+        }
+    }
+
+    /**
+     * JSONレポートを出力
      */
     async exportReport() {
         try {
@@ -792,7 +1032,6 @@ class ProgressPage {
                 this.selectedExercise
             );
 
-            // 簡易的なレポート生成（実際のPDF出力は別途実装）
             const reportData = {
                 exercise: this.selectedExercise,
                 dateRange: analysis.dateRange,
@@ -804,19 +1043,98 @@ class ProgressPage {
 
             // JSON形式でダウンロード
             const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `progress-report-${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            const filename = `progress-report-${new Date().toISOString().split('T')[0]}.json`;
+            reportService.downloadFile(blob, filename);
 
-            this.showNotification('レポートをダウンロードしました', 'success');
+            this.showNotification('JSONレポートをダウンロードしました', 'success');
         } catch (error) {
             errorHandler.handleError(error, 'ProgressPage.exportReport');
             this.showNotification('レポート出力に失敗しました', 'error');
+        }
+    }
+
+    /**
+     * PDFレポートを出力
+     */
+    async exportToPDF() {
+        try {
+            if (!this.selectedExercise || !this.currentUser || this.progressData.length === 0) {
+                this.showNotification('出力するデータがありません', 'warning');
+                return;
+            }
+
+            // ローディング表示
+            this.showNotification('PDFを生成中...', 'info');
+
+            const analysis = await progressTrackingService.generateMonthlyAnalysis(
+                this.currentUser.id,
+                this.selectedExercise
+            );
+
+            // エクササイズ名を取得
+            const exerciseName = await this.getExerciseName(this.selectedExercise);
+
+            const reportData = {
+                dateRange: analysis.dateRange,
+                stats: analysis.stats,
+                trend: analysis.trend,
+                goals: this.goalsData,
+                progressData: this.progressData
+            };
+
+            const pdfBlob = await reportService.generateProgressReportPDF(reportData, exerciseName);
+            const filename = `progress-report-${exerciseName}-${new Date().toISOString().split('T')[0]}.pdf`;
+            reportService.downloadFile(pdfBlob, filename);
+
+            this.showNotification('PDFレポートをダウンロードしました', 'success');
+        } catch (error) {
+            errorHandler.handleError(error, 'ProgressPage.exportToPDF');
+            this.showNotification('PDF出力に失敗しました', 'error');
+        }
+    }
+
+    /**
+     * CSVデータを出力
+     */
+    async exportToCSV() {
+        try {
+            if (!this.selectedExercise || !this.currentUser || this.progressData.length === 0) {
+                this.showNotification('出力するデータがありません', 'warning');
+                return;
+            }
+
+            // エクササイズ名を取得
+            const exerciseName = await this.getExerciseName(this.selectedExercise);
+
+            const csvBlob = reportService.exportToCSV(this.progressData, exerciseName);
+            const filename = `progress-data-${exerciseName}-${new Date().toISOString().split('T')[0]}.csv`;
+            reportService.downloadFile(csvBlob, filename);
+
+            this.showNotification('CSVデータをダウンロードしました', 'success');
+        } catch (error) {
+            errorHandler.handleError(error, 'ProgressPage.exportToCSV');
+            this.showNotification('CSV出力に失敗しました', 'error');
+        }
+    }
+
+    /**
+     * エクササイズ名を取得
+     * @param {string} exerciseId - エクササイズID
+     * @returns {Promise<string>} エクササイズ名
+     */
+    async getExerciseName(exerciseId) {
+        try {
+            const { data, error } = await supabaseService.getClient()
+                .from('exercises')
+                .select('name_ja')
+                .eq('id', exerciseId)
+                .single();
+
+            if (error) {throw error;}
+            return data?.name_ja || 'Unknown Exercise';
+        } catch (error) {
+            errorHandler.handleError(error, 'ProgressPage.getExerciseName');
+            return 'Unknown Exercise';
         }
     }
 

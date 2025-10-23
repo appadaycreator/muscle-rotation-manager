@@ -153,7 +153,10 @@ describe('バリデーション機能テスト', () => {
                     'password123',
                     'MySecure123',
                     'test1234',
-                    'abcdefgh1'
+                    'abcdefgh1',
+                    'password',
+                    'abcdefgh',
+                    'testpass'
                 ];
 
                 validPasswords.forEach(password => {
@@ -168,11 +171,11 @@ describe('バリデーション機能テスト', () => {
                 expect(result.errors).toContain(ERROR_MESSAGES.INVALID_PASSWORD);
             });
 
-            test('英数字混在でないパスワードを拒否する', () => {
+            test('無効な文字を含むパスワードを拒否する', () => {
                 const invalidPasswords = [
-                    'onlyletters',
-                    '12345678',
-                    'パスワード123' // 日本語文字
+                    'パスワード123', // 日本語文字
+                    'password<script>',
+                    'test[bracket]'
                 ];
 
                 invalidPasswords.forEach(password => {

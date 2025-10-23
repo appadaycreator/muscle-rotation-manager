@@ -2,8 +2,8 @@
 
 // Supabase設定
 export const SUPABASE_CONFIG = {
-    url: 'https://mwwlqpokfgduxyjbqoff.supabase.co',
-    key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13d2xxcG9rZmdkdXh5amJxb2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1MTU3MTIsImV4cCI6MjA2ODA5MTcxMn0.0vyxxQ7zBfRKrH-JhpHMor_UvuBbQu3wE9HStGjsfGQ'
+    url: 'https://rtdbgxanjfvdkzrnxqjz.supabase.co',
+    key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0ZGJneGFuamZ2ZGt6cm54cWp6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ5NTcxNjQsImV4cCI6MjA1MDUzMzE2NH0.ANON_KEY_PLACEHOLDER'
 };
 
 // 筋肉部位の定義（科学的根拠に基づく回復期間を含む）

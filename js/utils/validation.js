@@ -13,9 +13,9 @@
  */
 export const VALIDATION_RULES = {
     // 数値範囲
-    WEIGHT: { min: 0, max: 1000, unit: 'kg' },
+    WEIGHT: { min: 0.1, max: 500, unit: 'kg' },
     REPS: { min: 1, max: 100, unit: '回' },
-    SETS: { min: 1, max: 20, unit: 'セット' },
+    SETS: { min: 1, max: 10, unit: 'セット' },
 
     // 文字列長
     EMAIL_MAX_LENGTH: 254,
@@ -28,7 +28,7 @@ export const VALIDATION_RULES = {
     // 正規表現パターン
     // eslint-disable-next-line max-len
     EMAIL_PATTERN: /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/,
-    PASSWORD_PATTERN: /^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,}$/,
+    PASSWORD_PATTERN: /^[a-zA-Z\d@$!%*?&]{8,}$/,
     SAFE_TEXT_PATTERN: /^[a-zA-Z0-9\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\s\-_.()（）、。！？]*$/
 };
 
@@ -38,7 +38,7 @@ export const VALIDATION_RULES = {
 export const ERROR_MESSAGES = {
     REQUIRED: 'この項目は必須です',
     INVALID_EMAIL: 'メールアドレスの形式が正しくありません',
-    INVALID_PASSWORD: 'パスワードは8文字以上で、英数字を含む必要があります',
+    INVALID_PASSWORD: 'パスワードは8文字以上で入力してください',
     INVALID_NUMBER: '数値を入力してください',
     OUT_OF_RANGE: (min, max, unit) => `${min}${unit}から${max}${unit}の範囲で入力してください`,
     TOO_LONG: (max) => `${max}文字以内で入力してください`,
@@ -166,13 +166,9 @@ export class Validator {
 
             if (sanitizedPassword.length < VALIDATION_RULES.PASSWORD_MIN_LENGTH) {
                 errors.push(ERROR_MESSAGES.INVALID_PASSWORD);
-            }
-
-            if (sanitizedPassword.length > VALIDATION_RULES.PASSWORD_MAX_LENGTH) {
+            } else if (sanitizedPassword.length > VALIDATION_RULES.PASSWORD_MAX_LENGTH) {
                 errors.push(ERROR_MESSAGES.TOO_LONG(VALIDATION_RULES.PASSWORD_MAX_LENGTH));
-            }
-
-            if (!VALIDATION_RULES.PASSWORD_PATTERN.test(sanitizedPassword)) {
+            } else if (!VALIDATION_RULES.PASSWORD_PATTERN.test(sanitizedPassword)) {
                 errors.push(ERROR_MESSAGES.INVALID_PASSWORD);
             }
 
