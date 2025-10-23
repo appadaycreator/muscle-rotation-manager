@@ -4,6 +4,7 @@ import { authManager } from '../modules/authManager.js';
 import { supabaseService } from '../services/supabaseService.js';
 import { showNotification } from '../utils/helpers.js';
 import { handleError } from '../utils/errorHandler.js';
+import { tooltipManager } from '../utils/tooltip.js';
 
 /**
  * MPA初期化クラス
@@ -73,7 +74,10 @@ class MPAInitializer {
             // 1. 認証管理の初期化
             await this.initializeAuthManager();
 
-            // 2. Supabaseの初期化を待つ
+            // 2. ツールチップマネージャーの初期化
+            await this.initializeTooltipManager();
+
+            // 3. Supabaseの初期化を待つ
             await this.waitForSupabaseInitialization();
 
             // 3. 認証状態の確認（スキップオプションがない場合）
@@ -515,6 +519,20 @@ class MPAInitializer {
         } catch (error) {
             console.error('❌ Auth manager initialization failed:', error);
             throw error;
+        }
+    }
+
+    /**
+     * ツールチップマネージャーを初期化
+     */
+    async initializeTooltipManager() {
+        try {
+            console.log('💡 Initializing tooltip manager...');
+            tooltipManager.initialize();
+            console.log('✅ Tooltip manager initialized');
+        } catch (error) {
+            console.error('❌ Tooltip manager initialization failed:', error);
+            // ツールチップの初期化に失敗してもアプリケーションは動作する
         }
     }
 

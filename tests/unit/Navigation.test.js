@@ -20,6 +20,14 @@ jest.mock('../../js/utils/helpers.js', () => ({
   showNotification: jest.fn()
 }));
 
+// tooltipManagerをモック
+jest.mock('../../js/utils/tooltip.js', () => ({
+  tooltipManager: {
+    initialize: jest.fn(),
+    addTooltip: jest.fn()
+  }
+}));
+
 describe('Navigation', () => {
   beforeEach(() => {
     // DOM要素のモック設定
@@ -337,6 +345,31 @@ describe('Navigation', () => {
       
       // エラーが発生しないことを確認
       expect(true).toBe(true);
+    });
+  });
+
+  describe('setupTooltips', () => {
+    test('should setup tooltips for navigation elements', () => {
+      const navigation = new Navigation();
+      const { tooltipManager } = require('../../js/utils/tooltip.js');
+      
+      navigation.setupTooltips();
+      
+      expect(tooltipManager.addTooltip).toHaveBeenCalledWith('a[href="/dashboard.html"]', expect.any(Object));
+      expect(tooltipManager.addTooltip).toHaveBeenCalledWith('a[href="/workout.html"]', expect.any(Object));
+      expect(tooltipManager.addTooltip).toHaveBeenCalledWith('a[href="/calendar.html"]', expect.any(Object));
+      expect(tooltipManager.addTooltip).toHaveBeenCalledWith('a[href="/analysis.html"]', expect.any(Object));
+      expect(tooltipManager.addTooltip).toHaveBeenCalledWith('a[href="/progress.html"]', expect.any(Object));
+      expect(tooltipManager.addTooltip).toHaveBeenCalledWith('a[href="/exercises.html"]', expect.any(Object));
+      expect(tooltipManager.addTooltip).toHaveBeenCalledWith('a[href="/settings.html"]', expect.any(Object));
+      expect(tooltipManager.addTooltip).toHaveBeenCalledWith('a[href="/help.html"]', expect.any(Object));
+      expect(tooltipManager.addTooltip).toHaveBeenCalledWith('a[href="/privacy.html"]', expect.any(Object));
+      expect(tooltipManager.addTooltip).toHaveBeenCalledWith('#mobile-menu-btn', expect.any(Object));
+      expect(tooltipManager.addTooltip).toHaveBeenCalledWith('#user-avatar', expect.any(Object));
+      expect(tooltipManager.addTooltip).toHaveBeenCalledWith('#login-btn', expect.any(Object));
+      expect(tooltipManager.addTooltip).toHaveBeenCalledWith('#profile-settings', expect.any(Object));
+      expect(tooltipManager.addTooltip).toHaveBeenCalledWith('#logout-btn', expect.any(Object));
+      expect(tooltipManager.addTooltip).toHaveBeenCalledWith('#mobile-sidebar-close', expect.any(Object));
     });
   });
 

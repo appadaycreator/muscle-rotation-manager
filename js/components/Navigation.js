@@ -50,6 +50,9 @@ export class Navigation {
             // イベントリスナーを設定
             this.setupEventListeners();
 
+            // ツールチップを設定
+            this.setupTooltips();
+
             // 認証状態に応じてナビゲーションを更新
             await this.updateNavigationForAuth();
 
@@ -614,6 +617,98 @@ export class Navigation {
                 e.preventDefault();
                 navItems[navItems.length - 1].focus();
                 break;
+        }
+    }
+
+    /**
+     * ツールチップを設定
+     */
+    setupTooltips() {
+        try {
+            console.log('Setting up tooltips for navigation');
+
+            // デスクトップサイドバーのツールチップ
+            tooltipManager.addTooltip('a[href="/dashboard.html"]', {
+                content: 'ダッシュボード：ワークアウトの統計情報と推奨事項を表示します。',
+                position: 'right'
+            });
+
+            tooltipManager.addTooltip('a[href="/workout.html"]', {
+                content: 'ワークアウト：筋力トレーニングの記録と管理を行います。',
+                position: 'right'
+            });
+
+            tooltipManager.addTooltip('a[href="/calendar.html"]', {
+                content: 'カレンダー：過去のワークアウト履歴と予定を確認できます。',
+                position: 'right'
+            });
+
+            tooltipManager.addTooltip('a[href="/analysis.html"]', {
+                content: '分析：トレーニングデータの詳細な分析とグラフを表示します。',
+                position: 'right'
+            });
+
+            tooltipManager.addTooltip('a[href="/progress.html"]', {
+                content: 'プログレッシブ・オーバーロード：筋力向上の進捗を科学的に追跡します。',
+                position: 'right'
+            });
+
+            tooltipManager.addTooltip('a[href="/exercises.html"]', {
+                content: 'エクササイズデータベース：豊富なエクササイズ情報を検索できます。',
+                position: 'right'
+            });
+
+            tooltipManager.addTooltip('a[href="/settings.html"]', {
+                content: '設定：アカウント情報やアプリケーションの設定を変更できます。',
+                position: 'right'
+            });
+
+            tooltipManager.addTooltip('a[href="/help.html"]', {
+                content: '使い方：アプリケーションの使用方法とヘルプ情報を表示します。',
+                position: 'right'
+            });
+
+            tooltipManager.addTooltip('a[href="/privacy.html"]', {
+                content: 'プライバシーポリシー：個人情報の取り扱いについて説明します。',
+                position: 'right'
+            });
+
+            // ヘッダー要素のツールチップ
+            tooltipManager.addTooltip('#mobile-menu-btn', {
+                content: 'メニューを開く：モバイル用のナビゲーションメニューを表示します。',
+                position: 'bottom'
+            });
+
+            tooltipManager.addTooltip('#user-avatar', {
+                content: 'ユーザープロフィール：アカウント情報とログアウトオプションを表示します。',
+                position: 'bottom'
+            });
+
+            tooltipManager.addTooltip('#login-btn', {
+                content: 'ログイン：アカウントにログインしてアプリケーションを使用します。',
+                position: 'bottom'
+            });
+
+            tooltipManager.addTooltip('#profile-settings', {
+                content: '設定：アカウント情報やアプリケーションの設定を変更できます。',
+                position: 'bottom'
+            });
+
+            tooltipManager.addTooltip('#logout-btn', {
+                content: 'ログアウト：現在のセッションを終了し、ログイン画面に戻ります。',
+                position: 'bottom'
+            });
+
+            // モバイルサイドバーのツールチップ
+            tooltipManager.addTooltip('#mobile-sidebar-close', {
+                content: 'メニューを閉じる：モバイル用のナビゲーションメニューを閉じます。',
+                position: 'bottom'
+            });
+
+            console.log('✅ Tooltips setup complete for navigation');
+
+        } catch (error) {
+            console.error('❌ Failed to setup tooltips:', error);
         }
     }
 
