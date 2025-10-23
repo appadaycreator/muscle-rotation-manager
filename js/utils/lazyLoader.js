@@ -62,7 +62,7 @@ class LazyLoader {
                     module = await import('../pages/dashboardPage.js');
                     break;
                 case 'workout':
-                    module = await import('../pages/workoutPage.js');
+                    module = await import('../pages/workoutPageWizard.js');
                     break;
                 case 'calendar':
                     module = await import('../pages/calendarPage.js');

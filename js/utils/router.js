@@ -20,11 +20,35 @@ class Router {
 
         // ブラウザの戻る/進むボタンに対応
         window.addEventListener('popstate', (e) => {
+            console.log('🔄 Popstate event:', e.state);
             this.handleRouteChange(e.state?.route || this.getCurrentPath());
         });
 
-        // 初期ルートを処理
-        this.handleRouteChange(this.getCurrentPath());
+        // 初期ルートを処理（少し遅延させてDOMの準備を待つ）
+        setTimeout(() => {
+            const currentPath = this.getCurrentPath();
+            console.log('🔄 Initial route:', currentPath);
+            this.handleRouteChange(currentPath);
+        }, 100);
+
+        // ナビゲーションリンクのクリックイベントを設定
+        this.setupNavigationLinks();
+    }
+
+    /**
+     * ナビゲーションリンクのクリックイベントを設定
+     */
+    setupNavigationLinks() {
+        // ナビゲーションリンクのクリックイベントを設定
+        document.addEventListener('click', (e) => {
+            const navLink = e.target.closest('a[href]');
+            if (navLink && navLink.getAttribute('href').startsWith('/')) {
+                e.preventDefault();
+                const href = navLink.getAttribute('href');
+                console.log('🔗 ナビゲーションリンククリック:', href);
+                this.navigateTo(href);
+            }
+        });
     }
 
     /**
@@ -214,11 +238,21 @@ class Router {
             // コンテンツを挿入
             mainContent.innerHTML = content;
 
-            // ページコンポーネントを初期化
-            await this.initializePageComponent(route);
+            // ページコンポーネントを初期化（エラーハンドリング付き）
+            try {
+                await this.initializePageComponent(route);
+            } catch (componentError) {
+                console.warn(`ページコンポーネント初期化に失敗しました (${route.component}):`, componentError);
+                // コンポーネント初期化に失敗してもページは表示される
+            }
 
         } catch (error) {
             console.error('ページ読み込みエラー:', error);
+            // エラーページを表示
+            const mainContent = document.getElementById('main-content');
+            if (mainContent) {
+                mainContent.innerHTML = this.getErrorPage();
+            }
             throw error;
         }
     }
@@ -233,12 +267,22 @@ class Router {
         }
 
         try {
-            // キャッシュバスティング用のタイムスタンプを追加
-            const timestamp = Date.now();
-            const url = `partials/${componentName}.html?t=${timestamp}`;
-            
             // partialsからHTMLファイルを読み込み
-            const response = await fetch(url);
+            const response = await fetch(`partials/${componentName}.html`);
+
+            // 503エラーの場合は自動リトライ
+            if (response.status === 503) {
+                console.warn(`503 Service Unavailable for ${componentName}, retrying...`);
+                await this.delay(1000); // 1秒待機
+                const retryResponse = await fetch(`partials/${componentName}.html`);
+                if (!retryResponse.ok) {
+                    throw new Error(`Failed to load partials/${componentName}.html after retry`);
+                }
+                const content = await retryResponse.text();
+                this.pageCache.set(componentName, content);
+                return content;
+            }
+
             if (!response.ok) {
                 throw new Error(`Failed to load partials/${componentName}.html`);
             }
@@ -249,8 +293,19 @@ class Router {
 
         } catch (error) {
             console.error(`ページコンテンツ読み込みエラー (${componentName}):`, error);
+            // 503エラーの場合は専用ページを表示
+            if (error.message.includes('503') || error.message.includes('Service Unavailable')) {
+                return this.get503ErrorPage();
+            }
             return this.getErrorPage();
         }
+    }
+
+    /**
+     * 遅延処理
+     */
+    delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     /**
@@ -272,6 +327,29 @@ class Router {
     }
 
     /**
+     * 503エラー専用ページを取得
+     */
+    get503ErrorPage() {
+        return `
+            <div class="page-content">
+                <div class="text-center text-gray-500 py-8">
+                    <i class="fas fa-server text-4xl mb-4"></i>
+                    <h2 class="text-2xl font-bold mb-2">サービスが一時的に利用できません</h2>
+                    <p class="mb-4">サーバーが一時的に過負荷状態です。しばらく時間をおいてから再度お試しください。</p>
+                    <div class="space-x-4">
+                        <button onclick="router.navigateTo('/')" class="btn-primary">
+                            <i class="fas fa-home mr-2"></i>ホームに戻る
+                        </button>
+                        <button onclick="location.reload()" class="btn-secondary">
+                            <i class="fas fa-redo mr-2"></i>再読み込み
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    /**
      * ページコンポーネントを初期化
      */
     async initializePageComponent(route) {
@@ -285,6 +363,34 @@ class Router {
 
         } catch (error) {
             console.error(`ページコンポーネント初期化エラー (${route.component}):`, error);
+            // エラーが発生した場合は、ページコンテンツを再読み込み
+            this.reloadPageContent(route.component);
+        }
+    }
+
+    /**
+     * ページコンテンツを再読み込み
+     */
+    async reloadPageContent(componentName) {
+        try {
+            const mainContent = document.getElementById('main-content');
+            if (!mainContent) {
+                console.error('メインコンテンツエリアが見つかりません');
+                return;
+            }
+
+            // ページコンテンツを再読み込み
+            const content = await this.loadPageContent(componentName);
+            mainContent.innerHTML = content;
+
+            // ページコンポーネントを再初期化
+            const route = this.routes.get(`/${componentName}`);
+            if (route) {
+                await this.initializePageComponent(route);
+            }
+
+        } catch (error) {
+            console.error(`ページコンテンツ再読み込みエラー (${componentName}):`, error);
         }
     }
 
@@ -418,19 +524,19 @@ class Router {
     clearAllCache() {
         // ルーターキャッシュをクリア
         this.pageCache.clear();
-        
+
         // ローカルストレージをクリア
         if (typeof localStorage !== 'undefined') {
             localStorage.clear();
             console.log('🔄 Local storage cleared');
         }
-        
+
         // セッションストレージをクリア
         if (typeof sessionStorage !== 'undefined') {
             sessionStorage.clear();
             console.log('🔄 Session storage cleared');
         }
-        
+
         // Service Workerをクリア
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.getRegistrations().then(registrations => {
@@ -440,17 +546,17 @@ class Router {
                 console.log('🔄 Service workers cleared');
             });
         }
-        
+
         // ブラウザキャッシュをクリア
         if ('caches' in window) {
-            caches.keys().then(names => {
+            window.caches.keys().then(names => {
                 names.forEach(name => {
-                    caches.delete(name);
+                    window.caches.delete(name);
                 });
                 console.log('🔄 Browser caches cleared');
             });
         }
-        
+
         console.log('🔄 All caches cleared successfully');
     }
 

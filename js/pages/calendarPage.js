@@ -11,6 +11,7 @@ import {
     showInputDialog
 } from '../utils/helpers.js';
 import { MUSCLE_GROUPS } from '../utils/constants.js';
+import { authManager } from '../modules/authManager.js';
 
 class CalendarPage {
     constructor() {
@@ -28,6 +29,13 @@ class CalendarPage {
         console.log('Calendar page initialized');
 
         try {
+            // 認証状態を確認
+            const isAuthenticated = await authManager.isAuthenticated();
+            if (!isAuthenticated) {
+                this.showLoginPrompt();
+                return;
+            }
+
             // まずカレンダーインターフェースを設定
             this.setupCalendarInterface();
 
@@ -36,6 +44,7 @@ class CalendarPage {
 
             // イベントリスナーを設定
             this.setupEventListeners();
+            this.setupAuthButton();
 
             // カレンダーをレンダリング
             this.renderCalendar();
@@ -87,6 +96,41 @@ class CalendarPage {
         } catch (error) {
             console.error('Error loading planned workouts:', error);
             return [];
+        }
+    }
+
+    /**
+     * ログインプロンプトを表示
+     */
+    showLoginPrompt() {
+        const mainContent = document.querySelector('main');
+        if (mainContent) {
+            mainContent.innerHTML = `
+                <div class="text-center py-12">
+                    <i class="fas fa-lock text-4xl text-gray-400 mb-4"></i>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">ログインが必要です</h2>
+                    <p class="text-gray-600 mb-6">カレンダーを表示するにはログインしてください</p>
+                    <button id="login-btn" class="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700">
+                        ログイン
+                    </button>
+                </div>
+            `;
+
+            document.getElementById('login-btn')?.addEventListener('click', () => {
+                authManager.showLoginModal();
+            });
+        }
+    }
+
+    /**
+     * 認証ボタンを設定
+     */
+    setupAuthButton() {
+        const authButton = document.getElementById('auth-button');
+        if (authButton) {
+            authButton.addEventListener('click', () => {
+                authManager.showLoginModal();
+            });
         }
     }
 
@@ -627,7 +671,11 @@ window.addPlannedWorkout = async function(dateStr) {
     }
 };
 
-// デフォルトエクスポート
-const calendarPage = new CalendarPage();
-window.calendarPageInstance = calendarPage;
-export default calendarPage;
+// ページが読み込まれた時に自動初期化
+document.addEventListener('DOMContentLoaded', async () => {
+    const calendarPage = new CalendarPage();
+    await calendarPage.initialize();
+    window.calendarPageInstance = calendarPage;
+});
+
+export default new CalendarPage();

@@ -27,13 +27,33 @@ class MuscleRotationApp {
      * アプリケーションを初期化（パフォーマンス最適化版）
      */
     async initialize() {
-        if (this.isInitialized) {return;}
+        if (this.isInitialized) {
+            console.log('⚠️ App already initialized, skipping...');
+            return;
+        }
 
         console.log('🚀 MuscleRotationManager v3.0 - Starting Application with Comprehensive Optimizations');
         const initStartTime = typeof window !== 'undefined' && window.performance ? window.performance.now() : Date.now();
 
         try {
+            // DOM要素の存在確認
+            console.log('🔍 Checking DOM elements...');
+            const mainContent = document.getElementById('main-content');
+            const headerContainer = document.getElementById('header-container');
+            const sidebarContainer = document.getElementById('sidebar-container');
+
+            console.log('DOM Elements:', {
+                mainContent: !!mainContent,
+                headerContainer: !!headerContainer,
+                sidebarContainer: !!sidebarContainer
+            });
+
+            if (!mainContent) {
+                throw new Error('main-content element not found');
+            }
+
             // 包括的最適化を並行実行
+            console.log('🔄 Starting optimization processes...');
             const optimizationPromises = [
                 resourceOptimizer.initializeOptimizations(),
                 performanceOptimizer.initialize(),
@@ -43,30 +63,38 @@ class MuscleRotationApp {
             ];
 
             // オンライン状態の監視を開始
+            console.log('🔄 Setting up online status monitoring...');
             this.setupOnlineStatusMonitoring();
 
             // 基本コンポーネントを読み込み
+            console.log('🔄 Loading basic components...');
             await this.loadBasicComponents();
 
             // ルーティング機能を初期化（ページマネージャーの代わりに使用）
             console.log('🔄 ルーティング機能を初期化中...');
 
             // ナビゲーションを初期化
+            console.log('🔄 Initializing navigation...');
             pageManager.initializeNavigation();
 
             // 認証を初期化
+            console.log('🔄 Initializing authentication...');
             await authManager.initialize();
 
             // モバイルメニューを初期化
+            console.log('🔄 Initializing mobile menu...');
             this.initializeMobileMenu();
 
             // オフライン同期機能を初期化
+            console.log('🔄 Initializing offline sync...');
             this.initializeOfflineSync();
 
             // 最適化処理の完了を待つ
+            console.log('🔄 Waiting for optimization processes...');
             await Promise.allSettled(optimizationPromises);
 
             // 定期的なメンテナンスを設定
+            console.log('🔄 Setting up periodic maintenance...');
             this.setupPeriodicMaintenance();
 
             const initTime = (typeof window !== 'undefined' && window.performance ? window.performance.now() : Date.now()) - initStartTime;
@@ -81,6 +109,7 @@ class MuscleRotationApp {
             }));
 
         } catch (error) {
+            console.error('❌ App initialization failed:', error);
             handleError(error, {
                 context: 'アプリケーション初期化',
                 showNotification: true
@@ -200,10 +229,17 @@ class MuscleRotationApp {
      */
     async loadBasicComponents() {
         try {
+            console.log('🔄 Loading header and sidebar...');
+
             const [headerResult, sidebarResult] = await Promise.allSettled([
                 pageManager.loadHeader(),
                 pageManager.loadSidebar()
             ]);
+
+            console.log('Component loading results:', {
+                header: headerResult.status,
+                sidebar: sidebarResult.status
+            });
 
             // 個別のエラーハンドリング
             if (headerResult.status === 'rejected') {
@@ -217,6 +253,8 @@ class MuscleRotationApp {
             if (headerResult.status === 'rejected' && sidebarResult.status === 'rejected') {
                 throw new Error('Critical components failed to load');
             }
+
+            console.log('✅ Basic components loaded successfully');
         } catch (error) {
             console.error('Failed to load basic components:', error);
             throw error;

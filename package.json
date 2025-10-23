@@ -1,55 +1,78 @@
 {
   "name": "muscle-rotation-manager",
-  "version": "1.0.0",
-  "description": "効率的な筋トレ部位ローテーションを科学的に管理するWebアプリケーションです。",
+  "version": "3.0.0",
+  "description": "筋トレ部位ローテーション管理システム",
   "type": "module",
-  "main": "app-refactored.js",
-  "directories": {
-    "test": "tests"
-  },
+  "main": "index.html",
   "scripts": {
-    "test:unit": "node -e \"require('./tests/unit/test-runner.js'); require('./tests/unit/muscle-groups.test.js'); require('./tests/unit/page-modules.test.js'); global.runTests()\"",
-    "test:workout": "node -e \"require('./tests/unit/test-runner.js'); require('./tests/unit/workout-recording.test.js'); global.runTests()\"",
-    "test:integration": "node -e \"require('./tests/unit/test-runner.js'); require('./tests/integration/workout-flow.test.js'); global.runTests()\"",
-    "test:spec": "node -e \"require('./tests/unit/test-runner.js'); require('./tests/spec-driven/requirements.test.js'); global.runTests()\"",
-    "test:performance": "node -e \"require('./tests/unit/test-runner.js'); require('./tests/performance/performance.test.js'); global.runTests()\"",
-    "test:tdd-example": "node ./tests/examples/tdd-example.js",
-    "test:spec-example": "node ./tests/examples/spec-driven-example.js",
-    "test": "npm run test:unit && npm run test:workout && npm run test:integration && npm run test:spec && npm run test:performance",
-    "test:detailed": "npm run test:unit && npm run test:workout && npm run test:integration && npm run test:spec && npm run test:tdd-example && npm run test:spec-example",
-    "test:browser": "echo 'ブラウザで http://localhost:8000/tests/test-runner.html にアクセスしてください'",
-    "start": "npx serve .",
-    "dev": "npx serve . -p 8000",
-    "lint": "eslint . --ext .js,.html --fix",
-    "lint:check": "eslint . --ext .js,.html",
+    "start": "python3 simple-spa-server.py 8000",
+    "dev": "python3 simple-spa-server.py 8000",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:e2e": "puppeteer test:e2e",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "build": "echo 'ビルドプロセスは不要です（静的サイト）'"
+    "build": "npm run lint && npm run test && npm run format",
+    "deploy": "npm run build && gh-pages -d .",
+    "clean": "rm -rf node_modules package-lock.json",
+    "install:clean": "npm run clean && npm install"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/appadaycreator/muscle-rotation-manager.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/appadaycreator/muscle-rotation-manager/issues"
-  },
-  "homepage": "https://github.com/appadaycreator/muscle-rotation-manager#readme",
-  "dependencies": {
-    "@supabase/supabase-js": "^2.76.1",
-    "chart.js": "^3.9.1",
-    "html2canvas": "^1.4.1",
-    "jspdf": "^3.0.3",
-    "puppeteer": "^24.15.0"
-  },
+  "keywords": [
+    "fitness",
+    "workout",
+    "muscle-rotation",
+    "progressive-overload",
+    "health",
+    "training"
+  ],
+  "author": "AppAdayCreator",
+  "license": "MIT",
   "devDependencies": {
-    "@eslint/js": "^9.38.0",
-    "eslint": "^9.38.0",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-prettier": "^5.5.4",
+    "@babel/core": "^7.28.5",
+    "@babel/preset-env": "^7.28.5",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "babel-jest": "^30.2.0",
+    "eslint": "^8.50.0",
+    "jest": "^30.2.0",
+    "jest-environment-jsdom": "^30.2.0",
     "jsdom": "^27.0.1",
-    "prettier": "^3.6.2"
+    "prettier": "^3.0.0",
+    "puppeteer": "^24.26.1"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.0",
+    "chart.js": "^4.4.0"
+  },
+  "eslintConfig": {
+    "env": {
+      "browser": true,
+      "es2021": true,
+      "jest": true
+    },
+    "extends": [
+      "eslint:recommended",
+      "prettier"
+    ],
+    "parserOptions": {
+      "ecmaVersion": "latest",
+      "sourceType": "module"
+    },
+    "rules": {
+      "no-unused-vars": "error",
+      "no-console": "warn",
+      "prefer-const": "error",
+      "no-var": "error"
+    }
+  },
+  "prettier": {
+    "semi": true,
+    "trailingComma": "es5",
+    "singleQuote": true,
+    "printWidth": 80,
+    "tabWidth": 2
   }
 }

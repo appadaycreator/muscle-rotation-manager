@@ -4,6 +4,7 @@ import { supabaseService } from '../services/supabaseService.js';
 import recommendationService from '../services/recommendationService.js';
 import { showNotification, createErrorHTML, formatWorkoutDate, getDaysAgo, getWorkoutColor, parseExercises } from '../utils/helpers.js';
 import { MUSCLE_GROUPS } from '../utils/constants.js';
+import { authManager } from '../modules/authManager.js';
 
 class DashboardPage {
     constructor() {
@@ -18,15 +19,26 @@ class DashboardPage {
         console.log('Dashboard page initialized');
 
         try {
+            // 認証状態を確認
+            const isAuthenticated = await authManager.isAuthenticated();
+            if (!isAuthenticated) {
+                this.showLoginPrompt();
+                return;
+            }
+
             // データを並行して読み込み
             await Promise.all([
                 this.loadRecommendations(),
                 this.loadMuscleRecoveryData(),
-                this.loadRecentWorkouts()
+                this.loadRecentWorkouts(),
+                this.loadStats()
             ]);
 
             // 筋肉部位クリックハンドラーを設定
             this.setupMusclePartHandlers();
+
+            // 認証ボタンの設定
+            this.setupAuthButton();
 
         } catch (error) {
             console.error('Error initializing dashboard:', error);
@@ -45,6 +57,68 @@ class DashboardPage {
                 this.handleMusclePartClick(muscle);
             });
         });
+    }
+
+    /**
+     * ログインプロンプトを表示
+     */
+    showLoginPrompt() {
+        const mainContent = document.querySelector('main');
+        if (mainContent) {
+            mainContent.innerHTML = `
+                <div class="text-center py-12">
+                    <i class="fas fa-lock text-4xl text-gray-400 mb-4"></i>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">ログインが必要です</h2>
+                    <p class="text-gray-600 mb-6">ダッシュボードを表示するにはログインしてください</p>
+                    <button id="login-btn" class="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700">
+                        ログイン
+                    </button>
+                </div>
+            `;
+
+            document.getElementById('login-btn')?.addEventListener('click', () => {
+                authManager.showLoginModal();
+            });
+        }
+    }
+
+    /**
+     * 認証ボタンを設定
+     */
+    setupAuthButton() {
+        const authButton = document.getElementById('auth-button');
+        if (authButton) {
+            authButton.addEventListener('click', () => {
+                authManager.showLoginModal();
+            });
+        }
+    }
+
+    /**
+     * 統計データを読み込み
+     */
+    async loadStats() {
+        try {
+            const stats = await supabaseService.getUserStats();
+            this.updateStatsDisplay(stats);
+        } catch (error) {
+            console.error('Error loading stats:', error);
+        }
+    }
+
+    /**
+     * 統計表示を更新
+     */
+    updateStatsDisplay(stats) {
+        const weeklyWorkouts = document.getElementById('weekly-workouts');
+        const totalTime = document.getElementById('total-time');
+        const streakDays = document.getElementById('streak-days');
+        const goalsAchieved = document.getElementById('goals-achieved');
+
+        if (weeklyWorkouts) {weeklyWorkouts.textContent = stats.weeklyWorkouts || 0;}
+        if (totalTime) {totalTime.textContent = `${stats.totalMinutes || 0}分`;}
+        if (streakDays) {streakDays.textContent = `${stats.streakDays || 0}日`;}
+        if (goalsAchieved) {goalsAchieved.textContent = `${stats.goalsAchieved || 0}/5`;}
     }
 
     /**
@@ -448,4 +522,10 @@ class DashboardPage {
 }
 
 // デフォルトエクスポート
+// ページが読み込まれた時に自動初期化
+document.addEventListener('DOMContentLoaded', async () => {
+    const dashboardPage = new DashboardPage();
+    await dashboardPage.initialize();
+});
+
 export default new DashboardPage();

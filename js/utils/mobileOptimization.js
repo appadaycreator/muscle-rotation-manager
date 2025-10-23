@@ -616,6 +616,7 @@ class MobileOptimizationManager {
                     addBtn.click();
                 }
                 break;
+            }
         }
     }
 
