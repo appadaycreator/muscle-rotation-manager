@@ -176,6 +176,9 @@ class MPAInitializer {
             if (sidebarResult.status === 'rejected') {
                 console.warn('Sidebar loading failed:', sidebarResult.reason);
             }
+            if (footerResult.status === 'rejected') {
+                console.warn('Footer loading failed:', footerResult.reason);
+            }
 
             // ヘッダーが読み込まれた後に認証イベントリスナーを再設定
             if (headerResult.status === 'fulfilled') {
@@ -231,6 +234,29 @@ class MPAInitializer {
             console.log('✅ Sidebar loaded successfully');
         } catch (error) {
             console.error('❌ Sidebar loading failed:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * フッターを読み込み
+     */
+    async loadFooter() {
+        const footerContainer = document.getElementById('footer-container');
+        if (!footerContainer) {
+            throw new Error('Footer container not found');
+        }
+
+        try {
+            const response = await fetch('partials/footer.html');
+            if (!response.ok) {
+                throw new Error(`Failed to load footer: ${response.status}`);
+            }
+            const footerHTML = await response.text();
+            footerContainer.innerHTML = footerHTML;
+            console.log('✅ Footer loaded successfully');
+        } catch (error) {
+            console.error('❌ Footer loading failed:', error);
             throw error;
         }
     }
