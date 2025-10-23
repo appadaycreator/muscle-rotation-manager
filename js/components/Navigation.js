@@ -2,6 +2,7 @@
 
 import { authManager } from '../modules/authManager.js';
 import { showNotification } from '../utils/helpers.js';
+import { tooltipManager } from '../utils/tooltip.js';
 
 /**
  * ナビゲーションコンポーネント
@@ -49,6 +50,9 @@ export class Navigation {
 
             // 認証状態に応じてナビゲーションを更新
             await this.updateNavigationForAuth();
+
+            // ナビゲーションアイテムにツールチップを追加
+            this.addNavigationTooltips();
 
             this.isInitialized = true;
             console.log('✅ Navigation initialized successfully');

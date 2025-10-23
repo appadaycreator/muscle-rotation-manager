@@ -92,13 +92,6 @@ class ExercisePage {
             });
         });
 
-        // ワークアウトに戻るボタン
-        const returnToWorkoutBtn = document.getElementById('return-to-workout');
-        if (returnToWorkoutBtn) {
-            returnToWorkoutBtn.addEventListener('click', () => {
-                this.returnToWorkout();
-            });
-        }
 
         // モーダル関連
         this.setupModalEventListeners();
@@ -188,8 +181,6 @@ class ExercisePage {
             // 器具フィルターを設定
             await this.setupEquipmentFilter();
 
-            // ワークアウトページから選択された筋肉部位をチェック
-            this.checkWorkoutSelection();
 
             // 初期エクササイズを読み込み
             await this.loadExercises();
@@ -266,104 +257,6 @@ class ExercisePage {
         return names[equipment] || equipment;
     }
 
-    /**
-     * ワークアウトページから選択された筋肉部位をチェック
-     */
-    checkWorkoutSelection() {
-        try {
-            const selectedMuscleGroups = sessionStorage.getItem('selectedMuscleGroups');
-            if (selectedMuscleGroups) {
-                const muscles = JSON.parse(selectedMuscleGroups);
-                
-                // 筋肉部位フィルターを設定
-                const muscleGroupFilter = document.getElementById('muscle-group-filter');
-                if (muscleGroupFilter && muscles.length > 0) {
-                    // 最初の筋肉部位でフィルターを設定
-                    const firstMuscle = muscles[0];
-                    const muscleGroupId = this.getMuscleGroupId(firstMuscle);
-                    if (muscleGroupId) {
-                        muscleGroupFilter.value = muscleGroupId;
-                    }
-                }
-
-                // 選択された筋肉部位の通知を表示
-                if (muscles.length > 0) {
-                    showNotification(`${muscles.join(', ')}のエクササイズを表示中`, 'info');
-                    
-                    // ワークアウトに戻るボタンを表示
-                    const returnSection = document.getElementById('workout-return-section');
-                    if (returnSection) {
-                        returnSection.classList.remove('hidden');
-                    }
-                }
-
-                // セッションストレージから削除（一度だけ適用）
-                sessionStorage.removeItem('selectedMuscleGroups');
-            }
-        } catch (error) {
-            console.error('Failed to check workout selection:', error);
-        }
-    }
-
-    /**
-     * 筋肉部位名からIDを取得
-     * @param {string} muscleName - 筋肉部位名
-     * @returns {string} 筋肉部位ID
-     */
-    getMuscleGroupId(muscleName) {
-        const muscleGroupMap = {
-            '胸': 'chest',
-            '背中': 'back',
-            '肩': 'shoulders',
-            '腕': 'arms',
-            '脚': 'legs',
-            '腹筋': 'core'
-        };
-        return muscleGroupMap[muscleName];
-    }
-
-    /**
-     * ワークアウトに戻る
-     */
-    returnToWorkout() {
-        // 選択されたエクササイズを保存
-        const selectedExercises = this.getSelectedExercises();
-        if (selectedExercises.length > 0) {
-            sessionStorage.setItem('selectedExercises', JSON.stringify(selectedExercises));
-            showNotification(`${selectedExercises.length}個のエクササイズを選択しました`, 'success');
-        }
-
-        // ワークアウトページに戻る
-        window.location.href = '/workout.html';
-    }
-
-    /**
-     * 選択されたエクササイズを取得
-     * @returns {Array} 選択されたエクササイズの配列
-     */
-    getSelectedExercises() {
-        // 現在表示されているエクササイズから選択されたものを取得
-        // 実際の実装では、ユーザーが選択したエクササイズを追跡する必要があります
-        const selectedExercises = [];
-        
-        // 簡単な実装として、現在フィルタリングされている筋肉部位のエクササイズを返す
-        const muscleGroupFilter = document.getElementById('muscle-group-filter');
-        if (muscleGroupFilter && muscleGroupFilter.value) {
-            // 現在のフィルター条件に基づいてエクササイズを取得
-            const filteredExercises = this.currentExercises.filter(exercise => {
-                return exercise.muscle_groups && exercise.muscle_groups.id === muscleGroupFilter.value;
-            });
-            
-            // 最大5個のエクササイズを選択
-            selectedExercises.push(...filteredExercises.slice(0, 5).map(exercise => ({
-                id: exercise.id,
-                name: exercise.name_ja,
-                muscle_group: exercise.muscle_groups?.name_ja || '未設定'
-            })));
-        }
-
-        return selectedExercises;
-    }
 
     /**
      * エクササイズを読み込み

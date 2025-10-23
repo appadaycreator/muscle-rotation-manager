@@ -5,6 +5,7 @@ import mpaInitializer from './js/core/MPAInitializer.js';
 import { authManager } from './js/modules/authManager.js';
 import { showNotification } from './js/utils/helpers.js';
 import { handleError } from './js/utils/errorHandler.js';
+import { tooltipManager } from './js/utils/tooltip.js';
 
 /**
  * アプリケーション初期化クラス
@@ -208,6 +209,9 @@ class App {
             // 4. キーボードショートカットの設定
             this.setupKeyboardShortcuts();
 
+            // 5. ツールチップ機能の初期化
+            this.initializeTooltipSystem();
+
             console.log('✅ App-specific initialization complete');
 
         } catch (error) {
@@ -339,6 +343,147 @@ class App {
         });
 
         console.log('✅ Keyboard shortcuts setup complete');
+    }
+
+    /**
+     * ツールチップシステムを初期化
+     */
+    initializeTooltipSystem() {
+        console.log('💡 Initializing tooltip system...');
+
+        try {
+            // ツールチップマネージャーを初期化
+            tooltipManager.initialize();
+
+            // グローバルに公開
+            window.tooltipManager = tooltipManager;
+
+            // 既存の要素にツールチップを追加
+            this.addTooltipsToExistingElements();
+
+            console.log('✅ Tooltip system initialized successfully');
+
+        } catch (error) {
+            console.error('❌ Tooltip system initialization failed:', error);
+            // ツールチップ機能の失敗は致命的ではない
+        }
+    }
+
+    /**
+     * 既存の要素にツールチップを追加
+     */
+    addTooltipsToExistingElements() {
+        console.log('💡 Adding tooltips to existing elements...');
+
+        try {
+            // ナビゲーションアイテムにツールチップを追加
+            this.addNavigationTooltips();
+
+            // 筋肉部位カードにツールチップを追加
+            this.addMuscleGroupTooltips();
+
+            // 統計データにツールチップを追加
+            this.addStatsTooltips();
+
+            // ボタンにツールチップを追加
+            this.addButtonTooltips();
+
+            console.log('✅ Tooltips added to existing elements');
+
+        } catch (error) {
+            console.error('❌ Failed to add tooltips to existing elements:', error);
+        }
+    }
+
+    /**
+     * ナビゲーションアイテムにツールチップを追加
+     */
+    addNavigationTooltips() {
+        const navItems = [
+            { selector: 'a[href*="dashboard"]', text: 'ダッシュボード\nトレーニングの概要と進捗を確認' },
+            { selector: 'a[href*="workout"]', text: 'ワークアウト\n新しいトレーニングを開始' },
+            { selector: 'a[href*="calendar"]', text: 'カレンダー\nトレーニングスケジュールを管理' },
+            { selector: 'a[href*="analysis"]', text: '分析\nトレーニングデータを分析' },
+            { selector: 'a[href*="progress"]', text: 'プログレッシブ・オーバーロード\n筋力向上の進捗を追跡' },
+            { selector: 'a[href*="exercises"]', text: 'エクササイズデータベース\nエクササイズの詳細情報を確認' },
+            { selector: 'a[href*="settings"]', text: '設定\nアプリケーションの設定を変更' },
+            { selector: 'a[href*="help"]', text: '使い方\nアプリケーションの使い方を確認' },
+            { selector: 'a[href*="privacy"]', text: 'プライバシーポリシー\nプライバシーに関する情報' }
+        ];
+
+        navItems.forEach(item => {
+            const elements = document.querySelectorAll(item.selector);
+            elements.forEach(element => {
+                tooltipManager.addTooltip(element, item.text, {
+                    position: 'right',
+                    maxWidth: 200,
+                    theme: 'light'
+                });
+            });
+        });
+    }
+
+    /**
+     * 筋肉部位カードにツールチップを追加
+     */
+    addMuscleGroupTooltips() {
+        const muscleGroups = ['chest', 'back', 'shoulder', 'arm', 'leg', 'core'];
+        
+        muscleGroups.forEach(group => {
+            const elements = document.querySelectorAll(`[data-muscle-group="${group}"], .muscle-part[data-group="${group}"]`);
+            elements.forEach(element => {
+                tooltipManager.addMuscleGroupTooltip(element, group);
+            });
+        });
+    }
+
+    /**
+     * 統計データにツールチップを追加
+     */
+    addStatsTooltips() {
+        const statsElements = [
+            { selector: '[data-stat="total-workouts"]', type: 'totalWorkouts' },
+            { selector: '[data-stat="current-streak"]', type: 'currentStreak' },
+            { selector: '[data-stat="weekly-goal"]', type: 'weeklyGoal' },
+            { selector: '[data-stat="progress-rate"]', type: 'progressRate' },
+            { selector: '[data-stat="recovery-time"]', type: 'recoveryTime' },
+            { selector: '[data-stat="muscle-balance"]', type: 'muscleBalance' }
+        ];
+
+        statsElements.forEach(item => {
+            const elements = document.querySelectorAll(item.selector);
+            elements.forEach(element => {
+                tooltipManager.addStatsTooltip(element, item.type);
+            });
+        });
+    }
+
+    /**
+     * ボタンにツールチップを追加
+     */
+    addButtonTooltips() {
+        const buttonTooltips = [
+            { selector: '.btn-primary', text: 'メインアクション\n主要な操作を実行' },
+            { selector: '.btn-secondary', text: 'サブアクション\n補助的な操作を実行' },
+            { selector: '.btn-success', text: '成功アクション\n完了や保存などの操作' },
+            { selector: '.btn-warning', text: '警告アクション\n注意が必要な操作' },
+            { selector: '.btn-danger', text: '危険アクション\n削除などの危険な操作' },
+            { selector: '[data-action="save"]', text: '保存\nデータを保存します' },
+            { selector: '[data-action="delete"]', text: '削除\nデータを削除します' },
+            { selector: '[data-action="edit"]', text: '編集\nデータを編集します' },
+            { selector: '[data-action="add"]', text: '追加\n新しいデータを追加します' }
+        ];
+
+        buttonTooltips.forEach(item => {
+            const elements = document.querySelectorAll(item.selector);
+            elements.forEach(element => {
+                tooltipManager.addTooltip(element, item.text, {
+                    position: 'top',
+                    maxWidth: 150,
+                    theme: 'light'
+                });
+            });
+        });
     }
 
     /**

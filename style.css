@@ -6,6 +6,43 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
+/* ヘッダー固定スタイル */
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* ヘッダー固定時のメインコンテンツ調整 */
+body {
+    padding-top: 64px; /* ヘッダーの高さ分のパディングを追加 */
+}
+
+/* ヘッダー固定時のページコンテンツ調整 */
+#app {
+    padding-top: 0; /* アプリコンテナのパディングをリセット */
+}
+
+/* ヘッダー内のコンテンツ調整 */
+header .max-w-7xl {
+    height: 64px; /* ヘッダーの高さを固定 */
+}
+
+/* モバイル対応 */
+@media (max-width: 768px) {
+    body {
+        padding-top: 56px; /* モバイルでのヘッダー高さ調整 */
+    }
+    
+    header .max-w-7xl {
+        height: 56px;
+    }
+}
+
 .font-size-xs { font-size: 0.625rem; }
 .font-size-sm { font-size: 0.75rem; }
 .font-size-base { font-size: 1rem; }
@@ -542,6 +579,325 @@ body.offline-mode::before {
     }
 }
 
+/* ツールチップスタイル */
+.tooltip-container {
+    position: fixed;
+    z-index: 10000;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.tooltip {
+    position: absolute;
+    max-width: 300px;
+    padding: 8px 12px;
+    background: #ffffff;
+    color: #1f2937;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    font-size: 14px;
+    line-height: 1.4;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    opacity: 0;
+    transform: translateY(5px);
+    transition: all 0.2s ease;
+    word-wrap: break-word;
+    z-index: 10001;
+    font-family: 'Noto Sans JP', 'Inter', sans-serif;
+}
+
+.tooltip-dark {
+    background: #1f2937;
+    color: #f9fafb;
+    border-color: #374151;
+}
+
+.tooltip::before {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border: 5px solid transparent;
+}
+
+.tooltip[data-position="top"]::before {
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-top-color: #e5e7eb;
+}
+
+.tooltip[data-position="bottom"]::before {
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-bottom-color: #e5e7eb;
+}
+
+.tooltip[data-position="left"]::before {
+    right: -10px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-left-color: #e5e7eb;
+}
+
+.tooltip[data-position="right"]::before {
+    left: -10px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-right-color: #e5e7eb;
+}
+
+.tooltip-dark[data-position="top"]::before {
+    border-top-color: #374151;
+}
+
+.tooltip-dark[data-position="bottom"]::before {
+    border-bottom-color: #374151;
+}
+
+.tooltip-dark[data-position="left"]::before {
+    border-left-color: #374151;
+}
+
+.tooltip-dark[data-position="right"]::before {
+    border-right-color: #374151;
+}
+
+/* ツールチップアニメーション */
+.tooltip.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.tooltip.fade-out {
+    opacity: 0;
+    transform: translateY(5px);
+}
+
+/* 筋肉部位用ツールチップ */
+.muscle-tooltip {
+    max-width: 250px;
+    font-size: 13px;
+}
+
+.muscle-tooltip .muscle-name {
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.muscle-tooltip .muscle-details {
+    font-size: 12px;
+    color: #6b7280;
+    line-height: 1.3;
+}
+
+/* エクササイズ用ツールチップ */
+.exercise-tooltip {
+    max-width: 300px;
+    font-size: 13px;
+}
+
+.exercise-tooltip .exercise-name {
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.exercise-tooltip .exercise-difficulty {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.exercise-tooltip .difficulty-beginner {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.exercise-tooltip .difficulty-intermediate {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.exercise-tooltip .difficulty-advanced {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.exercise-tooltip .exercise-muscles {
+    font-size: 12px;
+    color: #6b7280;
+    margin-bottom: 4px;
+}
+
+.exercise-tooltip .exercise-description {
+    font-size: 12px;
+    color: #4b5563;
+    line-height: 1.3;
+}
+
+/* 統計データ用ツールチップ */
+.stats-tooltip {
+    max-width: 200px;
+    font-size: 12px;
+}
+
+.stats-tooltip .stats-title {
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.stats-tooltip .stats-description {
+    font-size: 11px;
+    color: #6b7280;
+    line-height: 1.3;
+}
+
+/* ナビゲーション用ツールチップ */
+.nav-tooltip {
+    max-width: 150px;
+    font-size: 12px;
+    text-align: center;
+}
+
+.nav-tooltip .nav-name {
+    font-weight: 500;
+    color: #1f2937;
+    display: block;
+}
+
+.nav-tooltip .nav-description {
+    font-size: 11px;
+    color: #6b7280;
+    margin-top: 2px;
+}
+
+/* ボタン用ツールチップ */
+.button-tooltip {
+    max-width: 200px;
+    font-size: 12px;
+    text-align: center;
+}
+
+.button-tooltip .button-title {
+    font-weight: 500;
+    color: #1f2937;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.button-tooltip .button-description {
+    font-size: 11px;
+    color: #6b7280;
+    line-height: 1.3;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .tooltip {
+        max-width: 250px;
+        font-size: 13px;
+        padding: 6px 10px;
+    }
+    
+    .muscle-tooltip {
+        max-width: 200px;
+    }
+    
+    .exercise-tooltip {
+        max-width: 250px;
+    }
+    
+    .stats-tooltip {
+        max-width: 180px;
+    }
+    
+    .nav-tooltip {
+        max-width: 120px;
+    }
+    
+    .button-tooltip {
+        max-width: 150px;
+    }
+}
+
+@media (max-width: 480px) {
+    .tooltip {
+        max-width: 200px;
+        font-size: 12px;
+        padding: 5px 8px;
+    }
+    
+    .muscle-tooltip,
+    .exercise-tooltip,
+    .stats-tooltip,
+    .nav-tooltip,
+    .button-tooltip {
+        max-width: 150px;
+    }
+}
+
+/* アクセシビリティ対応 */
+@media (prefers-reduced-motion: reduce) {
+    .tooltip {
+        transition: none;
+        animation: none;
+    }
+    
+    .tooltip.show {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+/* ダークモード対応 */
+@media (prefers-color-scheme: dark) {
+    .tooltip {
+        background: #1f2937;
+        color: #f9fafb;
+        border-color: #374151;
+    }
+    
+    .muscle-tooltip .muscle-name,
+    .exercise-tooltip .exercise-name,
+    .stats-tooltip .stats-title,
+    .nav-tooltip .nav-name,
+    .button-tooltip .button-title {
+        color: #f9fafb;
+    }
+    
+    .muscle-tooltip .muscle-details,
+    .exercise-tooltip .exercise-muscles,
+    .exercise-tooltip .exercise-description,
+    .stats-tooltip .stats-description,
+    .nav-tooltip .nav-description,
+    .button-tooltip .button-description {
+        color: #d1d5db;
+    }
+}
+
+/* 高コントラストモード対応 */
+@media (prefers-contrast: high) {
+    .tooltip {
+        border: 2px solid #000;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+    
+    .tooltip::before {
+        border-width: 6px;
+    }
+}
+
 /* カレンダー印刷対応 */
 @media print {
     .calendar-nav-button,
@@ -558,6 +914,10 @@ body.offline-mode::before {
     
     .workout-dot {
         background: #000 !important;
+    }
+    
+    .tooltip-container {
+        display: none !important;
     }
 }
 

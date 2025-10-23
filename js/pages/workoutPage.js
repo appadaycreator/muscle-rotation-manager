@@ -565,16 +565,51 @@ export class WorkoutPage extends BasePage {
     }
 
     /**
-   * デフォルトエクササイズを取得
-   */
+     * デフォルトエクササイズを取得
+     */
     getDefaultExercises() {
         return [
-            { name: 'ベンチプレス', muscle_group: '胸' },
-            { name: 'スクワット', muscle_group: '脚' },
-            { name: 'デッドリフト', muscle_group: '背中' },
-            { name: 'オーバーヘッドプレス', muscle_group: '肩' },
-            { name: 'バーベルカール', muscle_group: '腕' },
-            { name: 'プランク', muscle_group: '腹筋' }
+            // 胸筋エクササイズ
+            { name: 'ベンチプレス', muscle_group: '胸', difficulty: 3, equipment: 'バーベル' },
+            { name: 'プッシュアップ', muscle_group: '胸', difficulty: 2, equipment: '自重' },
+            { name: 'ダンベルフライ', muscle_group: '胸', difficulty: 2, equipment: 'ダンベル' },
+            { name: 'インクラインプレス', muscle_group: '胸', difficulty: 3, equipment: 'バーベル' },
+            { name: 'ディップス', muscle_group: '胸', difficulty: 3, equipment: '自重' },
+            
+            // 背筋エクササイズ
+            { name: 'デッドリフト', muscle_group: '背中', difficulty: 4, equipment: 'バーベル' },
+            { name: 'プルアップ', muscle_group: '背中', difficulty: 4, equipment: '自重' },
+            { name: 'ベントオーバーロウ', muscle_group: '背中', difficulty: 3, equipment: 'バーベル' },
+            { name: 'ラットプルダウン', muscle_group: '背中', difficulty: 2, equipment: 'マシン' },
+            { name: 'ワンハンドダンベルロウ', muscle_group: '背中', difficulty: 3, equipment: 'ダンベル' },
+            
+            // 脚筋エクササイズ
+            { name: 'スクワット', muscle_group: '脚', difficulty: 3, equipment: 'バーベル' },
+            { name: 'ランジ', muscle_group: '脚', difficulty: 2, equipment: '自重' },
+            { name: 'レッグプレス', muscle_group: '脚', difficulty: 2, equipment: 'マシン' },
+            { name: 'ブルガリアンスクワット', muscle_group: '脚', difficulty: 3, equipment: '自重' },
+            { name: 'カーフレイズ', muscle_group: '脚', difficulty: 1, equipment: '自重' },
+            
+            // 肩筋エクササイズ
+            { name: 'オーバーヘッドプレス', muscle_group: '肩', difficulty: 3, equipment: 'バーベル' },
+            { name: 'サイドレイズ', muscle_group: '肩', difficulty: 2, equipment: 'ダンベル' },
+            { name: 'フロントレイズ', muscle_group: '肩', difficulty: 2, equipment: 'ダンベル' },
+            { name: 'リアデルトフライ', muscle_group: '肩', difficulty: 2, equipment: 'ダンベル' },
+            { name: 'アーノルドプレス', muscle_group: '肩', difficulty: 3, equipment: 'ダンベル' },
+            
+            // 腕筋エクササイズ
+            { name: 'バーベルカール', muscle_group: '腕', difficulty: 2, equipment: 'バーベル' },
+            { name: 'ダンベルカール', muscle_group: '腕', difficulty: 2, equipment: 'ダンベル' },
+            { name: 'トライセップディップス', muscle_group: '腕', difficulty: 3, equipment: '自重' },
+            { name: 'ハンマーカール', muscle_group: '腕', difficulty: 2, equipment: 'ダンベル' },
+            { name: 'クローズグリッププッシュアップ', muscle_group: '腕', difficulty: 3, equipment: '自重' },
+            
+            // 腹筋エクササイズ
+            { name: 'プランク', muscle_group: '腹筋', difficulty: 2, equipment: '自重' },
+            { name: 'クランチ', muscle_group: '腹筋', difficulty: 1, equipment: '自重' },
+            { name: 'サイドプランク', muscle_group: '腹筋', difficulty: 2, equipment: '自重' },
+            { name: 'ロシアンツイスト', muscle_group: '腹筋', difficulty: 2, equipment: '自重' },
+            { name: 'マウンテンクライマー', muscle_group: '腹筋', difficulty: 3, equipment: '自重' }
         ];
     }
 
@@ -616,25 +651,6 @@ export class WorkoutPage extends BasePage {
      * ワークアウトウィザードの次のステップに進む
      */
     nextStep(stepNumber) {
-        // ステップ2（エクササイズ選択）の場合は、エクササイズページに遷移
-        if (stepNumber === 2) {
-            // 選択された筋肉部位を保存
-            const selectedMuscles = Array.from(document.querySelectorAll('.muscle-group-btn.selected'))
-                .map(btn => btn.dataset.muscle);
-            
-            if (selectedMuscles.length === 0) {
-                showNotification('筋肉部位を選択してください', 'warning');
-                return;
-            }
-
-            // 選択された筋肉部位をセッションストレージに保存
-            sessionStorage.setItem('selectedMuscleGroups', JSON.stringify(selectedMuscles));
-            
-            // エクササイズページに遷移
-            window.location.href = '/exercises.html';
-            return;
-        }
-
         // 現在のステップを非表示
         document.querySelectorAll('.wizard-step').forEach(step => {
             step.classList.remove('active');
@@ -657,7 +673,9 @@ export class WorkoutPage extends BasePage {
         }
 
         // ステップ固有の処理
-        if (stepNumber === 3) {
+        if (stepNumber === 2) {
+            this.loadExercisePresets();
+        } else if (stepNumber === 3) {
             this.updateWorkoutSummary();
         }
     }
@@ -722,22 +740,45 @@ export class WorkoutPage extends BasePage {
      * エクササイズプリセットを読み込み
      */
     loadExercisePresets() {
-        // エクササイズページから選択されたエクササイズをチェック
-        this.checkSelectedExercises();
-
         const selectedMuscles = Array.from(document.querySelectorAll('.muscle-group-btn.selected'))
             .map(btn => btn.dataset.muscle);
+
+        if (selectedMuscles.length === 0) {
+            showNotification('筋肉部位を選択してください', 'warning');
+            return;
+        }
 
         const exercisePresets = this.getExercisePresetsForMuscles(selectedMuscles);
         const container = document.getElementById('exercise-presets');
         
         if (container) {
-            container.innerHTML = exercisePresets.map(exercise => `
-                <button class="exercise-preset-btn" data-exercise="${exercise.name}">
-                    <i class="fas fa-dumbbell text-blue-500 mb-1"></i>
-                    <span>${exercise.name}</span>
-                </button>
-            `).join('');
+            if (exercisePresets.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-8 text-gray-500">
+                        <i class="fas fa-dumbbell text-4xl mb-4 opacity-50"></i>
+                        <p>選択された筋肉部位に対応するエクササイズが見つかりませんでした</p>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = exercisePresets.map(exercise => `
+                    <button class="exercise-preset-btn bg-white border-2 border-gray-200 rounded-lg p-4 hover:border-blue-500 hover:bg-blue-50 transition-colors text-left" data-exercise="${exercise.name}">
+                        <div class="flex items-center mb-2">
+                            <i class="fas fa-dumbbell text-blue-500 mr-2"></i>
+                            <span class="font-medium text-gray-900">${exercise.name}</span>
+                        </div>
+                        <div class="text-sm text-gray-600">
+                            <div class="flex items-center mb-1">
+                                <i class="fas fa-tag text-xs mr-1"></i>
+                                <span>${exercise.muscle_group}</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-star text-xs mr-1"></i>
+                                <span>難易度: ${'★'.repeat(exercise.difficulty)}${'☆'.repeat(5 - exercise.difficulty)}</span>
+                            </div>
+                        </div>
+                    </button>
+                `).join('');
+            }
 
             // エクササイズプリセットボタンのイベントリスナーを設定
             document.querySelectorAll('.exercise-preset-btn').forEach(btn => {
@@ -748,41 +789,31 @@ export class WorkoutPage extends BasePage {
         }
     }
 
-    /**
-     * エクササイズページから選択されたエクササイズをチェック
-     */
-    checkSelectedExercises() {
-        try {
-            const selectedExercises = sessionStorage.getItem('selectedExercises');
-            if (selectedExercises) {
-                const exercises = JSON.parse(selectedExercises);
-                
-                // 選択されたエクササイズを自動的に追加
-                exercises.forEach(exercise => {
-                    this.addExerciseToSelection(exercise.name);
-                });
-
-                // 通知を表示
-                if (exercises.length > 0) {
-                    showNotification(`${exercises.length}個のエクササイズを追加しました`, 'success');
-                }
-
-                // セッションストレージから削除
-                sessionStorage.removeItem('selectedExercises');
-            }
-        } catch (error) {
-            console.error('Failed to check selected exercises:', error);
-        }
-    }
 
     /**
      * 選択された筋肉部位に対応するエクササイズプリセットを取得
      */
     getExercisePresetsForMuscles(muscles) {
         const allExercises = this.getDefaultExercises();
-        return allExercises.filter(exercise => 
+        const filteredExercises = allExercises.filter(exercise => 
             muscles.includes(exercise.muscle_group)
         );
+        
+        // 筋肉部位ごとにエクササイズをグループ化
+        const exerciseGroups = {};
+        muscles.forEach(muscle => {
+            exerciseGroups[muscle] = filteredExercises.filter(ex => ex.muscle_group === muscle);
+        });
+        
+        // 各筋肉部位から代表的なエクササイズを選択（最大3個ずつ）
+        const selectedExercises = [];
+        muscles.forEach(muscle => {
+            const muscleExercises = exerciseGroups[muscle];
+            const selected = muscleExercises.slice(0, 3); // 各筋肉部位から最大3個
+            selectedExercises.push(...selected);
+        });
+        
+        return selectedExercises;
     }
 
     /**
@@ -794,17 +825,32 @@ export class WorkoutPage extends BasePage {
 
         // 既に選択されているかチェック
         const existing = container.querySelector(`[data-exercise="${exerciseName}"]`);
-        if (existing) return;
+        if (existing) {
+            showNotification('このエクササイズは既に選択されています', 'info');
+            return;
+        }
 
+        // エクササイズの詳細情報を取得
+        const exerciseInfo = this.getExerciseInfo(exerciseName);
+        
         const exerciseElement = document.createElement('div');
-        exerciseElement.className = 'flex items-center justify-between p-3 bg-blue-50 rounded-lg';
+        exerciseElement.className = 'flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-lg mb-2';
         exerciseElement.dataset.exercise = exerciseName;
         exerciseElement.innerHTML = `
-            <div class="flex items-center">
-                <i class="fas fa-dumbbell text-blue-500 mr-2"></i>
-                <span>${exerciseName}</span>
+            <div class="flex items-center flex-1">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-dumbbell text-blue-500 text-lg"></i>
+                </div>
+                <div class="ml-3 flex-1">
+                    <div class="font-medium text-gray-900">${exerciseName}</div>
+                    <div class="text-sm text-gray-600">
+                        <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mr-2">${exerciseInfo.muscle_group}</span>
+                        <span class="inline-block bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded mr-2">${exerciseInfo.equipment}</span>
+                        <span class="text-yellow-600">${'★'.repeat(exerciseInfo.difficulty)}${'☆'.repeat(5 - exerciseInfo.difficulty)}</span>
+                    </div>
+                </div>
             </div>
-            <button class="remove-exercise-btn text-red-500 hover:text-red-700">
+            <button class="remove-exercise-btn text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-colors">
                 <i class="fas fa-times"></i>
             </button>
         `;
@@ -814,10 +860,51 @@ export class WorkoutPage extends BasePage {
         this.addEventListener(removeBtn, 'click', () => {
             exerciseElement.remove();
             this.updateStep2NextButton();
+            this.updateSelectedExercisesDisplay();
         });
+
+        // 空の状態メッセージを削除
+        const emptyMessage = container.querySelector('.text-center');
+        if (emptyMessage) {
+            emptyMessage.remove();
+        }
 
         container.appendChild(exerciseElement);
         this.updateStep2NextButton();
+        this.updateSelectedExercisesDisplay();
+        
+        showNotification(`${exerciseName}を追加しました`, 'success');
+    }
+
+    /**
+     * エクササイズ情報を取得
+     */
+    getExerciseInfo(exerciseName) {
+        const allExercises = this.getDefaultExercises();
+        return allExercises.find(ex => ex.name === exerciseName) || {
+            muscle_group: '未設定',
+            equipment: '未設定',
+            difficulty: 1
+        };
+    }
+
+    /**
+     * 選択されたエクササイズの表示を更新
+     */
+    updateSelectedExercisesDisplay() {
+        const container = document.getElementById('selected-exercises-list');
+        if (!container) return;
+
+        const selectedExercises = container.querySelectorAll('[data-exercise]');
+        
+        if (selectedExercises.length === 0) {
+            container.innerHTML = `
+                <div class="text-center text-gray-500 py-4">
+                    <i class="fas fa-dumbbell text-2xl mb-2 opacity-50"></i>
+                    <p>エクササイズを選択してください</p>
+                </div>
+            `;
+        }
     }
 
     /**
@@ -827,10 +914,29 @@ export class WorkoutPage extends BasePage {
         const input = document.getElementById('custom-exercise-input');
         const exerciseName = input.value.trim();
         
-        if (exerciseName) {
-            this.addExerciseToSelection(exerciseName);
-            input.value = '';
+        if (!exerciseName) {
+            showNotification('エクササイズ名を入力してください', 'warning');
+            return;
         }
+
+        if (exerciseName.length < 2) {
+            showNotification('エクササイズ名は2文字以上で入力してください', 'warning');
+            return;
+        }
+
+        // カスタムエクササイズとして追加
+        const customExercise = {
+            name: exerciseName,
+            muscle_group: 'カスタム',
+            equipment: '未設定',
+            difficulty: 2
+        };
+
+        this.addExerciseToSelection(exerciseName);
+        input.value = '';
+        
+        // 入力フィールドをクリア
+        input.focus();
     }
 
     /**
@@ -859,14 +965,58 @@ export class WorkoutPage extends BasePage {
 
         const summaryContainer = document.getElementById('workout-summary');
         if (summaryContainer) {
+            const estimatedTime = this.calculateEstimatedTime(selectedExercises);
+            const muscleGroupCount = selectedMuscles.length;
+            const exerciseCount = selectedExercises.length;
+            
             summaryContainer.innerHTML = `
-                <div class="space-y-2">
-                    <div><strong>対象部位:</strong> ${selectedMuscles.join(', ')}</div>
-                    <div><strong>エクササイズ:</strong> ${selectedExercises.join(', ')}</div>
-                    <div><strong>予想時間:</strong> ${selectedExercises.length * 15}分</div>
+                <div class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-blue-50 p-3 rounded-lg">
+                            <div class="text-sm text-blue-600 font-medium">対象部位</div>
+                            <div class="text-lg font-bold text-blue-900">${muscleGroupCount}部位</div>
+                            <div class="text-xs text-blue-700">${selectedMuscles.join(', ')}</div>
+                        </div>
+                        <div class="bg-green-50 p-3 rounded-lg">
+                            <div class="text-sm text-green-600 font-medium">エクササイズ</div>
+                            <div class="text-lg font-bold text-green-900">${exerciseCount}種目</div>
+                            <div class="text-xs text-green-700">${selectedExercises.slice(0, 3).join(', ')}${selectedExercises.length > 3 ? '...' : ''}</div>
+                        </div>
+                        <div class="bg-orange-50 p-3 rounded-lg">
+                            <div class="text-sm text-orange-600 font-medium">予想時間</div>
+                            <div class="text-lg font-bold text-orange-900">${estimatedTime}分</div>
+                            <div class="text-xs text-orange-700">セット間休憩含む</div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-medium text-gray-900 mb-2">選択されたエクササイズ</h4>
+                        <div class="space-y-1">
+                            ${selectedExercises.map(exercise => `
+                                <div class="flex items-center text-sm">
+                                    <i class="fas fa-dumbbell text-blue-500 mr-2"></i>
+                                    <span>${exercise}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
                 </div>
             `;
         }
+    }
+
+    /**
+     * 予想時間を計算
+     */
+    calculateEstimatedTime(exercises) {
+        if (exercises.length === 0) return 0;
+        
+        // 各エクササイズあたりの時間（分）
+        const timePerExercise = 15; // セット間休憩含む
+        const warmupTime = 5; // ウォームアップ時間
+        const cooldownTime = 5; // クールダウン時間
+        
+        return warmupTime + (exercises.length * timePerExercise) + cooldownTime;
     }
 
     /**
