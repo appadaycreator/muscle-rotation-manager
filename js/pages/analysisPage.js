@@ -1,6 +1,7 @@
 // analysisPage.js - 分析ページの機能
 
 import { supabaseService } from '../services/supabaseService.js';
+import { authManager } from '../modules/authManager.js';
 // import { chartService } from '../services/chartService.js';
 import {
     showNotification,
@@ -23,6 +24,13 @@ class AnalysisPage {
     async initialize() {
         console.log('Analysis page initialized');
 
+        // 認証状態をチェック
+        const isAuthenticated = await authManager.isAuthenticated();
+        if (!isAuthenticated) {
+            this.showLoginPrompt();
+            return;
+        }
+
         await safeAsync(
             async () => {
                 // 分析ページのコンテンツを表示
@@ -41,6 +49,46 @@ class AnalysisPage {
                 });
             }
         );
+    }
+
+    /**
+     * ログインプロンプトを表示
+     */
+    showLoginPrompt() {
+        const mainContent = safeGetElement('#main-content');
+        if (!mainContent) return;
+
+        mainContent.innerHTML = `
+            <div class="min-h-screen flex items-center justify-center bg-gray-50">
+                <div class="max-w-md w-full bg-white rounded-lg shadow-md p-6 text-center">
+                    <div class="mb-6">
+                        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 mb-4">
+                            <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                            </svg>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-900 mb-2">ログインが必要です</h2>
+                        <p class="text-gray-600 mb-6">分析機能を使用するにはログインしてください。</p>
+                    </div>
+                    <div class="space-y-3">
+                        <button id="login-btn" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors">
+                            ログイン
+                        </button>
+                        <button onclick="window.location.href='/index.html'" class="w-full bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors">
+                            ホームに戻る
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // ログインボタンのイベントリスナーを設定
+        const loginBtn = document.getElementById('login-btn');
+        if (loginBtn) {
+            loginBtn.addEventListener('click', () => {
+                authManager.showAuthModal('login');
+            });
+        }
     }
 
     /**

@@ -257,12 +257,8 @@ class App {
         }
 
         // 認証済みユーザー向けのイベントリスナー
-        document.addEventListener('click', (e) => {
-            // ログアウトボタンの処理
-            if (e.target.matches('[data-action="logout"]')) {
-                this.handleLogout();
-            }
-        });
+        // ログアウトボタンの処理はAuthManagerで統一管理
+        console.log('🔐 Authenticated features setup complete');
     }
 
     /**
@@ -271,12 +267,9 @@ class App {
     setupUnauthenticatedFeatures() {
         console.log('🔓 Setting up unauthenticated features...');
 
-        // ログインボタンの処理
-        document.addEventListener('click', (e) => {
-            if (e.target.matches('[data-action="login"]')) {
-                authManager.showAuthModal('login');
-            }
-        });
+        // ログインボタンの処理はAuthManagerで統一管理
+        // 重複を避けるため、ここでは設定しない
+        console.log('🔓 Unauthenticated features setup complete');
     }
 
     /**

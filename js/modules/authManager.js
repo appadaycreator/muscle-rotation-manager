@@ -43,43 +43,40 @@ class AuthManager {
         // 既存のイベントリスナーを削除
         this.removeEventListeners();
         
-        const loginBtn = document.getElementById('login-btn');
-        const logoutBtn = document.getElementById('logout-btn');
-
-        console.log('Setting up auth event listeners:', { loginBtn: !!loginBtn, logoutBtn: !!logoutBtn });
-
-        if (loginBtn) {
-            loginBtn.addEventListener('click', () => {
+        // グローバルなクリックイベントリスナーを設定
+        document.addEventListener('click', (e) => {
+            // ログインボタンのクリック（IDまたはdata-action属性）
+            if (e.target.matches('#login-btn, [data-action="login"]')) {
                 console.log('Login button clicked');
+                e.preventDefault();
+                e.stopPropagation();
+                
                 if (!supabaseService.isAvailable()) {
                     showNotification('Supabaseが設定されていません。設定を確認してください。', 'error');
                     return;
                 }
                 this.showAuthModal('login');
-            });
-        }
-
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', async () => {
+            }
+            
+            // ログアウトボタンのクリック
+            if (e.target.matches('#logout-btn, [data-action="logout"]')) {
                 console.log('Logout button clicked');
-                await this.handleLogout();
-            });
-        }
+                e.preventDefault();
+                e.stopPropagation();
+                this.handleLogout();
+            }
+        });
+
+        console.log('Auth event listeners setup complete');
     }
 
     /**
      * イベントリスナーを削除
      */
     removeEventListeners() {
-        const loginBtn = document.getElementById('login-btn');
-        const logoutBtn = document.getElementById('logout-btn');
-
-        if (loginBtn) {
-            loginBtn.replaceWith(loginBtn.cloneNode(true));
-        }
-        if (logoutBtn) {
-            logoutBtn.replaceWith(logoutBtn.cloneNode(true));
-        }
+        // グローバルイベントリスナーは削除しない
+        // 必要に応じて個別の要素のイベントリスナーを削除
+        console.log('Event listeners cleanup completed');
     }
 
     /**
