@@ -190,11 +190,11 @@ export function safeGetElement(selector, context = document) {
  * 安全に複数のDOMエレメントを取得
  * @param {string} selector - セレクター
  * @param {Element|Document} context - 検索コンテキスト（デフォルト: document）
- * @returns {NodeList} DOMエレメントのリスト
+ * @returns {Array<Element>} DOMエレメントの配列
  */
 export function safeGetElements(selector, context = document) {
     try {
-        return context.querySelectorAll(selector);
+        return Array.from(context.querySelectorAll(selector));
     } catch (error) {
         console.warn(`Invalid selector: ${selector}`, error);
         return [];

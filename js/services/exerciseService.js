@@ -51,7 +51,7 @@ class ExerciseService {
                         color_code
                     )
                 `)
-                .order('name_ja');
+                .order('name_ja', { ascending: true });
 
             // カスタムエクササイズの取得条件
             if (includeCustom && supabaseService.getCurrentUser()) {
@@ -115,8 +115,8 @@ class ExerciseService {
                 .from('exercises')
                 .select('*')
                 .eq('muscle_group_id', muscleGroupId)
-                .order('difficulty_level')
-                .order('name_ja');
+                .order('difficulty_level', { ascending: true })
+                .order('name_ja', { ascending: true });
 
             // カスタムエクササイズの取得条件
             if (supabaseService.getCurrentUser()) {
@@ -244,9 +244,9 @@ class ExerciseService {
             } else if (filters.sortBy === 'usage') {
                 query = query.order('usage_count', { ascending: false });
             } else if (filters.sortBy === 'difficulty') {
-                query = query.order('difficulty_level');
+                query = query.order('difficulty_level', { ascending: true });
             } else {
-                query = query.order('name_ja');
+                query = query.order('name_ja', { ascending: true });
             }
 
             // 制限
@@ -300,6 +300,7 @@ class ExerciseService {
 
             return result;
         } catch (error) {
+            console.error('Exercise search error:', error);
             handleError(error, {
                 context: 'エクササイズ検索',
                 showNotification: true

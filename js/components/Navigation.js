@@ -12,14 +12,15 @@ export class Navigation {
         this.isInitialized = false;
         this.currentPage = '';
         this.navigationItems = [
-            { id: 'dashboard', name: 'ダッシュボード', icon: 'fas fa-home', href: '/dashboard.html', requiresAuth: true },
+            { id: 'dashboard', name: 'ダッシュボード', icon: 'fas fa-tachometer-alt', href: '/dashboard.html', requiresAuth: true },
             { id: 'workout', name: 'ワークアウト', icon: 'fas fa-dumbbell', href: '/workout.html', requiresAuth: true },
-            { id: 'progress', name: 'プログレス', icon: 'fas fa-chart-line', href: '/progress.html', requiresAuth: true },
-            { id: 'calendar', name: 'カレンダー', icon: 'fas fa-calendar', href: '/calendar.html', requiresAuth: true },
-            { id: 'exercises', name: 'エクササイズ', icon: 'fas fa-list', href: '/exercises.html', requiresAuth: true },
-            { id: 'analysis', name: '分析', icon: 'fas fa-chart-bar', href: '/analysis.html', requiresAuth: true },
+            { id: 'calendar', name: 'カレンダー', icon: 'fas fa-calendar-alt', href: '/calendar.html', requiresAuth: true },
+            { id: 'analysis', name: '分析', icon: 'fas fa-chart-line', href: '/analysis.html', requiresAuth: true },
+            { id: 'progress', name: 'プログレッシブ・オーバーロード', icon: 'fas fa-trophy', href: '/progress.html', requiresAuth: true },
+            { id: 'exercises', name: 'エクササイズデータベース', icon: 'fas fa-database', href: '/exercises.html', requiresAuth: true },
             { id: 'settings', name: '設定', icon: 'fas fa-cog', href: '/settings.html', requiresAuth: true },
-            { id: 'help', name: 'ヘルプ', icon: 'fas fa-question-circle', href: '/help.html', requiresAuth: false }
+            { id: 'help', name: '使い方', icon: 'fas fa-question-circle', href: '/help.html', requiresAuth: false },
+            { id: 'privacy', name: 'プライバシーポリシー', icon: 'fas fa-shield-alt', href: '/privacy.html', requiresAuth: false }
         ];
     }
 

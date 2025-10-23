@@ -76,10 +76,10 @@ export class SupabaseService {
         }
 
         try {
-            // 現在のセッションからユーザー情報を取得
-            // getSession()は非同期メソッドなので、直接アクセスできない
-            // 代わりに、認証状態をチェックする簡易版を実装
-            return null; // 一時的にnullを返す
+            // Supabaseクライアントから現在のセッションを取得
+            // 注意: これは非同期メソッドなので、実際の実装では非同期にする必要がある
+            // 現在は簡易的な実装として、認証状態をチェック
+            return null; // 一時的にnullを返す（認証が必要な場合は非同期メソッドを使用）
         } catch (error) {
             console.error('Failed to get current user:', error);
             return null;
