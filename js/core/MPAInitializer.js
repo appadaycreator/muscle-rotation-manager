@@ -48,19 +48,22 @@ class MPAInitializer {
         const startTime = performance.now();
 
         try {
-            // 1. 認証状態の確認
+            // 1. 認証管理の初期化
+            await authManager.initialize();
+
+            // 2. 認証状態の確認
             await this.checkAuthentication();
 
-            // 2. 共通コンポーネントの読み込み
+            // 3. 共通コンポーネントの読み込み
             await this.loadCommonComponents();
 
-            // 3. ページ固有の初期化
+            // 4. ページ固有の初期化
             await this.initializePageSpecific();
 
-            // 4. イベントリスナーの設定
+            // 5. イベントリスナーの設定
             this.setupEventListeners();
 
-            // 5. エラーハンドリングの設定
+            // 6. エラーハンドリングの設定
             this.setupErrorHandling();
 
             const initTime = performance.now() - startTime;
@@ -88,7 +91,7 @@ class MPAInitializer {
     async checkAuthentication() {
         try {
             const isAuthenticated = await authManager.isAuthenticated();
-            const currentUser = authManager.getCurrentUser();
+            const currentUser = await authManager.getCurrentUser();
 
             console.log('🔐 Authentication check:', {
                 isAuthenticated,

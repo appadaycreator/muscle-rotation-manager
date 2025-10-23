@@ -1,6 +1,5 @@
 // js/services/SupabaseService.js - Supabase統合サービス
 
-import { createClient } from '@supabase/supabase-js';
 import { SUPABASE_CONFIG } from '../utils/constants.js';
 
 /**
@@ -24,6 +23,13 @@ export class SupabaseService {
                 return;
             }
 
+            // CDNから読み込まれたSupabaseライブラリを使用
+            if (!window.supabase || !window.supabase.createClient) {
+                console.error('Supabase library not loaded from CDN');
+                return;
+            }
+
+            const { createClient } = window.supabase;
             this.client = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
             this.isConnected = true;
             console.log('✅ Supabase client initialized');
@@ -58,6 +64,25 @@ export class SupabaseService {
         } catch (error) {
             console.error('Failed to get auth state:', error);
             return { user: null, session: null };
+        }
+    }
+
+    /**
+   * 現在のユーザーを取得（同期版）
+   */
+    getCurrentUser() {
+        if (!this.isAvailable()) {
+            return null;
+        }
+
+        try {
+            // 現在のセッションからユーザー情報を取得
+            // getSession()は非同期メソッドなので、直接アクセスできない
+            // 代わりに、認証状態をチェックする簡易版を実装
+            return null; // 一時的にnullを返す
+        } catch (error) {
+            console.error('Failed to get current user:', error);
+            return null;
         }
     }
 
@@ -495,6 +520,53 @@ export class SupabaseService {
             localStorage.setItem('offlineWorkoutQueue', JSON.stringify(offlineQueue));
         } catch (error) {
             console.error('Failed to add to offline queue:', error);
+        }
+    }
+
+    /**
+   * 認証状態の変更を監視
+   */
+    onAuthStateChange(callback) {
+        if (!this.isAvailable()) {
+            console.warn('Supabase is not available, cannot set up auth state listener');
+            return;
+        }
+
+        try {
+            return this.client.auth.onAuthStateChange(callback);
+        } catch (error) {
+            console.error('Failed to set up auth state listener:', error);
+        }
+    }
+
+    /**
+   * ユーザーの統計情報を取得
+   */
+    async getUserStats() {
+        if (!this.isAvailable()) {
+            console.warn('Supabase is not available, cannot get user stats');
+            return null;
+        }
+
+        try {
+            const { data: { user } } = await this.client.auth.getUser();
+            if (!user) {
+                console.warn('No authenticated user found');
+                return null;
+            }
+
+            // 基本的な統計情報を返す（実際の実装ではデータベースから取得）
+            return {
+                totalWorkouts: 0,
+                totalExercises: 0,
+                currentStreak: 0,
+                lastWorkout: null,
+                weeklyGoal: 3,
+                weeklyProgress: 0
+            };
+        } catch (error) {
+            console.error('Failed to get user stats:', error);
+            return null;
         }
     }
 }

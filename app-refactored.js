@@ -222,7 +222,7 @@ class App {
     async checkAuthenticationStatus() {
         try {
             const isAuthenticated = await authManager.isAuthenticated();
-            const currentUser = authManager.getCurrentUser();
+            const currentUser = await authManager.getCurrentUser();
 
             console.log('🔐 Authentication status:', {
                 isAuthenticated,
@@ -231,7 +231,7 @@ class App {
 
             // 認証状態に応じた処理
             if (isAuthenticated) {
-                this.setupAuthenticatedFeatures();
+                await this.setupAuthenticatedFeatures();
             } else {
                 this.setupUnauthenticatedFeatures();
             }
@@ -244,11 +244,11 @@ class App {
     /**
      * 認証済みユーザー向け機能を設定
      */
-    setupAuthenticatedFeatures() {
+    async setupAuthenticatedFeatures() {
         console.log('🔐 Setting up authenticated features...');
 
         // ユーザー情報の表示
-        const user = authManager.getCurrentUser();
+        const user = await authManager.getCurrentUser();
         if (user) {
             console.log('👤 User info:', {
                 email: user.email,
@@ -274,7 +274,7 @@ class App {
         // ログインボタンの処理
         document.addEventListener('click', (e) => {
             if (e.target.matches('[data-action="login"]')) {
-                this.showLoginModal();
+                authManager.showAuthModal('login');
             }
         });
     }
@@ -363,14 +363,6 @@ class App {
         }
     }
 
-    /**
-     * ログインモーダルを表示
-     */
-    showLoginModal() {
-        console.log('🔐 Showing login modal...');
-        // ログインモーダルの表示ロジック
-        // この部分は認証モジュールで実装される
-    }
 
     /**
      * 検索を開く

@@ -18,6 +18,11 @@ class AuthManager {
     async initialize() {
         if (this.isInitialized) {return;}
 
+        // pageManagerの初期化を確認
+        if (!pageManager.isInitialized) {
+            await pageManager.initialize();
+        }
+
         this.setupEventListeners();
         await this.checkCurrentSession();
         this.setupAuthStateListener();
@@ -54,54 +59,71 @@ class AuthManager {
      * 現在のセッションをチェック
      */
     async checkCurrentSession() {
-        const user = await supabaseService.checkCurrentSession();
-        this.updateAuthUI();
-        return user;
+        try {
+            const { user } = await supabaseService.getAuthState();
+            await this.updateAuthUI();
+            return user;
+        } catch (error) {
+            console.error('Failed to check current session:', error);
+            await this.updateAuthUI();
+            return null;
+        }
     }
 
     /**
      * 認証状態の変更を監視
      */
     setupAuthStateListener() {
-        supabaseService.onAuthStateChange((event, session) => {
+        supabaseService.onAuthStateChange(async (event, session) => {
             if (event === 'SIGNED_IN' && session) {
                 showNotification('ログインしました', 'success');
             } else if (event === 'SIGNED_OUT') {
                 showNotification('ログアウトしました', 'success');
             }
-            this.updateAuthUI();
+            await this.updateAuthUI();
         });
     }
 
     /**
      * 認証UIを更新
      */
-    updateAuthUI() {
+    async updateAuthUI() {
         const loginBtn = document.getElementById('login-btn');
         const logoutBtn = document.getElementById('logout-btn');
-        const currentUser = supabaseService.getCurrentUser();
+        
+        try {
+            const currentUser = await this.getCurrentUser();
+            console.log('Updating auth UI, currentUser:', currentUser);
 
-        console.log('Updating auth UI, currentUser:', currentUser);
-
-        if (currentUser) {
-            console.log('User is logged in, hiding login button, showing logout button');
-            if (loginBtn) {
-                loginBtn.classList.add('hidden');
-                console.log('Login button hidden');
+            if (currentUser) {
+                console.log('User is logged in, hiding login button, showing logout button');
+                if (loginBtn) {
+                    loginBtn.classList.add('hidden');
+                    console.log('Login button hidden');
+                }
+                if (logoutBtn) {
+                    logoutBtn.classList.remove('hidden');
+                    console.log('Logout button shown');
+                }
+            } else {
+                console.log('User is not logged in, showing login button, hiding logout button');
+                if (loginBtn) {
+                    loginBtn.classList.remove('hidden');
+                    console.log('Login button shown');
+                }
+                if (logoutBtn) {
+                    logoutBtn.classList.add('hidden');
+                    console.log('Logout button hidden');
+                }
             }
-            if (logoutBtn) {
-                logoutBtn.classList.remove('hidden');
-                console.log('Logout button shown');
-            }
-        } else {
-            console.log('User is not logged in, showing login button, hiding logout button');
+        } catch (error) {
+            console.error('Failed to update auth UI:', error);
+            // エラーの場合は未認証状態として表示
             if (loginBtn) {
                 loginBtn.classList.remove('hidden');
-                console.log('Login button shown');
             }
             if (logoutBtn) {
                 logoutBtn.classList.add('hidden');
-                console.log('Logout button hidden');
             }
         }
     }
@@ -125,7 +147,7 @@ class AuthManager {
 
         try {
             await supabaseService.signOut();
-            this.updateAuthUI();
+            await this.updateAuthUI();
             showNotification('ログアウトしました', 'success');
         } catch (error) {
             console.error('Logout error:', error);
@@ -269,9 +291,14 @@ class AuthManager {
             }
 
             // UIを更新してモーダルを閉じる
-            this.updateAuthUI();
+            await this.updateAuthUI();
             this.hideAuthModal();
             showNotification('ログインしました', 'success');
+            
+            // ログイン後にページを再読み込みしてダッシュボードを表示
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
 
         } catch (error) {
             const errorInfo = handleError(error, {
@@ -335,11 +362,31 @@ class AuthManager {
     }
 
     /**
+     * 認証状態をチェック
+     * @returns {boolean} 認証済みかどうか
+     */
+    async isAuthenticated() {
+        try {
+            const { user } = await supabaseService.getAuthState();
+            return user !== null;
+        } catch (error) {
+            console.error('Authentication check failed:', error);
+            return false;
+        }
+    }
+
+    /**
      * 現在のユーザーを取得
      * @returns {Object|null} ユーザーオブジェクト
      */
-    getCurrentUser() {
-        return supabaseService.getCurrentUser();
+    async getCurrentUser() {
+        try {
+            const { user } = await supabaseService.getAuthState();
+            return user;
+        } catch (error) {
+            console.error('Failed to get current user:', error);
+            return null;
+        }
     }
 }
 

@@ -1,13 +1,19 @@
 // supabase-connection-test.js - Supabase接続テスト
 
-import { createClient } from '@supabase/supabase-js';
-
 // Supabase設定
 const supabaseUrl = 'https://your-project.supabase.co';
 const supabaseKey = 'your-anon-key';
 
-// テスト用のSupabaseクライアントを作成
-const supabase = createClient(supabaseUrl, supabaseKey);
+// CDNから読み込まれたSupabaseライブラリを使用
+let supabase = null;
+
+// Supabaseライブラリが読み込まれるのを待つ
+if (window.supabase && window.supabase.createClient) {
+    const { createClient } = window.supabase;
+    supabase = createClient(supabaseUrl, supabaseKey);
+} else {
+    console.error('Supabase library not loaded from CDN');
+}
 
 console.log('🔍 Supabase接続テストを開始...');
 

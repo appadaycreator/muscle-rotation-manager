@@ -8,6 +8,19 @@ class PageManager {
     constructor() {
         this.currentPage = 'dashboard';
         this.pageCache = new Map();
+        this.isInitialized = false;
+    }
+
+    /**
+     * ページ管理を初期化
+     */
+    async initialize() {
+        if (this.isInitialized) {
+            return;
+        }
+
+        this.isInitialized = true;
+        console.log('PageManager initialized');
     }
 
     /**

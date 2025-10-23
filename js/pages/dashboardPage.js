@@ -77,7 +77,7 @@ class DashboardPage {
             `;
 
             document.getElementById('login-btn')?.addEventListener('click', () => {
-                authManager.showLoginModal();
+                authManager.showAuthModal('login');
             });
         }
     }
@@ -89,7 +89,7 @@ class DashboardPage {
         const authButton = document.getElementById('auth-button');
         if (authButton) {
             authButton.addEventListener('click', () => {
-                authManager.showLoginModal();
+                authManager.showAuthModal('login');
             });
         }
     }
