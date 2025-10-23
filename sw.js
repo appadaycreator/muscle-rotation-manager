@@ -54,11 +54,17 @@ self.addEventListener('install', event => {
     console.log('[SW] Installing Service Worker v2.0.0...');
 
     event.waitUntil(
-        Promise.all([
+        Promise.allSettled([
             // 1. クリティカルファイルを最優先でキャッシュ
             caches.open(STATIC_CACHE).then(cache => {
                 console.log('[SW] Caching critical files');
-                return cache.addAll(CRITICAL_FILES);
+                return cache.addAll(CRITICAL_FILES).catch(error => {
+                    console.warn('[SW] Some critical files failed to cache:', error);
+                    // 個別ファイルで再試行
+                    return Promise.allSettled(
+                        CRITICAL_FILES.map(file => cache.add(file))
+                    );
+                });
             }),
             
             // 2. 画像ファイルを並行してキャッシュ
@@ -67,6 +73,9 @@ self.addEventListener('install', event => {
                 return cache.addAll(IMAGE_FILES).catch(error => {
                     console.warn('[SW] Some images failed to cache:', error);
                     // 画像キャッシュ失敗は致命的ではない
+                    return Promise.allSettled(
+                        IMAGE_FILES.map(file => cache.add(file))
+                    );
                 });
             }),
             
@@ -83,13 +92,18 @@ self.addEventListener('install', event => {
                 });
             })
         ])
-        .then(() => {
+        .then(results => {
+            const failed = results.filter(r => r.status === 'rejected');
+            if (failed.length > 0) {
+                console.warn('[SW] Some cache operations failed, but continuing:', failed);
+            }
             console.log('[SW] Installation completed successfully');
             return self.skipWaiting();
         })
         .catch(error => {
             console.error('[SW] Installation failed:', error);
-            throw error;
+            // インストール失敗でもService Workerは有効にする
+            return self.skipWaiting();
         })
     );
 });
@@ -134,8 +148,13 @@ self.addEventListener('fetch', event => {
     const { request } = event;
     const url = new URL(request.url);
 
-    // Skip non-GET requests and chrome-extension
-    if (request.method !== 'GET' || url.protocol === 'chrome-extension:') {
+    // Skip non-GET requests and unsupported protocols
+    if (request.method !== 'GET' || 
+        url.protocol === 'chrome-extension:' || 
+        url.protocol === 'chrome:' ||
+        url.protocol === 'moz-extension:' ||
+        url.protocol === 'safari-extension:' ||
+        url.protocol === 'ms-browser-extension:') {
         return;
     }
 
@@ -176,9 +195,14 @@ async function cacheFirst(request, startTime) {
         if (networkResponse && networkResponse.ok && networkResponse.status === 200) {
             // レスポンスが有効かチェック
             if (networkResponse.headers.get('content-type')) {
-                const responseClone = networkResponse.clone();
-                await cache.put(request, responseClone);
-                recordPerformanceMetric('static_network', request.url, startTime);
+                try {
+                    const responseClone = networkResponse.clone();
+                    await cache.put(request, responseClone);
+                    recordPerformanceMetric('static_network', request.url, startTime);
+                } catch (cacheError) {
+                    console.warn('[SW] Failed to cache response:', cacheError);
+                    // キャッシュ失敗は致命的ではないので続行
+                }
             }
         }
         return networkResponse;
@@ -260,9 +284,14 @@ async function staleWhileRevalidate(request, startTime) {
             if (networkResponse && networkResponse.ok && networkResponse.status === 200) {
                 // レスポンスが有効かチェック
                 if (networkResponse.headers.get('content-type')) {
-                    const responseClone = networkResponse.clone();
-                    cache.put(request, responseClone);
-                    recordPerformanceMetric('swr_network_update', request.url, startTime);
+                    try {
+                        const responseClone = networkResponse.clone();
+                        cache.put(request, responseClone);
+                        recordPerformanceMetric('swr_network_update', request.url, startTime);
+                    } catch (cacheError) {
+                        console.warn('[SW] Failed to cache in SWR:', cacheError);
+                        // キャッシュ失敗は致命的ではないので続行
+                    }
                 }
             }
             return networkResponse;
@@ -306,9 +335,14 @@ async function imageHandler(request, startTime) {
         const networkResponse = await fetch(request);
         if (networkResponse && networkResponse.ok) {
             // 画像は長期キャッシュ
-            const responseClone = networkResponse.clone();
-            await cache.put(request, responseClone);
-            recordPerformanceMetric('image_network', request.url, startTime);
+            try {
+                const responseClone = networkResponse.clone();
+                await cache.put(request, responseClone);
+                recordPerformanceMetric('image_network', request.url, startTime);
+            } catch (cacheError) {
+                console.warn('[SW] Failed to cache image:', cacheError);
+                // キャッシュ失敗は致命的ではないので続行
+            }
         }
         return networkResponse;
     } catch (error) {
@@ -327,13 +361,18 @@ async function apiHandler(request, startTime) {
             
             // GET リクエストのみキャッシュ（短期間）
             if (request.method === 'GET') {
-                const responseClone = networkResponse.clone();
-                await cache.put(request, responseClone);
-                
-                // 5分後に期限切れ
-                setTimeout(() => {
-                    cache.delete(request);
-                }, 5 * 60 * 1000);
+                try {
+                    const responseClone = networkResponse.clone();
+                    await cache.put(request, responseClone);
+                    
+                    // 5分後に期限切れ
+                    setTimeout(() => {
+                        cache.delete(request).catch(() => {}); // 削除失敗は無視
+                    }, 5 * 60 * 1000);
+                } catch (cacheError) {
+                    console.warn('[SW] Failed to cache API response:', cacheError);
+                    // キャッシュ失敗は致命的ではないので続行
+                }
             }
             
             recordPerformanceMetric('api_network', request.url, startTime);
