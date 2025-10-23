@@ -31,6 +31,7 @@ class WorkoutPage {
             async () => {
                 await this.setupWorkoutInterface();
                 this.setupEventListeners();
+        this.initializeOfflineSync();
             },
             'ワークアウトページの初期化'
         );
@@ -240,7 +241,7 @@ class WorkoutPage {
     /**
      * ワークアウトを開始
      */
-    startWorkout() {
+    async startWorkout() {
         if (this.selectedMuscleGroups.length === 0) {
             showNotification('筋肉部位を選択してください', 'warning');
             return;
@@ -251,11 +252,15 @@ class WorkoutPage {
             muscleGroups: [...this.selectedMuscleGroups],
             exercises: [],
             startTime: new Date(),
-            endTime: null
+            endTime: null,
+            sessionId: null
         };
 
         this.startTime = new Date();
         this.startWorkoutTimer();
+
+        // ワークアウトセッションを事前作成（リアルタイム保存のため）
+        await this.createWorkoutSession();
 
         // UIを更新
         const workoutSection = safeGetElement('#current-workout-section');
@@ -268,7 +273,35 @@ class WorkoutPage {
             'success'
         );
 
-        console.log('Workout started:', this.currentWorkout);
+        console.log('✅ ワークアウトを開始:', this.currentWorkout);
+    }
+
+    /**
+     * ワークアウトセッションを事前作成
+     */
+    async createWorkoutSession() {
+        try {
+            if (supabaseService.isAvailable() && supabaseService.getCurrentUser()) {
+                const sessionData = {
+                    session_name: `ワークアウト ${new Date().toLocaleDateString()}`,
+                    workout_date: new Date().toISOString().split('T')[0],
+                    start_time: this.currentWorkout.startTime.toISOString(),
+                    muscle_groups_trained: this.currentWorkout.muscleGroups,
+                    session_type: 'strength',
+                    is_completed: false,
+                    notes: '進行中のワークアウト'
+                };
+
+                const savedSession = await supabaseService.saveWorkout(sessionData);
+                if (savedSession && savedSession[0]) {
+                    this.currentWorkout.sessionId = savedSession[0].id;
+                    console.log('💾 ワークアウトセッションを作成:', this.currentWorkout.sessionId);
+                }
+            }
+        } catch (error) {
+            console.error('ワークアウトセッション作成エラー:', error);
+            // エラーでもワークアウトは継続
+        }
     }
 
     /**
@@ -302,7 +335,16 @@ class WorkoutPage {
      * ワークアウトを停止
      */
     async stopWorkout() {
-        if (!this.currentWorkout) {return;}
+        if (!this.currentWorkout) {
+            showNotification('進行中のワークアウトがありません', 'warning');
+            return;
+        }
+
+        // 確認ダイアログを表示
+        const shouldStop = await this.showWorkoutStopConfirmation();
+        if (!shouldStop) {
+            return;
+        }
 
         // タイマーを停止
         if (this.workoutTimer) {
@@ -311,24 +353,32 @@ class WorkoutPage {
         }
 
         this.currentWorkout.endTime = new Date();
-        const duration = Math.floor(
-            (this.currentWorkout.endTime - this.currentWorkout.startTime) / 1000
+        const durationMinutes = Math.floor(
+            (this.currentWorkout.endTime - this.currentWorkout.startTime) / (1000 * 60)
         );
+        this.currentWorkout.duration = durationMinutes;
 
+        // ワークアウト完了処理
         const success = await safeAsync(
             async () => {
-                await this.saveWorkoutData({
+                await this.completeWorkout({
                     ...this.currentWorkout,
-                    duration
+                    duration: durationMinutes
                 });
                 return true;
             },
-            'ワークアウトの保存',
+            'ワークアウトの完了処理',
             false
         );
 
         if (success) {
-            showNotification('ワークアウトを完了しました', 'success');
+            await this.showWorkoutSummary(this.currentWorkout);
+            showNotification(
+                `ワークアウトを完了しました！ (${durationMinutes}分, ${this.exercises.length}種目)`,
+                'success'
+            );
+        } else {
+            showNotification('ワークアウトの保存に失敗しました', 'error');
         }
 
         // リセット
@@ -336,20 +386,380 @@ class WorkoutPage {
     }
 
     /**
+     * ワークアウト停止確認ダイアログ
+     * @returns {Promise<boolean>} 停止するかどうか
+     */
+    async showWorkoutStopConfirmation() {
+        return new Promise((resolve) => {
+            const modalHtml = `
+                <div id="stop-workout-modal" 
+                     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">
+                            <i class="fas fa-stop-circle text-red-500 mr-2"></i>
+                            ワークアウトを終了しますか？
+                        </h3>
+                        <div class="mb-4 text-gray-600">
+                            <p class="mb-2">現在の進行状況:</p>
+                            <ul class="list-disc list-inside space-y-1 text-sm">
+                                <li>実施時間: <span class="font-medium">${this.getElapsedTimeString()}</span></li>
+                                <li>エクササイズ数: <span class="font-medium">${this.exercises.length}種目</span></li>
+                                <li>対象部位: <span class="font-medium">${this.selectedMuscleGroups.length}部位</span></li>
+                            </ul>
+                        </div>
+                        <div class="flex space-x-3">
+                            <button id="confirm-stop" 
+                                    class="flex-1 bg-red-500 hover:bg-red-600 
+                                           text-white py-2 px-4 rounded-lg transition-colors">
+                                <i class="fas fa-check mr-2"></i>終了する
+                            </button>
+                            <button id="cancel-stop" 
+                                    class="flex-1 bg-gray-500 hover:bg-gray-600 
+                                           text-white py-2 px-4 rounded-lg transition-colors">
+                                <i class="fas fa-times mr-2"></i>続ける
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+            const modal = safeGetElement('#stop-workout-modal');
+            const confirmBtn = safeGetElement('#confirm-stop');
+            const cancelBtn = safeGetElement('#cancel-stop');
+
+            const cleanup = () => {
+                if (modal) {
+                    modal.remove();
+                }
+            };
+
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', () => {
+                    cleanup();
+                    resolve(true);
+                });
+            }
+
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', () => {
+                    cleanup();
+                    resolve(false);
+                });
+            }
+
+            // モーダル外クリックでキャンセル
+            if (modal) {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        cleanup();
+                        resolve(false);
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+     * 経過時間を文字列で取得
+     * @returns {string} 経過時間
+     */
+    getElapsedTimeString() {
+        if (!this.startTime) return '0分';
+        
+        const elapsed = Math.floor((new Date() - this.startTime) / (1000 * 60));
+        const hours = Math.floor(elapsed / 60);
+        const minutes = elapsed % 60;
+        
+        if (hours > 0) {
+            return `${hours}時間${minutes}分`;
+        }
+        return `${minutes}分`;
+    }
+
+    /**
+     * ワークアウト完了処理
+     * @param {Object} workoutData - ワークアウトデータ
+     */
+    async completeWorkout(workoutData) {
+        // データ保存
+        await this.saveWorkoutData(workoutData);
+        
+        // セッション完了をSupabaseに更新
+        if (workoutData.sessionId && supabaseService.isAvailable()) {
+            try {
+                // セッション完了フラグを更新（直接SQLクエリが必要な場合は別途実装）
+                console.log('✅ ワークアウトセッション完了:', workoutData.sessionId);
+            } catch (error) {
+                console.error('セッション完了更新エラー:', error);
+            }
+        }
+        
+        // 統計更新
+        await this.updateWorkoutStatistics(workoutData);
+        
+        // 筋肉回復データ更新
+        await this.updateMuscleRecoveryData(workoutData);
+        
+        console.log('🎉 ワークアウト完了処理が完了しました');
+    }
+
+    /**
+     * 筋肉回復データを更新
+     * @param {Object} workoutData - ワークアウトデータ
+     */
+    async updateMuscleRecoveryData(workoutData) {
+        try {
+            const recoveryData = JSON.parse(localStorage.getItem('muscleRecoveryData') || '{}');
+            const today = new Date().toISOString().split('T')[0];
+            
+            // 各筋肉部位の最終ワークアウト日を更新
+            workoutData.muscleGroups.forEach(muscleGroup => {
+                recoveryData[muscleGroup] = {
+                    lastWorkout: today,
+                    workoutCount: (recoveryData[muscleGroup]?.workoutCount || 0) + 1,
+                    totalSets: (recoveryData[muscleGroup]?.totalSets || 0) + 
+                              workoutData.exercises.reduce((sum, ex) => sum + ex.sets, 0)
+                };
+            });
+            
+            localStorage.setItem('muscleRecoveryData', JSON.stringify(recoveryData));
+            console.log('💪 筋肉回復データを更新しました:', recoveryData);
+        } catch (error) {
+            console.error('筋肉回復データ更新エラー:', error);
+        }
+    }
+
+    /**
+     * ワークアウトサマリーを表示
+     * @param {Object} workoutData - ワークアウトデータ
+     */
+    async showWorkoutSummary(workoutData) {
+        const totalSets = workoutData.exercises.reduce((sum, ex) => sum + ex.sets, 0);
+        const totalReps = workoutData.exercises.reduce((sum, ex) => sum + (ex.reps * ex.sets), 0);
+        const maxWeight = Math.max(...workoutData.exercises.map(ex => ex.weight));
+        
+        const modalHtml = `
+            <div id="workout-summary-modal" 
+                 class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div class="bg-white rounded-lg p-6 w-full max-w-lg mx-4">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">
+                        <i class="fas fa-trophy text-yellow-500 mr-2"></i>
+                        ワークアウト完了！
+                    </h3>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="text-center p-4 bg-blue-50 rounded-lg">
+                            <div class="text-2xl font-bold text-blue-600">${workoutData.duration}</div>
+                            <div class="text-sm text-gray-600">分</div>
+                        </div>
+                        <div class="text-center p-4 bg-green-50 rounded-lg">
+                            <div class="text-2xl font-bold text-green-600">${workoutData.exercises.length}</div>
+                            <div class="text-sm text-gray-600">種目</div>
+                        </div>
+                        <div class="text-center p-4 bg-purple-50 rounded-lg">
+                            <div class="text-2xl font-bold text-purple-600">${totalSets}</div>
+                            <div class="text-sm text-gray-600">セット</div>
+                        </div>
+                        <div class="text-center p-4 bg-orange-50 rounded-lg">
+                            <div class="text-2xl font-bold text-orange-600">${maxWeight}</div>
+                            <div class="text-sm text-gray-600">kg (最大)</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h4 class="font-semibold text-gray-700 mb-2">実施エクササイズ</h4>
+                        <div class="space-y-2 max-h-32 overflow-y-auto">
+                            ${workoutData.exercises.map(ex => `
+                                <div class="flex justify-between items-center text-sm bg-gray-50 p-2 rounded">
+                                    <span class="font-medium">${escapeHtml(ex.name)}</span>
+                                    <span class="text-gray-600">${ex.weight}kg × ${ex.reps}回 × ${ex.sets}セット</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <button id="close-summary" 
+                            class="w-full bg-blue-500 hover:bg-blue-600 
+                                   text-white py-3 px-4 rounded-lg transition-colors">
+                        <i class="fas fa-check mr-2"></i>完了
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        const modal = safeGetElement('#workout-summary-modal');
+        const closeBtn = safeGetElement('#close-summary');
+
+        const cleanup = () => {
+            if (modal) {
+                modal.remove();
+            }
+        };
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', cleanup);
+        }
+
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    cleanup();
+                }
+            });
+        }
+
+        // 3秒後に自動で閉じる（オプション）
+        setTimeout(() => {
+            if (document.getElementById('workout-summary-modal')) {
+                cleanup();
+            }
+        }, 10000);
+    }
+
+    /**
      * ワークアウトデータを保存
      * @param {Object} workoutData - ワークアウトデータ
      */
     async saveWorkoutData(workoutData) {
-        if (!supabaseService.isAvailable() || !supabaseService.getCurrentUser()) {
-            // ローカルストレージに保存
-            const history = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
-            history.unshift(workoutData);
-            localStorage.setItem('workoutHistory', JSON.stringify(history.slice(0, 50)));
-            return;
-        }
+        try {
+            // リアルタイム保存とオフライン対応
+            if (supabaseService.isAvailable() && supabaseService.getCurrentUser()) {
+                // Supabaseに保存
+                const sessionData = {
+                    session_name: `ワークアウト ${new Date().toLocaleDateString()}`,
+                    workout_date: workoutData.startTime.toISOString().split('T')[0],
+                    start_time: workoutData.startTime.toISOString(),
+                    end_time: workoutData.endTime.toISOString(),
+                    total_duration_minutes: workoutData.duration,
+                    muscle_groups_trained: workoutData.muscleGroups,
+                    session_type: 'strength',
+                    is_completed: true,
+                    notes: `${workoutData.exercises.length}種目のワークアウト`
+                };
 
-        // Supabaseに保存
-        await supabaseService.saveWorkout(workoutData);
+                const savedSession = await supabaseService.saveWorkout(sessionData);
+                const sessionId = savedSession[0]?.id;
+
+                // 各エクササイズをtraining_logsに保存
+                if (sessionId && workoutData.exercises.length > 0) {
+                    const trainingLogs = workoutData.exercises.map(exercise => ({
+                        workout_session_id: sessionId,
+                        muscle_group_id: this.getMuscleGroupId(workoutData.muscleGroups[0]),
+                        exercise_name: exercise.name,
+                        sets: exercise.sets,
+                        reps: [exercise.reps],
+                        weights: [exercise.weight],
+                        workout_date: workoutData.startTime.toISOString().split('T')[0],
+                        notes: exercise.notes || null
+                    }));
+
+                    await supabaseService.saveTrainingLogs(trainingLogs);
+                }
+
+                // 統計情報を更新
+                await this.updateWorkoutStatistics(workoutData);
+                
+                console.log('✅ ワークアウトデータをSupabaseに保存しました');
+            } else {
+                // オフライン時はローカルストレージに保存
+                await this.saveToLocalStorage(workoutData);
+                console.log('📱 オフライン: ローカルストレージに保存しました');
+            }
+
+            // カスタムイベントを発火
+            window.dispatchEvent(new CustomEvent('workoutSaved', {
+                detail: workoutData
+            }));
+
+        } catch (error) {
+            console.error('❌ ワークアウト保存エラー:', error);
+            // フォールバック: ローカルストレージに保存
+            await this.saveToLocalStorage(workoutData);
+            showNotification('オンライン保存に失敗しました。ローカルに保存されました。', 'warning');
+        }
+    }
+
+    /**
+     * ローカルストレージに保存
+     * @param {Object} workoutData - ワークアウトデータ
+     */
+    async saveToLocalStorage(workoutData) {
+        const history = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
+        const enhancedData = {
+            ...workoutData,
+            id: workoutData.id || `workout_${Date.now()}`,
+            savedAt: new Date().toISOString(),
+            syncStatus: 'pending'
+        };
+        
+        history.unshift(enhancedData);
+        localStorage.setItem('workoutHistory', JSON.stringify(history.slice(0, 50)));
+        
+        // オフライン同期キューに追加
+        const syncQueue = JSON.parse(localStorage.getItem('offlineWorkoutQueue') || '[]');
+        syncQueue.push({
+            id: enhancedData.id,
+            data: enhancedData,
+            operation: 'INSERT',
+            timestamp: Date.now()
+        });
+        localStorage.setItem('offlineWorkoutQueue', JSON.stringify(syncQueue));
+    }
+
+    /**
+     * 筋肉部位名からIDを取得
+     * @param {string} muscleName - 筋肉部位名
+     * @returns {string} 筋肉部位ID
+     */
+    getMuscleGroupId(muscleName) {
+        const muscleMap = {
+            'chest': 'chest',
+            'back': 'back', 
+            'shoulders': 'shoulders',
+            'arms': 'arms',
+            'legs': 'legs',
+            'abs': 'abs'
+        };
+        return muscleMap[muscleName] || muscleName;
+    }
+
+    /**
+     * ワークアウト統計を更新
+     * @param {Object} workoutData - ワークアウトデータ
+     */
+    async updateWorkoutStatistics(workoutData) {
+        try {
+            // ローカル統計を更新
+            const stats = JSON.parse(localStorage.getItem('workoutStats') || '{}');
+            const today = new Date().toISOString().split('T')[0];
+            
+            if (!stats[today]) {
+                stats[today] = {
+                    workouts: 0,
+                    exercises: 0,
+                    duration: 0,
+                    muscleGroups: []
+                };
+            }
+            
+            stats[today].workouts += 1;
+            stats[today].exercises += workoutData.exercises.length;
+            stats[today].duration += workoutData.duration;
+            stats[today].muscleGroups = [...new Set([
+                ...stats[today].muscleGroups,
+                ...workoutData.muscleGroups
+            ])];
+            
+            localStorage.setItem('workoutStats', JSON.stringify(stats));
+            
+            console.log('📊 統計情報を更新しました:', stats[today]);
+        } catch (error) {
+            console.error('統計更新エラー:', error);
+        }
     }
 
     /**
@@ -553,16 +963,20 @@ class WorkoutPage {
         const exercise = {
             id: `exercise_${Date.now()}`,
             name: sanitizedData.exerciseName,
-            weight: sanitizedData.weight,
-            reps: sanitizedData.reps,
-            sets: sanitizedData.sets,
-            notes: sanitizedData.notes,
-            timestamp: new Date()
+            weight: parseFloat(sanitizedData.weight),
+            reps: parseInt(sanitizedData.reps),
+            sets: parseInt(sanitizedData.sets),
+            notes: sanitizedData.notes || '',
+            timestamp: new Date(),
+            muscleGroups: [...this.selectedMuscleGroups]
         };
 
         this.exercises.push(exercise);
         if (this.currentWorkout) {
             this.currentWorkout.exercises.push(exercise);
+            
+            // リアルタイム保存（エクササイズ追加時）
+            await this.saveExerciseRealtime(exercise);
         }
 
         // UIを更新
@@ -570,6 +984,56 @@ class WorkoutPage {
         this.hideExerciseModal();
 
         showNotification(`${exercise.name}を追加しました`, 'success');
+        
+        console.log('✅ エクササイズを追加:', exercise);
+    }
+
+    /**
+     * エクササイズのリアルタイム保存
+     * @param {Object} exercise - エクササイズデータ
+     */
+    async saveExerciseRealtime(exercise) {
+        try {
+            if (supabaseService.isAvailable() && supabaseService.getCurrentUser()) {
+                // 現在のワークアウトセッションが存在する場合のみ保存
+                if (this.currentWorkout?.sessionId) {
+                    const trainingLog = {
+                        workout_session_id: this.currentWorkout.sessionId,
+                        muscle_group_id: this.getMuscleGroupId(exercise.muscleGroups[0]),
+                        exercise_name: exercise.name,
+                        sets: exercise.sets,
+                        reps: [exercise.reps],
+                        weights: [exercise.weight],
+                        workout_date: new Date().toISOString().split('T')[0],
+                        notes: exercise.notes
+                    };
+
+                    await supabaseService.saveTrainingLog(trainingLog);
+                    console.log('💾 エクササイズをリアルタイム保存しました');
+                }
+            } else {
+                // オフライン時は一時保存
+                const tempExercises = JSON.parse(localStorage.getItem('tempExercises') || '[]');
+                tempExercises.push({
+                    ...exercise,
+                    workoutId: this.currentWorkout?.id,
+                    savedAt: new Date().toISOString()
+                });
+                localStorage.setItem('tempExercises', JSON.stringify(tempExercises));
+                console.log('📱 エクササイズを一時保存しました');
+            }
+        } catch (error) {
+            console.error('エクササイズ保存エラー:', error);
+            // エラー時もローカルに保存
+            const tempExercises = JSON.parse(localStorage.getItem('tempExercises') || '[]');
+            tempExercises.push({
+                ...exercise,
+                workoutId: this.currentWorkout?.id,
+                savedAt: new Date().toISOString(),
+                syncStatus: 'failed'
+            });
+            localStorage.setItem('tempExercises', JSON.stringify(tempExercises));
+        }
     }
 
     /**
@@ -665,7 +1129,200 @@ class WorkoutPage {
     getCurrentWorkout() {
         return this.currentWorkout;
     }
+
+    /**
+     * オフライン同期機能を初期化
+     */
+    initializeOfflineSync() {
+        // オンライン復帰時の自動同期
+        window.addEventListener('online', () => {
+            console.log('🌐 オンラインに復帰しました。同期を開始します...');
+            this.syncOfflineData();
+        });
+
+        // ページ読み込み時に未同期データがあるかチェック
+        this.checkPendingSyncData();
+    }
+
+    /**
+     * オフラインデータを同期
+     */
+    async syncOfflineData() {
+        try {
+            if (!supabaseService.isAvailable() || !supabaseService.getCurrentUser()) {
+                console.log('⚠️ Supabaseまたはユーザー認証が利用できません');
+                return;
+            }
+
+            const syncQueue = JSON.parse(localStorage.getItem('offlineWorkoutQueue') || '[]');
+            if (syncQueue.length === 0) {
+                console.log('✅ 同期待ちのデータはありません');
+                return;
+            }
+
+            console.log(`🔄 ${syncQueue.length}件のデータを同期中...`);
+            let syncedCount = 0;
+            let failedCount = 0;
+
+            for (const item of syncQueue) {
+                try {
+                    await this.syncSingleWorkout(item.data);
+                    syncedCount++;
+                    
+                    // 同期成功したアイテムをキューから削除
+                    const updatedQueue = JSON.parse(localStorage.getItem('offlineWorkoutQueue') || '[]')
+                        .filter(queueItem => queueItem.id !== item.id);
+                    localStorage.setItem('offlineWorkoutQueue', JSON.stringify(updatedQueue));
+                    
+                } catch (error) {
+                    console.error(`❌ 同期失敗 (ID: ${item.id}):`, error);
+                    failedCount++;
+                }
+            }
+
+            const message = `同期完了: 成功${syncedCount}件, 失敗${failedCount}件`;
+            showNotification(message, failedCount === 0 ? 'success' : 'warning');
+            console.log(`📊 ${message}`);
+
+        } catch (error) {
+            console.error('❌ オフライン同期エラー:', error);
+            showNotification('オフラインデータの同期に失敗しました', 'error');
+        }
+    }
+
+    /**
+     * 単一のワークアウトデータを同期
+     * @param {Object} workoutData - ワークアウトデータ
+     */
+    async syncSingleWorkout(workoutData) {
+        const sessionData = {
+            session_name: workoutData.sessionName || `ワークアウト ${new Date(workoutData.startTime).toLocaleDateString()}`,
+            workout_date: new Date(workoutData.startTime).toISOString().split('T')[0],
+            start_time: new Date(workoutData.startTime).toISOString(),
+            end_time: workoutData.endTime ? new Date(workoutData.endTime).toISOString() : null,
+            total_duration_minutes: workoutData.duration || 0,
+            muscle_groups_trained: workoutData.muscleGroups || [],
+            session_type: 'strength',
+            is_completed: !!workoutData.endTime,
+            notes: `オフライン同期: ${workoutData.exercises?.length || 0}種目`
+        };
+
+        const savedSession = await supabaseService.saveWorkout(sessionData);
+        const sessionId = savedSession[0]?.id;
+
+        // エクササイズデータも同期
+        if (sessionId && workoutData.exercises && workoutData.exercises.length > 0) {
+            const trainingLogs = workoutData.exercises.map(exercise => ({
+                workout_session_id: sessionId,
+                muscle_group_id: this.getMuscleGroupId(workoutData.muscleGroups[0]),
+                exercise_name: exercise.name,
+                sets: exercise.sets,
+                reps: [exercise.reps],
+                weights: [exercise.weight],
+                workout_date: new Date(workoutData.startTime).toISOString().split('T')[0],
+                notes: exercise.notes || null
+            }));
+
+            await supabaseService.saveTrainingLogs(trainingLogs);
+        }
+
+        console.log(`✅ ワークアウト同期完了 (ID: ${workoutData.id})`);
+    }
+
+    /**
+     * 未同期データの存在をチェック
+     */
+    async checkPendingSyncData() {
+        const syncQueue = JSON.parse(localStorage.getItem('offlineWorkoutQueue') || '[]');
+        if (syncQueue.length > 0) {
+            console.log(`📋 ${syncQueue.length}件の未同期データがあります`);
+            
+            if (navigator.onLine && supabaseService.isAvailable() && supabaseService.getCurrentUser()) {
+                showNotification(`${syncQueue.length}件の未同期データを同期中...`, 'info');
+                await this.syncOfflineData();
+            } else {
+                showNotification(`${syncQueue.length}件の未同期データがあります。オンライン時に自動同期されます。`, 'warning');
+            }
+        }
+    }
+
+    /**
+     * ワークアウト履歴を取得（オンライン・オフライン対応）
+     * @param {number} limit - 取得件数
+     * @returns {Promise<Array>} ワークアウト履歴
+     */
+    async getWorkoutHistory(limit = 20) {
+        try {
+            let workouts = [];
+
+            // オンラインデータを取得
+            if (supabaseService.isAvailable() && supabaseService.getCurrentUser()) {
+                workouts = await supabaseService.getWorkouts(limit);
+            }
+
+            // ローカルデータを追加
+            const localHistory = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
+            
+            // 重複を除去してマージ
+            const allWorkouts = [...workouts, ...localHistory];
+            const uniqueWorkouts = allWorkouts.filter((workout, index, self) => 
+                index === self.findIndex(w => w.id === workout.id)
+            );
+
+            // 日付でソート
+            uniqueWorkouts.sort((a, b) => new Date(b.startTime || b.workout_date) - new Date(a.startTime || a.workout_date));
+
+            return uniqueWorkouts.slice(0, limit);
+        } catch (error) {
+            console.error('ワークアウト履歴取得エラー:', error);
+            // フォールバック: ローカルデータのみ
+            return JSON.parse(localStorage.getItem('workoutHistory') || '[]').slice(0, limit);
+        }
+    }
+
+    /**
+     * データ整合性チェック
+     */
+    async validateDataIntegrity() {
+        try {
+            const localHistory = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
+            const syncQueue = JSON.parse(localStorage.getItem('offlineWorkoutQueue') || '[]');
+            
+            console.log('📊 データ整合性チェック:');
+            console.log(`  - ローカル履歴: ${localHistory.length}件`);
+            console.log(`  - 未同期キュー: ${syncQueue.length}件`);
+            
+            // 重複チェック
+            const duplicates = localHistory.filter((item, index, self) => 
+                index !== self.findIndex(other => other.id === item.id)
+            );
+            
+            if (duplicates.length > 0) {
+                console.warn(`⚠️ 重複データを検出: ${duplicates.length}件`);
+                // 重複を削除
+                const uniqueHistory = localHistory.filter((item, index, self) => 
+                    index === self.findIndex(other => other.id === item.id)
+                );
+                localStorage.setItem('workoutHistory', JSON.stringify(uniqueHistory));
+                console.log('✅ 重複データを削除しました');
+            }
+            
+            return {
+                localCount: localHistory.length,
+                pendingSync: syncQueue.length,
+                duplicatesRemoved: duplicates.length
+            };
+        } catch (error) {
+            console.error('データ整合性チェックエラー:', error);
+            return null;
+        }
+    }
 }
 
 // デフォルトエクスポート
-export default new WorkoutPage();
+const workoutPageInstance = new WorkoutPage();
+
+// オフライン同期機能を初期化
+workoutPageInstance.initializeOfflineSync();
+
+export default workoutPageInstance;

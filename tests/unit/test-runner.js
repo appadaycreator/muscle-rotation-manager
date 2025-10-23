@@ -18,6 +18,7 @@ if (typeof window === 'undefined' && typeof global !== 'undefined') {
         global.HTMLElement = dom.window.HTMLElement;
         global.Event = dom.window.Event;
         global.CustomEvent = dom.window.CustomEvent;
+        global.localStorage = dom.window.localStorage;
         
         // navigatorは読み取り専用なので、別の方法で設定
         Object.defineProperty(global, 'navigator', {
@@ -51,7 +52,29 @@ if (typeof window === 'undefined' && typeof global !== 'undefined') {
                 removeChild: () => {}
             }
         };
-        global.window = { document: global.document };
+        
+        // localStorage のモック実装
+        const localStorageMock = {
+            store: {},
+            getItem: function(key) {
+                return this.store[key] || null;
+            },
+            setItem: function(key, value) {
+                this.store[key] = value.toString();
+            },
+            removeItem: function(key) {
+                delete this.store[key];
+            },
+            clear: function() {
+                this.store = {};
+            }
+        };
+        
+        global.localStorage = localStorageMock;
+        global.window = { 
+            document: global.document,
+            localStorage: localStorageMock
+        };
     }
 }
 
