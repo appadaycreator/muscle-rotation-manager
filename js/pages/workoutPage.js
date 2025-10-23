@@ -21,11 +21,29 @@ export class WorkoutPage extends BasePage {
     }
 
     /**
+   * 認証状態をチェック（オーバーライド）
+   */
+    async checkAuthentication() {
+        const isAuthenticated = await authManager.isAuthenticated();
+
+        if (!isAuthenticated) {
+            // ログインプロンプトを表示
+            this.showLoginPrompt();
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
    * ページ固有の初期化処理
    */
     async onInitialize() {
         // 認証状態をチェック
-        await this.checkAuthentication();
+        const isAuthenticated = await this.checkAuthentication();
+        if (!isAuthenticated) {
+            return; // 認証されていない場合は処理を停止
+        }
         
         // ナビゲーションを初期化
         await this.navigation.initialize();
