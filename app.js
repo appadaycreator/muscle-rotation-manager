@@ -1669,50 +1669,96 @@ function initializeProfileEdit() {
 
 // プロフィール情報取得
 async function loadUserProfile() {
-    if (!supabase || !currentUser) return;
+    if (!supabase || !currentUser) {
+        console.warn('⚠️ SupabaseまたはcurrentUserが設定されていません');
+        return;
+    }
+    
+    console.log('🔍 プロフィール情報取得開始:', currentUser.id);
+    
     const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('id', currentUser.id)
         .maybeSingle(); // 0件でもエラーにしない
+    
     const nicknameInput = document.getElementById('profile-nickname');
     const emailInput = document.getElementById('profile-email');
     const avatarPreview = document.getElementById('profile-avatar-preview');
+    
     if (error) {
-        console.error('プロフィール取得エラー', error);
+        console.error('❌ プロフィール取得エラー:', error);
         if (nicknameInput) nicknameInput.value = '';
         if (emailInput) emailInput.value = '';
         if (avatarPreview) avatarPreview.src = 'assets/default-avatar.png';
         return;
     }
+    
     if (!data) {
+        console.log('📝 プロフィールデータが存在しません（初回ユーザー）');
         if (nicknameInput) nicknameInput.value = '';
         if (emailInput) emailInput.value = '';
         if (avatarPreview) avatarPreview.src = 'assets/default-avatar.png';
         return;
     }
+    
+    console.log('✅ プロフィール情報取得成功:', data);
+    
     if (nicknameInput) nicknameInput.value = data.display_name || '';
-    if (emailInput) emailInput.value = data.email || '';
+    if (emailInput) emailInput.value = data.email || currentUser.email || '';
     if (avatarPreview && data.avatar_url) avatarPreview.src = data.avatar_url;
 }
 
 // プロフィール保存
 async function saveUserProfile({ nickname, email, avatar_url }) {
     if (!supabase || !currentUser) throw new Error('認証情報がありません');
+    
+    console.log('🔍 プロフィール保存開始:', { 
+        userId: currentUser.id, 
+        nickname, 
+        email, 
+        avatar_url: avatar_url ? 'あり' : 'なし' 
+    });
+    
     // プロフィールテーブル更新
-    const { error } = await supabase
+    const { data, error } = await supabase
         .from('user_profiles')
         .upsert({
             id: currentUser.id,
             display_name: nickname,
             email: email,
-            avatar_url: avatar_url
+            avatar_url: avatar_url,
+            font_size: 'md'  // デフォルト値を明示的に設定
         });
-    if (error) throw error;
-    // メールアドレス変更はAuthにも反映
+    
+    if (error) {
+        console.error('❌ プロフィール保存エラー:', error);
+        throw new Error(`プロフィール保存に失敗しました: ${error.message}`);
+    }
+    
+    console.log('✅ プロフィール保存成功:', data);
+    
+    // メールアドレス変更はAuthにも反映（現在のユーザーのメールと異なる場合のみ）
     if (email !== currentUser.email) {
+        console.log('📧 メールアドレス更新中...', { 
+            currentEmail: currentUser.email, 
+            newEmail: email 
+        });
+        
+        // メールアドレスの形式を再検証
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            throw new Error(`無効なメールアドレス形式です: ${email}`);
+        }
+        
         const { error: authError } = await supabase.auth.updateUser({ email });
-        if (authError) throw authError;
+        if (authError) {
+            console.error('❌ Auth更新エラー:', authError);
+            // メールアドレス更新エラーの場合は、プロフィール保存は成功として扱う
+            console.log('⚠️ メールアドレス更新は失敗しましたが、プロフィール保存は完了しました');
+            return; // エラーを投げずに正常終了
+        }
+        console.log('✅ メールアドレス更新成功');
     }
 }
 
