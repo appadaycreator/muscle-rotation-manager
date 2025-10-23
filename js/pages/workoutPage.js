@@ -57,8 +57,10 @@ export class WorkoutPage extends BasePage {
 
         // DOM要素が読み込まれた後にイベントリスナーを設定
         setTimeout(() => {
+            console.log('Setting up event listeners after DOM load...');
         this.setupEventListeners();
             this.updateQuickStartButton();
+            console.log('Event listeners setup complete');
         }, 100);
     }
 
@@ -153,6 +155,7 @@ export class WorkoutPage extends BasePage {
         document.addEventListener('click', (e) => {
             if (e.target.closest('.muscle-group-btn')) {
                 const button = e.target.closest('.muscle-group-btn');
+                console.log('Muscle group button clicked:', button.dataset.muscle);
                 this.toggleMuscleGroup(button);
             }
         });
@@ -226,10 +229,12 @@ export class WorkoutPage extends BasePage {
             button.style.backgroundColor = '#3B82F6';
             button.style.color = 'white';
             button.style.borderColor = '#3B82F6';
+            console.log('Muscle group selected:', button.dataset.muscle);
         } else {
             button.style.backgroundColor = '';
             button.style.color = '';
             button.style.borderColor = '';
+            console.log('Muscle group deselected:', button.dataset.muscle);
         }
         
         this.updateQuickStartButton();
@@ -242,7 +247,9 @@ export class WorkoutPage extends BasePage {
         const selectedMuscles = document.querySelectorAll('.muscle-group-btn.selected');
         const quickStartButton = document.getElementById('quick-start-workout');
         
+        console.log('Updating quick start button...');
         console.log('Selected muscles count:', selectedMuscles.length);
+        console.log('Quick start button found:', quickStartButton);
         
         if (quickStartButton) {
             if (selectedMuscles.length > 0) {
@@ -256,6 +263,8 @@ export class WorkoutPage extends BasePage {
                 quickStartButton.classList.remove('hover:bg-blue-700');
                 console.log('Quick start button disabled');
             }
+        } else {
+            console.error('Quick start button not found!');
         }
     }
 

@@ -104,10 +104,10 @@ export function getMuscleColor(muscleId) {
     const colorMap = {
         chest: 'chest-color',
         back: 'back-color',
-        shoulder: 'shoulder-color',
-        arm: 'arm-color',
-        leg: 'leg-color',
-        core: 'core-color'
+        shoulders: 'shoulder-color',
+        arms: 'arm-color',
+        legs: 'leg-color',
+        abs: 'core-color'
     };
     return colorMap[muscleId] || 'chest-color';
 }

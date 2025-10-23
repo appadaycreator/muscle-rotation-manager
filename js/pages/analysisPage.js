@@ -1,6 +1,7 @@
 // analysisPage.js - 分析ページの機能
 
 import { supabaseService } from '../services/supabaseService.js';
+import { muscleGroupService } from '../services/muscleGroupService.js';
 import { authManager } from '../modules/authManager.js';
 // import { chartService } from '../services/chartService.js';
 import {
@@ -346,16 +347,14 @@ class AnalysisPage {
     /**
      * 筋肉部位名を取得
      */
-    getMuscleGroupName(muscleId) {
-        const names = {
-            chest: '胸筋',
-            back: '背筋',
-            shoulder: '肩',
-            arm: '腕',
-            leg: '脚',
-            abs: '体幹'
-        };
-        return names[muscleId] || muscleId;
+    async getMuscleGroupName(muscleId) {
+        try {
+            const muscleGroup = await muscleGroupService.getMuscleGroupById(muscleId);
+            return muscleGroup ? muscleGroup.name_ja : muscleId;
+        } catch (error) {
+            console.error('Failed to get muscle group name:', error);
+            return muscleId;
+        }
     }
 
     /**
