@@ -141,15 +141,21 @@ export class WorkoutPage extends BasePage {
             let workoutHistory = [];
 
             if (supabaseService.isAvailable()) {
+                console.log('Loading workout history from Supabase...');
                 workoutHistory = await supabaseService.getWorkoutHistory();
+                console.log('Workout history loaded from Supabase:', workoutHistory);
             } else {
+                console.log('Loading workout history from localStorage...');
                 workoutHistory = this.loadFromLocalStorage('workoutHistory');
+                console.log('Workout history loaded from localStorage:', workoutHistory);
             }
 
             this.updateWorkoutHistory(workoutHistory);
 
         } catch (error) {
             console.error('Failed to load workout history:', error);
+            // エラーが発生した場合は空の履歴を表示
+            this.updateWorkoutHistory([]);
         }
     }
 
@@ -479,6 +485,8 @@ export class WorkoutPage extends BasePage {
         const container = document.getElementById('workout-history');
         if (!container) return;
 
+        console.log('Updating workout history with data:', workoutHistory);
+
         if (workoutHistory.length === 0) {
             container.innerHTML = `
         <div class="text-center py-8 text-gray-500">
@@ -490,34 +498,65 @@ export class WorkoutPage extends BasePage {
         }
 
         const recentWorkouts = workoutHistory
-            .sort((a, b) => new Date(b.workout_date) - new Date(a.workout_date))
+            .sort((a, b) => {
+                const dateA = a.workout_date || a.startTime || a.created_at;
+                const dateB = b.workout_date || b.startTime || b.created_at;
+                return new Date(dateB) - new Date(dateA);
+            })
             .slice(0, 10);
 
-        container.innerHTML = recentWorkouts.map(workout => `
+        container.innerHTML = recentWorkouts.map(workout => {
+            // データベースの構造に応じて適切なフィールドを取得
+            const sessionName = workout.session_name || workout.sessionName || 'ワークアウト';
+            const muscleGroups = workout.muscle_groups_trained || workout.muscleGroups || workout.muscle_groups || [];
+            const duration = workout.total_duration_minutes || workout.duration || workout.total_duration || 0;
+            const workoutDate = workout.workout_date || workout.startTime || workout.created_at || workout.date;
+
+            console.log('Processing workout:', {
+                sessionName,
+                muscleGroups,
+                duration,
+                workoutDate
+            });
+
+            return `
       <div class="flex items-center justify-between p-4 border-b border-gray-200">
         <div class="flex items-center">
           <div class="flex-shrink-0">
             <i class="fas fa-dumbbell text-blue-600"></i>
           </div>
           <div class="ml-4">
-            <div class="text-sm font-medium text-gray-900">${workout.session_name}</div>
-            <div class="text-sm text-gray-500">${workout.muscle_groups_trained?.join(', ') || '部位不明'}</div>
+            <div class="text-sm font-medium text-gray-900">${sessionName}</div>
+            <div class="text-sm text-gray-500">${Array.isArray(muscleGroups) ? muscleGroups.join(', ') : muscleGroups || '部位不明'}</div>
           </div>
         </div>
         <div class="text-right">
-          <div class="text-sm text-gray-900">${workout.total_duration_minutes}分</div>
-          <div class="text-sm text-gray-500">${this.formatDate(workout.workout_date)}</div>
+          <div class="text-sm text-gray-900">${duration}分</div>
+          <div class="text-sm text-gray-500">${this.formatDate(workoutDate)}</div>
         </div>
       </div>
-    `).join('');
+    `;
+        }).join('');
     }
 
     /**
      * 日付をフォーマット
      */
     formatDate(dateString) {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('ja-JP');
+        if (!dateString) {
+            return '日付不明';
+        }
+        
+        try {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) {
+                return '日付不明';
+            }
+            return date.toLocaleDateString('ja-JP');
+        } catch (error) {
+            console.error('Failed to format date:', dateString, error);
+            return '日付不明';
+        }
     }
 
     /**

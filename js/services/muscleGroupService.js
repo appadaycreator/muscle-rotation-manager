@@ -155,7 +155,12 @@ class MuscleGroupService {
         if (!muscleGroupId) return null;
 
         const muscleGroups = await this.getMuscleGroups();
-        return muscleGroups.find(group => group.id === muscleGroupId) || null;
+        console.log('Searching for muscle group ID:', muscleGroupId);
+        console.log('Available muscle groups:', muscleGroups.map(g => ({ id: g.id, name_ja: g.name_ja })));
+        
+        const found = muscleGroups.find(group => group.id === muscleGroupId);
+        console.log('Found muscle group:', found);
+        return found || null;
     }
 
     /**
@@ -167,11 +172,16 @@ class MuscleGroupService {
         if (!muscleGroupName) return null;
 
         const muscleGroups = await this.getMuscleGroups();
-        return muscleGroups.find(group => 
+        console.log('Searching for muscle group name:', muscleGroupName);
+        console.log('Available muscle groups:', muscleGroups.map(g => ({ name: g.name, name_ja: g.name_ja, name_en: g.name_en })));
+        
+        const found = muscleGroups.find(group => 
             group.name === muscleGroupName ||
             group.name_ja === muscleGroupName ||
             group.name_en === muscleGroupName
-        ) || null;
+        );
+        console.log('Found muscle group by name:', found);
+        return found || null;
     }
 
     /**
@@ -250,10 +260,20 @@ class MuscleGroupService {
         const mappedId = muscleGroupMapping[muscleGroupId] || muscleGroupId;
         console.log('Getting category info for:', muscleGroupId, 'mapped to:', mappedId);
         
-        const muscleGroup = await this.getMuscleGroupById(mappedId);
+        // まずIDで検索
+        let muscleGroup = await this.getMuscleGroupById(mappedId);
+        
+        // IDで見つからない場合は名前で検索
         if (!muscleGroup) {
-            console.warn('Muscle group not found:', muscleGroupId, 'mapped to:', mappedId);
-            return null;
+            console.log('Trying to find by name...');
+            muscleGroup = await this.getMuscleGroupByName(muscleGroupId);
+        }
+        
+        if (!muscleGroup) {
+            console.warn('Muscle group not found by ID or name:', muscleGroupId, 'mapped to:', mappedId);
+            // フォールバック: 筋肉部位が見つからない場合でも、カテゴリ情報は返す
+            console.log('Using fallback category info for:', muscleGroupId);
+            return this.getFallbackCategoryInfo(muscleGroupId);
         }
         
         console.log('Found muscle group:', muscleGroup);
@@ -487,6 +507,84 @@ class MuscleGroupService {
             text: group.name_ja,
             color: group.color_code
         }));
+    }
+
+    /**
+     * フォールバック用のカテゴリ情報を取得
+     * @param {string} muscleGroupId - 筋肉部位ID
+     * @returns {Object|null} カテゴリ情報
+     */
+    getFallbackCategoryInfo(muscleGroupId) {
+        const fallbackInfo = {
+            chest: {
+                name: '胸筋',
+                nameEn: 'Chest',
+                icon: 'fas fa-heart',
+                color: 'text-red-500',
+                description: '大胸筋、小胸筋、前鋸筋を鍛えるエクササイズ',
+                benefits: ['胸筋の厚みと幅を向上', '上半身の安定性向上', '姿勢の改善', 'プッシュ系動作の強化'],
+                exercises: ['プッシュアップ', 'ベンチプレス', 'ダンベルフライ', 'インクラインプレス', 'ディップス'],
+                tips: ['胸筋を意識して動作を行う', '肩甲骨を安定させる', '適切な可動域を保つ', '呼吸を意識する'],
+                commonMistakes: ['肩が前に出すぎる', '可動域が狭い', '反動を使いすぎる', '呼吸を止める']
+            },
+            back: {
+                name: '背筋',
+                nameEn: 'Back',
+                icon: 'fas fa-user',
+                color: 'text-green-500',
+                description: '広背筋、僧帽筋、菱形筋、脊柱起立筋を鍛えるエクササイズ',
+                benefits: ['背中の厚みと幅を向上', '姿勢の改善', '肩甲骨の安定性向上', '引く動作の強化'],
+                exercises: ['プルアップ', 'ラットプルダウン', 'ベントオーバーロウ', 'ワンハンドダンベルロウ', 'シーテッドロウ'],
+                tips: ['肩甲骨を寄せる動作を意識', '胸を張って姿勢を保つ', '背筋を意識して動作', '適切な重量を選択'],
+                commonMistakes: ['肩が上がる', '腰が丸まる', '反動を使いすぎる', '可動域が狭い']
+            },
+            legs: {
+                name: '脚筋',
+                nameEn: 'Legs',
+                icon: 'fas fa-running',
+                color: 'text-purple-500',
+                description: '大腿四頭筋、ハムストリングス、臀筋、ふくらはぎを鍛えるエクササイズ',
+                benefits: ['下半身の筋力向上', 'バランス能力向上', '代謝の向上', '日常動作の改善'],
+                exercises: ['スクワット', 'ランジ', 'デッドリフト', 'レッグプレス', 'レッグカール'],
+                tips: ['膝の向きに注意', '重心を安定させる', '深い可動域を意識', '呼吸を意識する'],
+                commonMistakes: ['膝が内側に入る', '腰が丸まる', '可動域が浅い', '反動を使いすぎる']
+            },
+            shoulders: {
+                name: '肩筋',
+                nameEn: 'Shoulders',
+                icon: 'fas fa-dumbbell',
+                color: 'text-blue-500',
+                description: '三角筋（前部・中部・後部）を鍛えるエクササイズ',
+                benefits: ['肩の幅と厚みを向上', '肩の安定性向上', '姿勢の改善', 'オーバーヘッド動作の強化'],
+                exercises: ['ショルダープレス', 'サイドレイズ', 'フロントレイズ', 'リアデルトフライ', 'アーノルドプレス'],
+                tips: ['肩甲骨を安定させる', '適切な重量を選択', '可動域を意識', 'バランスよく鍛える'],
+                commonMistakes: ['重量が重すぎる', '肩が上がる', '可動域が狭い', '前部ばかり鍛える']
+            },
+            arms: {
+                name: '腕筋',
+                nameEn: 'Arms',
+                icon: 'fas fa-fist-raised',
+                color: 'text-orange-500',
+                description: '上腕二頭筋、上腕三頭筋、前腕筋を鍛えるエクササイズ',
+                benefits: ['腕の筋力向上', '握力の向上', '腕の太さと形の改善', 'プッシュ・プル動作の強化'],
+                exercises: ['ダンベルカール', 'ハンマーカール', 'トライセップディップス', 'トライセッププッシュダウン', 'オーバーヘッドエクステンション'],
+                tips: ['適切な重量を選択', '可動域を意識', '反動を使わない', 'バランスよく鍛える'],
+                commonMistakes: ['反動を使いすぎる', '重量が重すぎる', '可動域が狭い', '片方ばかり鍛える']
+            },
+            core: {
+                name: '腹',
+                nameEn: 'Core',
+                icon: 'fas fa-circle',
+                color: 'text-yellow-500',
+                description: '腹筋、背筋、横腹筋、深層筋を鍛えるエクササイズ',
+                benefits: ['体幹の安定性向上', '姿勢の改善', '腰痛の予防', 'パフォーマンス向上'],
+                exercises: ['プランク', 'クランチ', 'サイドプランク', 'ロシアンツイスト', 'マウンテンクライマー'],
+                tips: ['呼吸を意識する', '正しい姿勢を保つ', 'ゆっくりと動作', '継続的に行う'],
+                commonMistakes: ['呼吸を止める', '腰を反らしすぎる', '反動を使う', '継続しない']
+            }
+        };
+
+        return fallbackInfo[muscleGroupId] || null;
     }
 
     /**
