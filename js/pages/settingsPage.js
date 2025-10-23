@@ -328,15 +328,6 @@ class SettingsPage {
                             </div>
                         </div>
 
-                        <!-- 保存ボタン -->
-                        <button type="submit" 
-                                id="save-profile-btn"
-                                class="w-full bg-blue-500 hover:bg-blue-600 text-white 
-                                       font-semibold py-2 px-4 rounded-lg transition-colors
-                                       disabled:bg-gray-300 disabled:cursor-not-allowed">
-                            <i class="fas fa-save mr-2"></i>
-                            プロフィールを保存
-                        </button>
                     </form>
                 </div>
 
@@ -371,14 +362,6 @@ class SettingsPage {
                         </div>
 
 
-                        <!-- 保存ボタン -->
-                        <button type="submit" 
-                                id="save-fitness-btn"
-                                class="w-full bg-orange-500 hover:bg-orange-600 text-white 
-                                       font-semibold py-2 px-4 rounded-lg transition-colors">
-                            <i class="fas fa-save mr-2"></i>
-                            体力レベルを保存
-                        </button>
                     </form>
                 </div>
 
@@ -418,14 +401,6 @@ class SettingsPage {
                             </select>
                         </div>
 
-                        <!-- 保存ボタン -->
-                        <button type="submit" 
-                                id="save-goals-btn"
-                                class="w-full bg-red-500 hover:bg-red-600 text-white 
-                                       font-semibold py-2 px-4 rounded-lg transition-colors">
-                            <i class="fas fa-save mr-2"></i>
-                            目標設定を保存
-                        </button>
                     </form>
                 </div>
 
@@ -489,14 +464,6 @@ class SettingsPage {
                             </div>
                         </div>
 
-                        <!-- 保存ボタン -->
-                        <button type="submit" 
-                                id="save-frequency-btn"
-                                class="w-full bg-purple-500 hover:bg-purple-600 text-white 
-                                       font-semibold py-2 px-4 rounded-lg transition-colors">
-                            <i class="fas fa-save mr-2"></i>
-                            頻度設定を保存
-                        </button>
                     </form>
                 </div>
 
@@ -576,86 +543,6 @@ class SettingsPage {
                     </form>
                 </div>
 
-                <!-- 表示設定 -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4">
-                        <i class="fas fa-cog text-green-500 mr-2"></i>
-                        表示設定
-                    </h2>
-                    
-                    <form id="display-form" class="space-y-4">
-                        <!-- テーマ設定 -->
-                        <div>
-                            <label for="theme-preference" 
-                                   class="block text-sm font-medium text-gray-700 mb-2">
-                                テーマ設定
-                            </label>
-                            <select id="theme-preference" 
-                                    name="theme_preference"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg 
-                                           focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                <option value="auto" ${profile.theme_preference === 'auto' ? 'selected' : ''}>自動</option>
-                                <option value="light" ${profile.theme_preference === 'light' ? 'selected' : ''}>ライト</option>
-                                <option value="dark" ${profile.theme_preference === 'dark' ? 'selected' : ''}>ダーク</option>
-                            </select>
-                        </div>
-
-                        <!-- フォントサイズ -->
-                        <div>
-                            <label for="font-size" 
-                                   class="block text-sm font-medium text-gray-700 mb-2">
-                                フォントサイズ
-                            </label>
-                            <select id="font-size" 
-                                    name="font_size"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg 
-                                           focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                <option value="sm" ${fontSize === 'sm' ? 'selected' : ''}>小</option>
-                                <option value="md" ${fontSize === 'md' ? 'selected' : ''}>中</option>
-                                <option value="lg" ${fontSize === 'lg' ? 'selected' : ''}>大</option>
-                            </select>
-                        </div>
-
-                        <!-- 単位設定 -->
-                        <div>
-                            <label for="weight-unit" 
-                                   class="block text-sm font-medium text-gray-700 mb-2">
-                                重量単位
-                            </label>
-                            <select id="weight-unit" 
-                                    name="weight_unit"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg 
-                                           focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                <option value="kg" ${profile.weight_unit === 'kg' ? 'selected' : ''}>キログラム (kg)</option>
-                                <option value="lbs" ${profile.weight_unit === 'lbs' ? 'selected' : ''}>ポンド (lbs)</option>
-                            </select>
-                        </div>
-
-                        <!-- 言語設定 -->
-                        <div>
-                            <label for="language" 
-                                   class="block text-sm font-medium text-gray-700 mb-2">
-                                言語
-                            </label>
-                            <select id="language" 
-                                    name="preferred_language"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg 
-                                           focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                <option value="ja" selected>日本語</option>
-                                <option value="en" disabled>English (準備中)</option>
-                            </select>
-                        </div>
-
-                        <!-- 保存ボタン -->
-                        <button type="submit" 
-                                id="save-display-btn"
-                                class="w-full bg-green-500 hover:bg-green-600 text-white 
-                                       font-semibold py-2 px-4 rounded-lg transition-colors">
-                            <i class="fas fa-save mr-2"></i>
-                            表示設定を保存
-                        </button>
-                    </form>
-                </div>
 
                 <!-- データ管理 -->
                 <div class="bg-white rounded-lg shadow-md p-6">
@@ -736,11 +623,6 @@ class SettingsPage {
             recoveryForm.addEventListener('submit', (e) => this.handleRecoverySave(e));
         }
 
-        // 表示設定フォーム
-        const displayForm = safeGetElement('#display-form');
-        if (displayForm) {
-            displayForm.addEventListener('submit', (e) => this.handleDisplaySave(e));
-        }
 
         // ストレスレベルスライダー
         const stressSlider = safeGetElement('#stress-level');
@@ -953,46 +835,6 @@ class SettingsPage {
         this.isLoading = false;
     }
 
-    /**
-     * 表示設定保存処理
-     * @param {Event} e - イベントオブジェクト
-     */
-    async handleDisplaySave(e) {
-        e.preventDefault();
-
-        if (this.isLoading) {return;}
-        this.isLoading = true;
-
-        const formData = new FormData(e.target);
-        // フォントサイズのマッピング（アプリの値 → データベースの値）
-        const fontSizeMapping = {
-            'sm': 'sm',
-            'md': 'md', 
-            'lg': 'lg'
-        };
-        
-        const displaySettings = {
-            theme_preference: formData.get('theme_preference'),
-            font_size: fontSizeMapping[formData.get('font_size')] || 'md',
-            preferred_language: formData.get('preferred_language')
-        };
-
-        const success = await safeAsync(
-            async () => {
-                await this.saveProfile(displaySettings);
-                this.applyDisplaySettings(displaySettings);
-                return true;
-            },
-            '表示設定の保存',
-            false
-        );
-
-        if (success) {
-            showNotification('表示設定を保存しました', 'success');
-        }
-
-        this.isLoading = false;
-    }
 
     /**
      * プロフィールを保存
@@ -1110,18 +952,6 @@ class SettingsPage {
         }
     }
 
-    /**
-     * 表示設定を適用
-     * @param {Object} settings - 表示設定
-     */
-    applyDisplaySettings(settings) {
-        // フォントサイズを適用
-        if (settings.font_size) {
-            document.documentElement.className =
-                document.documentElement.className.replace(/font-size-\w+/g, '');
-            document.documentElement.classList.add(`font-size-${settings.font_size}`);
-        }
-    }
 
     /**
      * データをエクスポート

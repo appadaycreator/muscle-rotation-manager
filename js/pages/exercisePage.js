@@ -12,6 +12,7 @@ import { handleError } from '../utils/errorHandler.js';
 class ExercisePage {
     constructor() {
         this.currentExercises = [];
+        this.totalExercises = 0;
         this.currentFilters = {};
         this.selectedExercise = null;
         this.isLoading = false;
@@ -187,6 +188,8 @@ class ExercisePage {
             // 器具フィルターを設定
             await this.setupEquipmentFilter();
 
+            // 総件数を取得
+            await this.loadTotalExerciseCount();
 
             // 初期エクササイズを読み込み
             await this.loadExercises();
@@ -254,6 +257,20 @@ class ExercisePage {
     }
 
     /**
+     * 総エクササイズ件数を取得
+     */
+    async loadTotalExerciseCount() {
+        try {
+            // フィルターなしで全エクササイズを取得して件数をカウント
+            const allExercises = await exerciseService.searchExercises('', {});
+            this.totalExercises = allExercises.length;
+        } catch (error) {
+            console.warn('Failed to load total exercise count:', error);
+            this.totalExercises = 0;
+        }
+    }
+
+    /**
      * 器具の表示名を取得
      * @param {string} equipment - 器具名
      * @returns {string} 表示名
@@ -280,10 +297,11 @@ class ExercisePage {
 
         try {
             const searchTerm = document.getElementById('exercise-search')?.value || '';
-        const filters = this.getCurrentFilters();
+            const filters = this.getCurrentFilters();
 
-        this.currentExercises = await exerciseService.searchExercises(searchTerm, filters);
+            this.currentExercises = await exerciseService.searchExercises(searchTerm, filters);
             this.renderExercises();
+            this.updateExerciseCount();
 
         } catch (error) {
             handleError(error, {
@@ -345,6 +363,7 @@ class ExercisePage {
             const filters = this.getCurrentFilters();
             this.currentExercises = await exerciseService.searchExercises(searchTerm, filters);
             this.renderExercises();
+            this.updateExerciseCount();
 
         } catch (error) {
             handleError(error, {
@@ -361,6 +380,55 @@ class ExercisePage {
      */
     async applyFilters() {
         await this.loadExercises();
+    }
+
+    /**
+     * エクササイズ件数を更新
+     */
+    updateExerciseCount() {
+        const currentCountElement = document.getElementById('current-count');
+        const totalCountElement = document.getElementById('total-count');
+        
+        if (currentCountElement && totalCountElement) {
+            const currentCount = this.currentExercises.length;
+            const totalCount = this.totalExercises || currentCount;
+            
+            currentCountElement.textContent = currentCount;
+            totalCountElement.textContent = totalCount;
+            
+            // フィルターが適用されている場合の表示を更新
+            const countElement = document.getElementById('exercise-count');
+            if (countElement) {
+                if (this.hasActiveFilters()) {
+                    countElement.innerHTML = `
+                        <span id="current-count">${currentCount}</span>件中 <span id="total-count">${totalCount}</span>件を表示
+                        <span class="text-blue-600 ml-2">（フィルター適用中）</span>
+                    `;
+                } else {
+                    countElement.innerHTML = `
+                        <span id="current-count">${currentCount}</span>件中 <span id="total-count">${totalCount}</span>件を表示
+                    `;
+                }
+            }
+        }
+    }
+
+    /**
+     * アクティブなフィルターがあるかチェック
+     * @returns {boolean} フィルターが適用されているかどうか
+     */
+    hasActiveFilters() {
+        const searchTerm = document.getElementById('exercise-search')?.value || '';
+        const muscleGroup = document.getElementById('muscle-group-filter')?.value;
+        const equipment = document.getElementById('equipment-filter')?.value;
+        const difficulty = document.getElementById('difficulty-filter')?.value;
+        const exerciseType = document.getElementById('exercise-type-filter')?.value;
+        const bodyweightOnly = document.getElementById('bodyweight-filter')?.checked;
+        const compoundOnly = document.getElementById('compound-filter')?.checked;
+        const beginnerOnly = document.getElementById('beginner-filter')?.checked;
+
+        return !!(searchTerm || muscleGroup || equipment || difficulty || exerciseType || 
+                 bodyweightOnly || compoundOnly || beginnerOnly);
     }
 
     /**

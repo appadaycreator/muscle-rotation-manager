@@ -576,33 +576,99 @@ export class SupabaseService {
     }
 
     /**
-   * ユーザーの統計情報を取得
-   */
+     * ユーザーの統計情報を取得
+     */
     async getUserStats() {
         if (!this.isAvailable()) {
             console.warn('Supabase is not available, cannot get user stats');
-            return null;
+            return {
+                totalWorkouts: 0,
+                currentStreak: 0,
+                weeklyProgress: 0,
+                lastWorkout: null
+            };
         }
 
         try {
             const { data: { user } } = await this.client.auth.getUser();
             if (!user) {
                 console.warn('No authenticated user found');
-                return null;
+                return {
+                    totalWorkouts: 0,
+                    currentStreak: 0,
+                    weeklyProgress: 0,
+                    lastWorkout: null
+                };
             }
 
-            // 基本的な統計情報を返す（実際の実装ではデータベースから取得）
+            // ワークアウト履歴を取得して統計を計算
+            const { data: workouts, error: workoutsError } = await this.client
+                .from('workout_sessions')
+                .select('*')
+                .order('workout_date', { ascending: false });
+
+            if (workoutsError) {
+                console.error('Error fetching workouts for stats:', workoutsError);
+                return {
+                    totalWorkouts: 0,
+                    currentStreak: 0,
+                    weeklyProgress: 0,
+                    lastWorkout: null
+                };
+            }
+
+            const totalWorkouts = workouts ? workouts.length : 0;
+            
+            // ストリーク計算
+            let currentStreak = 0;
+            if (workouts && workouts.length > 0) {
+                const today = new Date();
+                const sortedWorkouts = workouts.sort((a, b) => new Date(b.workout_date) - new Date(a.workout_date));
+                
+                for (let i = 0; i < sortedWorkouts.length; i++) {
+                    const workoutDate = new Date(sortedWorkouts[i].workout_date);
+                    const daysDiff = Math.floor((today - workoutDate) / (1000 * 60 * 60 * 24));
+                    
+                    if (i === 0 && daysDiff <= 1) {
+                        currentStreak = 1;
+                    } else if (i > 0) {
+                        const prevWorkoutDate = new Date(sortedWorkouts[i-1].workout_date);
+                        const daysBetween = Math.floor((prevWorkoutDate - workoutDate) / (1000 * 60 * 60 * 24));
+                        if (daysBetween <= 1) {
+                            currentStreak++;
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // 週間進捗計算
+            const oneWeekAgo = new Date();
+            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+            const weeklyWorkouts = workouts ? workouts.filter(w => 
+                new Date(w.workout_date) >= oneWeekAgo
+            ).length : 0;
+
+            const lastWorkout = workouts && workouts.length > 0 ? workouts[0] : null;
+
             return {
-                totalWorkouts: 0,
-                totalExercises: 0,
-                currentStreak: 0,
-                lastWorkout: null,
-                weeklyGoal: 3,
-                weeklyProgress: 0
+                totalWorkouts,
+                currentStreak,
+                weeklyProgress: weeklyWorkouts,
+                lastWorkout: lastWorkout ? {
+                    date: lastWorkout.workout_date,
+                    name: lastWorkout.session_name || 'ワークアウト'
+                } : null
             };
         } catch (error) {
             console.error('Failed to get user stats:', error);
-            return null;
+            return {
+                totalWorkouts: 0,
+                currentStreak: 0,
+                weeklyProgress: 0,
+                lastWorkout: null
+            };
         }
     }
 

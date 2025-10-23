@@ -37,6 +37,7 @@ class DashboardPage {
             } catch (error) {
                 console.error('Dashboard data loading failed:', error);
                 // エラーが発生してもダッシュボードを表示
+                showNotification('一部のデータの読み込みに失敗しました', 'warning');
             }
 
             // ダッシュボードコンテンツを表示
@@ -229,9 +230,17 @@ class DashboardPage {
     async loadStats() {
         try {
             const stats = await supabaseService.getUserStats();
+            console.log('Loaded stats:', stats);
             this.updateStatsDisplay(stats);
         } catch (error) {
             console.error('Error loading stats:', error);
+            // フォールバック: デフォルト値を表示
+            this.updateStatsDisplay({
+                totalWorkouts: 0,
+                currentStreak: 0,
+                weeklyProgress: 0,
+                lastWorkout: null
+            });
         }
     }
 
@@ -239,15 +248,37 @@ class DashboardPage {
      * 統計表示を更新
      */
     updateStatsDisplay(stats) {
-        const weeklyWorkouts = document.getElementById('weekly-workouts');
-        const totalTime = document.getElementById('total-time');
-        const streakDays = document.getElementById('streak-days');
-        const goalsAchieved = document.getElementById('goals-achieved');
+        if (!stats) return;
 
-        if (weeklyWorkouts) {weeklyWorkouts.textContent = stats.weeklyWorkouts || 0;}
-        if (totalTime) {totalTime.textContent = `${stats.totalMinutes || 0}分`;}
-        if (streakDays) {streakDays.textContent = `${stats.streakDays || 0}日`;}
-        if (goalsAchieved) {goalsAchieved.textContent = `${stats.goalsAchieved || 0}/5`;}
+        // 総ワークアウト数
+        const totalWorkoutsElement = document.getElementById('total-workouts');
+        if (totalWorkoutsElement) {
+            totalWorkoutsElement.textContent = stats.totalWorkouts || 0;
+        }
+
+        // 現在のストリーク
+        const currentStreakElement = document.getElementById('current-streak');
+        if (currentStreakElement) {
+            currentStreakElement.textContent = stats.currentStreak || 0;
+        }
+
+        // 週間進捗
+        const weeklyProgressElement = document.getElementById('weekly-progress');
+        if (weeklyProgressElement) {
+            weeklyProgressElement.textContent = `${stats.weeklyProgress || 0}/3`;
+        }
+
+        // 最後のワークアウト
+        const lastWorkoutElement = document.getElementById('last-workout');
+        if (lastWorkoutElement) {
+            if (stats.lastWorkout) {
+                const lastWorkoutDate = new Date(stats.lastWorkout.date);
+                const daysAgo = Math.floor((new Date() - lastWorkoutDate) / (1000 * 60 * 60 * 24));
+                lastWorkoutElement.textContent = `${daysAgo}日前`;
+            } else {
+                lastWorkoutElement.textContent = 'なし';
+            }
+        }
     }
 
     /**
