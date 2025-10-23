@@ -8,11 +8,28 @@ import { handleError } from '../utils/errorHandler.js';
 /**
  * MPA初期化クラス
  * 各ページで共通の初期化処理を実行
+ * 
+ * @class MPAInitializer
+ * @version 2.0.0
+ * @since 1.0.0
  */
 class MPAInitializer {
-    constructor() {
+    /**
+     * MPA初期化クラスのコンストラクタ
+     * @param {Object} options - 初期化オプション
+     * @param {boolean} options.autoInitialize - 自動初期化（デフォルト: true）
+     * @param {boolean} options.enablePerformanceMonitoring - パフォーマンス監視（デフォルト: true）
+     */
+    constructor(options = {}) {
         this.isInitialized = false;
         this.currentPage = this.getCurrentPageName();
+        this.autoInitialize = options.autoInitialize !== false;
+        this.enablePerformanceMonitoring = options.enablePerformanceMonitoring !== false;
+        this.initializationTime = null;
+        this.componentLoadTimes = new Map();
+        this.errorCount = 0;
+        this.maxRetries = 3;
+        this.retryDelay = 1000;
     }
 
     /**
@@ -37,22 +54,29 @@ class MPAInitializer {
 
     /**
      * MPA初期化を実行
+     * @param {Object} options - 初期化オプション
+     * @param {boolean} options.force - 強制初期化（デフォルト: false）
+     * @param {boolean} options.skipAuth - 認証チェックをスキップ（デフォルト: false）
+     * @returns {Promise<boolean>} 初期化成功かどうか
      */
-    async initialize() {
-        if (this.isInitialized) {
+    async initialize(options = {}) {
+        if (this.isInitialized && !options.force) {
             console.log('⚠️ MPA already initialized, skipping...');
-            return;
+            return true;
         }
 
         console.log(`🚀 Initializing MPA for page: ${this.currentPage}`);
         const startTime = performance.now();
+        this.errorCount = 0;
 
         try {
             // 1. 認証管理の初期化
-            await authManager.initialize();
+            await this.initializeAuthManager();
 
-            // 2. 認証状態の確認
-            await this.checkAuthentication();
+            // 2. 認証状態の確認（スキップオプションがない場合）
+            if (!options.skipAuth) {
+                await this.checkAuthentication();
+            }
 
             // 3. 共通コンポーネントの読み込み
             await this.loadCommonComponents();
@@ -66,22 +90,38 @@ class MPAInitializer {
             // 6. エラーハンドリングの設定
             this.setupErrorHandling();
 
-            const initTime = performance.now() - startTime;
-            console.log(`✅ MPA initialization complete (${initTime.toFixed(2)}ms)`);
+            // 7. パフォーマンス監視の設定
+            if (this.enablePerformanceMonitoring) {
+                this.setupPerformanceMonitoring();
+            }
 
+            this.initializationTime = performance.now() - startTime;
             this.isInitialized = true;
 
+            console.log(`✅ MPA initialization complete (${this.initializationTime.toFixed(2)}ms)`);
+
             // 初期化完了イベントを発火
-            window.dispatchEvent(new CustomEvent('mpaInitialized', {
-                detail: {
-                    page: this.currentPage,
-                    initTime
-                }
-            }));
+            this.dispatchEvent('mpaInitialized', {
+                page: this.currentPage,
+                initTime: this.initializationTime,
+                componentLoadTimes: Object.fromEntries(this.componentLoadTimes)
+            });
+
+            return true;
 
         } catch (error) {
-            console.error('❌ MPA initialization failed:', error);
+            this.errorCount++;
+            console.error(`❌ MPA initialization failed (attempt ${this.errorCount}):`, error);
+            
+            // リトライロジック
+            if (this.errorCount < this.maxRetries) {
+                console.log(`🔄 Retrying MPA initialization in ${this.retryDelay}ms...`);
+                await this.delay(this.retryDelay);
+                return await this.initialize({ ...options, force: true });
+            }
+            
             this.handleInitializationError(error);
+            return false;
         }
     }
 
@@ -452,6 +492,178 @@ class MPAInitializer {
      */
     getCurrentPage() {
         return this.currentPage;
+    }
+
+    /**
+     * 認証管理の初期化
+     * @returns {Promise<void>}
+     */
+    async initializeAuthManager() {
+        try {
+            console.log('🔐 Initializing auth manager...');
+            await authManager.initialize();
+            console.log('✅ Auth manager initialized');
+        } catch (error) {
+            console.error('❌ Auth manager initialization failed:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * パフォーマンス監視の設定
+     */
+    setupPerformanceMonitoring() {
+        console.log('📊 Setting up performance monitoring...');
+        
+        // ページ読み込み時間の監視
+        window.addEventListener('load', () => {
+            const loadTime = performance.now();
+            console.log(`📊 Page load time: ${loadTime.toFixed(2)}ms`);
+            
+            this.dispatchEvent('performanceMetric', {
+                metric: 'pageLoadTime',
+                value: loadTime,
+                timestamp: new Date().toISOString()
+            });
+        });
+
+        // メモリ使用量の監視（開発モードのみ）
+        if (window.DEV_MODE && performance.memory) {
+            setInterval(() => {
+                const memory = performance.memory;
+                const memoryInfo = {
+                    used: Math.round(memory.usedJSHeapSize / 1024 / 1024),
+                    total: Math.round(memory.totalJSHeapSize / 1024 / 1024),
+                    limit: Math.round(memory.jsHeapSizeLimit / 1024 / 1024)
+                };
+                
+                console.log('📊 Memory usage:', memoryInfo);
+                
+                this.dispatchEvent('performanceMetric', {
+                    metric: 'memoryUsage',
+                    value: memoryInfo,
+                    timestamp: new Date().toISOString()
+                });
+            }, 30000); // 30秒ごと
+        }
+
+        console.log('✅ Performance monitoring setup complete');
+    }
+
+    /**
+     * カスタムイベントを発火
+     * @param {string} eventName - イベント名
+     * @param {Object} detail - イベント詳細
+     */
+    dispatchEvent(eventName, detail = {}) {
+        const event = new CustomEvent(eventName, {
+            detail: {
+                page: this.currentPage,
+                timestamp: new Date().toISOString(),
+                ...detail
+            }
+        });
+        window.dispatchEvent(event);
+    }
+
+    /**
+     * 遅延実行
+     * @param {number} ms - 遅延時間（ミリ秒）
+     * @returns {Promise<void>}
+     */
+    delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    /**
+     * MPAの健全性チェック
+     * @returns {Object} 健全性チェック結果
+     */
+    healthCheck() {
+        const issues = [];
+        
+        if (this.errorCount > 3) {
+            issues.push('High error count');
+        }
+        
+        if (this.initializationTime && this.initializationTime > 10000) {
+            issues.push('Slow initialization');
+        }
+        
+        if (this.componentLoadTimes.size === 0) {
+            issues.push('No components loaded');
+        }
+
+        return {
+            isHealthy: issues.length === 0,
+            issues,
+            score: Math.max(0, 100 - (issues.length * 25)),
+            metrics: {
+                errorCount: this.errorCount,
+                initializationTime: this.initializationTime,
+                componentCount: this.componentLoadTimes.size
+            }
+        };
+    }
+
+    /**
+     * MPAの最適化を実行
+     * @returns {Promise<void>}
+     */
+    async optimize() {
+        console.log('🔧 Optimizing MPA...');
+        
+        // メモリ使用量の最適化
+        if (window.gc) {
+            window.gc();
+        }
+        
+        // 不要なイベントリスナーの削除
+        this.cleanup();
+        
+        console.log('✅ MPA optimization complete');
+    }
+
+    /**
+     * クリーンアップ処理
+     */
+    cleanup() {
+        console.log('🧹 Cleaning up MPA...');
+        
+        // イベントリスナーの削除
+        this.removeAllEventListeners();
+        
+        // コンポーネント読み込み時間のクリア
+        this.componentLoadTimes.clear();
+        
+        console.log('✅ MPA cleanup complete');
+    }
+
+    /**
+     * 全イベントリスナーを削除
+     */
+    removeAllEventListeners() {
+        // カスタムイベントリスナーの削除
+        const events = ['online', 'offline', 'error', 'unhandledrejection'];
+        events.forEach(event => {
+            window.removeEventListener(event, this[`handle${event.charAt(0).toUpperCase() + event.slice(1)}`]);
+        });
+    }
+
+    /**
+     * MPAの状態を取得
+     * @returns {Object} MPAの状態
+     */
+    getState() {
+        return {
+            isInitialized: this.isInitialized,
+            currentPage: this.currentPage,
+            initializationTime: this.initializationTime,
+            errorCount: this.errorCount,
+            componentLoadTimes: Object.fromEntries(this.componentLoadTimes),
+            autoInitialize: this.autoInitialize,
+            enablePerformanceMonitoring: this.enablePerformanceMonitoring
+        };
     }
 }
 

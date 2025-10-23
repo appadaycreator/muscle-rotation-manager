@@ -1,49 +1,239 @@
 // js/services/SupabaseService.js - Supabase統合サービス
 
 import { SUPABASE_CONFIG } from '../utils/constants.js';
+import { handleError } from '../utils/errorHandler.js';
 
 /**
  * Supabase統合サービス
  * データベース操作と認証を管理
+ * 
+ * @class SupabaseService
+ * @version 2.0.0
+ * @since 1.0.0
  */
 export class SupabaseService {
-    constructor() {
+    /**
+     * Supabaseサービスのコンストラクタ
+     * @param {Object} options - 初期化オプション
+     * @param {boolean} options.autoInitialize - 自動初期化（デフォルト: true）
+     * @param {boolean} options.enableRetry - リトライ機能（デフォルト: true）
+     * @param {number} options.maxRetries - 最大リトライ回数（デフォルト: 3）
+     */
+    constructor(options = {}) {
         this.client = null;
         this.isConnected = false;
-        this.initialize();
-    }
-
-    /**
-   * Supabaseクライアントを初期化
-   */
-    initialize() {
-        try {
-            if (!SUPABASE_CONFIG.url || !SUPABASE_CONFIG.key) {
-                console.warn('Supabase configuration not found');
-                return;
-            }
-
-            // CDNから読み込まれたSupabaseライブラリを使用
-            if (!window.supabase || !window.supabase.createClient) {
-                console.error('Supabase library not loaded from CDN');
-                return;
-            }
-
-            const { createClient } = window.supabase;
-            this.client = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
-            this.isConnected = true;
-            console.log('✅ Supabase client initialized');
-        } catch (error) {
-            console.error('❌ Failed to initialize Supabase client:', error);
-            this.isConnected = false;
+        this.autoInitialize = options.autoInitialize !== false;
+        this.enableRetry = options.enableRetry !== false;
+        this.maxRetries = options.maxRetries || 3;
+        this.retryDelay = 1000; // 1秒
+        this.connectionAttempts = 0;
+        this.lastConnectionAttempt = null;
+        this.healthCheckInterval = null;
+        this.performanceMetrics = {
+            totalRequests: 0,
+            successfulRequests: 0,
+            failedRequests: 0,
+            averageResponseTime: 0
+        };
+        
+        if (this.autoInitialize) {
+            this.initialize();
         }
     }
 
     /**
-   * Supabaseが利用可能かチェック
-   */
+     * Supabaseクライアントを初期化
+     * @param {Object} options - 初期化オプション
+     * @param {boolean} options.force - 強制初期化（デフォルト: false）
+     * @returns {Promise<boolean>} 初期化成功かどうか
+     */
+    async initialize(options = {}) {
+        if (this.isConnected && !options.force) {
+            console.log('⚠️ Supabase already initialized');
+            return true;
+        }
+
+        this.connectionAttempts++;
+        this.lastConnectionAttempt = new Date();
+
+        try {
+            console.log(`🔄 Initializing Supabase client (attempt ${this.connectionAttempts})...`);
+
+            if (!SUPABASE_CONFIG.url || !SUPABASE_CONFIG.key) {
+                throw new Error('Supabase configuration not found');
+            }
+
+            // CDNから読み込まれたSupabaseライブラリを使用
+            if (!window.supabase || !window.supabase.createClient) {
+                throw new Error('Supabase library not loaded from CDN');
+            }
+
+            const { createClient } = window.supabase;
+            this.client = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
+            
+            // 接続テスト
+            await this.testConnection();
+            
+            this.isConnected = true;
+            console.log('✅ Supabase client initialized successfully');
+
+            // ヘルスチェックの開始
+            this.startHealthCheck();
+
+            return true;
+
+        } catch (error) {
+            console.error(`❌ Failed to initialize Supabase client (attempt ${this.connectionAttempts}):`, error);
+            this.isConnected = false;
+            
+            // リトライロジック
+            if (this.enableRetry && this.connectionAttempts < this.maxRetries) {
+                console.log(`🔄 Retrying Supabase initialization in ${this.retryDelay}ms...`);
+                await this.delay(this.retryDelay);
+                return await this.initialize({ ...options, force: true });
+            }
+            
+            handleError(error, {
+                context: 'SupabaseService.initialize',
+                showNotification: true,
+                severity: 'error'
+            });
+            
+            return false;
+        }
+    }
+
+    /**
+     * Supabaseが利用可能かチェック
+     * @returns {boolean} 利用可能かどうか
+     */
     isAvailable() {
         return this.isConnected && this.client !== null;
+    }
+
+    /**
+     * 接続テストを実行
+     * @returns {Promise<boolean>} 接続成功かどうか
+     */
+    async testConnection() {
+        try {
+            const { data, error } = await this.client
+                .from('users')
+                .select('count')
+                .limit(1);
+            
+            if (error) {
+                throw new Error(`Connection test failed: ${error.message}`);
+            }
+            
+            console.log('✅ Supabase connection test successful');
+            return true;
+        } catch (error) {
+            console.error('❌ Supabase connection test failed:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * ヘルスチェックを開始
+     */
+    startHealthCheck() {
+        if (this.healthCheckInterval) {
+            clearInterval(this.healthCheckInterval);
+        }
+
+        this.healthCheckInterval = setInterval(async () => {
+            try {
+                await this.testConnection();
+            } catch (error) {
+                console.warn('⚠️ Supabase health check failed:', error);
+                this.isConnected = false;
+            }
+        }, 60000); // 1分ごと
+    }
+
+    /**
+     * ヘルスチェックを停止
+     */
+    stopHealthCheck() {
+        if (this.healthCheckInterval) {
+            clearInterval(this.healthCheckInterval);
+            this.healthCheckInterval = null;
+        }
+    }
+
+    /**
+     * 遅延実行
+     * @param {number} ms - 遅延時間（ミリ秒）
+     * @returns {Promise<void>}
+     */
+    delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    /**
+     * パフォーマンスメトリクスを更新
+     * @param {number} responseTime - レスポンス時間
+     * @param {boolean} success - 成功かどうか
+     */
+    updatePerformanceMetrics(responseTime, success) {
+        this.performanceMetrics.totalRequests++;
+        
+        if (success) {
+            this.performanceMetrics.successfulRequests++;
+        } else {
+            this.performanceMetrics.failedRequests++;
+        }
+        
+        // 平均レスポンス時間を更新
+        const total = this.performanceMetrics.totalRequests;
+        const current = this.performanceMetrics.averageResponseTime;
+        this.performanceMetrics.averageResponseTime = 
+            (current * (total - 1) + responseTime) / total;
+    }
+
+    /**
+     * パフォーマンスメトリクスを取得
+     * @returns {Object} パフォーマンスメトリクス
+     */
+    getPerformanceMetrics() {
+        return {
+            ...this.performanceMetrics,
+            successRate: this.performanceMetrics.totalRequests > 0 
+                ? (this.performanceMetrics.successfulRequests / this.performanceMetrics.totalRequests) * 100 
+                : 0
+        };
+    }
+
+    /**
+     * サービスの健全性チェック
+     * @returns {Object} 健全性チェック結果
+     */
+    healthCheck() {
+        const issues = [];
+        
+        if (!this.isConnected) {
+            issues.push('Not connected');
+        }
+        
+        if (this.connectionAttempts > this.maxRetries) {
+            issues.push('Too many connection attempts');
+        }
+        
+        if (this.performanceMetrics.failedRequests > this.performanceMetrics.successfulRequests) {
+            issues.push('High failure rate');
+        }
+
+        return {
+            isHealthy: issues.length === 0,
+            issues,
+            score: Math.max(0, 100 - (issues.length * 25)),
+            metrics: {
+                isConnected: this.isConnected,
+                connectionAttempts: this.connectionAttempts,
+                performance: this.getPerformanceMetrics()
+            }
+        };
     }
 
     /**

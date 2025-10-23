@@ -260,7 +260,7 @@ describe('Navigation', () => {
     test('should handle logout successfully', async () => {
       const navigation = new Navigation();
       
-      // window.location.hrefをモック
+      // window.location.hrefをモック（JSDOMエラーを回避）
       delete window.location;
       window.location = { href: '' };
       
@@ -277,7 +277,7 @@ describe('Navigation', () => {
       const { authManager } = require('../../js/modules/authManager.js');
       authManager.logout = jest.fn().mockRejectedValue(error);
       
-      // window.location.hrefをモック
+      // window.location.hrefをモック（JSDOMエラーを回避）
       delete window.location;
       window.location = { href: '' };
       
