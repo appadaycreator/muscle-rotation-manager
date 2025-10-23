@@ -165,17 +165,58 @@ export function safeSetText(target, text, context = document) {
 }
 
 /**
- * 安全にDOMエレメントのHTMLを設定
+ * HTMLエスケープ処理
+ * @param {string} str - エスケープする文字列
+ * @returns {string} エスケープされた文字列
+ */
+export function escapeHtml(str) {
+    if (typeof str !== 'string') {
+        return String(str);
+    }
+
+    const escapeMap = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#x27;',
+        '/': '&#x2F;',
+        '`': '&#x60;',
+        '=': '&#x3D;'
+    };
+
+    return str.replace(/[&<>"'`=/]/g, (match) => escapeMap[match]);
+}
+
+/**
+ * 安全にDOMエレメントのHTMLを設定（XSS対策付き）
  * @param {string|Element} target - エレメントIDまたはエレメント
  * @param {string} html - 設定するHTML
  * @param {Element|Document} context - 検索コンテキスト
+ * @param {boolean} escapeContent - HTMLエスケープするかどうか（デフォルト: false）
  */
-export function safeSetHTML(target, html, context = document) {
+export function safeSetHTML(target, html, context = document, escapeContent = false) {
     const element = typeof target === 'string'
         ? safeGetElement(target, context)
         : target;
     if (element) {
-        element.innerHTML = html;
+        element.innerHTML = escapeContent ? escapeHtml(html) : html;
+    }
+}
+
+/**
+ * 安全にテキストコンテンツを設定（XSS対策）
+ * @param {string|Element} target - エレメントIDまたはエレメント
+ * @param {string} content - 設定するコンテンツ
+ * @param {Element|Document} context - 検索コンテキスト
+ */
+export function safeSetContent(target, content, context = document) {
+    const element = typeof target === 'string'
+        ? safeGetElement(target, context)
+        : target;
+    if (element) {
+        // textContentを使用してXSSを防ぐ
+        element.textContent = content;
     }
 }
 

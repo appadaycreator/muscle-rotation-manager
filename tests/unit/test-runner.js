@@ -205,6 +205,16 @@ class TestRunner {
                 if (actual > expected) {
                     throw new Error(`期待値: ${expected}以下, 実際の値: ${actual}`);
                 }
+            },
+            toBeDefined: () => {
+                if (actual === undefined) {
+                    throw new Error(`期待値: 定義されている, 実際の値: undefined`);
+                }
+            },
+            toBeUndefined: () => {
+                if (actual !== undefined) {
+                    throw new Error(`期待値: undefined, 実際の値: ${actual}`);
+                }
             }
         };
     }
@@ -418,6 +428,9 @@ if (typeof module !== 'undefined' && require.main === module) {
     // ユニットテストを読み込んで実行
     try {
         require('./muscle-groups.test.js');
+        require('./validation.test.js');
+        require('./page-modules.test.js');
+        require('./workout-save.test.js');
         testRunner.run().then(() => {
             process.exit(testRunner.results.failed > 0 ? 1 : 0);
         });

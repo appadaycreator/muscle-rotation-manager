@@ -6,6 +6,7 @@ import {
     safeAsync,
     safeGetElement
 } from '../utils/helpers.js';
+import { globalFormValidator } from '../utils/validation.js';
 
 class SettingsPage {
     constructor() {
@@ -298,9 +299,20 @@ class SettingsPage {
             email: formData.get('email')
         };
 
+        // バリデーション実行
+        const sanitizedData = globalFormValidator.validateProfileForm(profileData);
+
+        if (!globalFormValidator.isValid()) {
+            const errors = globalFormValidator.getAllErrors();
+            const firstError = Object.values(errors).flat()[0];
+            showNotification(firstError, 'error');
+            this.isLoading = false;
+            return;
+        }
+
         const success = await safeAsync(
             async () => {
-                await this.saveProfile(profileData);
+                await this.saveProfile(sanitizedData);
                 return true;
             },
             'プロフィールの保存',

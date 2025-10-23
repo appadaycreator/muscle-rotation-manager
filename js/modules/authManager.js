@@ -3,6 +3,7 @@
 import { supabaseService } from '../services/supabaseService.js';
 import { showNotification } from '../utils/helpers.js';
 import { pageManager } from './pageManager.js';
+import { globalFormValidator, globalRealtimeValidator } from '../utils/validation.js';
 
 class AuthManager {
     constructor() {
@@ -172,6 +173,9 @@ class AuthManager {
             if (authModalTitle) {authModalTitle.textContent = '新規登録';}
         }
 
+        // バリデーション設定
+        this.setupFormValidation(authForm, signupForm);
+
         // イベントリスナー
         if (authModalClose) {
             authModalClose.addEventListener('click', this.hideAuthModal);
@@ -205,6 +209,23 @@ class AuthManager {
     }
 
     /**
+     * フォームバリデーションを設定
+     * @param {Element} authForm - ログインフォーム
+     * @param {Element} signupForm - 新規登録フォーム
+     */
+    setupFormValidation(authForm, signupForm) {
+        // ログインフォームのバリデーション設定
+        if (authForm) {
+            globalRealtimeValidator.setupAuthFormValidation(authForm);
+        }
+
+        // 新規登録フォームのバリデーション設定
+        if (signupForm) {
+            globalRealtimeValidator.setupAuthFormValidation(signupForm);
+        }
+    }
+
+    /**
      * 認証モーダルを非表示
      */
     hideAuthModal() {
@@ -225,14 +246,19 @@ class AuthManager {
         const password = document.getElementById('auth-password')?.value;
         const errorDiv = document.getElementById('auth-error');
 
-        if (!email || !password) {
-            this.showAuthError(errorDiv, 'メールアドレスとパスワードを入力してください');
+        // バリデーション実行
+        const sanitizedData = globalFormValidator.validateAuthForm({ email, password });
+
+        if (!globalFormValidator.isValid()) {
+            const errors = globalFormValidator.getAllErrors();
+            const firstError = Object.values(errors).flat()[0];
+            this.showAuthError(errorDiv, firstError);
             return;
         }
 
         try {
-            console.log('Attempting login with email:', email);
-            await supabaseService.signIn(email, password);
+            console.log('Attempting login with email:', sanitizedData.email);
+            await supabaseService.signIn(sanitizedData.email, sanitizedData.password);
 
             // エラーをクリア
             if (errorDiv) {
@@ -260,15 +286,27 @@ class AuthManager {
 
         const email = document.getElementById('signup-email')?.value;
         const password = document.getElementById('signup-password')?.value;
+        const privacyAgreement = document.getElementById('privacy-agreement')?.checked;
         const errorDiv = document.getElementById('signup-error');
 
-        if (!email || !password) {
-            this.showAuthError(errorDiv, 'メールアドレスとパスワードを入力してください');
+        // プライバシーポリシー同意チェック
+        if (!privacyAgreement) {
+            this.showAuthError(errorDiv, 'プライバシーポリシーへの同意が必要です');
+            return;
+        }
+
+        // バリデーション実行
+        const sanitizedData = globalFormValidator.validateAuthForm({ email, password });
+
+        if (!globalFormValidator.isValid()) {
+            const errors = globalFormValidator.getAllErrors();
+            const firstError = Object.values(errors).flat()[0];
+            this.showAuthError(errorDiv, firstError);
             return;
         }
 
         try {
-            await supabaseService.signUp(email, password);
+            await supabaseService.signUp(sanitizedData.email, sanitizedData.password);
 
             this.hideAuthModal();
             showNotification('登録が完了しました。メールを確認してください。', 'success');

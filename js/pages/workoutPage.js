@@ -6,9 +6,11 @@ import {
     safeAsync,
     safeGetElement,
     safeGetElements,
-    debounce
+    debounce,
+    escapeHtml
 } from '../utils/helpers.js';
 import { MUSCLE_GROUPS } from '../utils/constants.js';
+import { globalFormValidator, globalRealtimeValidator } from '../utils/validation.js';
 
 class WorkoutPage {
     constructor() {
@@ -377,8 +379,283 @@ class WorkoutPage {
      * エクササイズ追加モーダルを表示
      */
     showAddExerciseModal() {
-        // 実装予定: エクササイズ追加のモーダル
-        showNotification('エクササイズ追加機能は実装予定です', 'info');
+        const modalHtml = `
+            <div id="add-exercise-modal" 
+                 class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">
+                        <i class="fas fa-plus-circle text-green-500 mr-2"></i>
+                        エクササイズを追加
+                    </h3>
+                    <form id="add-exercise-form" class="space-y-4">
+                        <div>
+                            <label for="exercise-name" 
+                                   class="block text-gray-700 font-medium mb-1">
+                                エクササイズ名
+                            </label>
+                            <input id="exercise-name" name="exerciseName" type="text" required 
+                                   class="w-full border border-gray-300 rounded px-3 py-2 
+                                          focus:border-blue-500 focus:outline-none"
+                                   placeholder="例: ベンチプレス">
+                            <div id="exercise-name-error" 
+                                 class="text-red-600 text-sm mt-1 hidden"></div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4">
+                            <div>
+                                <label for="exercise-weight" 
+                                       class="block text-gray-700 font-medium mb-1">
+                                    重量 (kg)
+                                </label>
+                                <input id="exercise-weight" name="weight" type="number" 
+                                       min="0" max="1000" step="0.5" required
+                                       class="w-full border border-gray-300 rounded px-3 py-2 
+                                              focus:border-blue-500 focus:outline-none"
+                                       placeholder="80">
+                                <div id="exercise-weight-error" 
+                                     class="text-red-600 text-sm mt-1 hidden"></div>
+                            </div>
+                            <div>
+                                <label for="exercise-reps" 
+                                       class="block text-gray-700 font-medium mb-1">
+                                    回数
+                                </label>
+                                <input id="exercise-reps" name="reps" type="number" 
+                                       min="1" max="100" required
+                                       class="w-full border border-gray-300 rounded px-3 py-2 
+                                              focus:border-blue-500 focus:outline-none"
+                                       placeholder="10">
+                                <div id="exercise-reps-error" 
+                                     class="text-red-600 text-sm mt-1 hidden"></div>
+                            </div>
+                            <div>
+                                <label for="exercise-sets" 
+                                       class="block text-gray-700 font-medium mb-1">
+                                    セット数
+                                </label>
+                                <input id="exercise-sets" name="sets" type="number" 
+                                       min="1" max="20" required
+                                       class="w-full border border-gray-300 rounded px-3 py-2 
+                                              focus:border-blue-500 focus:outline-none"
+                                       placeholder="3">
+                                <div id="exercise-sets-error" 
+                                     class="text-red-600 text-sm mt-1 hidden"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="exercise-notes" 
+                                   class="block text-gray-700 font-medium mb-1">
+                                メモ（任意）
+                            </label>
+                            <textarea id="exercise-notes" name="notes" rows="3" 
+                                      maxlength="1000"
+                                      class="w-full border border-gray-300 rounded px-3 py-2 
+                                             focus:border-blue-500 focus:outline-none"
+                                      placeholder="フォームや感想など..."></textarea>
+                            <div id="exercise-notes-error" 
+                                 class="text-red-600 text-sm mt-1 hidden"></div>
+                        </div>
+                        <div id="exercise-form-error" class="text-red-600 text-sm hidden"></div>
+                        <div class="flex space-x-3">
+                            <button type="submit" 
+                                    class="flex-1 bg-green-500 hover:bg-green-600 
+                                           text-white py-2 px-4 rounded-lg transition-colors">
+                                <i class="fas fa-check mr-2"></i>追加
+                            </button>
+                            <button type="button" id="cancel-exercise" 
+                                    class="flex-1 bg-gray-500 hover:bg-gray-600 
+                                           text-white py-2 px-4 rounded-lg transition-colors">
+                                <i class="fas fa-times mr-2"></i>キャンセル
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+
+        // モーダルを追加
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        // イベントリスナーを設定
+        this.setupExerciseModalListeners();
+    }
+
+    /**
+     * エクササイズモーダルのイベントリスナーを設定
+     */
+    setupExerciseModalListeners() {
+        const modal = safeGetElement('#add-exercise-modal');
+        const form = safeGetElement('#add-exercise-form');
+        const cancelBtn = safeGetElement('#cancel-exercise');
+
+        if (!modal || !form) {
+            console.warn('Exercise modal elements not found');
+            return;
+        }
+
+        // バリデーション設定
+        globalRealtimeValidator.setupWorkoutFormValidation(form);
+
+        // フォーム送信
+        form.addEventListener('submit', (e) => this.handleAddExercise(e));
+
+        // キャンセルボタン
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => this.hideExerciseModal());
+        }
+
+        // モーダル外クリックで閉じる
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                this.hideExerciseModal();
+            }
+        });
+
+        // Escapeキーで閉じる
+        const escapeHandler = (e) => {
+            if (e.key === 'Escape') {
+                this.hideExerciseModal();
+                document.removeEventListener('keydown', escapeHandler);
+            }
+        };
+        document.addEventListener('keydown', escapeHandler);
+    }
+
+    /**
+     * エクササイズ追加処理
+     * @param {Event} e - イベントオブジェクト
+     */
+    async handleAddExercise(e) {
+        e.preventDefault();
+
+        const formData = {
+            exerciseName: safeGetElement('#exercise-name')?.value,
+            weight: safeGetElement('#exercise-weight')?.value,
+            reps: safeGetElement('#exercise-reps')?.value,
+            sets: safeGetElement('#exercise-sets')?.value,
+            notes: safeGetElement('#exercise-notes')?.value
+        };
+
+        // バリデーション実行
+        const sanitizedData = globalFormValidator.validateWorkoutForm(formData);
+
+        if (!globalFormValidator.isValid()) {
+            const errors = globalFormValidator.getAllErrors();
+            const firstError = Object.values(errors).flat()[0];
+            const errorDiv = safeGetElement('#exercise-form-error');
+            if (errorDiv) {
+                errorDiv.textContent = firstError;
+                errorDiv.classList.remove('hidden');
+            }
+            return;
+        }
+
+        // エクササイズを追加
+        const exercise = {
+            id: `exercise_${Date.now()}`,
+            name: sanitizedData.exerciseName,
+            weight: sanitizedData.weight,
+            reps: sanitizedData.reps,
+            sets: sanitizedData.sets,
+            notes: sanitizedData.notes,
+            timestamp: new Date()
+        };
+
+        this.exercises.push(exercise);
+        if (this.currentWorkout) {
+            this.currentWorkout.exercises.push(exercise);
+        }
+
+        // UIを更新
+        this.updateExercisesList();
+        this.hideExerciseModal();
+
+        showNotification(`${exercise.name}を追加しました`, 'success');
+    }
+
+    /**
+     * エクササイズリストの表示を更新
+     */
+    updateExercisesList() {
+        const container = safeGetElement('#exercises-list');
+        if (!container) {
+            console.warn('Exercises list container not found');
+            return;
+        }
+
+        if (this.exercises.length === 0) {
+            container.innerHTML = `
+                <div class="text-center text-gray-500 py-8">
+                    <i class="fas fa-dumbbell text-3xl mb-2"></i>
+                    <p>まだエクササイズが追加されていません</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = this.exercises.map(exercise => `
+            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <div class="flex items-center justify-between mb-2">
+                    <h4 class="font-semibold text-gray-800">${escapeHtml(exercise.name)}</h4>
+                    <button class="text-red-500 hover:text-red-700 transition-colors" 
+                            onclick="workoutPage.removeExercise('${escapeHtml(exercise.id)}')">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+                <div class="grid grid-cols-3 gap-4 text-sm text-gray-600 mb-2">
+                    <div>
+                        <span class="font-medium">重量:</span> 
+                        ${escapeHtml(exercise.weight.toString())}kg
+                    </div>
+                    <div>
+                        <span class="font-medium">回数:</span> 
+                        ${escapeHtml(exercise.reps.toString())}回
+                    </div>
+                    <div>
+                        <span class="font-medium">セット:</span> 
+                        ${escapeHtml(exercise.sets.toString())}セット
+                    </div>
+                </div>
+                ${exercise.notes ? `
+                    <div class="text-sm text-gray-600 bg-white p-2 rounded border">
+                        <i class="fas fa-sticky-note mr-1"></i>
+                        ${escapeHtml(exercise.notes)}
+                    </div>
+                ` : ''}
+            </div>
+        `).join('');
+    }
+
+    /**
+     * エクササイズを削除
+     * @param {string} exerciseId - エクササイズID
+     */
+    removeExercise(exerciseId) {
+        const index = this.exercises.findIndex(ex => ex.id === exerciseId);
+        if (index > -1) {
+            const exercise = this.exercises[index];
+            this.exercises.splice(index, 1);
+
+            if (this.currentWorkout) {
+                const workoutIndex = this.currentWorkout.exercises
+                    .findIndex(ex => ex.id === exerciseId);
+                if (workoutIndex > -1) {
+                    this.currentWorkout.exercises.splice(workoutIndex, 1);
+                }
+            }
+
+            this.updateExercisesList();
+            showNotification(`${exercise.name}を削除しました`, 'info');
+        }
+    }
+
+    /**
+     * エクササイズモーダルを非表示
+     */
+    hideExerciseModal() {
+        const modal = safeGetElement('#add-exercise-modal');
+        if (modal) {
+            modal.remove();
+        }
     }
 
     /**
