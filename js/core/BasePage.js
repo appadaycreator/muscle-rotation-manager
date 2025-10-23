@@ -99,10 +99,13 @@ export class BasePage {
      */
     async checkAuthentication() {
         try {
+            console.log(`🔐 Checking authentication for ${this.pageName} page (requiresAuth: ${this.requiresAuth})`);
+            
             const isAuthenticated = await authManager.isAuthenticated();
+            console.log(`🔐 Authentication result for ${this.pageName}:`, { isAuthenticated, requiresAuth: this.requiresAuth });
 
             if (!isAuthenticated && this.requiresAuth) {
-                console.log(`🔐 Authentication required for ${this.pageName} page`);
+                console.log(`🔐 Authentication required for ${this.pageName} page - redirecting to login`);
                 showNotification('ログインが必要です', 'warning');
 
                 // リダイレクト前にイベントを発火
@@ -115,6 +118,7 @@ export class BasePage {
                 return false;
             }
 
+            console.log(`🔐 Authentication check passed for ${this.pageName} page`);
             return isAuthenticated;
         } catch (error) {
             console.error('❌ Authentication check failed:', error);

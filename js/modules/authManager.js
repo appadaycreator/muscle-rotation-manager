@@ -99,11 +99,26 @@ class AuthManager {
      * 認証状態の変更を監視
      */
     setupAuthStateListener() {
+        if (!supabaseService.isAvailable()) {
+            console.log('Supabase is not available, cannot set up auth state listener');
+            return;
+        }
+
         supabaseService.onAuthStateChange(async (event, session) => {
-            console.log('Auth state change detected:', { event, session: !!session, user: !!session?.user });
+            console.log('Auth state change detected:', { 
+                event, 
+                session: !!session, 
+                user: !!session?.user,
+                userId: session?.user?.id,
+                userEmail: session?.user?.email
+            });
 
             if (event === 'SIGNED_IN' && session) {
                 showNotification('ログインしました', 'success');
+                // ログイン後にページをリロードして認証状態を反映
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
             } else if (event === 'SIGNED_OUT') {
                 showNotification('ログアウトしました', 'success');
             }
@@ -414,8 +429,16 @@ class AuthManager {
      */
     async isAuthenticated() {
         try {
+            // Supabaseが利用できない場合は認証失敗
+            if (!supabaseService.isAvailable()) {
+                console.log('Supabase not available, authentication failed');
+                return false;
+            }
+
             const { user } = await supabaseService.getAuthState();
-            return user !== null;
+            const isAuth = user !== null;
+            console.log('Authentication check result:', { isAuth, userId: user?.id });
+            return isAuth;
         } catch (error) {
             console.error('Authentication check failed:', error);
             return false;

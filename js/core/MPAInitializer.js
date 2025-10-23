@@ -73,7 +73,10 @@ class MPAInitializer {
             // 1. 認証管理の初期化
             await this.initializeAuthManager();
 
-            // 2. 認証状態の確認（スキップオプションがない場合）
+            // 2. Supabaseの初期化を待つ
+            await this.waitForSupabaseInitialization();
+
+            // 3. 認証状態の確認（スキップオプションがない場合）
             if (!options.skipAuth) {
                 await this.checkAuthentication();
             }
@@ -130,6 +133,12 @@ class MPAInitializer {
      */
     async checkAuthentication() {
         try {
+            // Supabaseが利用可能かチェック
+            if (!supabaseService.isAvailable()) {
+                console.log('🔐 Supabase not available, skipping authentication check');
+                return true; // Supabaseが利用できない場合は認証チェックをスキップ
+            }
+
             const isAuthenticated = await authManager.isAuthenticated();
             const currentUser = await authManager.getCurrentUser();
 
@@ -507,6 +516,30 @@ class MPAInitializer {
             console.error('❌ Auth manager initialization failed:', error);
             throw error;
         }
+    }
+
+    /**
+     * Supabaseの初期化完了を待つ
+     */
+    async waitForSupabaseInitialization() {
+        const maxWaitTime = 10000; // 10秒
+        const checkInterval = 100; // 100ms
+        let elapsedTime = 0;
+
+        console.log('⏳ Waiting for Supabase initialization...');
+
+        while (elapsedTime < maxWaitTime) {
+            if (supabaseService.isAvailable()) {
+                console.log('✅ Supabase initialization confirmed');
+                return true;
+            }
+
+            await new Promise(resolve => setTimeout(resolve, checkInterval));
+            elapsedTime += checkInterval;
+        }
+
+        console.warn('⚠️ Supabase initialization timeout - proceeding without Supabase');
+        return false;
     }
 
     /**

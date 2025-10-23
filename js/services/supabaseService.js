@@ -117,8 +117,9 @@ export class SupabaseService {
      */
     async testConnection() {
         try {
+            // 実際に存在するテーブルを使用して接続テスト
             const { data, error } = await this.client
-                .from('users')
+                .from('exercises')
                 .select('count')
                 .limit(1);
 
@@ -241,6 +242,7 @@ export class SupabaseService {
    */
     async getAuthState() {
         if (!this.isAvailable()) {
+            console.log('Supabase not available for auth state check');
             return { user: null, session: null };
         }
 
@@ -250,7 +252,16 @@ export class SupabaseService {
                 console.error('Auth state error:', error);
                 return { user: null, session: null };
             }
-            return { user: session?.user || null, session };
+            
+            const user = session?.user || null;
+            console.log('Auth state retrieved:', { 
+                hasSession: !!session, 
+                hasUser: !!user, 
+                userId: user?.id,
+                userEmail: user?.email 
+            });
+            
+            return { user, session };
         } catch (error) {
             console.error('Failed to get auth state:', error);
             return { user: null, session: null };

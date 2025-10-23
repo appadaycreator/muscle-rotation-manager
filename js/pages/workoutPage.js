@@ -21,9 +21,13 @@ export class WorkoutPage extends BasePage {
         this.selectedMuscles = [];
         this.selectedExercises = [];
         this.eventListenersSetup = false;
+        this.muscleGroupCache = new Map(); // 筋肉グループ名からUUIDへのキャッシュ
 
         console.log('WorkoutPage constructor called');
         console.log('Muscle groups initialized:', this.muscleGroups);
+        
+        // 筋肉グループのキャッシュを初期化
+        this.initializeMuscleGroupCache();
     }
 
     /**
@@ -412,6 +416,84 @@ export class WorkoutPage extends BasePage {
     }
 
     /**
+     * 筋肉グループのキャッシュを初期化
+     */
+    async initializeMuscleGroupCache() {
+        try {
+            if (!supabaseService.isAvailable()) {
+                console.log('Supabase not available, cannot initialize muscle group cache');
+                return;
+            }
+
+            const { data, error } = await supabaseService.client
+                .from('muscle_groups')
+                .select('id, name_ja');
+
+            if (error) {
+                console.error('Failed to load muscle groups:', error);
+                return;
+            }
+
+            if (data) {
+                data.forEach(muscle => {
+                    this.muscleGroupCache.set(muscle.name_ja, muscle.id);
+                });
+                console.log('Muscle group cache initialized:', this.muscleGroupCache);
+            }
+        } catch (error) {
+            console.error('Error initializing muscle group cache:', error);
+        }
+    }
+
+    /**
+     * 筋肉グループ名をUUIDに変換
+     */
+    async convertMuscleGroupsToUUIDs(muscleGroupNames) {
+        try {
+            if (!supabaseService.isAvailable()) {
+                console.log('Supabase not available, cannot convert muscle groups to UUIDs');
+                return [];
+            }
+
+            const muscleGroupUUIDs = [];
+            
+            for (const muscleName of muscleGroupNames) {
+                // キャッシュから確認
+                if (this.muscleGroupCache.has(muscleName)) {
+                    const uuid = this.muscleGroupCache.get(muscleName);
+                    muscleGroupUUIDs.push(uuid);
+                    console.log(`Using cached UUID for ${muscleName}: ${uuid}`);
+                    continue;
+                }
+
+                // データベースから取得
+                const { data, error } = await supabaseService.client
+                    .from('muscle_groups')
+                    .select('id')
+                    .eq('name_ja', muscleName)
+                    .single();
+
+                if (error) {
+                    console.error(`Failed to get UUID for muscle group ${muscleName}:`, error);
+                    continue;
+                }
+
+                if (data && data.id) {
+                    // キャッシュに保存
+                    this.muscleGroupCache.set(muscleName, data.id);
+                    muscleGroupUUIDs.push(data.id);
+                    console.log(`Converted ${muscleName} to UUID: ${data.id}`);
+                }
+            }
+
+            return muscleGroupUUIDs;
+        } catch (error) {
+            console.error('Error converting muscle groups to UUIDs:', error);
+            return [];
+        }
+    }
+
+    /**
      * ワークアウト履歴に保存
      */
     async saveWorkoutToHistory() {
@@ -429,9 +511,22 @@ export class WorkoutPage extends BasePage {
         const endTime = new Date();
         const duration = Math.floor((endTime - this.currentWorkout.startTime) / 60000);
 
+        // 筋肉グループ名をUUIDに変換
+        const muscleGroupUUIDs = await this.convertMuscleGroupsToUUIDs(this.currentWorkout.muscleGroups);
+        console.log('Converted muscle groups to UUIDs:', muscleGroupUUIDs);
+
+        // 現在のユーザーIDを取得
+        const currentUser = await authManager.getCurrentUser();
+        if (!currentUser) {
+            console.error('No authenticated user found');
+            showNotification('ログインが必要です', 'error');
+            return;
+        }
+
         const workoutData = {
+            user_id: currentUser.id,
             session_name: this.currentWorkout.sessionName,
-            muscle_groups_trained: this.currentWorkout.muscleGroups,
+            muscle_groups_trained: muscleGroupUUIDs,
             workout_date: this.currentWorkout.startTime.toISOString(),
             total_duration_minutes: duration,
             created_at: new Date().toISOString(),
