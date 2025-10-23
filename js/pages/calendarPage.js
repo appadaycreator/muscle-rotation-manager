@@ -28,9 +28,16 @@ class CalendarPage {
         console.log('Calendar page initialized');
 
         try {
-            await this.loadWorkoutData();
+            // まずカレンダーインターフェースを設定
             this.setupCalendarInterface();
+            
+            // データを読み込み
+            await this.loadWorkoutData();
+            
+            // イベントリスナーを設定
             this.setupEventListeners();
+            
+            // カレンダーをレンダリング
             this.renderCalendar();
         } catch (error) {
             console.error('Error initializing calendar page:', error);
@@ -88,7 +95,10 @@ class CalendarPage {
      */
     setupCalendarInterface() {
         const container = document.getElementById('calendar-container');
-        if (!container) {return;}
+        if (!container) {
+            console.error('Calendar container not found');
+            return;
+        }
 
         container.innerHTML = `
             <div class="space-y-6">
@@ -117,24 +127,26 @@ class CalendarPage {
                     </div>
 
                     <!-- カレンダーグリッド -->
-                    <div class="calendar-grid">
+                    <div class="calendar-wrapper">
                         <!-- 曜日ヘッダー -->
-                        <div class="grid grid-cols-7 gap-1 mb-2">
-                            <div class="text-center text-sm font-medium text-red-500 py-2">日</div>
-                            <div class="text-center text-sm font-medium text-gray-600 py-2">月</div>
-                            <div class="text-center text-sm font-medium text-gray-600 py-2">火</div>
-                            <div class="text-center text-sm font-medium text-gray-600 py-2">水</div>
-                            <div class="text-center text-sm font-medium text-gray-600 py-2">木</div>
-                            <div class="text-center text-sm font-medium text-gray-600 py-2">金</div>
-                            <div class="text-center text-sm font-medium text-blue-500 py-2">土</div>
+                        <div class="calendar-weekday-header">
+                            <div class="calendar-weekday sunday">日</div>
+                            <div class="calendar-weekday">月</div>
+                            <div class="calendar-weekday">火</div>
+                            <div class="calendar-weekday">水</div>
+                            <div class="calendar-weekday">木</div>
+                            <div class="calendar-weekday">金</div>
+                            <div class="calendar-weekday saturday">土</div>
                         </div>
                         
                         <!-- 日付グリッド -->
-                        <div id="calendar-dates" class="grid grid-cols-7 gap-1">
-                            <!-- ローディング表示 -->
-                            <div id="calendar-loading" class="col-span-7 text-center py-8 hidden">
-                                <i class="fas fa-spinner fa-spin text-2xl text-gray-400 mb-2"></i>
-                                <p class="text-gray-500">カレンダーを読み込み中...</p>
+                        <div class="calendar-grid">
+                            <div id="calendar-dates" class="calendar-dates-container">
+                                <!-- ローディング表示 -->
+                                <div id="calendar-loading" class="col-span-7 text-center py-8 hidden">
+                                    <i class="fas fa-spinner fa-spin text-2xl text-gray-400 mb-2"></i>
+                                    <p class="text-gray-500">カレンダーを読み込み中...</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -234,7 +246,10 @@ class CalendarPage {
         const datesContainer = safeGetElement('#calendar-dates');
         const loadingElement = safeGetElement('#calendar-loading');
 
-        if (!datesContainer) {return;}
+        if (!datesContainer) {
+            console.error('Calendar dates container not found');
+            return;
+        }
 
         // ローディング表示
         if (this.isLoading && loadingElement) {
@@ -288,7 +303,7 @@ class CalendarPage {
             }
         }
 
-        // 日付セルをレンダリング
+            // 日付セルをレンダリング
         datesContainer.innerHTML = dates.map(dateInfo => {
             // 実際のワークアウトドット
             const workoutDots = dateInfo.workouts.map(workout => {
@@ -296,7 +311,7 @@ class CalendarPage {
                     workout.muscle_groups : [workout.muscle_groups || 'chest'];
                 return muscles.map(muscle => {
                     const color = getMuscleColor(muscle);
-                    return `<div class="w-2 h-2 ${color} rounded-full shadow-sm" title="${muscle}"></div>`;
+                    return `<div class="workout-dot ${color}" title="${muscle}"></div>`;
                 }).join('');
             }).join('');
 
@@ -306,21 +321,17 @@ class CalendarPage {
                     workout.muscle_groups : [workout.muscle_groups || 'chest'];
                 return muscles.map(muscle => {
                     const color = getMuscleColor(muscle);
-                    return `<div class="w-2 h-2 ${color} rounded-full opacity-50 border border-white" title="予定: ${muscle}"></div>`;
+                    return `<div class="workout-dot ${color} opacity-50" title="予定: ${muscle}"></div>`;
                 }).join('');
             }).join('');
 
             // セルの背景色とスタイル
-            let cellClasses = 'calendar-date-cell h-20 md:h-24 p-1 border border-gray-200 cursor-pointer transition-all duration-200 hover:shadow-md';
+            let cellClasses = 'calendar-date-cell';
 
             if (!dateInfo.isCurrentMonth) {
-                cellClasses += ' bg-gray-50 text-gray-400';
+                cellClasses += ' other-month';
             } else if (dateInfo.isToday) {
-                cellClasses += ' bg-blue-50 border-blue-300 shadow-sm';
-            } else if (dateInfo.isFuture) {
-                cellClasses += ' bg-white hover:bg-green-50';
-            } else {
-                cellClasses += ' bg-white hover:bg-gray-50';
+                cellClasses += ' today';
             }
 
             // 日曜日と土曜日の色分け
@@ -335,10 +346,10 @@ class CalendarPage {
 
             return `
                 <div class="${cellClasses}" data-date="${dateInfo.dateStr}">
-                    <div class="text-sm ${dayTextColor} mb-1">
+                    <div class="date-number ${dayTextColor}">
                         ${dateInfo.day}
                     </div>
-                    <div class="flex flex-wrap gap-0.5 overflow-hidden">
+                    <div class="workout-dots">
                         ${workoutDots}
                         ${plannedDots}
                     </div>

@@ -418,18 +418,24 @@ class DashboardPage {
         try {
             const data = await supabaseService.getWorkouts(5);
 
+            // データが配列でない場合は空配列を返す
+            if (!Array.isArray(data)) {
+                console.warn('getWorkouts returned non-array data:', data);
+                return [];
+            }
+
             return data.map(workout => {
-                const exercises = parseExercises(workout.exercises);
-                const color = getWorkoutColor(workout.name);
+                const exercises = parseExercises(workout.exercises || workout.training_logs);
+                const color = getWorkoutColor(workout.name || workout.session_name);
 
                 return {
                     id: workout.id,
-                    name: workout.name,
+                    name: workout.name || workout.session_name,
                     exercises: Array.isArray(exercises) ? exercises.join(', ') : exercises,
-                    date: workout.date,
+                    date: workout.date || workout.workout_date,
                     color,
-                    duration: workout.duration || '0分',
-                    totalSets: workout.total_sets || 0,
+                    duration: workout.duration || workout.total_duration_minutes || '0分',
+                    totalSets: workout.total_sets || (workout.training_logs ? workout.training_logs.length : 0),
                     maxWeight: workout.max_weight || '0kg'
                 };
             });

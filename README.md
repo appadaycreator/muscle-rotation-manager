@@ -114,25 +114,81 @@ http://localhost:8000/lp.html
 
 ## セットアップ
 
-1. プロジェクトをクローン
+### 1. プロジェクトのクローン
 ```bash
 git clone https://github.com/appadaycreator/muscle-rotation-manager.git
 cd muscle-rotation-manager
 ```
 
-2. 依存関係をインストール
+### 2. 依存関係のインストール
 ```bash
 npm install
 ```
 
-3. ローカルサーバーで起動
+### 3. Supabase設定（重要）
+
+#### 3.1 Supabaseプロジェクトの作成
+1. [Supabaseダッシュボード](https://supabase.com/dashboard)にアクセス
+2. 新しいプロジェクトを作成
+3. プロジェクトのURLとAPIキーを取得
+
+#### 3.2 設定ファイルの更新
+`js/utils/constants.js` ファイルを編集して、実際のSupabase設定を入力：
+
+```javascript
+export const SUPABASE_CONFIG = {
+    url: 'https://your-actual-project-id.supabase.co', // 実際のプロジェクトURL
+    key: 'your-actual-anon-key-here' // 実際のanon key
+};
+```
+
+#### 3.3 データベーススキーマの設定
+`database/schema.sql` をSupabaseのSQL Editorで実行してテーブルを作成：
+
+```sql
+-- 必要なテーブルを作成
+-- (schema.sqlの内容を実行)
+```
+
+#### 3.4 ストレージバケットの作成
+Supabaseダッシュボードで以下のバケットを作成：
+- `avatars` (Public)
+- `exercise-images` (Public)
+- `user-uploads` (Private)
+
+### 4. ローカルサーバーの起動
 ```bash
 npm start
 # または
 python -m http.server 8000
 ```
 
-4. ブラウザで `http://localhost:8000` にアクセス
+### 5. アプリケーションへのアクセス
+ブラウザで `http://localhost:8000` にアクセス
+
+### トラブルシューティング
+
+#### Supabase接続エラー（ERR_NAME_NOT_RESOLVED）
+- **原因**: 無効なSupabase URLまたはプロジェクトの一時停止
+- **解決方法**: 
+  1. ブラウザのコンソールで `validateSupabaseConfig()` を実行して設定を確認
+  2. Supabaseダッシュボードでプロジェクトがアクティブか確認
+  3. 正しいURLとAPIキーを設定
+  4. プロジェクトが一時停止されている場合は復旧
+
+#### 認証エラー
+- **原因**: 無効なAPIキーまたはRLS設定
+- **解決方法**:
+  1. ブラウザのコンソールで `validateSupabaseConfig()` を実行して設定を確認
+  2. APIキーが正しいか確認
+  3. RLS（Row Level Security）設定を確認
+  4. 認証テーブルの設定を確認
+
+#### 設定検証
+アプリケーション起動時に自動的に設定が検証されます。問題がある場合は：
+1. ブラウザのコンソールでエラーメッセージを確認
+2. `validateSupabaseConfig()` を実行して詳細な検証結果を確認
+3. `SUPABASE_SETUP.md` の手順に従って設定を修正
 
 ## Supabase MCP設定
 

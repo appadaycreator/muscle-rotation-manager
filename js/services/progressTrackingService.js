@@ -4,7 +4,7 @@
  */
 
 import { supabaseService } from './supabaseService.js';
-import { errorHandler } from '../utils/errorHandler.js';
+import { handleError } from '../utils/errorHandler.js';
 
 class ProgressTrackingService {
     constructor() {
@@ -36,7 +36,7 @@ class ProgressTrackingService {
             const oneRM = weight * (36 / (37 - reps));
             return Math.round(oneRM * 10) / 10; // 小数点第1位まで
         } catch (error) {
-            errorHandler.handleError(error, 'ProgressTrackingService.calculateOneRM');
+            handleError(error, { context: 'ProgressTrackingService.calculateOneRM' });
             return 0;
         }
     }
@@ -72,7 +72,7 @@ class ProgressTrackingService {
 
             return { success: true, data };
         } catch (error) {
-            errorHandler.handleError(error, 'ProgressTrackingService.saveProgressData');
+            handleError(error, { context: 'ProgressTrackingService.saveProgressData' });
             return { success: false, error: error.message };
         }
     }
@@ -96,7 +96,7 @@ class ProgressTrackingService {
 
             return bestOneRM;
         } catch (error) {
-            errorHandler.handleError(error, 'ProgressTrackingService.calculateBestOneRM');
+            handleError(error, { context: 'ProgressTrackingService.calculateBestOneRM' });
             return 0;
         }
     }
@@ -138,7 +138,7 @@ class ProgressTrackingService {
                 one_rm: record.one_rm || this.calculateBestOneRM(record.reps, record.weights)
             }));
         } catch (error) {
-            errorHandler.handleError(error, 'ProgressTrackingService.getProgressHistory');
+            handleError(error, { context: 'ProgressTrackingService.getProgressHistory' });
             return [];
         }
     }
@@ -180,7 +180,7 @@ class ProgressTrackingService {
 
             if (error) {throw error;}
         } catch (error) {
-            errorHandler.handleError(error, 'ProgressTrackingService.updateProgressStats');
+            handleError(error, { context: 'ProgressTrackingService.updateProgressStats' });
         }
     }
 
@@ -223,7 +223,7 @@ class ProgressTrackingService {
 
             return { success: true, data };
         } catch (error) {
-            errorHandler.handleError(error, 'ProgressTrackingService.setGoal');
+            handleError(error, { context: 'ProgressTrackingService.setGoal' });
             return { success: false, error: error.message };
         }
     }
@@ -259,7 +259,7 @@ class ProgressTrackingService {
                 }
             }
         } catch (error) {
-            errorHandler.handleError(error, 'ProgressTrackingService.scheduleGoalNotifications');
+            handleError(error, { context: 'ProgressTrackingService.scheduleGoalNotifications' });
         }
     }
 
@@ -308,7 +308,7 @@ class ProgressTrackingService {
                 }
             }
         } catch (error) {
-            errorHandler.handleError(error, 'ProgressTrackingService.checkGoalProgress');
+            handleError(error, { context: 'ProgressTrackingService.checkGoalProgress' });
         }
     }
 
@@ -333,7 +333,7 @@ class ProgressTrackingService {
                 detail: { message: `${title}\n${message}`, type: 'success' }
             }));
         } catch (error) {
-            errorHandler.handleError(error, 'ProgressTrackingService.sendGoalNotification');
+            handleError(error, { context: 'ProgressTrackingService.sendGoalNotification' });
         }
     }
 
@@ -350,7 +350,7 @@ class ProgressTrackingService {
 
             if (error) {throw error;}
         } catch (error) {
-            errorHandler.handleError(error, 'ProgressTrackingService.deactivateGoal');
+            handleError(error, { context: 'ProgressTrackingService.deactivateGoal' });
         }
     }
 
@@ -415,7 +415,7 @@ class ProgressTrackingService {
 
             return { hasGoals: true, goals, progress: progressData };
         } catch (error) {
-            errorHandler.handleError(error, 'ProgressTrackingService.calculateGoalProgress');
+            handleError(error, { context: 'ProgressTrackingService.calculateGoalProgress' });
             return { hasGoals: false, error: error.message };
         }
     }
@@ -455,7 +455,7 @@ class ProgressTrackingService {
                 }
             };
         } catch (error) {
-            errorHandler.handleError(error, 'ProgressTrackingService.generateMonthlyAnalysis');
+            handleError(error, { context: 'ProgressTrackingService.generateMonthlyAnalysis' });
             return { hasData: false, error: error.message };
         }
     }

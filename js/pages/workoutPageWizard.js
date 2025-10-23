@@ -96,7 +96,6 @@ class WorkoutWizard {
                 this.setupWizardInterface();
                 this.setupEventListeners();
                 this.setupSwipeGestures();
-                this.loadMuscleGroups();
                 this.initializeOfflineSync();
                 this.trackOperation('initialize');
             },
@@ -127,6 +126,14 @@ class WorkoutWizard {
 
         // 初期ステップの表示
         this.showStep(1);
+        
+        // 筋肉部位ボタンの読み込みを確実に実行
+        setTimeout(() => {
+            console.log('🔄 筋肉部位ボタンを読み込み中...');
+            this.loadMuscleGroups();
+        }, 100);
+        
+        console.log('🔧 ウィザードインターフェース設定完了');
     }
 
     /**
@@ -204,13 +211,19 @@ class WorkoutWizard {
      * プリセットボタンを設定
      */
     setupPresetButtons() {
-        safeGetElements('.preset-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const preset = btn.dataset.preset;
-                this.trackOperation(`preset_${preset}`);
-                this.selectPreset(preset);
+        // イベント委譲を使用してプリセットボタンのクリックを処理
+        const wizardContainer = safeGetElement('#workout-wizard');
+        if (wizardContainer) {
+            wizardContainer.addEventListener('click', (e) => {
+                const presetBtn = e.target.closest('.preset-btn');
+                if (presetBtn) {
+                    const preset = presetBtn.dataset.preset;
+                    console.log('🎯 プリセットボタンクリック:', preset);
+                    this.trackOperation(`preset_${preset}`);
+                    this.selectPreset(preset);
+                }
             });
-        });
+        }
     }
 
     /**
@@ -393,7 +406,17 @@ class WorkoutWizard {
      */
     loadMuscleGroups() {
         const muscleGrid = safeGetElement('#muscle-groups-grid');
-        if (!muscleGrid) {return;}
+        if (!muscleGrid) {
+            console.warn('⚠️ 筋肉部位グリッドが見つかりません');
+            return;
+        }
+
+        console.log('💪 筋肉部位を読み込み中...', {
+            muscleGroups: MUSCLE_GROUPS.length,
+            gridElement: muscleGrid,
+            gridElementId: muscleGrid.id,
+            gridElementClasses: muscleGrid.className
+        });
 
         const muscleGroupsHtml = MUSCLE_GROUPS.map(group => `
             <button class="muscle-group-btn" data-muscle="${group.id}">
@@ -402,7 +425,41 @@ class WorkoutWizard {
             </button>
         `).join('');
 
+        console.log('🔧 筋肉部位HTML生成:', {
+            htmlLength: muscleGroupsHtml.length,
+            muscleGroups: MUSCLE_GROUPS.map(g => ({ id: g.id, name: g.name }))
+        });
+
         muscleGrid.innerHTML = muscleGroupsHtml;
+        
+        // 生成後の確認
+        const generatedButtons = safeGetElements('.muscle-group-btn');
+        console.log('✅ 筋肉部位読み込み完了:', {
+            buttonsCreated: generatedButtons.length,
+            buttons: generatedButtons.map(btn => ({
+                id: btn.dataset.muscle,
+                text: btn.textContent.trim(),
+                element: btn
+            }))
+        });
+
+        // グリッドレイアウトを強制的に更新
+        if (generatedButtons.length > 0) {
+            muscleGrid.style.display = 'grid';
+            muscleGrid.style.gridTemplateColumns = 'repeat(2, 1fr)';
+            muscleGrid.style.gap = '1rem';
+            
+            // レスポンシブ対応
+            if (window.innerWidth >= 768) {
+                muscleGrid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+            }
+            
+            console.log('🔧 グリッドレイアウトを更新:', {
+                display: muscleGrid.style.display,
+                gridTemplateColumns: muscleGrid.style.gridTemplateColumns,
+                gap: muscleGrid.style.gap
+            });
+        }
     }
 
     /**
@@ -410,20 +467,44 @@ class WorkoutWizard {
      */
     selectPreset(presetType) {
         try {
+            console.log('🎯 プリセット選択開始:', presetType);
+            
             // 既存の選択をクリア
             this.selectedMuscleGroups = [];
 
             // プリセットに基づいて筋肉部位を選択
             const muscleGroups = WORKOUT_PRESETS[presetType] || [];
             this.selectedMuscleGroups = [...muscleGroups];
+            
+            console.log('💪 選択された筋肉部位:', this.selectedMuscleGroups);
 
-            // UIを更新
-            this.updateMuscleGroupSelection();
-            this.updateStepButtons();
+            // 筋肉部位ボタンが読み込まれていない場合は先に読み込み
+            const muscleButtons = safeGetElements('.muscle-group-btn');
+            if (muscleButtons.length === 0) {
+                console.log('🔄 筋肉部位ボタンが見つからないため先に読み込み...');
+                this.loadMuscleGroups();
+                
+                // 読み込み完了後にUIを更新
+                setTimeout(() => {
+                    console.log('🔄 筋肉部位ボタン読み込み後の更新...');
+                    this.updateMuscleGroupSelection();
+                    this.updateStepButtons();
+                    this.updatePresetButtonStates(presetType);
+                }, 200);
+            } else {
+                console.log('✅ 筋肉部位ボタンは既に読み込まれています');
+                // 筋肉部位ボタンが存在する場合は即座に更新
+                this.updateMuscleGroupSelection();
+                this.updateStepButtons();
+                this.updatePresetButtonStates(presetType);
+            }
 
-            // プリセットボタンの選択状態を更新
-            safeGetElements('.preset-btn').forEach(btn => {
-                btn.classList.toggle('selected', btn.dataset.preset === presetType);
+            // ボタンの状態をデバッグ
+            const step1Next = safeGetElement('#step1-next');
+            console.log('🔘 ステップ1次へボタン状態:', {
+                element: step1Next,
+                disabled: step1Next?.disabled,
+                muscleGroupsLength: this.selectedMuscleGroups.length
             });
 
             showNotification(`${this.getPresetName(presetType)}を選択しました`, 'success');
@@ -447,6 +528,15 @@ class WorkoutWizard {
             pull: 'プル系'
         };
         return names[presetType] || presetType;
+    }
+
+    /**
+     * プリセットボタンの選択状態を更新
+     */
+    updatePresetButtonStates(selectedPreset) {
+        safeGetElements('.preset-btn').forEach(btn => {
+            btn.classList.toggle('selected', btn.dataset.preset === selectedPreset);
+        });
     }
 
     /**
@@ -477,9 +567,45 @@ class WorkoutWizard {
      * 筋肉部位選択UIを更新
      */
     updateMuscleGroupSelection() {
-        safeGetElements('.muscle-group-btn').forEach(btn => {
+        console.log('💪 筋肉部位選択UI更新:', {
+            selectedMuscleGroups: this.selectedMuscleGroups,
+            muscleButtons: safeGetElements('.muscle-group-btn').length
+        });
+
+        const muscleButtons = safeGetElements('.muscle-group-btn');
+        console.log('🔍 筋肉部位ボタン詳細:', {
+            count: muscleButtons.length,
+            buttons: muscleButtons.map(btn => ({
+                id: btn.dataset.muscle,
+                hasSelectedClass: btn.classList.contains('selected'),
+                element: btn
+            }))
+        });
+
+        muscleButtons.forEach(btn => {
             const muscleId = btn.dataset.muscle;
-            btn.classList.toggle('selected', this.selectedMuscleGroups.includes(muscleId));
+            const isSelected = this.selectedMuscleGroups.includes(muscleId);
+            
+            // 既存の選択状態をクリア
+            btn.classList.remove('selected');
+            
+            // 新しい選択状態を適用
+            if (isSelected) {
+                btn.classList.add('selected');
+            }
+            
+            console.log(`🔘 筋肉部位ボタン更新: ${muscleId}`, {
+                isSelected,
+                hasSelectedClass: btn.classList.contains('selected'),
+                element: btn,
+                beforeUpdate: btn.classList.toString()
+            });
+        });
+
+        // 更新後の状態を確認
+        console.log('✅ 筋肉部位選択UI更新完了:', {
+            selectedCount: muscleButtons.filter(btn => btn.classList.contains('selected')).length,
+            totalButtons: muscleButtons.length
         });
     }
 
@@ -684,16 +810,37 @@ class WorkoutWizard {
      * ステップボタンの状態を更新
      */
     updateStepButtons() {
+        console.log('🔄 ステップボタン状態更新:', {
+            selectedMuscleGroups: this.selectedMuscleGroups,
+            selectedExercises: this.selectedExercises
+        });
+
         // ステップ1の次へボタン
         const step1Next = safeGetElement('#step1-next');
         if (step1Next) {
-            step1Next.disabled = this.selectedMuscleGroups.length === 0;
+            const shouldDisable = this.selectedMuscleGroups.length === 0;
+            step1Next.disabled = shouldDisable;
+            console.log('🔘 ステップ1次へボタン更新:', {
+                element: step1Next,
+                disabled: shouldDisable,
+                muscleGroupsCount: this.selectedMuscleGroups.length
+            });
+        } else {
+            console.warn('⚠️ ステップ1次へボタンが見つかりません');
         }
 
         // ステップ2の次へボタン
         const step2Next = safeGetElement('#step2-next');
         if (step2Next) {
-            step2Next.disabled = this.selectedExercises.length === 0;
+            const shouldDisable = this.selectedExercises.length === 0;
+            step2Next.disabled = shouldDisable;
+            console.log('🔘 ステップ2次へボタン更新:', {
+                element: step2Next,
+                disabled: shouldDisable,
+                exercisesCount: this.selectedExercises.length
+            });
+        } else {
+            console.warn('⚠️ ステップ2次へボタンが見つかりません');
         }
     }
 

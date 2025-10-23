@@ -21,11 +21,26 @@ class SupabaseService {
      */
     initialize() {
         if (typeof window !== 'undefined' && window.supabase) {
-            this.client = window.supabase.createClient(
-                SUPABASE_CONFIG.url,
-                SUPABASE_CONFIG.key
-            );
-            console.log('✅ Supabase client initialized');
+            // 設定の検証
+            if (!SUPABASE_CONFIG.url || SUPABASE_CONFIG.url.includes('your-project-id')) {
+                console.error('❌ Supabase URLが設定されていません。js/utils/constants.jsを確認してください。');
+                return;
+            }
+            
+            if (!SUPABASE_CONFIG.key || SUPABASE_CONFIG.key.includes('your-anon-key')) {
+                console.error('❌ Supabase API Keyが設定されていません。js/utils/constants.jsを確認してください。');
+                return;
+            }
+            
+            try {
+                this.client = window.supabase.createClient(
+                    SUPABASE_CONFIG.url,
+                    SUPABASE_CONFIG.key
+                );
+                console.log('✅ Supabase client initialized');
+            } catch (error) {
+                console.error('❌ Supabase client initialization failed:', error);
+            }
         } else {
             console.warn('⚠️ Supabase client not available');
         }
@@ -83,21 +98,35 @@ class SupabaseService {
 
         return executeWithRetry(async () => {
             console.log('Attempting login with email:', email);
-            const { data, error } = await this.client.auth.signInWithPassword({
-                email,
-                password
-            });
+            
+            try {
+                const { data, error } = await this.client.auth.signInWithPassword({
+                    email,
+                    password
+                });
 
-            if (error) {
-                throw handleError(error, {
-                    context: 'ログイン',
-                    showNotification: true
-                }).originalError;
+                if (error) {
+                    // ネットワークエラーの特別処理
+                    if (error.message.includes('Failed to fetch') || error.message.includes('ERR_NAME_NOT_RESOLVED')) {
+                        throw new Error('Supabaseサーバーに接続できません。URLとAPIキーを確認してください。');
+                    }
+                    
+                    throw handleError(error, {
+                        context: 'ログイン',
+                        showNotification: true
+                    }).originalError;
+                }
+
+                console.log('Login successful, user data:', data.user);
+                this.currentUser = data.user;
+                return data.user;
+            } catch (error) {
+                // ネットワークエラーの詳細な処理
+                if (error.message.includes('Failed to fetch') || error.message.includes('ERR_NAME_NOT_RESOLVED')) {
+                    throw new Error('Supabaseサーバーに接続できません。プロジェクトのURLとAPIキーを確認してください。');
+                }
+                throw error;
             }
-
-            console.log('Login successful, user data:', data.user);
-            this.currentUser = data.user;
-            return data.user;
         }, {
             maxRetries: 2,
             context: 'ログイン'
@@ -189,12 +218,17 @@ class SupabaseService {
 
     /**
      * ワークアウトセッション履歴を取得（最適化版）
-     * @param {Object} options - 取得オプション
-     * @returns {Promise<Object>} ページネーション付きワークアウトセッション
+     * @param {Object|number} options - 取得オプションまたは件数制限
+     * @returns {Promise<Array>} ワークアウトセッション配列
      */
     async getWorkouts(options = {}) {
         if (!this.client || !this.currentUser) {
-            return { data: [], pagination: null };
+            return [];
+        }
+
+        // 後方互換性: 数値が渡された場合は件数制限として扱う
+        if (typeof options === 'number') {
+            options = { limit: options };
         }
 
         const {
@@ -218,15 +252,7 @@ class SupabaseService {
                     end_time,
                     total_duration_minutes,
                     muscle_groups_trained,
-                    is_completed,
-                    training_logs (
-                        id,
-                        exercise_name,
-                        sets,
-                        reps,
-                        weights,
-                        muscle_group_id
-                    )
+                    is_completed
                 `, { count: 'exact' })
                 .eq('user_id', this.currentUser.id);
 
@@ -253,23 +279,125 @@ class SupabaseService {
             const { data, error, count } = await query;
 
             if (error) {
+                console.error('Supabase query error:', error);
+                
+                // データベース関係性エラーの場合は、基本的なデータのみ取得を試行
+                if (error.code === 'PGRST200' && error.message.includes('relationship')) {
+                    console.warn('Database relationship error detected, attempting fallback query...');
+                    
+                    // フォールバック: 基本的なワークアウトデータのみ取得
+                    const fallbackQuery = this.client
+                        .from('workout_sessions')
+                        .select(`
+                            id,
+                            session_name,
+                            workout_date,
+                            start_time,
+                            end_time,
+                            total_duration_minutes,
+                            muscle_groups_trained,
+                            is_completed
+                        `)
+                        .eq('user_id', this.currentUser.id)
+                        .order(sortBy, { ascending: sortOrder === 'asc' })
+                        .range(offset, offset + limit - 1);
+                    
+                    const { data: fallbackData, error: fallbackError } = await fallbackQuery;
+                    
+                    if (fallbackError) {
+                        throw handleError(fallbackError, {
+                            context: 'ワークアウト履歴取得（フォールバック）',
+                            showNotification: true
+                        }).originalError;
+                    }
+                    
+                    // フォールバックデータを返す（training_logsは空配列）
+                    return (fallbackData || []).map(workout => ({
+                        id: workout.id,
+                        name: workout.session_name,
+                        date: workout.workout_date,
+                        startTime: workout.start_time,
+                        endTime: workout.end_time,
+                        duration: workout.total_duration_minutes,
+                        muscleGroups: workout.muscle_groups_trained || [],
+                        isCompleted: workout.is_completed,
+                        exercises: [], // 空配列
+                        workout_date: workout.workout_date,
+                        session_name: workout.session_name,
+                        total_duration_minutes: workout.total_duration_minutes,
+                        muscle_groups_trained: workout.muscle_groups_trained,
+                        is_completed: workout.is_completed,
+                        training_logs: []
+                    }));
+                }
+                
                 throw handleError(error, {
                     context: 'ワークアウト履歴取得',
                     showNotification: true
                 }).originalError;
             }
 
-            return {
-                data: data || [],
-                totalCount: count || 0,
-                hasMore: (offset + limit) < (count || 0)
-            };
+            // training_logsを別途取得
+            const workoutIds = (data || []).map(workout => workout.id);
+            let trainingLogs = [];
+            
+            if (workoutIds.length > 0) {
+                try {
+                    const { data: logsData, error: logsError } = await this.client
+                        .from('training_logs')
+                        .select(`
+                            id,
+                            workout_session_id,
+                            exercise_name,
+                            sets,
+                            reps,
+                            weights,
+                            muscle_group_id
+                        `)
+                        .in('workout_session_id', workoutIds);
+                    
+                    if (logsError) {
+                        console.warn('Training logs fetch error:', logsError);
+                    } else {
+                        trainingLogs = logsData || [];
+                    }
+                } catch (logsError) {
+                    console.warn('Training logs fetch failed:', logsError);
+                }
+            }
+
+            // データを正規化して返す
+            const normalizedData = (data || []).map(workout => {
+                const workoutLogs = trainingLogs.filter(log => log.workout_session_id === workout.id);
+                
+                return {
+                    id: workout.id,
+                    name: workout.session_name,
+                    date: workout.workout_date,
+                    startTime: workout.start_time,
+                    endTime: workout.end_time,
+                    duration: workout.total_duration_minutes,
+                    muscleGroups: workout.muscle_groups_trained || [],
+                    isCompleted: workout.is_completed,
+                    exercises: workoutLogs,
+                    // 後方互換性のための追加フィールド
+                    workout_date: workout.workout_date,
+                    session_name: workout.session_name,
+                    total_duration_minutes: workout.total_duration_minutes,
+                    muscle_groups_trained: workout.muscle_groups_trained,
+                    is_completed: workout.is_completed,
+                    training_logs: workoutLogs
+                };
+            });
+
+            return normalizedData;
         } catch (error) {
+            console.error('getWorkouts error:', error);
             handleError(error, {
                 context: 'ワークアウト履歴取得',
                 showNotification: true
             });
-            return { data: [], totalCount: 0, hasMore: false };
+            return [];
         }
     }
 

@@ -113,15 +113,7 @@ class ExerciseService {
         try {
             let query = supabaseService.client
                 .from('exercises')
-                .select(`
-                    *,
-                    muscle_groups (
-                        id,
-                        name,
-                        name_ja,
-                        color_code
-                    )
-                `)
+                .select('*')
                 .eq('muscle_group_id', muscleGroupId)
                 .order('difficulty_level')
                 .order('name_ja');
@@ -139,13 +131,35 @@ class ExerciseService {
                 throw error;
             }
 
+            let result = data || [];
+
+            // 筋肉部位の情報を取得して結合
+            if (result.length > 0) {
+                try {
+                    const { data: muscleGroupData, error: muscleGroupError } = await supabaseService.client
+                        .from('muscle_groups')
+                        .select('id, name, name_ja, color_code')
+                        .eq('id', muscleGroupId)
+                        .single();
+
+                    if (!muscleGroupError && muscleGroupData) {
+                        result = result.map(exercise => ({
+                            ...exercise,
+                            muscle_groups: muscleGroupData
+                        }));
+                    }
+                } catch (muscleGroupError) {
+                    console.warn('Failed to load muscle group:', muscleGroupError);
+                }
+            }
+
             // キャッシュに保存
             this.cache.set(cacheKey, {
-                data: data || [],
+                data: result,
                 timestamp: Date.now()
             });
 
-            return data || [];
+            return result;
         } catch (error) {
             handleError(error, {
                 context: '部位別エクササイズ取得',
@@ -180,15 +194,7 @@ class ExerciseService {
         try {
             let query = supabaseService.client
                 .from('exercises')
-                .select(`
-                    *,
-                    muscle_groups (
-                        id,
-                        name,
-                        name_ja,
-                        color_code
-                    )
-                `);
+                .select('*');
 
             // テキスト検索
             if (searchTerm && searchTerm.trim()) {
@@ -254,7 +260,37 @@ class ExerciseService {
                 throw error;
             }
 
-            const result = data || [];
+            let result = data || [];
+
+            // 筋肉部位の情報を別途取得して結合
+            if (result.length > 0) {
+                try {
+                    const muscleGroupIds = [...new Set(result.map(exercise => exercise.muscle_group_id).filter(id => id))];
+                    
+                    if (muscleGroupIds.length > 0) {
+                        const { data: muscleGroupsData, error: muscleGroupsError } = await supabaseService.client
+                            .from('muscle_groups')
+                            .select('id, name, name_ja, color_code')
+                            .in('id', muscleGroupIds);
+
+                        if (!muscleGroupsError && muscleGroupsData) {
+                            const muscleGroupsMap = {};
+                            muscleGroupsData.forEach(group => {
+                                muscleGroupsMap[group.id] = group;
+                            });
+
+                            // エクササイズデータに筋肉部位情報を結合
+                            result = result.map(exercise => ({
+                                ...exercise,
+                                muscle_groups: muscleGroupsMap[exercise.muscle_group_id] || null
+                            }));
+                        }
+                    }
+                } catch (muscleGroupsError) {
+                    console.warn('Failed to load muscle groups:', muscleGroupsError);
+                    // 筋肉部位情報なしでもエクササイズデータは返す
+                }
+            }
 
             // 検索キャッシュに保存
             this.searchCache.set(cacheKey, {

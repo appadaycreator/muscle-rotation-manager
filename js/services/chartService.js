@@ -3,7 +3,7 @@
  * Chart.jsを使用した進捗グラフの生成・管理を行う
  */
 
-import { errorHandler } from '../utils/errorHandler.js';
+import { handleError } from '../utils/errorHandler.js';
 
 class ChartService {
     constructor() {
@@ -29,7 +29,7 @@ class ChartService {
                 this.charts.delete(chartId);
             }
         } catch (error) {
-            errorHandler.handleError(error, 'ChartService.destroyChart');
+            handleError(error, { context: 'ChartService.destroyChart' });
         }
     }
 
@@ -171,7 +171,7 @@ class ChartService {
 
             return chart;
         } catch (error) {
-            errorHandler.handleError(error, 'ChartService.createOneRMChart');
+            handleError(error, { context: 'ChartService.createOneRMChart' });
             return null;
         }
     }
@@ -321,7 +321,7 @@ class ChartService {
 
             return chart;
         } catch (error) {
-            errorHandler.handleError(error, 'ChartService.createWeightChart');
+            handleError(error, { context: 'ChartService.createWeightChart' });
             return null;
         }
     }
@@ -446,7 +446,7 @@ class ChartService {
 
             return chart;
         } catch (error) {
-            errorHandler.handleError(error, 'ChartService.createVolumeChart');
+            handleError(error, { context: 'ChartService.createVolumeChart' });
             return null;
         }
     }
@@ -534,7 +534,7 @@ class ChartService {
 
             return chart;
         } catch (error) {
-            errorHandler.handleError(error, 'ChartService.createGoalProgressChart');
+            handleError(error, { context: 'ChartService.createGoalProgressChart' });
             return null;
         }
     }
@@ -682,7 +682,7 @@ class ChartService {
 
             return chart;
         } catch (error) {
-            errorHandler.handleError(error, 'ChartService.createWeeklyComparisonChart');
+            handleError(error, { context: 'ChartService.createWeeklyComparisonChart' });
             return null;
         }
     }
@@ -697,7 +697,7 @@ class ChartService {
             });
             this.charts.clear();
         } catch (error) {
-            errorHandler.handleError(error, 'ChartService.destroyAllCharts');
+            handleError(error, { context: 'ChartService.destroyAllCharts' });
         }
     }
 
@@ -711,7 +711,7 @@ class ChartService {
                 this.charts.get(chartId).resize();
             }
         } catch (error) {
-            errorHandler.handleError(error, 'ChartService.resizeChart');
+            handleError(error, { context: 'ChartService.resizeChart' });
         }
     }
 }

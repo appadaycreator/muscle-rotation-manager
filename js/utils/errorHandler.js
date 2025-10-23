@@ -250,6 +250,16 @@ const ERROR_MESSAGES = {
             ],
             severity: 'error'
         },
+        relationship_error: {
+            message: 'データベースの関係性エラーが発生しました',
+            description: 'テーブル間の関係性が見つかりません',
+            solutions: [
+                'アプリを再起動してください',
+                'しばらく時間をおいて再試行してください',
+                '問題が続く場合はサポートにお問い合わせください'
+            ],
+            severity: 'warning'
+        },
         query_failed: {
             message: 'データの取得に失敗しました',
             description: 'データベースからの情報取得でエラーが発生しました',
@@ -523,7 +533,10 @@ export function determineErrorType(error) {
         errorMessage.includes('foreign key') ||
         errorMessage.includes('constraint') ||
         errorMessage.includes('PostgreSQL') ||
-        errorCode?.startsWith('23')) {
+        errorMessage.includes('relationship') ||
+        errorMessage.includes('schema cache') ||
+        errorCode?.startsWith('23') ||
+        errorCode === 'PGRST200') {
         return ERROR_TYPES.DATABASE;
     }
 
@@ -695,6 +708,13 @@ function determineSpecificErrorKey(error) {
     }
     if (errorMessage.includes('500') || errorMessage.includes('502') || errorMessage.includes('503')) {
         return 'server_error';
+    }
+
+    // データベースエラーの詳細判定
+    if (errorMessage.includes('relationship') ||
+        errorMessage.includes('schema cache') ||
+        error?.code === 'PGRST200') {
+        return 'relationship_error';
     }
 
     // ストレージエラーの詳細判定

@@ -155,11 +155,19 @@ class RecommendationService {
             // Supabaseからワークアウト履歴を取得
             let workoutHistory = [];
             if (supabaseService.isAvailable() && supabaseService.getCurrentUser()) {
-                workoutHistory = await supabaseService.getWorkouts(30); // 過去30件
+                const result = await supabaseService.getWorkouts(30); // 過去30件
+                // データが配列でない場合は空配列にフォールバック
+                workoutHistory = Array.isArray(result) ? result : [];
             } else {
                 // オフライン時はローカルストレージから取得
                 const localHistory = localStorage.getItem('workoutHistory');
                 workoutHistory = localHistory ? JSON.parse(localHistory) : [];
+            }
+
+            // ワークアウト履歴が配列でない場合は空配列にフォールバック
+            if (!Array.isArray(workoutHistory)) {
+                console.warn('workoutHistory is not an array, using empty array');
+                workoutHistory = [];
             }
 
             // 各筋肉部位の回復データを計算
@@ -207,7 +215,20 @@ class RecommendationService {
 
         } catch (error) {
             console.error('筋肉回復データの取得に失敗:', error);
-            throw error;
+            // フォールバック: 基本的な回復データを返す
+            return MUSCLE_GROUPS.map(muscle => ({
+                ...muscle,
+                lastTrained: 'なし',
+                recovery: 100,
+                recoveryStatus: 'fully_recovered',
+                hoursUntilRecovery: 0,
+                nextRecommended: '今すぐ',
+                isReady: true,
+                recoveryColor: this.getRecoveryColor(100),
+                recoveryClass: this.getRecoveryClass(100),
+                lastWorkout: null,
+                recoveryFactors: null
+            }));
         }
     }
 
@@ -218,14 +239,27 @@ class RecommendationService {
      * @returns {Object|null} 最新ワークアウト
      */
     findLastWorkoutForMuscle(workoutHistory, muscleId) {
+        // ワークアウト履歴が配列でない場合はnullを返す
+        if (!Array.isArray(workoutHistory)) {
+            return null;
+        }
+
         // ワークアウト履歴を日付順にソート（新しい順）
         const sortedHistory = workoutHistory
-            .filter(workout => workout.muscle_groups_trained && workout.muscle_groups_trained.includes(muscleId))
-            .sort((a, b) => new Date(b.date || b.workout_date) - new Date(a.date || a.workout_date));
+            .filter(workout => {
+                // 筋肉部位のチェック（複数のフィールドに対応）
+                const muscleGroups = workout.muscle_groups_trained || workout.muscleGroups || [];
+                return Array.isArray(muscleGroups) && muscleGroups.includes(muscleId);
+            })
+            .sort((a, b) => {
+                const dateA = new Date(a.date || a.workout_date || a.startTime);
+                const dateB = new Date(b.date || b.workout_date || b.startTime);
+                return dateB - dateA;
+            });
 
         return sortedHistory.length > 0 ? {
             ...sortedHistory[0],
-            date: sortedHistory[0].date || sortedHistory[0].workout_date
+            date: sortedHistory[0].date || sortedHistory[0].workout_date || sortedHistory[0].startTime
         } : null;
     }
 

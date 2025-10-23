@@ -148,6 +148,24 @@ class TestRunner {
     /**
      * アサーション関数群
      */
+    assertTrue(condition, message = 'Assertion failed') {
+        if (!condition) {
+            throw new Error(message);
+        }
+    }
+
+    assertFalse(condition, message = 'Assertion failed') {
+        if (condition) {
+            throw new Error(message);
+        }
+    }
+
+    assertEqual(actual, expected, message = 'Values are not equal') {
+        if (actual !== expected) {
+            throw new Error(`${message}. Expected: ${expected}, Actual: ${actual}`);
+        }
+    }
+
     expect(actual) {
         return {
             toBe: (expected) => {
@@ -227,6 +245,12 @@ class TestRunner {
             toBeLessThanOrEqual: (expected) => {
                 if (actual > expected) {
                     throw new Error(`期待値: ${expected}以下, 実際の値: ${actual}`);
+                }
+            },
+            toMatch: (pattern) => {
+                const regex = typeof pattern === 'string' ? new RegExp(pattern) : pattern;
+                if (!regex.test(actual)) {
+                    throw new Error(`期待値: パターン${pattern}にマッチ, 実際の値: ${actual}`);
                 }
             },
             toBeDefined: () => {
@@ -441,6 +465,7 @@ if (typeof window !== 'undefined') {
     global.mock = testRunner.mock.bind(testRunner);
     global.runTests = testRunner.run.bind(testRunner);
     global.testRunner = testRunner;
+    global.TestRunner = TestRunner;
     
     console.log('✅ Test functions exported to global scope');
     
