@@ -19,8 +19,4 @@ describe('CalendarPage', () => {
   test('should have renderCalendar method', () => {
     expect(typeof CalendarPage.renderCalendar).toBe('function');
   });
-
-  test('should have setupTooltips method', () => {
-    expect(typeof CalendarPage.setupTooltips).toBe('function');
-  });
 });

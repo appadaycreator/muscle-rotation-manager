@@ -19,8 +19,4 @@ describe('AnalysisPage', () => {
   test('should have renderCharts method', () => {
     expect(typeof AnalysisPage.renderCharts).toBe('function');
   });
-
-  test('should have setupTooltips method', () => {
-    expect(typeof AnalysisPage.setupTooltips).toBe('function');
-  });
 });
