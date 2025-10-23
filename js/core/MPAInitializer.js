@@ -175,6 +175,12 @@ class MPAInitializer {
                 console.warn('Sidebar loading failed:', sidebarResult.reason);
             }
 
+            // ヘッダーが読み込まれた後に認証イベントリスナーを再設定
+            if (headerResult.status === 'fulfilled') {
+                console.log('🔄 Re-setting up auth event listeners after header load');
+                await authManager.setupEventListeners();
+            }
+
         } catch (error) {
             console.error('❌ Failed to load common components:', error);
             throw error;

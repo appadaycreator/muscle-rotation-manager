@@ -118,9 +118,107 @@ class WorkoutWizard {
     }
 
     /**
+     * ワークアウトページのコンテンツを表示
+     */
+    renderWorkoutPage() {
+        const mainContent = safeGetElement('#main-content');
+        if (!mainContent) return;
+
+        mainContent.innerHTML = `
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-900">ワークアウト</h1>
+                <p class="mt-2 text-gray-600">新しいワークアウトを開始しましょう</p>
+            </div>
+
+            <!-- ワークアウトウィザード -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <!-- ステップインジケーター -->
+                    <div class="mb-8">
+                        <div class="flex items-center justify-center space-x-4">
+                            <div class="step-indicator active" data-step="1">
+                                <div class="step-number">1</div>
+                                <div class="step-label">筋肉部位選択</div>
+                            </div>
+                            <div class="step-indicator" data-step="2">
+                                <div class="step-number">2</div>
+                                <div class="step-label">エクササイズ選択</div>
+                            </div>
+                            <div class="step-indicator" data-step="3">
+                                <div class="step-number">3</div>
+                                <div class="step-label">セット・重量設定</div>
+                            </div>
+                            <div class="step-indicator" data-step="4">
+                                <div class="step-number">4</div>
+                                <div class="step-label">確認・開始</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ステップ1: 筋肉部位選択 -->
+                    <div id="step-1" class="step-content">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">トレーニングする筋肉部位を選択してください</h3>
+                        <div id="muscle-groups-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+                            <!-- 筋肉部位ボタンがここに動的に生成されます -->
+                        </div>
+                        
+                        <!-- プリセットボタン -->
+                        <div class="mb-6">
+                            <h4 class="text-md font-medium text-gray-700 mb-3">プリセット</h4>
+                            <div class="flex flex-wrap gap-2">
+                                <button class="preset-btn" data-preset="push">プッシュ系</button>
+                                <button class="preset-btn" data-preset="pull">プル系</button>
+                                <button class="preset-btn" data-preset="legs">脚</button>
+                                <button class="preset-btn" data-preset="fullbody">全身</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ステップ2: エクササイズ選択 -->
+                    <div id="step-2" class="step-content hidden">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">エクササイズを選択してください</h3>
+                        <div id="exercise-selection" class="space-y-4">
+                            <!-- エクササイズ選択がここに表示されます -->
+                        </div>
+                    </div>
+
+                    <!-- ステップ3: セット・重量設定 -->
+                    <div id="step-3" class="step-content hidden">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">セットと重量を設定してください</h3>
+                        <div id="set-configuration" class="space-y-4">
+                            <!-- セット設定がここに表示されます -->
+                        </div>
+                    </div>
+
+                    <!-- ステップ4: 確認・開始 -->
+                    <div id="step-4" class="step-content hidden">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">ワークアウト内容を確認してください</h3>
+                        <div id="workout-summary" class="space-y-4">
+                            <!-- ワークアウト概要がここに表示されます -->
+                        </div>
+                    </div>
+
+                    <!-- ナビゲーションボタン -->
+                    <div class="flex justify-between mt-8">
+                        <button id="prev-step" class="px-4 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50" disabled>
+                            <i class="fas fa-arrow-left mr-2"></i>前へ
+                        </button>
+                        <button id="next-step" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
+                            次へ<i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    /**
      * ウィザードインターフェースを設定
      */
     setupWizardInterface() {
+        // ワークアウトページのコンテンツを表示
+        this.renderWorkoutPage();
+
         // ステップインジケーターの初期化
         this.updateStepIndicator();
 

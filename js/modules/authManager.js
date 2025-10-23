@@ -27,6 +27,11 @@ class AuthManager {
         await this.checkCurrentSession();
         this.setupAuthStateListener();
 
+        // 初期化後にUIを再確認
+        setTimeout(() => {
+            this.updateAuthUI();
+        }, 1000);
+
         this.isInitialized = true;
         console.log('AuthManager initialized');
     }
@@ -35,11 +40,17 @@ class AuthManager {
      * イベントリスナーを設定
      */
     setupEventListeners() {
+        // 既存のイベントリスナーを削除
+        this.removeEventListeners();
+        
         const loginBtn = document.getElementById('login-btn');
         const logoutBtn = document.getElementById('logout-btn');
 
+        console.log('Setting up auth event listeners:', { loginBtn: !!loginBtn, logoutBtn: !!logoutBtn });
+
         if (loginBtn) {
             loginBtn.addEventListener('click', () => {
+                console.log('Login button clicked');
                 if (!supabaseService.isAvailable()) {
                     showNotification('Supabaseが設定されていません。設定を確認してください。', 'error');
                     return;
@@ -50,8 +61,24 @@ class AuthManager {
 
         if (logoutBtn) {
             logoutBtn.addEventListener('click', async () => {
+                console.log('Logout button clicked');
                 await this.handleLogout();
             });
+        }
+    }
+
+    /**
+     * イベントリスナーを削除
+     */
+    removeEventListeners() {
+        const loginBtn = document.getElementById('login-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        if (loginBtn) {
+            loginBtn.replaceWith(loginBtn.cloneNode(true));
+        }
+        if (logoutBtn) {
+            logoutBtn.replaceWith(logoutBtn.cloneNode(true));
         }
     }
 
@@ -61,6 +88,7 @@ class AuthManager {
     async checkCurrentSession() {
         try {
             const { user } = await supabaseService.getAuthState();
+            console.log('checkCurrentSession result:', { user: !!user, userId: user?.id });
             await this.updateAuthUI();
             return user;
         } catch (error) {
@@ -90,6 +118,8 @@ class AuthManager {
     async updateAuthUI() {
         const loginBtn = document.getElementById('login-btn');
         const logoutBtn = document.getElementById('logout-btn');
+        
+        console.log('updateAuthUI called, buttons found:', { loginBtn: !!loginBtn, logoutBtn: !!logoutBtn });
         
         try {
             const currentUser = await this.getCurrentUser();

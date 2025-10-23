@@ -27,12 +27,20 @@ class DashboardPage {
             }
 
             // データを並行して読み込み
-            await Promise.all([
-                this.loadRecommendations(),
-                this.loadMuscleRecoveryData(),
-                this.loadRecentWorkouts(),
-                this.loadStats()
-            ]);
+            try {
+                await Promise.all([
+                    this.loadRecommendations(),
+                    this.loadMuscleRecoveryData(),
+                    this.loadRecentWorkouts(),
+                    this.loadStats()
+                ]);
+            } catch (error) {
+                console.error('Dashboard data loading failed:', error);
+                // エラーが発生してもダッシュボードを表示
+            }
+
+            // ダッシュボードコンテンツを表示
+            this.renderDashboard();
 
             // 筋肉部位クリックハンドラーを設定
             this.setupMusclePartHandlers();
@@ -80,6 +88,127 @@ class DashboardPage {
                 authManager.showAuthModal('login');
             });
         }
+    }
+
+    /**
+     * ダッシュボードコンテンツを表示
+     */
+    renderDashboard() {
+        const mainContent = document.getElementById('main-content');
+        if (!mainContent) return;
+
+        mainContent.innerHTML = `
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-900">ダッシュボード</h1>
+                <p class="mt-2 text-gray-600">今日のトレーニング状況と推奨事項を確認しましょう</p>
+            </div>
+
+            <!-- 統計カード -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-dumbbell text-2xl text-blue-600"></i>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">総ワークアウト</dt>
+                                    <dd class="text-lg font-medium text-gray-900" id="total-workouts">0</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-fire text-2xl text-orange-600"></i>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">現在のストリーク</dt>
+                                    <dd class="text-lg font-medium text-gray-900" id="current-streak">0</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-calendar-week text-2xl text-green-600"></i>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">週間進捗</dt>
+                                    <dd class="text-lg font-medium text-gray-900" id="weekly-progress">0/3</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-clock text-2xl text-purple-600"></i>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">最後のワークアウト</dt>
+                                    <dd class="text-lg font-medium text-gray-900" id="last-workout">なし</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 今日の推奨事項 -->
+            <div class="bg-white shadow rounded-lg mb-8">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">今日の推奨事項</h3>
+                    <div id="today-recommendations">
+                        <div class="text-center text-gray-500 py-4">
+                            <i class="fas fa-info-circle text-xl mb-2"></i>
+                            <p>推奨事項を読み込み中...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 筋肉回復状況 -->
+            <div class="bg-white shadow rounded-lg mb-8">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">筋肉回復状況</h3>
+                    <div id="muscle-recovery-grid">
+                        <div class="text-center text-gray-500 py-4">
+                            <i class="fas fa-spinner fa-spin text-xl mb-2"></i>
+                            <p>回復データを読み込み中...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 最近のワークアウト -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">最近のワークアウト</h3>
+                    <div id="recent-workouts">
+                        <div class="text-center text-gray-500 py-4">
+                            <i class="fas fa-spinner fa-spin text-xl mb-2"></i>
+                            <p>ワークアウト履歴を読み込み中...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     /**
