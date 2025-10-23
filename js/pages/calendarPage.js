@@ -30,13 +30,13 @@ class CalendarPage {
         try {
             // まずカレンダーインターフェースを設定
             this.setupCalendarInterface();
-            
+
             // データを読み込み
             await this.loadWorkoutData();
-            
+
             // イベントリスナーを設定
             this.setupEventListeners();
-            
+
             // カレンダーをレンダリング
             this.renderCalendar();
         } catch (error) {
@@ -303,7 +303,7 @@ class CalendarPage {
             }
         }
 
-            // 日付セルをレンダリング
+        // 日付セルをレンダリング
         datesContainer.innerHTML = dates.map(dateInfo => {
             // 実際のワークアウトドット
             const workoutDots = dateInfo.workouts.map(workout => {

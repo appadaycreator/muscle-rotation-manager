@@ -266,7 +266,7 @@ class ExerciseService {
             if (result.length > 0) {
                 try {
                     const muscleGroupIds = [...new Set(result.map(exercise => exercise.muscle_group_id).filter(id => id))];
-                    
+
                     if (muscleGroupIds.length > 0) {
                         const { data: muscleGroupsData, error: muscleGroupsError } = await supabaseService.client
                             .from('muscle_groups')

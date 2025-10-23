@@ -100,7 +100,7 @@ class PageManager {
     async loadPageModule(pageName) {
         try {
             console.log(`🔄 ページモジュール読み込み開始: ${pageName}`);
-            const startTime = performance.now();
+            const startTime = typeof window !== 'undefined' && window.performance ? window.performance.now() : Date.now();
 
             // 遅延ローダーを使用してモジュールを読み込み
             const module = await lazyLoader.loadPageModule(pageName);
@@ -109,7 +109,7 @@ class PageManager {
                 await module.default.initialize();
             }
 
-            const loadTime = performance.now() - startTime;
+            const loadTime = (typeof window !== 'undefined' && window.performance ? window.performance.now() : Date.now()) - startTime;
             console.log(`✅ ページモジュール読み込み完了: ${pageName} (${loadTime.toFixed(2)}ms)`);
 
             // 遅延ロード対象の画像とコンポーネントを監視

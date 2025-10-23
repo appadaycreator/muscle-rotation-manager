@@ -126,13 +126,13 @@ class WorkoutWizard {
 
         // 初期ステップの表示
         this.showStep(1);
-        
+
         // 筋肉部位ボタンの読み込みを確実に実行
         setTimeout(() => {
             console.log('🔄 筋肉部位ボタンを読み込み中...');
             this.loadMuscleGroups();
         }, 100);
-        
+
         console.log('🔧 ウィザードインターフェース設定完了');
     }
 
@@ -431,7 +431,7 @@ class WorkoutWizard {
         });
 
         muscleGrid.innerHTML = muscleGroupsHtml;
-        
+
         // 生成後の確認
         const generatedButtons = safeGetElements('.muscle-group-btn');
         console.log('✅ 筋肉部位読み込み完了:', {
@@ -448,12 +448,12 @@ class WorkoutWizard {
             muscleGrid.style.display = 'grid';
             muscleGrid.style.gridTemplateColumns = 'repeat(2, 1fr)';
             muscleGrid.style.gap = '1rem';
-            
+
             // レスポンシブ対応
             if (window.innerWidth >= 768) {
                 muscleGrid.style.gridTemplateColumns = 'repeat(3, 1fr)';
             }
-            
+
             console.log('🔧 グリッドレイアウトを更新:', {
                 display: muscleGrid.style.display,
                 gridTemplateColumns: muscleGrid.style.gridTemplateColumns,
@@ -468,14 +468,14 @@ class WorkoutWizard {
     selectPreset(presetType) {
         try {
             console.log('🎯 プリセット選択開始:', presetType);
-            
+
             // 既存の選択をクリア
             this.selectedMuscleGroups = [];
 
             // プリセットに基づいて筋肉部位を選択
             const muscleGroups = WORKOUT_PRESETS[presetType] || [];
             this.selectedMuscleGroups = [...muscleGroups];
-            
+
             console.log('💪 選択された筋肉部位:', this.selectedMuscleGroups);
 
             // 筋肉部位ボタンが読み込まれていない場合は先に読み込み
@@ -483,7 +483,7 @@ class WorkoutWizard {
             if (muscleButtons.length === 0) {
                 console.log('🔄 筋肉部位ボタンが見つからないため先に読み込み...');
                 this.loadMuscleGroups();
-                
+
                 // 読み込み完了後にUIを更新
                 setTimeout(() => {
                     console.log('🔄 筋肉部位ボタン読み込み後の更新...');
@@ -585,15 +585,15 @@ class WorkoutWizard {
         muscleButtons.forEach(btn => {
             const muscleId = btn.dataset.muscle;
             const isSelected = this.selectedMuscleGroups.includes(muscleId);
-            
+
             // 既存の選択状態をクリア
             btn.classList.remove('selected');
-            
+
             // 新しい選択状態を適用
             if (isSelected) {
                 btn.classList.add('selected');
             }
-            
+
             console.log(`🔘 筋肉部位ボタン更新: ${muscleId}`, {
                 isSelected,
                 hasSelectedClass: btn.classList.contains('selected'),

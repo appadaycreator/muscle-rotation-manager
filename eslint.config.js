@@ -61,7 +61,20 @@ export default [
                 URIError: 'readonly',
                 Chart: 'readonly',
                 Notification: 'readonly',
-                navigator: 'readonly'
+                navigator: 'readonly',
+                performance: 'readonly',
+                MessageChannel: 'readonly',
+                PerformanceObserver: 'readonly',
+                IntersectionObserver: 'readonly',
+                crypto: 'readonly',
+                indexedDB: 'readonly',
+                Image: 'readonly',
+                MutationObserver: 'readonly',
+                SpeechSynthesisUtterance: 'readonly',
+                speechSynthesis: 'readonly',
+                requestAnimationFrame: 'readonly',
+                btoa: 'readonly',
+                atob: 'readonly'
             }
         },
         rules: {

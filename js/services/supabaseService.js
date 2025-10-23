@@ -26,12 +26,12 @@ class SupabaseService {
                 console.error('❌ Supabase URLが設定されていません。js/utils/constants.jsを確認してください。');
                 return;
             }
-            
+
             if (!SUPABASE_CONFIG.key || SUPABASE_CONFIG.key.includes('your-anon-key')) {
                 console.error('❌ Supabase API Keyが設定されていません。js/utils/constants.jsを確認してください。');
                 return;
             }
-            
+
             try {
                 this.client = window.supabase.createClient(
                     SUPABASE_CONFIG.url,
@@ -98,7 +98,7 @@ class SupabaseService {
 
         return executeWithRetry(async () => {
             console.log('Attempting login with email:', email);
-            
+
             try {
                 const { data, error } = await this.client.auth.signInWithPassword({
                     email,
@@ -110,7 +110,7 @@ class SupabaseService {
                     if (error.message.includes('Failed to fetch') || error.message.includes('ERR_NAME_NOT_RESOLVED')) {
                         throw new Error('Supabaseサーバーに接続できません。URLとAPIキーを確認してください。');
                     }
-                    
+
                     throw handleError(error, {
                         context: 'ログイン',
                         showNotification: true
@@ -280,11 +280,11 @@ class SupabaseService {
 
             if (error) {
                 console.error('Supabase query error:', error);
-                
+
                 // データベース関係性エラーの場合は、基本的なデータのみ取得を試行
                 if (error.code === 'PGRST200' && error.message.includes('relationship')) {
                     console.warn('Database relationship error detected, attempting fallback query...');
-                    
+
                     // フォールバック: 基本的なワークアウトデータのみ取得
                     const fallbackQuery = this.client
                         .from('workout_sessions')
@@ -301,16 +301,16 @@ class SupabaseService {
                         .eq('user_id', this.currentUser.id)
                         .order(sortBy, { ascending: sortOrder === 'asc' })
                         .range(offset, offset + limit - 1);
-                    
+
                     const { data: fallbackData, error: fallbackError } = await fallbackQuery;
-                    
+
                     if (fallbackError) {
                         throw handleError(fallbackError, {
                             context: 'ワークアウト履歴取得（フォールバック）',
                             showNotification: true
                         }).originalError;
                     }
-                    
+
                     // フォールバックデータを返す（training_logsは空配列）
                     return (fallbackData || []).map(workout => ({
                         id: workout.id,
@@ -330,7 +330,7 @@ class SupabaseService {
                         training_logs: []
                     }));
                 }
-                
+
                 throw handleError(error, {
                     context: 'ワークアウト履歴取得',
                     showNotification: true
@@ -340,7 +340,7 @@ class SupabaseService {
             // training_logsを別途取得
             const workoutIds = (data || []).map(workout => workout.id);
             let trainingLogs = [];
-            
+
             if (workoutIds.length > 0) {
                 try {
                     const { data: logsData, error: logsError } = await this.client
@@ -355,7 +355,7 @@ class SupabaseService {
                             muscle_group_id
                         `)
                         .in('workout_session_id', workoutIds);
-                    
+
                     if (logsError) {
                         console.warn('Training logs fetch error:', logsError);
                     } else {
@@ -369,7 +369,7 @@ class SupabaseService {
             // データを正規化して返す
             const normalizedData = (data || []).map(workout => {
                 const workoutLogs = trainingLogs.filter(log => log.workout_session_id === workout.id);
-                
+
                 return {
                     id: workout.id,
                     name: workout.session_name,

@@ -19,7 +19,7 @@ class OfflineManager {
         try {
             this.db = await this.openDatabase();
             console.log('✅ IndexedDB initialized');
-            
+
             // 既存の同期キューを復元
             await this.restoreSyncQueue();
         } catch (error) {
@@ -123,16 +123,16 @@ class OfflineManager {
         if (isOnline) {
             // オンライン復帰時の処理
             document.body.classList.remove('offline-mode');
-            
+
             // 同期キューを処理
             await this.processSyncQueue();
-            
+
             // UI更新イベントを発火
             window.dispatchEvent(new CustomEvent('connectionRestored'));
         } else {
             // オフライン時の処理
             document.body.classList.add('offline-mode');
-            
+
             // UI更新イベントを発火
             window.dispatchEvent(new CustomEvent('connectionLost'));
         }
@@ -274,7 +274,7 @@ class OfflineManager {
 
             request.onsuccess = () => {
                 let results = request.result || [];
-                
+
                 // フィルタリング
                 if (options.userId) {
                     results = results.filter(item => item.user_id === options.userId);
@@ -303,7 +303,7 @@ class OfflineManager {
         try {
             const key = `offline_${storeName}`;
             const existing = JSON.parse(localStorage.getItem(key) || '[]');
-            
+
             // 既存データの更新または新規追加
             const index = existing.findIndex(item => item.id === data.id);
             if (index >= 0) {
@@ -406,12 +406,12 @@ class OfflineManager {
         const concurrency = 3;
         for (let i = 0; i < this.syncQueue.length; i += concurrency) {
             const batch = this.syncQueue.slice(i, i + concurrency);
-            
+
             const batchPromises = batch.map(async (item, index) => {
                 try {
                     await this.syncItem(item);
                     results.success++;
-                    
+
                     // 成功したアイテムをキューから削除
                     const queueIndex = this.syncQueue.findIndex(q => q.id === item.id);
                     if (queueIndex >= 0) {
@@ -486,11 +486,11 @@ class OfflineManager {
         // 実際のSupabaseサービスを使用して同期
         if (window.supabaseService && window.supabaseService.saveWorkout) {
             const result = await window.supabaseService.saveWorkout(sessionData);
-            
+
             // ローカルデータの同期状態を更新
             sessionData.sync_status = 'synced';
             sessionData.server_id = result.id;
-            
+
             if (this.db) {
                 await this.saveToIndexedDB('workoutSessions', sessionData);
             }
@@ -505,7 +505,7 @@ class OfflineManager {
     async syncTrainingLogs(logs) {
         if (window.supabaseService && window.supabaseService.saveTrainingLogs) {
             const result = await window.supabaseService.saveTrainingLogs(logs);
-            
+
             // ローカルデータの同期状態を更新
             logs.forEach((log, index) => {
                 log.sync_status = 'synced';
@@ -536,11 +536,11 @@ class OfflineManager {
      * @returns {Promise<void>}
      */
     async restoreSyncQueue() {
-        if (!this.db) return;
+        if (!this.db) {return;}
 
         try {
             const transaction = this.db.transaction(['syncQueue'], 'readonly');
-            const store = transaction.objectStore(syncQueue);
+            const store = transaction.objectStore('syncQueue');
             const request = store.getAll();
 
             request.onsuccess = () => {

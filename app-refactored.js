@@ -5,8 +5,12 @@ import { authManager } from './js/modules/authManager.js';
 import { supabaseService } from './js/services/supabaseService.js';
 import { showNotification } from './js/utils/helpers.js';
 import { resourceOptimizer } from './js/utils/resourceOptimizer.js';
-import { databaseOptimizer } from './js/utils/databaseOptimizer.js';
+import databaseOptimizer from './js/utils/databaseOptimizer.js';
 import { handleError, watchOnlineStatus } from './js/utils/errorHandler.js';
+import router from './js/utils/router.js';
+import performanceOptimizer from './js/utils/performanceOptimizer.js';
+import securityManager from './js/utils/securityManager.js';
+import accessibilityManager from './js/utils/accessibilityManager.js';
 
 class MuscleRotationApp {
     constructor() {
@@ -25,13 +29,16 @@ class MuscleRotationApp {
     async initialize() {
         if (this.isInitialized) {return;}
 
-        console.log('🚀 MuscleRotationManager v2.0 - Starting Application with Performance Optimizations');
-        const initStartTime = performance.now();
+        console.log('🚀 MuscleRotationManager v3.0 - Starting Application with Comprehensive Optimizations');
+        const initStartTime = typeof window !== 'undefined' && window.performance ? window.performance.now() : Date.now();
 
         try {
-            // パフォーマンス最適化を並行実行
+            // 包括的最適化を並行実行
             const optimizationPromises = [
                 resourceOptimizer.initializeOptimizations(),
+                performanceOptimizer.initialize(),
+                securityManager.initialize(),
+                accessibilityManager.initialize(),
                 this.setupPerformanceMonitoring()
             ];
 
@@ -41,8 +48,8 @@ class MuscleRotationApp {
             // 基本コンポーネントを読み込み
             await this.loadBasicComponents();
 
-            // 初期ページを読み込み
-            await pageManager.navigateToPage('dashboard');
+            // ルーティング機能を初期化（ページマネージャーの代わりに使用）
+            console.log('🔄 ルーティング機能を初期化中...');
 
             // ナビゲーションを初期化
             pageManager.initializeNavigation();
@@ -62,7 +69,7 @@ class MuscleRotationApp {
             // 定期的なメンテナンスを設定
             this.setupPeriodicMaintenance();
 
-            const initTime = performance.now() - initStartTime;
+            const initTime = (typeof window !== 'undefined' && window.performance ? window.performance.now() : Date.now()) - initStartTime;
             console.log(`✅ App initialization complete (${initTime.toFixed(2)}ms)`);
             console.log('Current user:', authManager.getCurrentUser());
 
@@ -243,6 +250,31 @@ class MuscleRotationApp {
                 !mobileMenuBtn?.contains(e.target)) {
                 mobileSidebar.classList.remove('open');
             }
+        });
+
+        // ナビゲーションリンクのクリックイベントを処理
+        this.setupNavigationHandlers();
+    }
+
+    /**
+     * ナビゲーションハンドラーを設定
+     */
+    setupNavigationHandlers() {
+        // ナビゲーションリンクのクリックイベントを委譲
+        document.addEventListener('click', (e) => {
+            const navLink = e.target.closest('a[href]');
+            if (navLink && navLink.getAttribute('href').startsWith('/')) {
+                e.preventDefault();
+                const href = navLink.getAttribute('href');
+                console.log('🔗 ナビゲーションリンククリック:', href);
+                router.navigateTo(href);
+            }
+        });
+
+        // ルート変更イベントをリッスン
+        window.addEventListener('routechange', (e) => {
+            console.log('🔄 ルート変更:', e.detail);
+            // 必要に応じて追加の処理を実行
         });
     }
 

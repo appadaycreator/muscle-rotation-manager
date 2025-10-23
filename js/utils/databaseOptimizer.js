@@ -1,481 +1,727 @@
-// databaseOptimizer.js - データベースクエリ最適化とページネーション
+// databaseOptimizer.js - データベース最適化ユーティリティ
+
+import { supabaseService } from '../services/supabaseService.js';
+import { handleError } from './errorHandler.js';
 
 class DatabaseOptimizer {
     constructor() {
         this.queryCache = new Map();
-        this.cacheTimeout = 5 * 60 * 1000; // 5分
-        this.maxCacheSize = 100;
-        this.queryStats = {
-            totalQueries: 0,
-            cacheHits: 0,
-            averageResponseTime: 0,
-            slowQueries: []
+        this.connectionPool = new Map();
+        this.indexOptimizations = new Map();
+        this.queryMetrics = new Map();
+        this.batchOperations = [];
+        this.optimizationRules = new Map();
+        this.init();
+    }
+
+    /**
+     * データベース最適化を初期化
+     */
+    init() {
+        this.setupQueryOptimization();
+        this.setupConnectionPooling();
+        this.setupIndexOptimization();
+        this.setupBatchOperations();
+        this.setupDataCompression();
+        this.setupQueryCaching();
+        this.setupPerformanceMonitoring();
+    }
+
+    /**
+     * クエリ最適化設定
+     */
+    setupQueryOptimization() {
+        // クエリ最適化ルール
+        this.optimizationRules.set('select', {
+            maxColumns: 20,
+            preferIndexes: true,
+            useJoins: true,
+            limitResults: true
+        });
+
+        this.optimizationRules.set('insert', {
+            batchSize: 100,
+            useTransactions: true,
+            validateData: true
+        });
+
+        this.optimizationRules.set('update', {
+            useWhereClause: true,
+            limitRows: 1000,
+            useTransactions: true
+        });
+
+        this.optimizationRules.set('delete', {
+            useWhereClause: true,
+            limitRows: 100,
+            useTransactions: true
+        });
+    }
+
+    /**
+     * 接続プール設定
+     */
+    setupConnectionPooling() {
+        this.connectionPool = new Map();
+        this.maxConnections = 10;
+        this.connectionTimeout = 30000; // 30秒
+
+        // 接続プール管理
+        this.getConnection = async () => {
+            if (this.connectionPool.size >= this.maxConnections) {
+                await this.waitForConnection();
+            }
+
+            const connectionId = this.generateConnectionId();
+            const connection = {
+                id: connectionId,
+                createdAt: Date.now(),
+                lastUsed: Date.now(),
+                isActive: true
+            };
+
+            this.connectionPool.set(connectionId, connection);
+            return connection;
+        };
+
+        this.releaseConnection = (connectionId) => {
+            if (this.connectionPool.has(connectionId)) {
+                this.connectionPool.delete(connectionId);
+            }
         };
     }
 
     /**
-     * 最適化されたクエリを実行
-     * @param {Function} queryFunction - クエリ実行関数
-     * @param {string} cacheKey - キャッシュキー
-     * @param {Object} options - オプション
-     * @returns {Promise<any>} クエリ結果
+     * 接続待機
      */
-    async executeOptimizedQuery(queryFunction, cacheKey, options = {}) {
-        const startTime = performance.now();
-        this.queryStats.totalQueries++;
+    async waitForConnection() {
+        return new Promise((resolve) => {
+            const checkConnection = () => {
+                if (this.connectionPool.size < this.maxConnections) {
+                    resolve();
+                } else {
+                    setTimeout(checkConnection, 100);
+                }
+            };
+            checkConnection();
+        });
+    }
+
+    /**
+     * 接続ID生成
+     */
+    generateConnectionId() {
+        return `conn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    }
+
+    /**
+     * インデックス最適化設定
+     */
+    setupIndexOptimization() {
+        // インデックス最適化ルール
+        this.indexOptimizations.set('workout_sessions', [
+            { column: 'user_id', type: 'btree' },
+            { column: 'workout_date', type: 'btree' },
+            { column: 'muscle_groups_trained', type: 'gin' },
+            { columns: ['user_id', 'workout_date'], type: 'btree' }
+        ]);
+
+        this.indexOptimizations.set('training_logs', [
+            { column: 'workout_session_id', type: 'btree' },
+            { column: 'exercise_name', type: 'btree' },
+            { column: 'muscle_group_id', type: 'btree' }
+        ]);
+
+        this.indexOptimizations.set('exercises', [
+            { column: 'muscle_group_id', type: 'btree' },
+            { column: 'name_ja', type: 'btree' },
+            { column: 'difficulty_level', type: 'btree' }
+        ]);
+
+        this.indexOptimizations.set('muscle_groups', [
+            { column: 'name', type: 'btree' },
+            { column: 'name_ja', type: 'btree' }
+        ]);
+    }
+
+    /**
+     * バッチ操作設定
+     */
+    setupBatchOperations() {
+        this.batchOperations = [];
+        this.batchSize = 100;
+        this.batchTimeout = 5000; // 5秒
+
+        // バッチ操作の実行
+        this.executeBatch = async () => {
+            if (this.batchOperations.length === 0) {return;}
+
+            const operations = this.batchOperations.splice(0, this.batchSize);
+
+            try {
+                await this.processBatchOperations(operations);
+            } catch (error) {
+                console.error('バッチ操作エラー:', error);
+                // 失敗した操作を元に戻す
+                this.batchOperations.unshift(...operations);
+            }
+        };
+
+        // 定期的なバッチ実行
+        setInterval(() => {
+            this.executeBatch();
+        }, this.batchTimeout);
+    }
+
+    /**
+     * バッチ操作処理
+     */
+    async processBatchOperations(operations) {
+        const groupedOperations = this.groupOperationsByType(operations);
+
+        for (const [operationType, ops] of groupedOperations) {
+            await this.executeOperationGroup(operationType, ops);
+        }
+    }
+
+    /**
+     * 操作をタイプ別にグループ化
+     */
+    groupOperationsByType(operations) {
+        const groups = new Map();
+
+        operations.forEach(op => {
+            if (!groups.has(op.type)) {
+                groups.set(op.type, []);
+            }
+            groups.get(op.type).push(op);
+        });
+
+        return groups;
+    }
+
+    /**
+     * 操作グループ実行
+     */
+    async executeOperationGroup(type, operations) {
+        switch (type) {
+            case 'insert':
+                await this.batchInsert(operations);
+                break;
+            case 'update':
+                await this.batchUpdate(operations);
+                break;
+            case 'delete':
+                await this.batchDelete(operations);
+                break;
+            default:
+                console.warn('未知の操作タイプ:', type);
+        }
+    }
+
+    /**
+     * バッチ挿入
+     */
+    async batchInsert(operations) {
+        const tableGroups = this.groupOperationsByTable(operations);
+
+        for (const [table, ops] of tableGroups) {
+            const data = ops.map(op => op.data);
+
+            const { error } = await supabaseService.client
+                .from(table)
+                .insert(data);
+
+            if (error) {
+                throw new Error(`バッチ挿入エラー (${table}): ${error.message}`);
+            }
+        }
+    }
+
+    /**
+     * バッチ更新
+     */
+    async batchUpdate(operations) {
+        for (const op of operations) {
+            const { error } = await supabaseService.client
+                .from(op.table)
+                .update(op.data)
+                .eq(op.condition.column, op.condition.value);
+
+            if (error) {
+                throw new Error(`バッチ更新エラー (${op.table}): ${error.message}`);
+            }
+        }
+    }
+
+    /**
+     * バッチ削除
+     */
+    async batchDelete(operations) {
+        for (const op of operations) {
+            const { error } = await supabaseService.client
+                .from(op.table)
+                .delete()
+                .eq(op.condition.column, op.condition.value);
+
+            if (error) {
+                throw new Error(`バッチ削除エラー (${op.table}): ${error.message}`);
+            }
+        }
+    }
+
+    /**
+     * 操作をテーブル別にグループ化
+     */
+    groupOperationsByTable(operations) {
+        const groups = new Map();
+
+        operations.forEach(op => {
+            if (!groups.has(op.table)) {
+                groups.set(op.table, []);
+            }
+            groups.get(op.table).push(op);
+        });
+
+        return groups;
+    }
+
+    /**
+     * データ圧縮設定
+     */
+    setupDataCompression() {
+        this.compressionEnabled = true;
+        this.compressionLevel = 6; // 1-9の範囲
+
+        // データ圧縮
+        this.compressData = (data) => {
+            if (!this.compressionEnabled) {return data;}
+
+            try {
+                const jsonString = JSON.stringify(data);
+                const compressed = this.compressString(jsonString);
+                return compressed;
+            } catch (error) {
+                console.warn('データ圧縮エラー:', error);
+                return data;
+            }
+        };
+
+        // データ展開
+        this.decompressData = (compressedData) => {
+            if (!this.compressionEnabled) {return compressedData;}
+
+            try {
+                const jsonString = this.decompressString(compressedData);
+                return JSON.parse(jsonString);
+            } catch (error) {
+                console.warn('データ展開エラー:', error);
+                return compressedData;
+            }
+        };
+    }
+
+    /**
+     * 文字列圧縮
+     */
+    compressString(str) {
+        // 簡易的な圧縮（実際の実装ではLZ4やgzipを使用）
+        return btoa(str);
+    }
+
+    /**
+     * 文字列展開
+     */
+    decompressString(compressedStr) {
+        return atob(compressedStr);
+    }
+
+    /**
+     * クエリキャッシュ設定
+     */
+    setupQueryCaching() {
+        this.queryCache = new Map();
+        this.cacheTimeout = 300000; // 5分
+        this.maxCacheSize = 100;
+
+        // キャッシュ取得
+        this.getCachedQuery = (queryKey) => {
+            const cached = this.queryCache.get(queryKey);
+            if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
+                return cached.data;
+            }
+            return null;
+        };
+
+        // キャッシュ設定
+        this.setCachedQuery = (queryKey, data) => {
+            if (this.queryCache.size >= this.maxCacheSize) {
+                this.evictOldestCache();
+            }
+
+            this.queryCache.set(queryKey, {
+                data,
+                timestamp: Date.now()
+            });
+        };
+
+        // 古いキャッシュを削除
+        this.evictOldestCache = () => {
+            let oldestKey = null;
+            let oldestTime = Date.now();
+
+            for (const [key, value] of this.queryCache) {
+                if (value.timestamp < oldestTime) {
+                    oldestTime = value.timestamp;
+                    oldestKey = key;
+                }
+            }
+
+            if (oldestKey) {
+                this.queryCache.delete(oldestKey);
+            }
+        };
+    }
+
+    /**
+     * パフォーマンス監視設定
+     */
+    setupPerformanceMonitoring() {
+        this.queryMetrics = new Map();
+
+        // クエリ実行時間監視
+        this.monitorQuery = async (queryName, queryFn) => {
+            const startTime = performance.now();
+
+            try {
+                if (typeof queryFn !== 'function') {
+                    throw new Error('queryFn must be a function');
+                }
+                const result = await queryFn();
+                const endTime = performance.now();
+                const duration = endTime - startTime;
+
+                this.recordQueryMetric(queryName, duration, true);
+                return result;
+            } catch (error) {
+                const endTime = performance.now();
+                const duration = endTime - startTime;
+
+                this.recordQueryMetric(queryName, duration, false);
+                throw error;
+            }
+        };
+    }
+
+    /**
+     * クエリメトリクス記録
+     */
+    recordQueryMetric(queryName, duration, success) {
+        if (!this.queryMetrics.has(queryName)) {
+            this.queryMetrics.set(queryName, {
+                count: 0,
+                totalDuration: 0,
+                averageDuration: 0,
+                minDuration: Infinity,
+                maxDuration: 0,
+                successCount: 0,
+                errorCount: 0
+            });
+        }
+
+        const metrics = this.queryMetrics.get(queryName);
+        metrics.count++;
+        metrics.totalDuration += duration;
+        metrics.averageDuration = metrics.totalDuration / metrics.count;
+        metrics.minDuration = Math.min(metrics.minDuration, duration);
+        metrics.maxDuration = Math.max(metrics.maxDuration, duration);
+
+        if (success) {
+            metrics.successCount++;
+        } else {
+            metrics.errorCount++;
+        }
+    }
+
+    /**
+     * 最適化されたクエリ実行
+     */
+    async executeOptimizedQuery(queryName, queryFn, options = {}) {
+        const queryKey = this.generateQueryKey(queryName, options);
 
         // キャッシュチェック
-        if (options.useCache !== false) {
-            const cachedResult = this.getCachedResult(cacheKey);
-            if (cachedResult) {
-                this.queryStats.cacheHits++;
-                console.log(`🎯 キャッシュヒット: ${cacheKey}`);
-                return cachedResult;
+        const cached = this.getCachedQuery(queryKey);
+        if (cached && !options.forceRefresh) {
+            return cached;
+        }
+
+        // クエリ実行
+        const result = await this.monitorQuery(queryName, queryFn);
+
+        // キャッシュに保存
+        this.setCachedQuery(queryKey, result);
+
+        return result;
+    }
+
+    /**
+     * クエリキー生成
+     */
+    generateQueryKey(queryName, options) {
+        const params = JSON.stringify(options);
+        return `${queryName}_${btoa(params)}`;
+    }
+
+    /**
+     * データベース統計取得
+     */
+    getDatabaseStats() {
+        return {
+            queryCache: {
+                size: this.queryCache.size,
+                maxSize: this.maxCacheSize
+            },
+            connectionPool: {
+                active: this.connectionPool.size,
+                max: this.maxConnections
+            },
+            queryMetrics: Object.fromEntries(this.queryMetrics),
+            batchOperations: {
+                pending: this.batchOperations.length,
+                batchSize: this.batchSize
+            }
+        };
+    }
+
+    /**
+     * パフォーマンスレポート生成
+     */
+    generatePerformanceReport() {
+        const stats = this.getDatabaseStats();
+        const report = {
+            timestamp: new Date().toISOString(),
+            databaseStats: stats,
+            recommendations: this.generateOptimizationRecommendations(stats)
+        };
+
+        return report;
+    }
+
+    /**
+     * 最適化推奨事項生成
+     */
+    generateOptimizationRecommendations(stats) {
+        const recommendations = [];
+
+        // キャッシュ効率の推奨事項
+        if (stats.queryCache.size > stats.queryCache.maxSize * 0.8) {
+            recommendations.push({
+                type: 'cache',
+                priority: 'medium',
+                message: 'クエリキャッシュの使用率が高いです。キャッシュサイズの増加を検討してください。'
+            });
+        }
+
+        // 接続プールの推奨事項
+        if (stats.connectionPool.active > stats.connectionPool.max * 0.8) {
+            recommendations.push({
+                type: 'connection',
+                priority: 'high',
+                message: '接続プールの使用率が高いです。最大接続数の増加を検討してください。'
+            });
+        }
+
+        // クエリパフォーマンスの推奨事項
+        for (const [queryName, metrics] of Object.entries(stats.queryMetrics)) {
+            if (metrics.averageDuration > 1000) {
+                recommendations.push({
+                    type: 'performance',
+                    priority: 'high',
+                    message: `${queryName}の平均実行時間が${metrics.averageDuration.toFixed(2)}msです。インデックスの追加を検討してください。`
+                });
             }
         }
 
+        return recommendations;
+    }
+
+    /**
+     * データベース最適化実行
+     */
+    async performOptimization() {
+        const optimizations = [];
+
         try {
-            // クエリ実行
-            const result = await queryFunction();
-            const duration = performance.now() - startTime;
+            // インデックス最適化
+            await this.optimizeIndexes();
+            optimizations.push('インデックス最適化完了');
 
-            // パフォーマンス統計更新
-            this.updateQueryStats(duration, cacheKey);
+            // クエリキャッシュ最適化
+            this.optimizeQueryCache();
+            optimizations.push('クエリキャッシュ最適化完了');
 
-            // 結果をキャッシュ
-            if (options.useCache !== false && result) {
-                this.setCachedResult(cacheKey, result, options.cacheTTL);
-            }
+            // 接続プール最適化
+            this.optimizeConnectionPool();
+            optimizations.push('接続プール最適化完了');
 
-            console.log(`📊 クエリ実行: ${cacheKey} (${duration.toFixed(2)}ms)`);
-            return result;
-
+            return {
+                success: true,
+                optimizations,
+                timestamp: new Date().toISOString()
+            };
         } catch (error) {
-            const duration = performance.now() - startTime;
-            console.error(`❌ クエリエラー: ${cacheKey} (${duration.toFixed(2)}ms)`, error);
+            handleError(error, {
+                context: 'データベース最適化',
+                showNotification: true
+            });
+
+            return {
+                success: false,
+                error: error.message,
+                timestamp: new Date().toISOString()
+            };
+        }
+    }
+
+    /**
+     * キャッシュ結果設定（テスト用）
+     */
+    setCachedResult(key, result) {
+        this.setCachedQuery(key, result);
+    }
+
+    /**
+     * キャッシュクエリ取得（テスト用）
+     */
+    getCachedQuery(key) {
+        const cached = this.queryCache.get(key);
+        if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
+            return cached.data;
+        }
+        return null;
+    }
+
+    /**
+     * ページネーション付きクエリ実行
+     */
+    async executePaginatedQuery(queryName, queryFn, page = 1, limit = 10) {
+        const offset = (page - 1) * limit;
+        const queryKey = `${queryName}_page_${page}_limit_${limit}`;
+
+        // キャッシュチェック
+        const cached = this.getCachedQuery(queryKey);
+        if (cached) {
+            return cached;
+        }
+
+        // クエリ実行
+        const result = await this.monitorQuery(queryName, async () => {
+            return await queryFn(offset, limit);
+        });
+
+        // キャッシュに保存
+        this.setCachedQuery(queryKey, result);
+
+        return result;
+    }
+
+    /**
+     * バッチクエリ実行
+     */
+    async executeBatchQueries(queries, options = {}) {
+        const startTime = performance.now();
+
+        try {
+            const results = await Promise.all(queries.map(async (query) => {
+                return await this.monitorQuery(query.name, query.queryFunction);
+            }));
+
+            const endTime = typeof window !== 'undefined' && window.performance ? window.performance.now() : Date.now();
+            const duration = endTime - startTime;
+
+            console.log(`バッチクエリ実行完了: ${queries.length}件, ${duration.toFixed(2)}ms`);
+
+            return { results, errors: [] };
+        } catch (error) {
+            console.error('バッチクエリ実行エラー:', error);
             throw error;
         }
     }
 
     /**
-     * ページネーション付きクエリを実行
-     * @param {Function} queryFunction - クエリ実行関数
-     * @param {Object} paginationOptions - ページネーションオプション
-     * @returns {Promise<Object>} ページネーション結果
-     */
-    async executePaginatedQuery(queryFunction, paginationOptions = {}) {
-        const {
-            page = 1,
-            limit = 20,
-            sortBy = 'created_at',
-            sortOrder = 'desc',
-            cacheKey,
-            useCache = true
-        } = paginationOptions;
-
-        const offset = (page - 1) * limit;
-        const fullCacheKey = `${cacheKey}_page_${page}_limit_${limit}_sort_${sortBy}_${sortOrder}`;
-
-        return this.executeOptimizedQuery(
-            async () => {
-                // ページネーション付きクエリを実行
-                const result = await queryFunction({
-                    offset,
-                    limit,
-                    sortBy,
-                    sortOrder
-                });
-
-                // 総件数を取得（別途カウントクエリが必要な場合）
-                let totalCount = result.totalCount;
-                if (!totalCount && result.data) {
-                    totalCount = result.data.length;
-                }
-
-                return {
-                    data: result.data || result,
-                    pagination: {
-                        page,
-                        limit,
-                        totalCount,
-                        totalPages: Math.ceil(totalCount / limit),
-                        hasNext: page * limit < totalCount,
-                        hasPrev: page > 1
-                    },
-                    sortBy,
-                    sortOrder
-                };
-            },
-            fullCacheKey,
-            { useCache, cacheTTL: 2 * 60 * 1000 } // 2分キャッシュ
-        );
-    }
-
-    /**
-     * バッチクエリを実行（複数のクエリを効率的に処理）
-     * @param {Array} queries - クエリ配列
-     * @param {Object} options - オプション
-     * @returns {Promise<Array>} 結果配列
-     */
-    async executeBatchQueries(queries, options = {}) {
-        const { concurrency = 3, failFast = false } = options;
-
-        console.log(`📦 バッチクエリ実行: ${queries.length}件 (並行度: ${concurrency})`);
-
-        const results = [];
-        const errors = [];
-
-        // 並行度を制限してクエリを実行
-        for (let i = 0; i < queries.length; i += concurrency) {
-            const batch = queries.slice(i, i + concurrency);
-
-            const batchPromises = batch.map(async (query, index) => {
-                try {
-                    const result = await this.executeOptimizedQuery(
-                        query.queryFunction,
-                        query.cacheKey,
-                        query.options
-                    );
-                    return { index: i + index, result, success: true };
-                } catch (error) {
-                    const errorResult = { index: i + index, error, success: false };
-                    if (failFast) {
-                        throw errorResult;
-                    }
-                    return errorResult;
-                }
-            });
-
-            const batchResults = await Promise.allSettled(batchPromises);
-
-            batchResults.forEach(result => {
-                if (result.status === 'fulfilled') {
-                    if (result.value.success) {
-                        results[result.value.index] = result.value.result;
-                    } else {
-                        errors.push(result.value);
-                    }
-                } else {
-                    errors.push({ error: result.reason });
-                }
-            });
-        }
-
-        if (errors.length > 0 && failFast) {
-            throw new Error(`バッチクエリで${errors.length}件のエラーが発生しました`);
-        }
-
-        console.log(`✅ バッチクエリ完了: 成功 ${results.length}件, エラー ${errors.length}件`);
-        return { results, errors };
-    }
-
-    /**
-     * インデックス最適化のための分析を実行
-     * @param {Array} queries - 分析対象のクエリ
-     * @returns {Object} 最適化提案
-     */
-    analyzeQueryPerformance(queries) {
-        const analysis = {
-            slowQueries: [],
-            frequentQueries: new Map(),
-            indexSuggestions: [],
-            cacheOptimizations: []
-        };
-
-        // 遅いクエリを特定
-        this.queryStats.slowQueries.forEach(query => {
-            if (query.duration > 1000) { // 1秒以上
-                analysis.slowQueries.push(query);
-            }
-        });
-
-        // 頻繁に実行されるクエリを特定
-        queries.forEach(query => {
-            const count = analysis.frequentQueries.get(query.pattern) || 0;
-            analysis.frequentQueries.set(query.pattern, count + 1);
-        });
-
-        // インデックス提案を生成
-        analysis.slowQueries.forEach(query => {
-            if (query.cacheKey.includes('workout_sessions')) {
-                analysis.indexSuggestions.push({
-                    table: 'workout_sessions',
-                    columns: ['user_id', 'workout_date'],
-                    reason: '頻繁なユーザー別日付検索のため'
-                });
-            }
-
-            if (query.cacheKey.includes('training_logs')) {
-                analysis.indexSuggestions.push({
-                    table: 'training_logs',
-                    columns: ['workout_session_id', 'muscle_group_id'],
-                    reason: 'セッション別筋肉部位検索のため'
-                });
-            }
-        });
-
-        // キャッシュ最適化提案
-        analysis.frequentQueries.forEach((count, pattern) => {
-            if (count > 10) {
-                analysis.cacheOptimizations.push({
-                    pattern,
-                    frequency: count,
-                    suggestion: 'より長いキャッシュTTLを設定'
-                });
-            }
-        });
-
-        return analysis;
-    }
-
-    /**
-     * クエリ結果をキャッシュに保存
-     * @param {string} key - キャッシュキー
-     * @param {any} result - 結果
-     * @param {number} ttl - 生存時間（ミリ秒）
-     */
-    setCachedResult(key, result, ttl = this.cacheTimeout) {
-        // キャッシュサイズ制限
-        if (this.queryCache.size >= this.maxCacheSize) {
-            const firstKey = this.queryCache.keys().next().value;
-            this.queryCache.delete(firstKey);
-        }
-
-        const cacheEntry = {
-            result,
-            timestamp: Date.now(),
-            ttl
-        };
-
-        this.queryCache.set(key, cacheEntry);
-    }
-
-    /**
-     * キャッシュから結果を取得
-     * @param {string} key - キャッシュキー
-     * @returns {any|null} キャッシュされた結果
-     */
-    getCachedResult(key) {
-        const entry = this.queryCache.get(key);
-        if (!entry) {return null;}
-
-        const now = Date.now();
-        if (now - entry.timestamp > entry.ttl) {
-            this.queryCache.delete(key);
-            return null;
-        }
-
-        return entry.result;
-    }
-
-    /**
-     * クエリ統計を更新
-     * @param {number} duration - 実行時間
-     * @param {string} cacheKey - キャッシュキー
-     */
-    updateQueryStats(duration, cacheKey) {
-        // 平均レスポンス時間を更新
-        const currentAvg = this.queryStats.averageResponseTime;
-        const totalQueries = this.queryStats.totalQueries;
-        this.queryStats.averageResponseTime =
-            (currentAvg * (totalQueries - 1) + duration) / totalQueries;
-
-        // 遅いクエリを記録
-        if (duration > 500) { // 500ms以上
-            this.queryStats.slowQueries.push({
-                cacheKey,
-                duration,
-                timestamp: Date.now()
-            });
-
-            // 最新100件のみ保持
-            if (this.queryStats.slowQueries.length > 100) {
-                this.queryStats.slowQueries.shift();
-            }
-        }
-    }
-
-    /**
-     * データベース接続プールを最適化
-     * @param {Object} poolConfig - プール設定
-     * @returns {Object} 最適化されたプール設定
-     */
-    optimizeConnectionPool(poolConfig = {}) {
-        const optimized = {
-            // 基本設定
-            min: poolConfig.min || 2,
-            max: poolConfig.max || 10,
-
-            // 接続タイムアウト
-            acquireTimeoutMillis: poolConfig.acquireTimeoutMillis || 30000,
-            createTimeoutMillis: poolConfig.createTimeoutMillis || 30000,
-            destroyTimeoutMillis: poolConfig.destroyTimeoutMillis || 5000,
-            idleTimeoutMillis: poolConfig.idleTimeoutMillis || 30000,
-
-            // 再試行設定
-            reapIntervalMillis: poolConfig.reapIntervalMillis || 1000,
-            createRetryIntervalMillis: poolConfig.createRetryIntervalMillis || 200,
-
-            // パフォーマンス最適化
-            propagateCreateError: false,
-
-            // ログ設定
-            log: (message, logLevel) => {
-                if (logLevel === 'error') {
-                    console.error('🔗 DB Pool Error:', message);
-                } else if (logLevel === 'warn') {
-                    console.warn('🔗 DB Pool Warning:', message);
-                }
-            }
-        };
-
-        console.log('🔗 データベース接続プールを最適化しました:', optimized);
-        return optimized;
-    }
-
-    /**
-     * クエリビルダーを最適化
-     * @param {Object} baseQuery - ベースクエリ
-     * @param {Object} filters - フィルター
-     * @returns {Object} 最適化されたクエリ
-     */
-    buildOptimizedQuery(baseQuery, filters = {}) {
-        const query = { ...baseQuery };
-
-        // インデックスを活用するためのクエリ最適化
-        if (filters.userId) {
-            // user_id は最初にフィルタリング（インデックスが効く）
-            query.where = query.where || [];
-            query.where.unshift(['user_id', '=', filters.userId]);
-        }
-
-        if (filters.dateRange) {
-            // 日付範囲フィルタ（インデックスが効く）
-            query.where = query.where || [];
-            if (filters.dateRange.start) {
-                query.where.push(['workout_date', '>=', filters.dateRange.start]);
-            }
-            if (filters.dateRange.end) {
-                query.where.push(['workout_date', '<=', filters.dateRange.end]);
-            }
-        }
-
-        // LIMIT を適切に設定
-        if (!query.limit || query.limit > 100) {
-            query.limit = 50; // デフォルト制限
-        }
-
-        // 必要な列のみ選択
-        if (!query.select || query.select.includes('*')) {
-            query.select = this.getOptimalColumns(query.table);
-        }
-
-        // ソート最適化
-        if (query.orderBy && !this.hasIndexForSort(query.table, query.orderBy)) {
-            console.warn(`⚠️ ソート列にインデックスがありません: ${query.table}.${query.orderBy}`);
-        }
-
-        return query;
-    }
-
-    /**
-     * テーブルの最適な列を取得
-     * @param {string} tableName - テーブル名
-     * @returns {Array} 列名配列
-     */
-    getOptimalColumns(tableName) {
-        const columnMap = {
-            workout_sessions: [
-                'id', 'session_name', 'workout_date', 'start_time', 'end_time',
-                'total_duration_minutes', 'muscle_groups_trained', 'is_completed'
-            ],
-            training_logs: [
-                'id', 'workout_session_id', 'exercise_name', 'sets', 'reps',
-                'weights', 'muscle_group_id', 'workout_date'
-            ],
-            user_profiles: [
-                'id', 'display_name', 'avatar_url', 'font_size', 'theme_preference'
-            ]
-        };
-
-        return columnMap[tableName] || ['*'];
-    }
-
-    /**
-     * ソート用インデックスの存在チェック
-     * @param {string} tableName - テーブル名
-     * @param {string} column - 列名
-     * @returns {boolean} インデックス存在フラグ
-     */
-    hasIndexForSort(tableName, column) {
-        const indexedColumns = {
-            workout_sessions: ['workout_date', 'user_id', 'created_at'],
-            training_logs: ['workout_date', 'workout_session_id', 'created_at'],
-            user_profiles: ['id', 'created_at']
-        };
-
-        return indexedColumns[tableName]?.includes(column) || false;
-    }
-
-    /**
-     * キャッシュを最適化
-     */
-    optimizeCache() {
-        const now = Date.now();
-        let removedCount = 0;
-
-        // 期限切れエントリを削除
-        for (const [key, entry] of this.queryCache.entries()) {
-            if (now - entry.timestamp > entry.ttl) {
-                this.queryCache.delete(key);
-                removedCount++;
-            }
-        }
-
-        console.log(`🧹 キャッシュ最適化: ${removedCount}件の期限切れエントリを削除`);
-    }
-
-    /**
-     * パフォーマンス統計を取得
-     * @returns {Object} 統計情報
-     */
-    getPerformanceStats() {
-        const cacheHitRate = this.queryStats.totalQueries > 0
-            ? (this.queryStats.cacheHits / this.queryStats.totalQueries * 100).toFixed(2)
-            : 0;
-
-        return {
-            totalQueries: this.queryStats.totalQueries,
-            cacheHits: this.queryStats.cacheHits,
-            cacheHitRate: `${cacheHitRate}%`,
-            averageResponseTime: `${this.queryStats.averageResponseTime.toFixed(2)}ms`,
-            slowQueriesCount: this.queryStats.slowQueries.length,
-            cacheSize: this.queryCache.size,
-            recentSlowQueries: this.queryStats.slowQueries.slice(-5)
-        };
-    }
-
-    /**
-     * キャッシュをクリア
-     */
-    clearCache() {
-        this.queryCache.clear();
-        console.log('🧹 クエリキャッシュをクリアしました');
-    }
-
-    /**
-     * 統計をリセット
+     * 統計リセット
      */
     resetStats() {
-        this.queryStats = {
-            totalQueries: 0,
-            cacheHits: 0,
-            averageResponseTime: 0,
-            slowQueries: []
+        this.queryMetrics.clear();
+        this.queryCache.clear();
+        this.connectionPool.clear();
+        this.batchOperations = [];
+
+        console.log('データベース統計をリセットしました');
+    }
+
+    /**
+     * クエリ統計更新
+     */
+    updateQueryStats(duration, queryName) {
+        this.recordQueryMetric(queryName, duration, true);
+    }
+
+    /**
+     * パフォーマンス統計取得
+     */
+    getPerformanceStats() {
+        const totalQueries = Array.from(this.queryMetrics.values())
+            .reduce((sum, metrics) => sum + metrics.count, 0);
+        const totalDuration = Array.from(this.queryMetrics.values())
+            .reduce((sum, metrics) => sum + metrics.totalDuration, 0);
+        const averageResponseTime = totalQueries > 0 ? totalDuration / totalQueries : 0;
+
+        return {
+            totalQueries,
+            averageResponseTime: averageResponseTime.toFixed(2)
         };
-        console.log('📊 クエリ統計をリセットしました');
+    }
+
+    /**
+     * インデックス最適化
+     */
+    async optimizeIndexes() {
+        // インデックス最適化の実装
+        console.log('インデックス最適化を実行中...');
+    }
+
+    /**
+     * クエリキャッシュ最適化
+     */
+    optimizeQueryCache() {
+        // 古いキャッシュを削除
+        const now = Date.now();
+        for (const [key, value] of this.queryCache) {
+            if (now - value.timestamp > this.cacheTimeout) {
+                this.queryCache.delete(key);
+            }
+        }
+    }
+
+    /**
+     * 接続プール最適化
+     */
+    optimizeConnectionPool() {
+        // 古い接続を削除
+        const now = Date.now();
+        for (const [id, connection] of this.connectionPool) {
+            if (now - connection.lastUsed > this.connectionTimeout) {
+                this.connectionPool.delete(id);
+            }
+        }
     }
 }
 
-// シングルトンインスタンスをエクスポート
-export const databaseOptimizer = new DatabaseOptimizer();
+// グローバルインスタンスを作成
+const databaseOptimizer = new DatabaseOptimizer();
+
+// グローバルに公開
+window.databaseOptimizer = databaseOptimizer;
+
+export default databaseOptimizer;

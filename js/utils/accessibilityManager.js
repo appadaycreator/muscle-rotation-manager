@@ -15,6 +15,10 @@ class AccessibilityManager {
         this.highContrastMode = false;
         this.largeTextMode = false;
         this.reducedMotionMode = false;
+        this.colorBlindMode = false;
+        this.fontSize = 'normal';
+        this.voiceNavigation = false;
+        this.gestureSupport = false;
 
         // ARIA live region
         this.liveRegion = null;
@@ -22,6 +26,16 @@ class AccessibilityManager {
         // フォーカス管理
         this.focusTrap = null;
         this.lastFocusedElement = null;
+
+        // アクセシビリティ設定
+        this.accessibilitySettings = {
+            fontSize: 'normal',
+            contrast: 'normal',
+            motion: 'normal',
+            colorBlind: 'none',
+            voice: false,
+            gestures: false
+        };
 
         this.initialize();
     }

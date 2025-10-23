@@ -1,6 +1,6 @@
 /**
  * Supabase設定検証ユーティリティ
- * 
+ *
  * このモジュールはSupabaseの設定が正しく行われているかを検証します。
  */
 
@@ -37,7 +37,7 @@ export class SupabaseConfigValidation {
  */
 export function validateSupabaseConfig() {
     const validation = new SupabaseConfigValidation();
-    
+
     // URLの検証
     if (!SUPABASE_CONFIG.url) {
         validation.addError('Supabase URLが設定されていません');
@@ -52,7 +52,7 @@ export function validateSupabaseConfig() {
         // URLの形式は正しい
         validation.isValid = true;
     }
-    
+
     // API Keyの検証
     if (!SUPABASE_CONFIG.key) {
         validation.addError('Supabase API Keyが設定されていません');
@@ -65,12 +65,12 @@ export function validateSupabaseConfig() {
         validation.addError('Supabase API KeyはJWTトークンである必要があります（eyJで始まる）');
         validation.isValid = false;
     }
-    
+
     // 設定が正しい場合の追加チェック
     if (validation.isValid) {
         validation.addSuggestion('設定は正しく見えます。接続テストを実行してください');
     }
-    
+
     return validation;
 }
 
@@ -80,27 +80,27 @@ export function validateSupabaseConfig() {
  */
 export function displayValidationResults(validation) {
     console.log('\n🔍 Supabase設定検証結果:');
-    
+
     if (validation.isValid) {
         console.log('✅ 設定は正常です');
     } else {
         console.log('❌ 設定に問題があります');
     }
-    
+
     if (validation.errors.length > 0) {
         console.log('\n🚨 エラー:');
         validation.errors.forEach(error => {
             console.log(`   • ${error}`);
         });
     }
-    
+
     if (validation.warnings.length > 0) {
         console.log('\n⚠️ 警告:');
         validation.warnings.forEach(warning => {
             console.log(`   • ${warning}`);
         });
     }
-    
+
     if (validation.suggestions.length > 0) {
         console.log('\n💡 提案:');
         validation.suggestions.forEach(suggestion => {
@@ -116,12 +116,12 @@ export function displayConfigInfo() {
     console.log('\n📋 現在のSupabase設定:');
     console.log(`   URL: ${SUPABASE_CONFIG.url || '未設定'}`);
     console.log(`   Key: ${SUPABASE_CONFIG.key ? `${SUPABASE_CONFIG.key.substring(0, 20)}...` : '未設定'}`);
-    
+
     // 設定ファイルの場所を表示
     console.log('\n📁 設定ファイル:');
     console.log('   • js/utils/constants.js - フロントエンド設定');
     console.log('   • mcp-config.json - MCP設定（オプション）');
-    
+
     // 設定手順を表示
     console.log('\n📖 設定手順:');
     console.log('   1. Supabaseダッシュボードでプロジェクトを作成');

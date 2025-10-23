@@ -601,14 +601,15 @@ class MobileOptimizationManager {
                 // ホームページに移動
                 window.location.hash = '#dashboard';
                 break;
-            case 'menu':
+            case 'menu': {
                 // サイドバーを開く
                 const sidebar = document.querySelector('.sidebar');
                 if (sidebar) {
                     sidebar.classList.toggle('open');
                 }
                 break;
-            case 'add':
+            }
+            case 'add': {
                 // 新規追加（コンテキストに応じて）
                 const addBtn = document.querySelector('#add-exercise-btn, .add-button');
                 if (addBtn) {
