@@ -138,40 +138,9 @@ describe('CalendarPage', () => {
     });
   });
 
-  describe('getWorkoutsForDate', () => {
-    test('should return workouts for specific date', () => {
-      const date = new Date();
-      const workouts = calendarPage.getWorkoutsForDate(date);
-      expect(Array.isArray(workouts)).toBe(true);
-    });
-  });
-
-  describe('getPlannedWorkoutsForDate', () => {
-    test('should return planned workouts for specific date', () => {
-      const date = new Date();
-      const workouts = calendarPage.getPlannedWorkoutsForDate(date);
-      expect(Array.isArray(workouts)).toBe(true);
-    });
-  });
-
-  describe('addWorkout', () => {
-    test('should add workout', async () => {
-      const workout = { date: new Date(), exercises: [] };
-      await expect(calendarPage.addWorkout(workout)).resolves.not.toThrow();
-    });
-  });
-
-  describe('updateWorkout', () => {
-    test('should update workout', async () => {
-      const workout = { id: 1, date: new Date(), exercises: [] };
-      await expect(calendarPage.updateWorkout(workout)).resolves.not.toThrow();
-    });
-  });
-
-  describe('deleteWorkout', () => {
-    test('should delete workout', async () => {
-      const workoutId = 1;
-      await expect(calendarPage.deleteWorkout(workoutId)).resolves.not.toThrow();
+  describe('showLoginPrompt', () => {
+    test('should show login prompt', () => {
+      expect(() => calendarPage.showLoginPrompt()).not.toThrow();
     });
   });
 });

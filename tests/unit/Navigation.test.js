@@ -24,7 +24,8 @@ jest.mock('../../js/utils/helpers.js', () => ({
 jest.mock('../../js/utils/tooltip.js', () => ({
   tooltipManager: {
     initialize: jest.fn(),
-    addTooltip: jest.fn()
+    addTooltip: jest.fn(),
+    addDynamicTooltip: jest.fn()
   }
 }));
 
@@ -355,21 +356,21 @@ describe('Navigation', () => {
       
       navigation.setupTooltips();
       
-      expect(tooltipManager.addTooltip).toHaveBeenCalledWith('a[href="/dashboard.html"]', expect.any(Object));
-      expect(tooltipManager.addTooltip).toHaveBeenCalledWith('a[href="/workout.html"]', expect.any(Object));
-      expect(tooltipManager.addTooltip).toHaveBeenCalledWith('a[href="/calendar.html"]', expect.any(Object));
-      expect(tooltipManager.addTooltip).toHaveBeenCalledWith('a[href="/analysis.html"]', expect.any(Object));
-      expect(tooltipManager.addTooltip).toHaveBeenCalledWith('a[href="/progress.html"]', expect.any(Object));
-      expect(tooltipManager.addTooltip).toHaveBeenCalledWith('a[href="/exercises.html"]', expect.any(Object));
-      expect(tooltipManager.addTooltip).toHaveBeenCalledWith('a[href="/settings.html"]', expect.any(Object));
-      expect(tooltipManager.addTooltip).toHaveBeenCalledWith('a[href="/help.html"]', expect.any(Object));
-      expect(tooltipManager.addTooltip).toHaveBeenCalledWith('a[href="/privacy.html"]', expect.any(Object));
-      expect(tooltipManager.addTooltip).toHaveBeenCalledWith('#mobile-menu-btn', expect.any(Object));
-      expect(tooltipManager.addTooltip).toHaveBeenCalledWith('#user-avatar', expect.any(Object));
-      expect(tooltipManager.addTooltip).toHaveBeenCalledWith('#login-btn', expect.any(Object));
-      expect(tooltipManager.addTooltip).toHaveBeenCalledWith('#profile-settings', expect.any(Object));
-      expect(tooltipManager.addTooltip).toHaveBeenCalledWith('#logout-btn', expect.any(Object));
-      expect(tooltipManager.addTooltip).toHaveBeenCalledWith('#mobile-sidebar-close', expect.any(Object));
+      expect(tooltipManager.addDynamicTooltip).toHaveBeenCalledWith('a[href="/dashboard.html"]', 'ダッシュボード：ワークアウトの統計情報と推奨事項を表示します。', expect.any(Object));
+      expect(tooltipManager.addDynamicTooltip).toHaveBeenCalledWith('a[href="/workout.html"]', 'ワークアウト：筋力トレーニングの記録と管理を行います。', expect.any(Object));
+      expect(tooltipManager.addDynamicTooltip).toHaveBeenCalledWith('a[href="/calendar.html"]', 'カレンダー：過去のワークアウト履歴と予定を確認できます。', expect.any(Object));
+      expect(tooltipManager.addDynamicTooltip).toHaveBeenCalledWith('a[href="/analysis.html"]', '分析：トレーニングデータの詳細な分析とグラフを表示します。', expect.any(Object));
+      expect(tooltipManager.addDynamicTooltip).toHaveBeenCalledWith('a[href="/progress.html"]', 'プログレッシブ・オーバーロード：筋力向上の進捗を科学的に追跡します。', expect.any(Object));
+      expect(tooltipManager.addDynamicTooltip).toHaveBeenCalledWith('a[href="/exercises.html"]', 'エクササイズデータベース：豊富なエクササイズ情報を検索できます。', expect.any(Object));
+      expect(tooltipManager.addDynamicTooltip).toHaveBeenCalledWith('a[href="/settings.html"]', '設定：アカウント情報やアプリケーションの設定を変更できます。', expect.any(Object));
+      expect(tooltipManager.addDynamicTooltip).toHaveBeenCalledWith('a[href="/help.html"]', '使い方：アプリケーションの使用方法とヘルプ情報を表示します。', expect.any(Object));
+      expect(tooltipManager.addDynamicTooltip).toHaveBeenCalledWith('a[href="/privacy.html"]', 'プライバシーポリシー：個人情報の取り扱いについて説明します。', expect.any(Object));
+      expect(tooltipManager.addDynamicTooltip).toHaveBeenCalledWith('#mobile-menu-btn', 'メニューを開く：モバイル用のナビゲーションメニューを表示します。', expect.any(Object));
+      expect(tooltipManager.addDynamicTooltip).toHaveBeenCalledWith('#user-avatar', 'ユーザープロフィール：アカウント情報とログアウトオプションを表示します。', expect.any(Object));
+      expect(tooltipManager.addDynamicTooltip).toHaveBeenCalledWith('#login-btn', 'ログイン：アカウントにログインしてアプリケーションを使用します。', expect.any(Object));
+      expect(tooltipManager.addDynamicTooltip).toHaveBeenCalledWith('#profile-settings', '設定：アカウント情報やアプリケーションの設定を変更できます。', expect.any(Object));
+      expect(tooltipManager.addDynamicTooltip).toHaveBeenCalledWith('#logout-btn', 'ログアウト：現在のセッションを終了し、ログイン画面に戻ります。', expect.any(Object));
+      expect(tooltipManager.addDynamicTooltip).toHaveBeenCalledWith('#mobile-sidebar-close', 'メニューを閉じる：モバイル用のナビゲーションメニューを閉じます。', expect.any(Object));
     });
   });
 

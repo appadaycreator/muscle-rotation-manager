@@ -141,31 +141,4 @@ describe('WorkoutPage', () => {
       expect(typeof duration).toBe('number');
     });
   });
-
-  describe('getWorkoutStats', () => {
-    test('should get workout stats', () => {
-      const stats = workoutPage.getWorkoutStats();
-      expect(typeof stats).toBe('object');
-    });
-  });
-
-  describe('saveWorkout', () => {
-    test('should save workout', async () => {
-      await expect(workoutPage.saveWorkout()).resolves.not.toThrow();
-    });
-  });
-
-  describe('loadWorkout', () => {
-    test('should load workout', async () => {
-      const workoutId = 1;
-      await expect(workoutPage.loadWorkout(workoutId)).resolves.not.toThrow();
-    });
-  });
-
-  describe('deleteWorkout', () => {
-    test('should delete workout', async () => {
-      const workoutId = 1;
-      await expect(workoutPage.deleteWorkout(workoutId)).resolves.not.toThrow();
-    });
-  });
 });

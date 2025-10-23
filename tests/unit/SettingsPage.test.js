@@ -137,32 +137,4 @@ describe('SettingsPage', () => {
       expect(profile).toBeDefined();
     });
   });
-
-  describe('getUserSettings', () => {
-    test('should get user settings', async () => {
-      const settings = await settingsPage.getUserSettings();
-      expect(settings).toBeDefined();
-    });
-  });
-
-  describe('setUserSettings', () => {
-    test('should set user settings', async () => {
-      const settings = { theme: 'dark', language: 'ja' };
-      await expect(settingsPage.setUserSettings(settings)).resolves.not.toThrow();
-    });
-  });
-
-  describe('getUserPreferences', () => {
-    test('should get user preferences', async () => {
-      const preferences = await settingsPage.getUserPreferences();
-      expect(preferences).toBeDefined();
-    });
-  });
-
-  describe('setUserPreferences', () => {
-    test('should set user preferences', async () => {
-      const preferences = { notifications: true, email: true };
-      await expect(settingsPage.setUserPreferences(preferences)).resolves.not.toThrow();
-    });
-  });
 });

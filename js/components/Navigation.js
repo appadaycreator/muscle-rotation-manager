@@ -628,80 +628,65 @@ export class Navigation {
             console.log('Setting up tooltips for navigation');
 
             // デスクトップサイドバーのツールチップ
-            tooltipManager.addTooltip('a[href="/dashboard.html"]', {
-                content: 'ダッシュボード：ワークアウトの統計情報と推奨事項を表示します。',
+            tooltipManager.addDynamicTooltip('a[href="/dashboard.html"]', 'ダッシュボード：ワークアウトの統計情報と推奨事項を表示します。', {
                 position: 'right'
             });
 
-            tooltipManager.addTooltip('a[href="/workout.html"]', {
-                content: 'ワークアウト：筋力トレーニングの記録と管理を行います。',
+            tooltipManager.addDynamicTooltip('a[href="/workout.html"]', 'ワークアウト：筋力トレーニングの記録と管理を行います。', {
                 position: 'right'
             });
 
-            tooltipManager.addTooltip('a[href="/calendar.html"]', {
-                content: 'カレンダー：過去のワークアウト履歴と予定を確認できます。',
+            tooltipManager.addDynamicTooltip('a[href="/calendar.html"]', 'カレンダー：過去のワークアウト履歴と予定を確認できます。', {
                 position: 'right'
             });
 
-            tooltipManager.addTooltip('a[href="/analysis.html"]', {
-                content: '分析：トレーニングデータの詳細な分析とグラフを表示します。',
+            tooltipManager.addDynamicTooltip('a[href="/analysis.html"]', '分析：トレーニングデータの詳細な分析とグラフを表示します。', {
                 position: 'right'
             });
 
-            tooltipManager.addTooltip('a[href="/progress.html"]', {
-                content: 'プログレッシブ・オーバーロード：筋力向上の進捗を科学的に追跡します。',
+            tooltipManager.addDynamicTooltip('a[href="/progress.html"]', 'プログレッシブ・オーバーロード：筋力向上の進捗を科学的に追跡します。', {
                 position: 'right'
             });
 
-            tooltipManager.addTooltip('a[href="/exercises.html"]', {
-                content: 'エクササイズデータベース：豊富なエクササイズ情報を検索できます。',
+            tooltipManager.addDynamicTooltip('a[href="/exercises.html"]', 'エクササイズデータベース：豊富なエクササイズ情報を検索できます。', {
                 position: 'right'
             });
 
-            tooltipManager.addTooltip('a[href="/settings.html"]', {
-                content: '設定：アカウント情報やアプリケーションの設定を変更できます。',
+            tooltipManager.addDynamicTooltip('a[href="/settings.html"]', '設定：アカウント情報やアプリケーションの設定を変更できます。', {
                 position: 'right'
             });
 
-            tooltipManager.addTooltip('a[href="/help.html"]', {
-                content: '使い方：アプリケーションの使用方法とヘルプ情報を表示します。',
+            tooltipManager.addDynamicTooltip('a[href="/help.html"]', '使い方：アプリケーションの使用方法とヘルプ情報を表示します。', {
                 position: 'right'
             });
 
-            tooltipManager.addTooltip('a[href="/privacy.html"]', {
-                content: 'プライバシーポリシー：個人情報の取り扱いについて説明します。',
+            tooltipManager.addDynamicTooltip('a[href="/privacy.html"]', 'プライバシーポリシー：個人情報の取り扱いについて説明します。', {
                 position: 'right'
             });
 
             // ヘッダー要素のツールチップ
-            tooltipManager.addTooltip('#mobile-menu-btn', {
-                content: 'メニューを開く：モバイル用のナビゲーションメニューを表示します。',
+            tooltipManager.addDynamicTooltip('#mobile-menu-btn', 'メニューを開く：モバイル用のナビゲーションメニューを表示します。', {
                 position: 'bottom'
             });
 
-            tooltipManager.addTooltip('#user-avatar', {
-                content: 'ユーザープロフィール：アカウント情報とログアウトオプションを表示します。',
+            tooltipManager.addDynamicTooltip('#user-avatar', 'ユーザープロフィール：アカウント情報とログアウトオプションを表示します。', {
                 position: 'bottom'
             });
 
-            tooltipManager.addTooltip('#login-btn', {
-                content: 'ログイン：アカウントにログインしてアプリケーションを使用します。',
+            tooltipManager.addDynamicTooltip('#login-btn', 'ログイン：アカウントにログインしてアプリケーションを使用します。', {
                 position: 'bottom'
             });
 
-            tooltipManager.addTooltip('#profile-settings', {
-                content: '設定：アカウント情報やアプリケーションの設定を変更できます。',
+            tooltipManager.addDynamicTooltip('#profile-settings', '設定：アカウント情報やアプリケーションの設定を変更できます。', {
                 position: 'bottom'
             });
 
-            tooltipManager.addTooltip('#logout-btn', {
-                content: 'ログアウト：現在のセッションを終了し、ログイン画面に戻ります。',
+            tooltipManager.addDynamicTooltip('#logout-btn', 'ログアウト：現在のセッションを終了し、ログイン画面に戻ります。', {
                 position: 'bottom'
             });
 
             // モバイルサイドバーのツールチップ
-            tooltipManager.addTooltip('#mobile-sidebar-close', {
-                content: 'メニューを閉じる：モバイル用のナビゲーションメニューを閉じます。',
+            tooltipManager.addDynamicTooltip('#mobile-sidebar-close', 'メニューを閉じる：モバイル用のナビゲーションメニューを閉じます。', {
                 position: 'bottom'
             });
 

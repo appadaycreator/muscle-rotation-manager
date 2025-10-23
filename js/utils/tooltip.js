@@ -286,22 +286,34 @@ export class TooltipManager {
      */
     showTooltip(element, event) {
         const tooltipText = element.getAttribute('data-tooltip');
-        if (!tooltipText) {return;}
+        if (!tooltipText) {
+            console.warn('⚠️ No tooltip text found for element:', element);
+            return;
+        }
+
+        console.log(`🎯 Showing tooltip for element:`, element);
+        console.log(`📝 Tooltip text: ${tooltipText}`);
 
         // 既存のツールチップを非表示
         this.hideTooltip();
 
         // 設定を取得
         const config = this.getElementConfig(element);
+        console.log(`⚙️ Tooltip config:`, config);
 
         // 遅延を適用
         if (config.delay > 0) {
+            console.log(`⏰ Applying delay of ${config.delay}ms`);
             setTimeout(() => {
                 if (this.isElementHovered(element)) {
+                    console.log(`✅ Delay completed, creating tooltip`);
                     this.createTooltip(tooltipText, config, event);
+                } else {
+                    console.log(`❌ Element no longer hovered after delay`);
                 }
             }, config.delay);
         } else {
+            console.log(`⚡ No delay, creating tooltip immediately`);
             this.createTooltip(tooltipText, config, event);
         }
     }
@@ -346,13 +358,25 @@ export class TooltipManager {
      * ツールチップを作成
      */
     createTooltip(text, config, event) {
+        console.log(`🔨 Creating tooltip with text: ${text}`);
+        console.log(`⚙️ Config:`, config);
+        console.log(`📍 Event:`, event);
+        
         const container = document.getElementById('tooltip-container');
-        if (!container) {return;}
+        if (!container) {
+            console.error('❌ Tooltip container not found');
+            return;
+        }
+
+        console.log(`📦 Tooltip container found:`, container);
 
         // ツールチップ要素を作成
         const tooltip = document.createElement('div');
         tooltip.className = `tooltip tooltip-${config.theme}`;
         tooltip.innerHTML = this.formatTooltipContent(text);
+        
+        console.log(`🎨 Tooltip element created:`, tooltip);
+        console.log(`📝 Tooltip HTML: ${tooltip.innerHTML}`);
 
         // テーマとアニメーションを適用
         this.applyTooltipTheme(tooltip, config);
@@ -361,12 +385,16 @@ export class TooltipManager {
         // コンテナに追加
         container.appendChild(tooltip);
         this.activeTooltip = tooltip;
+        
+        console.log(`✅ Tooltip added to container`);
 
         // 位置を計算して設定
         this.positionTooltip(tooltip, event, config);
 
         // アニメーションで表示
         this.showTooltipWithAnimation(tooltip, config);
+        
+        console.log(`🎯 Tooltip creation completed`);
     }
 
     /**
@@ -662,7 +690,14 @@ export class TooltipManager {
      * 要素にツールチップを追加
      */
     addTooltip(element, text, config = {}) {
-        if (!element || !text) {return;}
+        if (!element || !text) {
+            console.warn('⚠️ Cannot add tooltip: element or text is missing', { element, text });
+            return;
+        }
+
+        console.log(`🔧 Adding tooltip to element:`, element);
+        console.log(`📝 Tooltip text: ${text}`);
+        console.log(`⚙️ Config:`, config);
 
         element.setAttribute('data-tooltip', text);
 
@@ -672,6 +707,15 @@ export class TooltipManager {
         if (config.maxWidth) {element.setAttribute('data-tooltip-max-width', config.maxWidth);}
         if (config.theme) {element.setAttribute('data-tooltip-theme', config.theme);}
         if (config.animation !== undefined) {element.setAttribute('data-tooltip-animation', config.animation);}
+        
+        console.log(`✅ Tooltip attributes added to element:`, {
+            'data-tooltip': element.getAttribute('data-tooltip'),
+            'data-tooltip-position': element.getAttribute('data-tooltip-position'),
+            'data-tooltip-delay': element.getAttribute('data-tooltip-delay'),
+            'data-tooltip-max-width': element.getAttribute('data-tooltip-max-width'),
+            'data-tooltip-theme': element.getAttribute('data-tooltip-theme'),
+            'data-tooltip-animation': element.getAttribute('data-tooltip-animation')
+        });
     }
 
     /**
@@ -777,9 +821,16 @@ export class TooltipManager {
      */
     addDynamicTooltip(selector, text, config = {}) {
         try {
+            console.log(`🔄 Adding dynamic tooltip for selector: ${selector}`);
+            console.log(`📝 Tooltip text: ${text}`);
+            console.log(`⚙️ Config:`, config);
+            
             // 既存の要素にツールチップを適用
             const elements = document.querySelectorAll(selector);
-            elements.forEach(element => {
+            console.log(`🎯 Found ${elements.length} elements for selector: ${selector}`);
+            
+            elements.forEach((element, index) => {
+                console.log(`📌 Adding tooltip to element ${index + 1}:`, element);
                 this.addTooltip(element, text, config);
             });
 
