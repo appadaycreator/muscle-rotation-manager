@@ -8,7 +8,7 @@ import { handleError } from '../utils/errorHandler.js';
 
 class ProgressTrackingService {
     constructor() {
-        this.supabase = supabaseService.getClient();
+        this.supabase = supabaseService.client;
     }
 
     /**

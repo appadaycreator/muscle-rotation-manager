@@ -40,5 +40,10 @@ export default {
     verbose: true,
     clearMocks: true,
     resetMocks: true,
-    restoreMocks: true
+    restoreMocks: true,
+    // テスト結果ファイルの出力設定
+    reporters: ['default'],
+    // カバレッジレポートの出力設定
+    coverageReporters: ['text', 'lcov', 'json', 'html'],
+    coverageDirectory: 'coverage'
 };
