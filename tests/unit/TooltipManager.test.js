@@ -207,7 +207,15 @@ describe('TooltipManager', () => {
     describe('addTooltip', () => {
         test('should add tooltip configuration', () => {
             const element = {
-                setAttribute: jest.fn()
+                setAttribute: jest.fn(),
+                getAttribute: jest.fn((attr) => {
+                    const attrs = {
+                        'data-tooltip': 'Test tooltip',
+                        'data-tooltip-position': 'top',
+                        'data-tooltip-theme': 'light'
+                    };
+                    return attrs[attr] || null;
+                })
             };
             const text = 'Test tooltip';
             const config = {

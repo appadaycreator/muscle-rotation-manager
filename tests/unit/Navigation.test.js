@@ -274,14 +274,22 @@ describe('Navigation', () => {
       const navigation = new Navigation();
       
       // window.location.hrefをモック（JSDOMエラーを回避）
+      const originalLocation = window.location;
       delete window.location;
-      window.location = { href: '' };
+      window.location = { 
+        href: '',
+        assign: jest.fn(),
+        replace: jest.fn()
+      };
       
       await navigation.handleLogout();
       
       const { authManager } = require('../../js/modules/authManager.js');
       expect(authManager.logout).toHaveBeenCalled();
       expect(global.showNotification).toHaveBeenCalledWith('ログアウトしました', 'success');
+      
+      // 元のlocationを復元
+      window.location = originalLocation;
     });
 
     test('should handle logout errors', async () => {
@@ -291,8 +299,13 @@ describe('Navigation', () => {
       authManager.logout = jest.fn().mockRejectedValue(error);
       
       // window.location.hrefをモック（JSDOMエラーを回避）
+      const originalLocation = window.location;
       delete window.location;
-      window.location = { href: '' };
+      window.location = { 
+        href: '',
+        assign: jest.fn(),
+        replace: jest.fn()
+      };
       
       const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
       
@@ -302,6 +315,9 @@ describe('Navigation', () => {
       expect(global.showNotification).toHaveBeenCalledWith('ログアウトに失敗しました', 'error');
       
       consoleErrorSpy.mockRestore();
+      
+      // 元のlocationを復元
+      window.location = originalLocation;
     });
   });
 
