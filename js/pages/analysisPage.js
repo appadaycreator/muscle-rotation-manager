@@ -25,6 +25,9 @@ class AnalysisPage {
 
         await safeAsync(
             async () => {
+                // 分析ページのコンテンツを表示
+                this.renderAnalysisPage();
+                
                 await this.loadWorkoutData();
                 this.renderStatistics();
                 this.renderCharts();
@@ -38,6 +41,111 @@ class AnalysisPage {
                 });
             }
         );
+    }
+
+    /**
+     * 分析ページのコンテンツを表示
+     */
+    renderAnalysisPage() {
+        const mainContent = safeGetElement('#main-content');
+        if (!mainContent) return;
+
+        mainContent.innerHTML = `
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-900">分析</h1>
+                <p class="mt-2 text-gray-600">トレーニングデータを分析し、進捗を可視化しましょう</p>
+            </div>
+
+            <!-- 総合統計 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-dumbbell text-2xl text-blue-600"></i>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">総ワークアウト数</dt>
+                                    <dd class="text-lg font-medium text-gray-900" id="total-workouts">0</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-clock text-2xl text-green-600"></i>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">総トレーニング時間</dt>
+                                    <dd class="text-lg font-medium text-gray-900" id="total-hours">0時間</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-chart-line text-2xl text-purple-600"></i>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">平均セッション時間</dt>
+                                    <dd class="text-lg font-medium text-gray-900" id="avg-session-time">0時間</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 筋肉部位別統計 -->
+            <div class="bg-white shadow rounded-lg mb-8">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">筋肉部位別統計</h3>
+                    <div id="muscle-group-stats">
+                        <div class="text-center text-gray-500 py-4">
+                            <i class="fas fa-spinner fa-spin text-xl mb-2"></i>
+                            <p>統計データを読み込み中...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 進捗グラフ -->
+            <div class="bg-white shadow rounded-lg mb-8">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">進捗グラフ</h3>
+                    <div id="progress-charts">
+                        <div class="text-center text-gray-500 py-4">
+                            <i class="fas fa-spinner fa-spin text-xl mb-2"></i>
+                            <p>グラフを読み込み中...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 詳細統計 -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">詳細統計</h3>
+                    <div id="detailed-stats">
+                        <div class="text-center text-gray-500 py-4">
+                            <i class="fas fa-spinner fa-spin text-xl mb-2"></i>
+                            <p>詳細データを読み込み中...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     /**
@@ -83,9 +191,20 @@ class AnalysisPage {
             sum + (workout.duration || 0), 0) / 3600;
         const avgSessionTime = totalWorkouts > 0 ? totalHours / totalWorkouts : 0;
 
-        safeGetElement('#total-workouts').textContent = totalWorkouts;
-        safeGetElement('#total-hours').textContent = `${totalHours.toFixed(1)}時間`;
-        safeGetElement('#avg-session-time').textContent = `${avgSessionTime.toFixed(1)}時間`;
+        // 要素の存在確認を追加
+        const totalWorkoutsEl = safeGetElement('#total-workouts');
+        const totalHoursEl = safeGetElement('#total-hours');
+        const avgSessionTimeEl = safeGetElement('#avg-session-time');
+
+        if (totalWorkoutsEl) {
+            totalWorkoutsEl.textContent = totalWorkouts;
+        }
+        if (totalHoursEl) {
+            totalHoursEl.textContent = `${totalHours.toFixed(1)}時間`;
+        }
+        if (avgSessionTimeEl) {
+            avgSessionTimeEl.textContent = `${avgSessionTime.toFixed(1)}時間`;
+        }
     }
 
     /**
