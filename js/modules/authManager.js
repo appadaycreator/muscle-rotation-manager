@@ -42,7 +42,7 @@ class AuthManager {
     setupEventListeners() {
         // 既存のイベントリスナーを削除
         this.removeEventListeners();
-        
+
         // グローバルなクリックイベントリスナーを設定
         document.addEventListener('click', (e) => {
             // ログインボタンのクリック（IDまたはdata-action属性）
@@ -50,14 +50,14 @@ class AuthManager {
                 console.log('Login button clicked');
                 e.preventDefault();
                 e.stopPropagation();
-                
+
                 if (!supabaseService.isAvailable()) {
                     showNotification('Supabaseが設定されていません。設定を確認してください。', 'error');
                     return;
                 }
                 this.showAuthModal('login');
             }
-            
+
             // ログアウトボタンのクリック
             if (e.target.matches('#logout-btn, [data-action="logout"]')) {
                 console.log('Logout button clicked');
@@ -101,13 +101,13 @@ class AuthManager {
     setupAuthStateListener() {
         supabaseService.onAuthStateChange(async (event, session) => {
             console.log('Auth state change detected:', { event, session: !!session, user: !!session?.user });
-            
+
             if (event === 'SIGNED_IN' && session) {
                 showNotification('ログインしました', 'success');
             } else if (event === 'SIGNED_OUT') {
                 showNotification('ログアウトしました', 'success');
             }
-            
+
             // UIを更新
             await this.updateAuthUI();
         });
@@ -119,9 +119,9 @@ class AuthManager {
     async updateAuthUI() {
         const loginBtn = document.getElementById('login-btn');
         const logoutBtn = document.getElementById('logout-btn');
-        
+
         console.log('updateAuthUI called, buttons found:', { loginBtn: !!loginBtn, logoutBtn: !!logoutBtn });
-        
+
         try {
             const currentUser = await this.getCurrentUser();
             console.log('Updating auth UI, currentUser:', currentUser);
@@ -179,15 +179,15 @@ class AuthManager {
         try {
             await supabaseService.signOut();
             console.log('Sign out completed, updating UI...');
-            
+
             // UIを即座に更新
             await this.updateAuthUI();
-            
+
             // 少し遅延して再度UIを更新（認証状態の変更が反映されるまで待つ）
             setTimeout(async () => {
                 await this.updateAuthUI();
             }, 500);
-            
+
             showNotification('ログアウトしました', 'success');
         } catch (error) {
             console.error('Logout error:', error);
@@ -341,7 +341,7 @@ class AuthManager {
             await this.updateAuthUI();
             this.hideAuthModal();
             showNotification('ログインしました', 'success');
-            
+
             // ログイン後にページを再読み込みしてダッシュボードを表示
             setTimeout(() => {
                 window.location.reload();

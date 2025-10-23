@@ -36,7 +36,7 @@ class AnalysisPage {
             async () => {
                 // 分析ページのコンテンツを表示
                 this.renderAnalysisPage();
-                
+
                 await this.loadWorkoutData();
                 this.renderStatistics();
                 this.renderCharts();
@@ -57,7 +57,7 @@ class AnalysisPage {
      */
     showLoginPrompt() {
         const mainContent = safeGetElement('#main-content');
-        if (!mainContent) return;
+        if (!mainContent) {return;}
 
         mainContent.innerHTML = `
             <div class="min-h-screen flex items-center justify-center bg-gray-50">
@@ -97,7 +97,7 @@ class AnalysisPage {
      */
     renderAnalysisPage() {
         const mainContent = safeGetElement('#main-content');
-        if (!mainContent) return;
+        if (!mainContent) {return;}
 
         mainContent.innerHTML = `
             <div class="mb-8">

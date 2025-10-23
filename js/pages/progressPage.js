@@ -895,9 +895,9 @@ class ProgressPage {
 
             // バリデーション
             const errors = [];
-            if (!goalType) errors.push('目標タイプ');
-            if (!targetValue) errors.push('目標値');
-            if (!targetDate) errors.push('目標達成日');
+            if (!goalType) {errors.push('目標タイプ');}
+            if (!targetValue) {errors.push('目標値');}
+            if (!targetDate) {errors.push('目標達成日');}
 
             if (errors.length > 0) {
                 throw new Error(`以下の項目を入力してください: ${errors.join(', ')}`);

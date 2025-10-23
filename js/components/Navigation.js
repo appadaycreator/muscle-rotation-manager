@@ -402,7 +402,7 @@ export class Navigation {
      */
     setupDesktopSidebarFocus() {
         const desktopSidebar = document.getElementById('desktop-sidebar');
-        if (!desktopSidebar) return;
+        if (!desktopSidebar) {return;}
 
         // サイドバーにフォーカスが当たった時の処理
         desktopSidebar.addEventListener('focusin', (e) => {
@@ -438,7 +438,7 @@ export class Navigation {
      */
     setupMobileSidebarFocus() {
         const mobileSidebar = document.getElementById('mobile-sidebar');
-        if (!mobileSidebar) return;
+        if (!mobileSidebar) {return;}
 
         // モバイルサイドバーのフォーカス管理
         mobileSidebar.addEventListener('focusin', (e) => {
@@ -477,10 +477,10 @@ export class Navigation {
      */
     showDesktopSidebar() {
         const desktopSidebar = document.getElementById('desktop-sidebar');
-        if (!desktopSidebar) return;
+        if (!desktopSidebar) {return;}
 
         // モバイル表示の場合は何もしない
-        if (window.innerWidth < 768) return;
+        if (window.innerWidth < 768) {return;}
 
         desktopSidebar.classList.remove('hidden');
         desktopSidebar.classList.add('flex');
@@ -500,10 +500,10 @@ export class Navigation {
      */
     hideDesktopSidebar() {
         const desktopSidebar = document.getElementById('desktop-sidebar');
-        if (!desktopSidebar) return;
+        if (!desktopSidebar) {return;}
 
         // モバイル表示の場合は何もしない
-        if (window.innerWidth < 768) return;
+        if (window.innerWidth < 768) {return;}
 
         desktopSidebar.classList.add('hidden');
         desktopSidebar.classList.remove('flex');
@@ -517,10 +517,10 @@ export class Navigation {
      */
     showMobileSidebar() {
         const mobileSidebar = document.getElementById('mobile-sidebar');
-        if (!mobileSidebar) return;
+        if (!mobileSidebar) {return;}
 
         // デスクトップ表示の場合は何もしない
-        if (window.innerWidth >= 768) return;
+        if (window.innerWidth >= 768) {return;}
 
         mobileSidebar.classList.remove('hidden');
         mobileSidebar.classList.add('block');
@@ -534,10 +534,10 @@ export class Navigation {
      */
     hideMobileSidebar() {
         const mobileSidebar = document.getElementById('mobile-sidebar');
-        if (!mobileSidebar) return;
+        if (!mobileSidebar) {return;}
 
         // デスクトップ表示の場合は何もしない
-        if (window.innerWidth >= 768) return;
+        if (window.innerWidth >= 768) {return;}
 
         mobileSidebar.classList.add('hidden');
         mobileSidebar.classList.remove('block');

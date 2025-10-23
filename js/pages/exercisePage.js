@@ -220,7 +220,7 @@ class ExercisePage {
             // 筋肉部位サービスから筋肉部位を取得
             const muscleGroups = await muscleGroupService.getMuscleGroups();
             console.log('Loaded muscle groups for filter:', muscleGroups);
-            
+
             muscleGroups.forEach(group => {
                 const option = document.createElement('option');
                 option.value = group.id;
@@ -228,7 +228,7 @@ class ExercisePage {
                 select.appendChild(option);
                 console.log('Added filter option:', { id: group.id, name_ja: group.name_ja, name_en: group.name_en });
             });
-            
+
             console.log('Muscle group filter setup complete. Total options:', select.options.length);
         } catch (error) {
             console.error('Failed to load muscle groups:', error);
@@ -306,7 +306,7 @@ class ExercisePage {
 
             this.currentExercises = await exerciseService.searchExercises(searchTerm, filters);
             this.renderExercises();
-            
+
             // updateExerciseCountメソッドが存在することを確認してから呼び出し
             if (typeof this.updateExerciseCount === 'function') {
                 this.updateExerciseCount();
@@ -376,7 +376,7 @@ class ExercisePage {
             const filters = this.getCurrentFilters();
             this.currentExercises = await exerciseService.searchExercises(searchTerm, filters);
             this.renderExercises();
-            
+
             // updateExerciseCountメソッドが存在することを確認してから呼び出し
             if (typeof this.updateExerciseCount === 'function') {
                 this.updateExerciseCount();
@@ -411,14 +411,14 @@ class ExercisePage {
         try {
             const currentCountElement = document.getElementById('current-count');
             const totalCountElement = document.getElementById('total-count');
-            
+
             if (currentCountElement && totalCountElement) {
                 const currentCount = this.currentExercises ? this.currentExercises.length : 0;
                 const totalCount = this.totalExercises || currentCount;
-                
+
                 currentCountElement.textContent = currentCount;
                 totalCountElement.textContent = totalCount;
-                
+
                 // フィルターが適用されている場合の表示を更新
                 const countElement = document.getElementById('exercise-count');
                 if (countElement) {
@@ -453,7 +453,7 @@ class ExercisePage {
         const compoundOnly = document.getElementById('compound-filter')?.checked;
         const beginnerOnly = document.getElementById('beginner-filter')?.checked;
 
-        return !!(searchTerm || muscleGroup || equipment || difficulty || exerciseType || 
+        return !!(searchTerm || muscleGroup || equipment || difficulty || exerciseType ||
                  bodyweightOnly || compoundOnly || beginnerOnly);
     }
 
@@ -618,7 +618,7 @@ class ExercisePage {
         try {
             const categoryInfo = await muscleGroupService.getMuscleGroupCategoryInfo(muscleGroup);
             console.log('Retrieved category info:', categoryInfo);
-            
+
             if (categoryInfo) {
                 this.renderCategoryDetail(categoryInfo);
                 this.showDetailModal();
@@ -758,35 +758,35 @@ class ExercisePage {
     async applyCategoryFilter(categoryName) {
         try {
             console.log('Applying category filter for:', categoryName);
-            
+
             // 筋肉部位名のマッピング（カテゴリ詳細の名前からデータベースの筋肉部位名へ）
             const categoryNameMapping = {
-                '胸筋': '胸',
-                '背筋': '背中',
-                '脚筋': '脚',
-                '肩筋': '肩',
-                '腕筋': '腕',
-                '腹': '腹',
-                '体幹': '腹'
+                胸筋: '胸',
+                背筋: '背中',
+                脚筋: '脚',
+                肩筋: '肩',
+                腕筋: '腕',
+                腹: '腹',
+                体幹: '腹'
             };
-            
+
             const mappedName = categoryNameMapping[categoryName] || categoryName;
             console.log('Mapped category name:', mappedName);
-            
+
             // 筋肉部位サービスから筋肉部位を取得
             const muscleGroup = await muscleGroupService.getMuscleGroupByName(mappedName);
             console.log('Found muscle group:', muscleGroup);
-            
+
             if (muscleGroup) {
                 const muscleGroupFilter = document.getElementById('muscle-group-filter');
                 if (muscleGroupFilter) {
                     console.log('Setting muscle group filter to:', muscleGroup.id);
                     muscleGroupFilter.value = muscleGroup.id;
-                    
+
                     // フィルターを適用
                     await this.applyFilters();
                     this.updateExerciseCount();
-                    
+
                     // フィルター適用の通知を表示
                     showNotification(`${muscleGroup.name_ja}のエクササイズで絞り込みました`, 'success');
                 } else {
@@ -795,18 +795,18 @@ class ExercisePage {
                 }
             } else {
                 console.warn('Muscle group not found for category:', categoryName, 'mapped to:', mappedName);
-                
+
                 // フォールバック: 直接筋肉部位IDで検索
                 const directMapping = {
-                    '胸筋': 'chest',
-                    '背筋': 'back',
-                    '脚筋': 'legs',
-                    '肩筋': 'shoulders',
-                    '腕筋': 'arms',
-                    '腹': 'abs',
-                    '体幹': 'abs'
+                    胸筋: 'chest',
+                    背筋: 'back',
+                    脚筋: 'legs',
+                    肩筋: 'shoulders',
+                    腕筋: 'arms',
+                    腹: 'abs',
+                    体幹: 'abs'
                 };
-                
+
                 const directId = directMapping[categoryName];
                 if (directId) {
                     console.log('Trying direct ID mapping:', directId);
@@ -815,7 +815,7 @@ class ExercisePage {
                         // 筋肉部位フィルターのオプションを確認
                         const options = Array.from(muscleGroupFilter.options);
                         console.log('Available filter options:', options.map(opt => ({ value: opt.value, text: opt.text })));
-                        
+
                         // 筋肉部位IDで直接検索
                         const targetOption = options.find(opt => opt.value === directId);
                         if (targetOption) {
@@ -1474,7 +1474,7 @@ class ExercisePage {
         if (exerciseList) {
             // ハイライト効果を追加
             exerciseList.classList.add('ring-2', 'ring-blue-500', 'ring-opacity-50');
-            
+
             // 2秒後にハイライトを削除
             setTimeout(() => {
                 exerciseList.classList.remove('ring-2', 'ring-blue-500', 'ring-opacity-50');

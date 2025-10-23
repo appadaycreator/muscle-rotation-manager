@@ -19,7 +19,7 @@ class MuscleGroupService {
      */
     async getMuscleGroups() {
         const cacheKey = 'muscle_groups';
-        
+
         // キャッシュチェック
         if (this.cache.has(cacheKey)) {
             const cached = this.cache.get(cacheKey);
@@ -45,7 +45,7 @@ class MuscleGroupService {
             }
 
             const muscleGroups = data || [];
-            
+
             // キャッシュに保存
             this.cache.set(cacheKey, {
                 data: muscleGroups,
@@ -152,12 +152,12 @@ class MuscleGroupService {
      * @returns {Promise<Object|null>} 筋肉部位情報
      */
     async getMuscleGroupById(muscleGroupId) {
-        if (!muscleGroupId) return null;
+        if (!muscleGroupId) {return null;}
 
         const muscleGroups = await this.getMuscleGroups();
         console.log('Searching for muscle group ID:', muscleGroupId);
         console.log('Available muscle groups:', muscleGroups.map(g => ({ id: g.id, name_ja: g.name_ja })));
-        
+
         const found = muscleGroups.find(group => group.id === muscleGroupId);
         console.log('Found muscle group:', found);
         return found || null;
@@ -169,13 +169,13 @@ class MuscleGroupService {
      * @returns {Promise<Object|null>} 筋肉部位情報
      */
     async getMuscleGroupByName(muscleGroupName) {
-        if (!muscleGroupName) return null;
+        if (!muscleGroupName) {return null;}
 
         const muscleGroups = await this.getMuscleGroups();
         console.log('Searching for muscle group name:', muscleGroupName);
         console.log('Available muscle groups:', muscleGroups.map(g => ({ name: g.name, name_ja: g.name_ja, name_en: g.name_en })));
-        
-        const found = muscleGroups.find(group => 
+
+        const found = muscleGroups.find(group =>
             group.name === muscleGroupName ||
             group.name_ja === muscleGroupName ||
             group.name_en === muscleGroupName
@@ -231,12 +231,12 @@ class MuscleGroupService {
      */
     getMuscleGroupMapping(oldMuscleGroupId) {
         const mapping = {
-            'chest': 'chest',
-            'back': 'back',
-            'shoulder': 'shoulders',
-            'arm': 'arms',
-            'leg': 'legs',
-            'core': 'abs'
+            chest: 'chest',
+            back: 'back',
+            shoulder: 'shoulders',
+            arm: 'arms',
+            leg: 'legs',
+            core: 'abs'
         };
         return mapping[oldMuscleGroupId] || oldMuscleGroupId;
     }
@@ -249,33 +249,33 @@ class MuscleGroupService {
     async getMuscleGroupCategoryInfo(muscleGroupId) {
         // 筋肉部位IDのマッピング（HTMLのdata-muscle属性とサービス内のIDを対応）
         const muscleGroupMapping = {
-            'chest': 'chest',
-            'back': 'back',
-            'legs': 'legs',
-            'shoulders': 'shoulders',
-            'arms': 'arms',
-            'core': 'abs'  // HTMLでは'core'だが、データベースでは'abs'
+            chest: 'chest',
+            back: 'back',
+            legs: 'legs',
+            shoulders: 'shoulders',
+            arms: 'arms',
+            core: 'abs'  // HTMLでは'core'だが、データベースでは'abs'
         };
 
         const mappedId = muscleGroupMapping[muscleGroupId] || muscleGroupId;
         console.log('Getting category info for:', muscleGroupId, 'mapped to:', mappedId);
-        
+
         // まずIDで検索
         let muscleGroup = await this.getMuscleGroupById(mappedId);
-        
+
         // IDで見つからない場合は名前で検索
         if (!muscleGroup) {
             console.log('Trying to find by name...');
             muscleGroup = await this.getMuscleGroupByName(muscleGroupId);
         }
-        
+
         if (!muscleGroup) {
             console.warn('Muscle group not found by ID or name:', muscleGroupId, 'mapped to:', mappedId);
             // フォールバック: 筋肉部位が見つからない場合でも、カテゴリ情報は返す
             console.log('Using fallback category info for:', muscleGroupId);
             return this.getFallbackCategoryInfo(muscleGroupId);
         }
-        
+
         console.log('Found muscle group:', muscleGroup);
 
         const categoryInfo = {

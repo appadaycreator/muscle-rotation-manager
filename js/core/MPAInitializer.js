@@ -8,7 +8,7 @@ import { handleError } from '../utils/errorHandler.js';
 /**
  * MPA初期化クラス
  * 各ページで共通の初期化処理を実行
- * 
+ *
  * @class MPAInitializer
  * @version 2.0.0
  * @since 1.0.0
@@ -112,14 +112,14 @@ class MPAInitializer {
         } catch (error) {
             this.errorCount++;
             console.error(`❌ MPA initialization failed (attempt ${this.errorCount}):`, error);
-            
+
             // リトライロジック
             if (this.errorCount < this.maxRetries) {
                 console.log(`🔄 Retrying MPA initialization in ${this.retryDelay}ms...`);
                 await this.delay(this.retryDelay);
                 return await this.initialize({ ...options, force: true });
             }
-            
+
             this.handleInitializationError(error);
             return false;
         }
@@ -514,12 +514,12 @@ class MPAInitializer {
      */
     setupPerformanceMonitoring() {
         console.log('📊 Setting up performance monitoring...');
-        
+
         // ページ読み込み時間の監視
         window.addEventListener('load', () => {
             const loadTime = performance.now();
             console.log(`📊 Page load time: ${loadTime.toFixed(2)}ms`);
-            
+
             this.dispatchEvent('performanceMetric', {
                 metric: 'pageLoadTime',
                 value: loadTime,
@@ -536,9 +536,9 @@ class MPAInitializer {
                     total: Math.round(memory.totalJSHeapSize / 1024 / 1024),
                     limit: Math.round(memory.jsHeapSizeLimit / 1024 / 1024)
                 };
-                
+
                 console.log('📊 Memory usage:', memoryInfo);
-                
+
                 this.dispatchEvent('performanceMetric', {
                     metric: 'memoryUsage',
                     value: memoryInfo,
@@ -581,15 +581,15 @@ class MPAInitializer {
      */
     healthCheck() {
         const issues = [];
-        
+
         if (this.errorCount > 3) {
             issues.push('High error count');
         }
-        
+
         if (this.initializationTime && this.initializationTime > 10000) {
             issues.push('Slow initialization');
         }
-        
+
         if (this.componentLoadTimes.size === 0) {
             issues.push('No components loaded');
         }
@@ -612,15 +612,15 @@ class MPAInitializer {
      */
     async optimize() {
         console.log('🔧 Optimizing MPA...');
-        
+
         // メモリ使用量の最適化
         if (window.gc) {
             window.gc();
         }
-        
+
         // 不要なイベントリスナーの削除
         this.cleanup();
-        
+
         console.log('✅ MPA optimization complete');
     }
 
@@ -629,13 +629,13 @@ class MPAInitializer {
      */
     cleanup() {
         console.log('🧹 Cleaning up MPA...');
-        
+
         // イベントリスナーの削除
         this.removeAllEventListeners();
-        
+
         // コンポーネント読み込み時間のクリア
         this.componentLoadTimes.clear();
-        
+
         console.log('✅ MPA cleanup complete');
     }
 

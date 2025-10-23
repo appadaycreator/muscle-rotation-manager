@@ -8,7 +8,7 @@ import { handleError } from '../utils/errorHandler.js';
 /**
  * ベースページクラス
  * 全ページで共通の機能を提供
- * 
+ *
  * @class BasePage
  * @version 2.0.0
  * @since 1.0.0
@@ -66,7 +66,7 @@ export class BasePage {
 
             this.isInitialized = true;
             this.initializationTime = performance.now() - startTime;
-            
+
             console.log(`✅ ${this.pageName} page initialized successfully (${this.initializationTime.toFixed(2)}ms)`);
 
             // 初期化完了イベントを発火
@@ -80,14 +80,14 @@ export class BasePage {
         } catch (error) {
             this.errorCount++;
             console.error(`❌ Failed to initialize ${this.pageName} page (attempt ${this.errorCount}):`, error);
-            
+
             // リトライロジック
             if (this.errorCount < this.maxRetries) {
                 console.log(`🔄 Retrying initialization in ${this.retryDelay}ms...`);
                 await this.delay(this.retryDelay);
                 return await this.initialize({ ...options, force: true });
             }
-            
+
             this.handleError(error);
             return false;
         }
@@ -104,13 +104,13 @@ export class BasePage {
             if (!isAuthenticated && this.requiresAuth) {
                 console.log(`🔐 Authentication required for ${this.pageName} page`);
                 showNotification('ログインが必要です', 'warning');
-                
+
                 // リダイレクト前にイベントを発火
                 this.dispatchEvent('authRequired', {
                     pageName: this.pageName,
                     redirectUrl: '/index.html'
                 });
-                
+
                 window.location.href = '/index.html';
                 return false;
             }
@@ -394,15 +394,15 @@ export class BasePage {
      */
     healthCheck() {
         const issues = [];
-        
+
         if (this.errorCount > 5) {
             issues.push('High error count');
         }
-        
+
         if (this.eventListeners.size > 50) {
             issues.push('Too many event listeners');
         }
-        
+
         if (this.initializationTime && this.initializationTime > 5000) {
             issues.push('Slow initialization');
         }
@@ -420,15 +420,15 @@ export class BasePage {
      */
     async optimize() {
         console.log(`🔧 Optimizing ${this.pageName} page...`);
-        
+
         // 不要なイベントリスナーの削除
         this.cleanup();
-        
+
         // メモリ使用量の最適化
         if (window.gc) {
             window.gc();
         }
-        
+
         console.log(`✅ ${this.pageName} page optimization complete`);
     }
 }

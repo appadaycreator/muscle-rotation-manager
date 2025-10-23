@@ -107,7 +107,7 @@ class DashboardPage {
      */
     renderDashboard() {
         const mainContent = document.getElementById('main-content');
-        if (!mainContent) return;
+        if (!mainContent) {return;}
 
         mainContent.innerHTML = `
             <div class="mb-8">
@@ -259,7 +259,7 @@ class DashboardPage {
      * 統計表示を更新
      */
     updateStatsDisplay(stats) {
-        if (!stats) return;
+        if (!stats) {return;}
 
         // 総ワークアウト数
         const totalWorkoutsElement = document.getElementById('total-workouts');

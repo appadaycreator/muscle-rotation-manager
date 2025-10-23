@@ -6,7 +6,7 @@ import { handleError } from '../utils/errorHandler.js';
 /**
  * Supabase統合サービス
  * データベース操作と認証を管理
- * 
+ *
  * @class SupabaseService
  * @version 2.0.0
  * @since 1.0.0
@@ -35,7 +35,7 @@ export class SupabaseService {
             failedRequests: 0,
             averageResponseTime: 0
         };
-        
+
         if (this.autoInitialize) {
             this.initialize();
         }
@@ -70,10 +70,10 @@ export class SupabaseService {
 
             const { createClient } = window.supabase;
             this.client = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
-            
+
             // 接続テスト
             await this.testConnection();
-            
+
             this.isConnected = true;
             console.log('✅ Supabase client initialized successfully');
 
@@ -85,20 +85,20 @@ export class SupabaseService {
         } catch (error) {
             console.error(`❌ Failed to initialize Supabase client (attempt ${this.connectionAttempts}):`, error);
             this.isConnected = false;
-            
+
             // リトライロジック
             if (this.enableRetry && this.connectionAttempts < this.maxRetries) {
                 console.log(`🔄 Retrying Supabase initialization in ${this.retryDelay}ms...`);
                 await this.delay(this.retryDelay);
                 return await this.initialize({ ...options, force: true });
             }
-            
+
             handleError(error, {
                 context: 'SupabaseService.initialize',
                 showNotification: true,
                 severity: 'error'
             });
-            
+
             return false;
         }
     }
@@ -121,11 +121,11 @@ export class SupabaseService {
                 .from('users')
                 .select('count')
                 .limit(1);
-            
+
             if (error) {
                 throw new Error(`Connection test failed: ${error.message}`);
             }
-            
+
             console.log('✅ Supabase connection test successful');
             return true;
         } catch (error) {
@@ -178,17 +178,17 @@ export class SupabaseService {
      */
     updatePerformanceMetrics(responseTime, success) {
         this.performanceMetrics.totalRequests++;
-        
+
         if (success) {
             this.performanceMetrics.successfulRequests++;
         } else {
             this.performanceMetrics.failedRequests++;
         }
-        
+
         // 平均レスポンス時間を更新
         const total = this.performanceMetrics.totalRequests;
         const current = this.performanceMetrics.averageResponseTime;
-        this.performanceMetrics.averageResponseTime = 
+        this.performanceMetrics.averageResponseTime =
             (current * (total - 1) + responseTime) / total;
     }
 
@@ -199,8 +199,8 @@ export class SupabaseService {
     getPerformanceMetrics() {
         return {
             ...this.performanceMetrics,
-            successRate: this.performanceMetrics.totalRequests > 0 
-                ? (this.performanceMetrics.successfulRequests / this.performanceMetrics.totalRequests) * 100 
+            successRate: this.performanceMetrics.totalRequests > 0
+                ? (this.performanceMetrics.successfulRequests / this.performanceMetrics.totalRequests) * 100
                 : 0
         };
     }
@@ -211,15 +211,15 @@ export class SupabaseService {
      */
     healthCheck() {
         const issues = [];
-        
+
         if (!this.isConnected) {
             issues.push('Not connected');
         }
-        
+
         if (this.connectionAttempts > this.maxRetries) {
             issues.push('Too many connection attempts');
         }
-        
+
         if (this.performanceMetrics.failedRequests > this.performanceMetrics.successfulRequests) {
             issues.push('High failure rate');
         }
@@ -272,14 +272,14 @@ export class SupabaseService {
                 const session = JSON.parse(sessionData);
                 return session?.user || null;
             }
-            
+
             // 別のキーでも試行
             const altSessionData = localStorage.getItem('supabase.auth.token');
             if (altSessionData) {
                 const session = JSON.parse(altSessionData);
                 return session?.user || null;
             }
-            
+
             return null;
         } catch (error) {
             console.error('Failed to get current user:', error);
@@ -815,17 +815,17 @@ export class SupabaseService {
             }
 
             const totalWorkouts = workouts ? workouts.length : 0;
-            
+
             // ストリーク計算
             let currentStreak = 0;
             if (workouts && workouts.length > 0) {
                 const today = new Date();
                 const sortedWorkouts = workouts.sort((a, b) => new Date(b.workout_date) - new Date(a.workout_date));
-                
+
                 for (let i = 0; i < sortedWorkouts.length; i++) {
                     const workoutDate = new Date(sortedWorkouts[i].workout_date);
                     const daysDiff = Math.floor((today - workoutDate) / (1000 * 60 * 60 * 24));
-                    
+
                     if (i === 0 && daysDiff <= 1) {
                         currentStreak = 1;
                     } else if (i > 0) {
@@ -843,7 +843,7 @@ export class SupabaseService {
             // 週間進捗計算
             const oneWeekAgo = new Date();
             oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-            const weeklyWorkouts = workouts ? workouts.filter(w => 
+            const weeklyWorkouts = workouts ? workouts.filter(w =>
                 new Date(w.workout_date) >= oneWeekAgo
             ).length : 0;
 
@@ -894,7 +894,7 @@ export class SupabaseService {
                 'email_notifications', 'push_notifications', 'theme_preference',
                 'font_size'
             ];
-            
+
             const filteredProfileData = {};
             Object.keys(profileData).forEach(key => {
                 if (allowedColumns.includes(key)) {
@@ -938,11 +938,11 @@ export class SupabaseService {
             }
 
             console.log('User profile saved to Supabase:', data);
-            
+
             // ローカルストレージにもバックアップ保存
             localStorage.setItem('userProfile', JSON.stringify(profileData));
             console.log('User profile also saved to localStorage as backup');
-            
+
             return true;
         } catch (error) {
             console.error('Failed to save user profile:', error);

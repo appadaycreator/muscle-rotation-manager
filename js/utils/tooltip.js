@@ -28,16 +28,16 @@ export class TooltipManager {
 
         try {
             console.log('🔄 Initializing tooltip manager...');
-            
+
             // ツールチップコンテナを作成
             this.createTooltipContainer();
-            
+
             // グローバルイベントリスナーを設定
             this.setupGlobalEventListeners();
-            
+
             this.isInitialized = true;
             console.log('✅ Tooltip manager initialized successfully');
-            
+
         } catch (error) {
             console.error('❌ Failed to initialize tooltip manager:', error);
             throw error;
@@ -65,7 +65,7 @@ export class TooltipManager {
             opacity: 0;
             transition: opacity 0.2s ease;
         `;
-        
+
         document.body.appendChild(container);
     }
 
@@ -116,14 +116,14 @@ export class TooltipManager {
      */
     showTooltip(element, event) {
         const tooltipText = element.getAttribute('data-tooltip');
-        if (!tooltipText) return;
+        if (!tooltipText) {return;}
 
         // 既存のツールチップを非表示
         this.hideTooltip();
 
         // 設定を取得
         const config = this.getElementConfig(element);
-        
+
         // 遅延を適用
         if (config.delay > 0) {
             setTimeout(() => {
@@ -141,23 +141,23 @@ export class TooltipManager {
      */
     createTooltip(text, config, event) {
         const container = document.getElementById('tooltip-container');
-        if (!container) return;
+        if (!container) {return;}
 
         // ツールチップ要素を作成
         const tooltip = document.createElement('div');
         tooltip.className = `tooltip tooltip-${config.theme}`;
         tooltip.innerHTML = this.formatTooltipContent(text);
-        
+
         // スタイルを適用
         this.applyTooltipStyles(tooltip, config);
-        
+
         // コンテナに追加
         container.appendChild(tooltip);
         this.activeTooltip = tooltip;
 
         // 位置を計算して設定
         this.positionTooltip(tooltip, event, config);
-        
+
         // アニメーションで表示
         if (config.animation) {
             requestAnimationFrame(() => {
@@ -218,7 +218,7 @@ export class TooltipManager {
      * ツールチップの位置を更新
      */
     updateTooltipPosition(event) {
-        if (!this.activeTooltip) return;
+        if (!this.activeTooltip) {return;}
 
         const tooltip = this.activeTooltip;
         const tooltipRect = tooltip.getBoundingClientRect();
@@ -243,12 +243,12 @@ export class TooltipManager {
      */
     hideTooltip() {
         const container = document.getElementById('tooltip-container');
-        if (!container || !this.activeTooltip) return;
+        if (!container || !this.activeTooltip) {return;}
 
         // アニメーションで非表示
         this.activeTooltip.style.opacity = '0';
         this.activeTooltip.style.transform = 'translateY(5px)';
-        
+
         setTimeout(() => {
             if (this.activeTooltip && this.activeTooltip.parentNode) {
                 this.activeTooltip.parentNode.removeChild(this.activeTooltip);
@@ -263,7 +263,7 @@ export class TooltipManager {
      */
     getElementConfig(element) {
         const config = { ...this.defaultConfig };
-        
+
         // データ属性から設定を取得
         const position = element.getAttribute('data-tooltip-position');
         const delay = element.getAttribute('data-tooltip-delay');
@@ -271,11 +271,11 @@ export class TooltipManager {
         const theme = element.getAttribute('data-tooltip-theme');
         const animation = element.getAttribute('data-tooltip-animation');
 
-        if (position) config.position = position;
-        if (delay) config.delay = parseInt(delay);
-        if (maxWidth) config.maxWidth = parseInt(maxWidth);
-        if (theme) config.theme = theme;
-        if (animation !== null) config.animation = animation === 'true';
+        if (position) {config.position = position;}
+        if (delay) {config.delay = parseInt(delay);}
+        if (maxWidth) {config.maxWidth = parseInt(maxWidth);}
+        if (theme) {config.theme = theme;}
+        if (animation !== null) {config.animation = animation === 'true';}
 
         return config;
     }
@@ -330,23 +330,23 @@ export class TooltipManager {
      * 要素にツールチップを追加
      */
     addTooltip(element, text, config = {}) {
-        if (!element || !text) return;
+        if (!element || !text) {return;}
 
         element.setAttribute('data-tooltip', text);
-        
+
         // 設定をデータ属性に追加
-        if (config.position) element.setAttribute('data-tooltip-position', config.position);
-        if (config.delay !== undefined) element.setAttribute('data-tooltip-delay', config.delay);
-        if (config.maxWidth) element.setAttribute('data-tooltip-max-width', config.maxWidth);
-        if (config.theme) element.setAttribute('data-tooltip-theme', config.theme);
-        if (config.animation !== undefined) element.setAttribute('data-tooltip-animation', config.animation);
+        if (config.position) {element.setAttribute('data-tooltip-position', config.position);}
+        if (config.delay !== undefined) {element.setAttribute('data-tooltip-delay', config.delay);}
+        if (config.maxWidth) {element.setAttribute('data-tooltip-max-width', config.maxWidth);}
+        if (config.theme) {element.setAttribute('data-tooltip-theme', config.theme);}
+        if (config.animation !== undefined) {element.setAttribute('data-tooltip-animation', config.animation);}
     }
 
     /**
      * 要素からツールチップを削除
      */
     removeTooltip(element) {
-        if (!element) return;
+        if (!element) {return;}
 
         element.removeAttribute('data-tooltip');
         element.removeAttribute('data-tooltip-position');
@@ -360,7 +360,7 @@ export class TooltipManager {
      * 複数の要素に一括でツールチップを追加
      */
     addTooltipsToElements(elements, text, config = {}) {
-        if (!Array.isArray(elements)) return;
+        if (!Array.isArray(elements)) {return;}
 
         elements.forEach(element => {
             this.addTooltip(element, text, config);
@@ -393,7 +393,7 @@ export class TooltipManager {
      */
     addExerciseTooltip(element, exercise) {
         const tooltipText = `${exercise.name}\n難易度: ${exercise.difficulty}\n対象部位: ${exercise.muscleGroups.join(', ')}\n${exercise.description || ''}`;
-        
+
         this.addTooltip(element, tooltipText, {
             position: 'top',
             maxWidth: 300,
@@ -429,12 +429,12 @@ export class TooltipManager {
         this.hideTooltip();
         this.tooltips.clear();
         this.isInitialized = false;
-        
+
         const container = document.getElementById('tooltip-container');
         if (container) {
             container.remove();
         }
-        
+
         console.log('🗑️ Tooltip manager destroyed');
     }
 }

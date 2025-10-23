@@ -130,7 +130,7 @@ export const EXERCISES = {
         { id: 6, name: 'パイクプッシュアップ', category: 'compound', description: '肩と上部胸筋を鍛える', muscles: '大胸筋上部、三角筋前部・中部', difficulty: '中級', equipment: 'bodyweight' },
         { id: 7, name: 'アーチャープッシュアップ', category: 'compound', description: '片側ずつ鍛える上級者向け', muscles: '大胸筋、上腕三頭筋', difficulty: '上級', equipment: 'bodyweight' },
         { id: 8, name: 'ヒンドゥープッシュアップ', category: 'compound', description: '流動的な動きで全身を鍛える', muscles: '大胸筋、三角筋、体幹', difficulty: '中級', equipment: 'bodyweight' },
-        
+
         // 器具を使ったエクササイズ
         { id: 9, name: 'ベンチプレス', category: 'compound', description: '大胸筋を鍛える基本的な複合エクササイズ', muscles: '大胸筋、三角筋前部、上腕三頭筋', difficulty: '中級', equipment: 'barbell' },
         { id: 10, name: 'ダンベルプレス', category: 'compound', description: '可動域を広く取れる胸筋エクササイズ', muscles: '大胸筋、三角筋前部、上腕三頭筋', difficulty: '中級', equipment: 'dumbbell' },
@@ -147,7 +147,7 @@ export const EXERCISES = {
         { id: 18, name: 'インバーテッドロウ', category: 'compound', description: '水平に引く背筋エクササイズ', muscles: '広背筋、菱形筋、上腕二頭筋', difficulty: '初級', equipment: 'bodyweight' },
         { id: 19, name: 'スーパーマン', category: 'isolation', description: '腰の強化に効果的', muscles: '脊柱起立筋、臀筋', difficulty: '初級', equipment: 'bodyweight' },
         { id: 20, name: 'リバーススノーエンジェル', category: 'isolation', description: '肩甲骨周りの筋肉を活性化', muscles: '菱形筋、中部僧帽筋', difficulty: '初級', equipment: 'bodyweight' },
-        
+
         // 器具を使ったエクササイズ
         { id: 21, name: 'デッドリフト', category: 'compound', description: '全身を鍛えるキングオブエクササイズ', muscles: '広背筋、脊柱起立筋、臀筋、ハムストリング', difficulty: '上級', equipment: 'barbell' },
         { id: 22, name: 'ベントオーバーロウ', category: 'compound', description: '背中の厚みを作るエクササイズ', muscles: '広背筋、菱形筋、上腕二頭筋', difficulty: '中級', equipment: 'barbell' },
@@ -163,7 +163,7 @@ export const EXERCISES = {
         { id: 29, name: 'パイクプッシュアップ', category: 'compound', description: '肩の筋肉を主に使う自重エクササイズ', muscles: '三角筋前部・中部、上腕三頭筋', difficulty: '中級', equipment: 'bodyweight' },
         { id: 30, name: '逆立ちプッシュアップ', category: 'compound', description: '上級者向けの肩エクササイズ', muscles: '三角筋前部・中部、上腕三頭筋', difficulty: '上級', equipment: 'bodyweight' },
         { id: 31, name: 'ショルダーサークル', category: 'isolation', description: '肩の可動域を広げるウォームアップ', muscles: '三角筋全体', difficulty: '初級', equipment: 'bodyweight' },
-        
+
         // 器具を使ったエクササイズ
         { id: 32, name: 'ショルダープレス', category: 'compound', description: '三角筋全体を鍛える基本的なエクササイズ', muscles: '三角筋前部・中部、上腕三頭筋', difficulty: '中級', equipment: 'dumbbell' },
         { id: 33, name: 'サイドレイズ', category: 'isolation', description: '三角筋中部を重点的に鍛える', muscles: '三角筋中部', difficulty: '初級', equipment: 'dumbbell' },
@@ -183,7 +183,7 @@ export const EXERCISES = {
         { id: 44, name: 'プリーチャーカール', category: 'isolation', description: '上腕二頭筋のピークを作る', muscles: '上腕二頭筋', difficulty: '中級', equipment: 'barbell' },
         { id: 45, name: 'ケーブルカール', category: 'isolation', description: '一定の負荷でカール', muscles: '上腕二頭筋', difficulty: '初級', equipment: 'cable' },
         { id: 46, name: 'コンセントレーションカール', category: 'isolation', description: '座って片手で行うカール', muscles: '上腕二頭筋', difficulty: '初級', equipment: 'dumbbell' },
-        
+
         // 上腕三頭筋
         { id: 47, name: 'トライセップディップス', category: 'compound', description: '自重で三頭筋を鍛える', muscles: '上腕三頭筋、大胸筋下部', difficulty: '中級', equipment: 'dip bars' },
         { id: 48, name: 'クローズグリップベンチプレス', category: 'compound', description: '三頭筋に効果的なベンチプレス', muscles: '上腕三頭筋、大胸筋', difficulty: '中級', equipment: 'barbell' },
@@ -191,7 +191,7 @@ export const EXERCISES = {
         { id: 50, name: 'トライセップキックバック', category: 'isolation', description: '三頭筋の単関節運動', muscles: '上腕三頭筋', difficulty: '初級', equipment: 'dumbbell' },
         { id: 51, name: 'ケーブルトライセッププッシュダウン', category: 'isolation', description: 'ケーブルで三頭筋を鍛える', muscles: '上腕三頭筋', difficulty: '初級', equipment: 'cable' },
         { id: 52, name: 'ダイヤモンドプッシュアップ', category: 'compound', description: '三頭筋に効果的なプッシュアップ', muscles: '上腕三頭筋、大胸筋内側', difficulty: '中級', equipment: 'bodyweight' },
-        
+
         // 前腕
         { id: 53, name: 'リストカール', category: 'isolation', description: '前腕の屈筋を鍛える', muscles: '前腕屈筋', difficulty: '初級', equipment: 'dumbbell' },
         { id: 54, name: 'リバースリストカール', category: 'isolation', description: '前腕の伸筋を鍛える', muscles: '前腕伸筋', difficulty: '初級', equipment: 'dumbbell' }
@@ -205,16 +205,16 @@ export const EXERCISES = {
         { id: 59, name: 'ウォーキングランジ', category: 'compound', description: '歩きながら行うランジ', muscles: '大腿四頭筋、臀筋、ハムストリング', difficulty: '初級', equipment: 'bodyweight' },
         { id: 60, name: 'レッグプレス', category: 'compound', description: 'マシンで脚を鍛える', muscles: '大腿四頭筋、臀筋', difficulty: '初級', equipment: 'machine' },
         { id: 61, name: 'レッグエクステンション', category: 'isolation', description: '大腿四頭筋の単関節運動', muscles: '大腿四頭筋', difficulty: '初級', equipment: 'machine' },
-        
+
         // ハムストリング
         { id: 62, name: 'ルーマニアンデッドリフト', category: 'compound', description: 'ハムストリングと臀筋に効果的', muscles: 'ハムストリング、臀筋、脊柱起立筋', difficulty: '中級', equipment: 'barbell' },
         { id: 63, name: 'レッグカール', category: 'isolation', description: 'ハムストリングの単関節運動', muscles: 'ハムストリング', difficulty: '初級', equipment: 'machine' },
         { id: 64, name: 'グッドモーニング', category: 'compound', description: '前傾で行うハムストリングエクササイズ', muscles: 'ハムストリング、臀筋、脊柱起立筋', difficulty: '中級', equipment: 'barbell' },
-        
+
         // 臀筋
         { id: 65, name: 'ヒップスラスト', category: 'compound', description: '臀筋を集中的に鍛える', muscles: '臀筋、ハムストリング', difficulty: '中級', equipment: 'bodyweight' },
         { id: 66, name: 'グリュートブリッジ', category: 'compound', description: '臀筋の基本運動', muscles: '臀筋、ハムストリング', difficulty: '初級', equipment: 'bodyweight' },
-        
+
         // ふくらはぎ
         { id: 67, name: 'カーフレイズ', category: 'isolation', description: 'ふくらはぎの基本運動', muscles: '腓腹筋、ヒラメ筋', difficulty: '初級', equipment: 'bodyweight' }
     ],
@@ -224,12 +224,12 @@ export const EXERCISES = {
         { id: 69, name: 'シットアップ', category: 'isolation', description: '上体を起こす腹筋運動', muscles: '腹直筋', difficulty: '中級', equipment: 'bodyweight' },
         { id: 70, name: 'レッグレイズ', category: 'isolation', description: '下腹部に効果的な脚上げ運動', muscles: '腹直筋下部', difficulty: '中級', equipment: 'bodyweight' },
         { id: 71, name: 'ハンギングレッグレイズ', category: 'isolation', description: '上級者向けの下腹部運動', muscles: '腹直筋下部', difficulty: '上級', equipment: 'pull-up bar' },
-        
+
         // 腹斜筋
         { id: 72, name: 'ロシアンツイスト', category: 'isolation', description: '腹斜筋と体幹の回転力', muscles: '腹斜筋、体幹', difficulty: '中級', equipment: 'bodyweight' },
         { id: 73, name: 'バイシクルクランチ', category: 'isolation', description: '自転車漕ぎのような腹筋運動', muscles: '腹斜筋、腹直筋', difficulty: '中級', equipment: 'bodyweight' },
         { id: 74, name: 'サイドプランク', category: 'isolation', description: '横向きで体を一直線に保つ', muscles: '腹斜筋、体幹', difficulty: '中級', equipment: 'bodyweight' },
-        
+
         // 体幹
         { id: 75, name: 'プランク', category: 'isolation', description: '体幹を安定させる静的エクササイズ', muscles: '腹直筋、腹斜筋、脊柱起立筋', difficulty: '初級', equipment: 'bodyweight' },
         { id: 76, name: 'マウンテンクライマー', category: 'compound', description: '全身の有酸素運動', muscles: '腹直筋、腹斜筋、体幹', difficulty: '中級', equipment: 'bodyweight' },

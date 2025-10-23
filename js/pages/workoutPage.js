@@ -21,7 +21,7 @@ export class WorkoutPage extends BasePage {
         this.selectedMuscles = [];
         this.selectedExercises = [];
         this.eventListenersSetup = false;
-        
+
         console.log('WorkoutPage constructor called');
         console.log('Muscle groups initialized:', this.muscleGroups);
     }
@@ -49,7 +49,7 @@ export class WorkoutPage extends BasePage {
         if (!isAuthenticated) {
             return;
         }
-        
+
         // ナビゲーションを初期化
         await this.navigation.initialize();
 
@@ -59,14 +59,14 @@ export class WorkoutPage extends BasePage {
         // DOM要素が読み込まれた後にイベントリスナーを設定
         setTimeout(() => {
             console.log('Setting up event listeners after DOM load...');
-            
+
             // 筋肉部位ボタンの存在を確認
             const muscleButtons = document.querySelectorAll('.muscle-group-btn');
             console.log('Found muscle group buttons:', muscleButtons.length);
             muscleButtons.forEach((btn, index) => {
                 console.log(`Button ${index}:`, btn.dataset.muscle, btn);
             });
-            
+
             // イベントリスナーが既に設定されている場合はスキップ
             if (!this.eventListenersSetup) {
                 this.setupEventListeners();
@@ -82,7 +82,7 @@ export class WorkoutPage extends BasePage {
    */
     showLoginPrompt() {
         const mainContent = document.getElementById('main-content');
-        if (!mainContent) return;
+        if (!mainContent) {return;}
 
         mainContent.innerHTML = `
             <div class="min-h-screen flex items-center justify-center bg-gray-50">
@@ -177,7 +177,7 @@ export class WorkoutPage extends BasePage {
             console.log('Click event detected on:', e.target);
             console.log('Event target classList:', e.target.classList);
             console.log('Closest muscle-group-btn:', e.target.closest('.muscle-group-btn'));
-            
+
             if (e.target.closest('.muscle-group-btn')) {
                 const button = e.target.closest('.muscle-group-btn');
                 console.log('Muscle group button clicked:', button.dataset.muscle);
@@ -274,7 +274,7 @@ export class WorkoutPage extends BasePage {
     toggleMuscleGroup(button) {
         console.log('Toggling muscle group:', button.dataset.muscle);
         button.classList.toggle('selected');
-        
+
         // 選択状態の視覚的フィードバック
         if (button.classList.contains('selected')) {
             button.style.backgroundColor = '#3B82F6';
@@ -287,7 +287,7 @@ export class WorkoutPage extends BasePage {
             button.style.borderColor = '';
             console.log('Muscle group deselected:', button.dataset.muscle);
         }
-        
+
         this.updateQuickStartButton();
     }
 
@@ -297,11 +297,11 @@ export class WorkoutPage extends BasePage {
     updateQuickStartButton() {
         const selectedMuscles = document.querySelectorAll('.muscle-group-btn.selected');
         const quickStartButton = document.getElementById('quick-start-workout');
-        
+
         console.log('Updating quick start button...');
         console.log('Selected muscles count:', selectedMuscles.length);
         console.log('Quick start button found:', quickStartButton);
-        
+
         if (quickStartButton) {
             if (selectedMuscles.length > 0) {
                 quickStartButton.disabled = false;
@@ -326,7 +326,7 @@ export class WorkoutPage extends BasePage {
         console.log(`Starting workout for: ${muscleGroup}`);
 
         this.currentWorkout = {
-            muscleGroup: muscleGroup,
+            muscleGroup,
             startTime: new Date(),
             sessionName: `${muscleGroup}のワークアウト - ${new Date().toLocaleDateString('ja-JP')}`
         };
@@ -356,9 +356,9 @@ export class WorkoutPage extends BasePage {
         if (this.currentWorkout) {
             const endTime = new Date();
             const duration = Math.floor((endTime - this.currentWorkout.startTime) / 60000);
-            
+
             showNotification(`ワークアウトを終了しました（${duration}分）`, 'success');
-            
+
             // ワークアウト履歴に保存
             await this.saveWorkoutToHistory();
         }
@@ -388,7 +388,7 @@ export class WorkoutPage extends BasePage {
      */
     addExerciseToWorkout(exerciseName) {
         const container = document.getElementById('workout-exercises');
-        if (!container) return;
+        if (!container) {return;}
 
         const exerciseElement = document.createElement('div');
         exerciseElement.className = 'flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg';
@@ -445,7 +445,7 @@ export class WorkoutPage extends BasePage {
                 // Supabaseに保存
                 await supabaseService.saveWorkout(workoutData);
                 console.log('Workout saved to Supabase successfully');
-                
+
                 // 履歴を再読み込み
                 await this.loadWorkoutHistory();
             } else {
@@ -454,16 +454,16 @@ export class WorkoutPage extends BasePage {
                 const history = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
                 history.push({
                     ...workoutData,
-                    endTime: endTime,
-                    duration: duration
+                    endTime,
+                    duration
                 });
                 localStorage.setItem('workoutHistory', JSON.stringify(history));
                 this.updateWorkoutHistory(history);
             }
-            
+
             // 現在のワークアウトに保存済みフラグを設定
             this.currentWorkout.saved = true;
-            
+
         } catch (error) {
             console.error('Failed to save workout:', error);
             showNotification('ワークアウトの保存に失敗しました', 'error');
@@ -484,7 +484,7 @@ export class WorkoutPage extends BasePage {
    * ワークアウトタイマーを更新
    */
     updateWorkoutTimer() {
-        if (!this.workoutStartTime) return;
+        if (!this.workoutStartTime) {return;}
 
         const now = new Date();
         const diff = now - this.workoutStartTime;
@@ -509,35 +509,35 @@ export class WorkoutPage extends BasePage {
             { name: 'ダンベルフライ', muscle_group: '胸', difficulty: 2, equipment: 'ダンベル' },
             { name: 'インクラインプレス', muscle_group: '胸', difficulty: 3, equipment: 'バーベル' },
             { name: 'ディップス', muscle_group: '胸', difficulty: 3, equipment: '自重' },
-            
+
             // 背筋エクササイズ
             { name: 'デッドリフト', muscle_group: '背中', difficulty: 4, equipment: 'バーベル' },
             { name: 'プルアップ', muscle_group: '背中', difficulty: 4, equipment: '自重' },
             { name: 'ベントオーバーロウ', muscle_group: '背中', difficulty: 3, equipment: 'バーベル' },
             { name: 'ラットプルダウン', muscle_group: '背中', difficulty: 2, equipment: 'マシン' },
             { name: 'ワンハンドダンベルロウ', muscle_group: '背中', difficulty: 3, equipment: 'ダンベル' },
-            
+
             // 脚筋エクササイズ
             { name: 'スクワット', muscle_group: '脚', difficulty: 3, equipment: 'バーベル' },
             { name: 'ランジ', muscle_group: '脚', difficulty: 2, equipment: '自重' },
             { name: 'レッグプレス', muscle_group: '脚', difficulty: 2, equipment: 'マシン' },
             { name: 'ブルガリアンスクワット', muscle_group: '脚', difficulty: 3, equipment: '自重' },
             { name: 'カーフレイズ', muscle_group: '脚', difficulty: 1, equipment: '自重' },
-            
+
             // 肩筋エクササイズ
             { name: 'オーバーヘッドプレス', muscle_group: '肩', difficulty: 3, equipment: 'バーベル' },
             { name: 'サイドレイズ', muscle_group: '肩', difficulty: 2, equipment: 'ダンベル' },
             { name: 'フロントレイズ', muscle_group: '肩', difficulty: 2, equipment: 'ダンベル' },
             { name: 'リアデルトフライ', muscle_group: '肩', difficulty: 2, equipment: 'ダンベル' },
             { name: 'アーノルドプレス', muscle_group: '肩', difficulty: 3, equipment: 'ダンベル' },
-            
+
             // 腕筋エクササイズ
             { name: 'バーベルカール', muscle_group: '腕', difficulty: 2, equipment: 'バーベル' },
             { name: 'ダンベルカール', muscle_group: '腕', difficulty: 2, equipment: 'ダンベル' },
             { name: 'トライセップディップス', muscle_group: '腕', difficulty: 3, equipment: '自重' },
             { name: 'ハンマーカール', muscle_group: '腕', difficulty: 2, equipment: 'ダンベル' },
             { name: 'クローズグリッププッシュアップ', muscle_group: '腕', difficulty: 3, equipment: '自重' },
-            
+
             // 腹筋エクササイズ
             { name: 'プランク', muscle_group: '腹筋', difficulty: 2, equipment: '自重' },
             { name: 'クランチ', muscle_group: '腹筋', difficulty: 1, equipment: '自重' },
@@ -552,7 +552,7 @@ export class WorkoutPage extends BasePage {
    */
     updateWorkoutHistory(workoutHistory) {
         const container = document.getElementById('workout-history');
-        if (!container) return;
+        if (!container) {return;}
 
         console.log('Updating workout history with data:', workoutHistory);
 
@@ -615,7 +615,7 @@ export class WorkoutPage extends BasePage {
         if (!dateString) {
             return '日付不明';
         }
-        
+
         try {
             const date = new Date(dateString);
             if (isNaN(date.getTime())) {

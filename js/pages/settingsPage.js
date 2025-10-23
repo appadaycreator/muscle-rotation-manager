@@ -38,7 +38,7 @@ class SettingsPage {
             async () => {
                 // 設定ページのコンテンツを表示
                 this.renderSettingsPage();
-                
+
                 await this.loadUserProfile();
                 this.setupSettingsInterface();
                 this.setupEventListeners();
@@ -54,10 +54,10 @@ class SettingsPage {
         // 認証状態が変更されたときにUIを更新
         supabaseService.onAuthStateChange(async (event, session) => {
             console.log('Auth state changed in settings page:', { event, session: !!session, user: !!session?.user });
-            
+
             // 認証UIを更新
             await authManager.updateAuthUI();
-            
+
             // ログアウトされた場合はログインプロンプトを表示
             if (event === 'SIGNED_OUT') {
                 console.log('User signed out, showing login prompt');
@@ -71,7 +71,7 @@ class SettingsPage {
      */
     showLoginPrompt() {
         const mainContent = safeGetElement('#main-content');
-        if (!mainContent) return;
+        if (!mainContent) {return;}
 
         mainContent.innerHTML = `
             <div class="min-h-screen flex items-center justify-center bg-gray-50">
@@ -111,7 +111,7 @@ class SettingsPage {
      */
     renderSettingsPage() {
         const mainContent = safeGetElement('#main-content');
-        if (!mainContent) return;
+        if (!mainContent) {return;}
 
         mainContent.innerHTML = `
             <div class="mb-8">
@@ -133,11 +133,11 @@ class SettingsPage {
      */
     async loadUserProfile() {
         console.log('Loading user profile...');
-        
+
         // まずローカルストレージから読み込み（即座に表示するため）
         this.userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
         console.log('Profile loaded from localStorage:', this.userProfile);
-        
+
         // Supabaseが利用可能でユーザーが認証されている場合は、データベースから最新データを取得
         if (supabaseService.isAvailable() && supabaseService.getCurrentUser()) {
             try {
@@ -145,7 +145,7 @@ class SettingsPage {
                 if (supabaseProfile && Object.keys(supabaseProfile).length > 0) {
                     this.userProfile = supabaseProfile;
                     console.log('Profile updated from Supabase:', this.userProfile);
-                    
+
                     // ローカルストレージも更新
                     localStorage.setItem('userProfile', JSON.stringify(this.userProfile));
                 }
@@ -171,14 +171,14 @@ class SettingsPage {
         const currentUser = supabaseService.getCurrentUser();
         const userEmail = currentUser?.email || this.userProfile.email || '';
         const userNickname = this.userProfile.display_name || '';
-        
+
         // フォントサイズのマッピング（データベースの値 → アプリの値）
         const fontSizeMapping = {
-            'xs': 'sm',
-            'sm': 'sm',
-            'md': 'md',
-            'lg': 'lg',
-            'xl': 'lg'
+            xs: 'sm',
+            sm: 'sm',
+            md: 'md',
+            lg: 'lg',
+            xl: 'lg'
         };
         const fontSize = fontSizeMapping[this.userProfile.font_size] || 'md';
 
@@ -676,14 +676,14 @@ class SettingsPage {
      */
     async handleSaveAllSettings() {
         console.log('統合保存処理を開始');
-        
+
         if (this.isLoading) {
             console.log('既に保存処理中です');
             return;
         }
-        
+
         this.isLoading = true;
-        
+
         // 保存ボタンを無効化
         const saveBtn = safeGetElement('#save-all-settings-btn');
         if (saveBtn) {
@@ -698,16 +698,16 @@ class SettingsPage {
 
             // 設定を保存
             await this.saveProfile(allSettings);
-            
+
             showNotification('すべての設定を保存しました', 'success');
             console.log('統合保存処理が完了しました');
-            
+
         } catch (error) {
             console.error('統合保存処理でエラーが発生:', error);
             showNotification('設定の保存に失敗しました', 'error');
         } finally {
             this.isLoading = false;
-            
+
             // 保存ボタンを有効化
             if (saveBtn) {
                 saveBtn.disabled = false;
@@ -962,7 +962,7 @@ class SettingsPage {
      */
     async saveProfile(profileData) {
         console.log('Saving profile data:', profileData);
-        
+
         // ローカルプロフィールを更新
         this.userProfile = { ...this.userProfile, ...profileData };
         localStorage.setItem('userProfile', JSON.stringify(this.userProfile));
@@ -1000,10 +1000,10 @@ class SettingsPage {
             return;
         }
 
-        console.log('Avatar upload started:', { 
-            fileName: file.name, 
-            fileSize: file.size, 
-            fileType: file.type 
+        console.log('Avatar upload started:', {
+            fileName: file.name,
+            fileSize: file.size,
+            fileType: file.type
         });
 
         // ファイルサイズチェック（5MB制限）
@@ -1043,7 +1043,7 @@ class SettingsPage {
                 reader.readAsDataURL(file);
             });
 
-            console.log('Local URL generated:', localUrl.substring(0, 50) + '...');
+            console.log('Local URL generated:', `${localUrl.substring(0, 50)}...`);
 
             // Supabaseにアップロード（利用可能な場合）
             if (supabaseService.isAvailable()) {
@@ -1161,11 +1161,11 @@ class SettingsPage {
     displayFieldErrors(errors) {
         // エラー表示用のマッピング
         const fieldErrorMap = {
-            'display_name': 'display_name-error',
-            'email': 'email-error',
-            'age': 'age-error',
-            'weight': 'weight-error',
-            'height': 'height-error'
+            display_name: 'display_name-error',
+            email: 'email-error',
+            age: 'age-error',
+            weight: 'weight-error',
+            height: 'height-error'
         };
 
         // 各フィールドのエラーを表示
@@ -1177,7 +1177,7 @@ class SettingsPage {
                     // 具体的な項目名を含むエラーメッセージを作成
                     const fieldDisplayName = this.getFieldDisplayName(fieldName);
                     const errorMessage = `${fieldDisplayName}: ${errorMessages[0]}`;
-                    
+
                     errorElement.textContent = errorMessage;
                     errorElement.classList.remove('hidden');
                     errorElement.classList.add('text-red-600', 'text-sm', 'mt-1');
@@ -1201,11 +1201,11 @@ class SettingsPage {
      */
     getFieldDisplayName(fieldName) {
         const displayNames = {
-            'display_name': 'ニックネーム',
-            'age': '年齢',
-            'weight': '体重',
-            'height': '身長',
-            'email': 'メールアドレス'
+            display_name: 'ニックネーム',
+            age: '年齢',
+            weight: '体重',
+            height: '身長',
+            email: 'メールアドレス'
         };
         return displayNames[fieldName] || fieldName;
     }
