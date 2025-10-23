@@ -22,12 +22,37 @@ class SettingsPage {
 
         await safeAsync(
             async () => {
+                // 設定ページのコンテンツを表示
+                this.renderSettingsPage();
+                
                 await this.loadUserProfile();
                 this.setupSettingsInterface();
                 this.setupEventListeners();
             },
             '設定ページの初期化'
         );
+    }
+
+    /**
+     * 設定ページのコンテンツを表示
+     */
+    renderSettingsPage() {
+        const mainContent = safeGetElement('#main-content');
+        if (!mainContent) return;
+
+        mainContent.innerHTML = `
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-900">設定</h1>
+                <p class="mt-2 text-gray-600">アプリケーションの設定を管理しましょう</p>
+            </div>
+
+            <div id="settings-container">
+                <div class="text-center text-gray-500 py-8">
+                    <i class="fas fa-spinner fa-spin text-xl mb-2"></i>
+                    <p>設定を読み込み中...</p>
+                </div>
+            </div>
+        `;
     }
 
     /**
@@ -651,14 +676,18 @@ class SettingsPage {
      */
     async handleProfileSave(e) {
         e.preventDefault();
+        console.log('Profile save form submitted');
 
         if (this.isLoading) {return;}
         this.isLoading = true;
 
         const formData = new FormData(e.target);
         const profileData = {
+            display_name: formData.get('display_name'),
             nickname: formData.get('nickname')
         };
+
+        console.log('Profile data to save:', profileData);
 
         // バリデーション実行
         const sanitizedData = globalFormValidator.validateProfileForm(profileData);
@@ -856,17 +885,23 @@ class SettingsPage {
      * @param {Object} profileData - プロフィールデータ
      */
     async saveProfile(profileData) {
+        console.log('Saving profile data:', profileData);
+        
         // ローカルプロフィールを更新
         this.userProfile = { ...this.userProfile, ...profileData };
         localStorage.setItem('userProfile', JSON.stringify(this.userProfile));
+        console.log('Profile saved to localStorage:', this.userProfile);
 
         // Supabaseに保存（利用可能な場合）
         if (supabaseService.isAvailable() && supabaseService.getCurrentUser()) {
             try {
-                await supabaseService.saveUserProfile(profileData);
+                const result = await supabaseService.saveUserProfile(profileData);
+                console.log('Profile saved to Supabase:', result);
             } catch (error) {
                 console.warn('Supabase profile save failed, using localStorage:', error);
             }
+        } else {
+            console.log('Supabase not available, using localStorage only');
         }
     }
 

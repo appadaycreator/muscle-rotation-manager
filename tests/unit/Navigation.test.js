@@ -6,6 +6,15 @@ import { Navigation } from '../../js/components/Navigation.js';
 let mockAuthManager;
 let mockElement;
 
+// authManagerモジュールをモック
+jest.mock('../../js/modules/authManager.js', () => ({
+  authManager: {
+    isAuthenticated: jest.fn(),
+    getCurrentUser: jest.fn(),
+    logout: jest.fn()
+  }
+}));
+
 describe('Navigation', () => {
   beforeEach(() => {
     // DOM要素のモック設定
@@ -36,8 +45,11 @@ describe('Navigation', () => {
       logout: jest.fn().mockResolvedValue()
     };
 
-    // グローバルモックの設定
-    global.authManager = mockAuthManager;
+    // モックされたauthManagerを設定
+    const { authManager } = require('../../js/modules/authManager.js');
+    authManager.isAuthenticated = mockAuthManager.isAuthenticated;
+    authManager.getCurrentUser = mockAuthManager.getCurrentUser;
+    authManager.logout = mockAuthManager.logout;
     global.showNotification = jest.fn();
     
     // window.location は setup.js で設定済み
@@ -127,7 +139,8 @@ describe('Navigation', () => {
       const navigation = new Navigation();
       
       // authManagerを無効にしてエラーを発生させる
-      global.authManager = null;
+      const { authManager } = require('../../js/modules/authManager.js');
+      authManager.isAuthenticated = jest.fn().mockRejectedValue(new Error('Auth error'));
       
       await expect(navigation.initialize()).rejects.toThrow();
     });
@@ -210,7 +223,8 @@ describe('Navigation', () => {
       const event = { preventDefault: jest.fn() };
       
       // 認証されていない状態をモック
-      mockAuthManager.isAuthenticated.mockResolvedValue(false);
+      const { authManager } = require('../../js/modules/authManager.js');
+      authManager.isAuthenticated = jest.fn().mockResolvedValue(false);
       
       await navigation.handleNavigationClick(navLink, event);
       
@@ -225,14 +239,16 @@ describe('Navigation', () => {
       
       await navigation.handleLogout();
       
-      expect(mockAuthManager.logout).toHaveBeenCalled();
+      const { authManager } = require('../../js/modules/authManager.js');
+      expect(authManager.logout).toHaveBeenCalled();
       expect(global.showNotification).toHaveBeenCalledWith('ログアウトしました', 'success');
     });
 
     test('should handle logout errors', async () => {
       const navigation = new Navigation();
       const error = new Error('Logout failed');
-      mockAuthManager.logout.mockRejectedValue(error);
+      const { authManager } = require('../../js/modules/authManager.js');
+      authManager.logout = jest.fn().mockRejectedValue(error);
       
       const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
       
@@ -251,16 +267,18 @@ describe('Navigation', () => {
       
       await navigation.updateNavigationForAuth();
       
-      expect(mockAuthManager.isAuthenticated).toHaveBeenCalled();
+      const { authManager } = require('../../js/modules/authManager.js');
+      expect(authManager.isAuthenticated).toHaveBeenCalled();
     });
 
     test('should update navigation for unauthenticated user', async () => {
       const navigation = new Navigation();
-      mockAuthManager.isAuthenticated.mockResolvedValue(false);
+      const { authManager } = require('../../js/modules/authManager.js');
+      authManager.isAuthenticated = jest.fn().mockResolvedValue(false);
       
       await navigation.updateNavigationForAuth();
       
-      expect(mockAuthManager.isAuthenticated).toHaveBeenCalled();
+      expect(authManager.isAuthenticated).toHaveBeenCalled();
     });
   });
 

@@ -7,7 +7,7 @@ import { progressTrackingService } from '../services/progressTrackingService.js'
 import { chartService } from '../services/chartService.js';
 import { supabaseService } from '../services/supabaseService.js';
 import { reportService } from '../services/reportService.js';
-import { errorHandler } from '../utils/errorHandler.js';
+import { handleError } from '../utils/errorHandler.js';
 import { safeGetElement, safeGetElements } from '../utils/helpers.js';
 
 class ProgressPage {
@@ -34,7 +34,7 @@ class ProgressPage {
             await this.loadExercises();
             this.isInitialized = true;
         } catch (error) {
-            errorHandler.handleError(error, 'ProgressPage.init');
+            handleError(error, 'ProgressPage.init');
         }
     }
 
@@ -447,7 +447,7 @@ class ProgressPage {
                 startWorkoutBtn.addEventListener('click', () => this.startWorkout());
             }
         } catch (error) {
-            errorHandler.handleError(error, 'ProgressPage.bindEvents');
+            handleError(error, 'ProgressPage.bindEvents');
         }
     }
 
@@ -475,7 +475,7 @@ class ProgressPage {
                 });
             }
         } catch (error) {
-            errorHandler.handleError(error, 'ProgressPage.loadExercises');
+            handleError(error, 'ProgressPage.loadExercises');
         }
     }
 
@@ -515,7 +515,7 @@ class ProgressPage {
                 exerciseSelect.disabled = false;
             }
         } catch (error) {
-            errorHandler.handleError(error, 'ProgressPage.handleMuscleGroupChange');
+            handleError(error, 'ProgressPage.handleMuscleGroupChange');
         }
     }
 
@@ -532,7 +532,7 @@ class ProgressPage {
             this.selectedExercise = exerciseId;
             await this.loadProgressData();
         } catch (error) {
-            errorHandler.handleError(error, 'ProgressPage.handleExerciseChange');
+            handleError(error, 'ProgressPage.handleExerciseChange');
         }
     }
 
@@ -579,7 +579,7 @@ class ProgressPage {
 
             this.showMainContent();
         } catch (error) {
-            errorHandler.handleError(error, 'ProgressPage.loadProgressData');
+            handleError(error, 'ProgressPage.loadProgressData');
         }
     }
 
@@ -624,7 +624,7 @@ class ProgressPage {
                 statsSummary.style.display = 'grid';
             }
         } catch (error) {
-            errorHandler.handleError(error, 'ProgressPage.updateStatsSummary');
+            handleError(error, 'ProgressPage.updateStatsSummary');
         }
     }
 
@@ -661,7 +661,7 @@ class ProgressPage {
                     break;
             }
         } catch (error) {
-            errorHandler.handleError(error, 'ProgressPage.switchChart');
+            handleError(error, 'ProgressPage.switchChart');
         }
     }
 
@@ -696,7 +696,7 @@ class ProgressPage {
                 </div>
             `).join('');
         } catch (error) {
-            errorHandler.handleError(error, 'ProgressPage.updateGoalsDisplay');
+            handleError(error, 'ProgressPage.updateGoalsDisplay');
         }
     }
 
@@ -714,7 +714,7 @@ class ProgressPage {
                 chartService.createWeeklyComparisonChart('weekly-chart', analysis.weeklyData);
             }
         } catch (error) {
-            errorHandler.handleError(error, 'ProgressPage.updateWeeklyAnalysis');
+            handleError(error, 'ProgressPage.updateWeeklyAnalysis');
         }
     }
 
@@ -780,7 +780,7 @@ class ProgressPage {
                 </div>
             `;
         } catch (error) {
-            errorHandler.handleError(error, 'ProgressPage.updateDetailedAnalysis');
+            handleError(error, 'ProgressPage.updateDetailedAnalysis');
         }
     }
 
@@ -851,7 +851,7 @@ class ProgressPage {
             targetValueEl.placeholder = `推奨: ${suggestedTarget.toFixed(1)}`;
 
         } catch (error) {
-            errorHandler.handleError(error, 'ProgressPage.updateCurrentValue');
+            handleError(error, 'ProgressPage.updateCurrentValue');
         }
     }
 
@@ -950,7 +950,7 @@ class ProgressPage {
                 throw new Error(result.error || '目標設定に失敗しました');
             }
         } catch (error) {
-            errorHandler.handleError(error, 'ProgressPage.handleGoalSubmit');
+            handleError(error, 'ProgressPage.handleGoalSubmit');
             this.showNotification(error.message, 'error');
         }
     }
@@ -1048,7 +1048,7 @@ class ProgressPage {
 
             this.showNotification('JSONレポートをダウンロードしました', 'success');
         } catch (error) {
-            errorHandler.handleError(error, 'ProgressPage.exportReport');
+            handleError(error, 'ProgressPage.exportReport');
             this.showNotification('レポート出力に失敗しました', 'error');
         }
     }
@@ -1088,7 +1088,7 @@ class ProgressPage {
 
             this.showNotification('PDFレポートをダウンロードしました', 'success');
         } catch (error) {
-            errorHandler.handleError(error, 'ProgressPage.exportToPDF');
+            handleError(error, 'ProgressPage.exportToPDF');
             this.showNotification('PDF出力に失敗しました', 'error');
         }
     }
@@ -1112,7 +1112,7 @@ class ProgressPage {
 
             this.showNotification('CSVデータをダウンロードしました', 'success');
         } catch (error) {
-            errorHandler.handleError(error, 'ProgressPage.exportToCSV');
+            handleError(error, 'ProgressPage.exportToCSV');
             this.showNotification('CSV出力に失敗しました', 'error');
         }
     }
@@ -1133,7 +1133,7 @@ class ProgressPage {
             if (error) {throw error;}
             return data?.name_ja || 'Unknown Exercise';
         } catch (error) {
-            errorHandler.handleError(error, 'ProgressPage.getExerciseName');
+            handleError(error, 'ProgressPage.getExerciseName');
             return 'Unknown Exercise';
         }
     }
@@ -1207,7 +1207,7 @@ class ProgressPage {
             this.selectedExercise = null;
             this.isInitialized = false;
         } catch (error) {
-            errorHandler.handleError(error, 'ProgressPage.cleanup');
+            handleError(error, 'ProgressPage.cleanup');
         }
     }
 }

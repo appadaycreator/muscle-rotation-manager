@@ -2,11 +2,43 @@
 
 import { BasePage } from '../../js/core/BasePage.js';
 
+// authManagerモジュールをモック
+jest.mock('../../js/modules/authManager.js', () => ({
+  authManager: {
+    isAuthenticated: jest.fn(),
+    getCurrentUser: jest.fn()
+  }
+}));
+
+// supabaseServiceモジュールをモック
+jest.mock('../../js/services/supabaseService.js', () => ({
+  supabaseService: {
+    isAvailable: jest.fn(),
+    getClient: jest.fn(),
+    saveData: jest.fn(),
+    loadData: jest.fn()
+  }
+}));
+
 describe('BasePage', () => {
   let basePage;
 
   beforeEach(() => {
     basePage = new BasePage();
+    
+    // モックの設定
+    const { authManager } = require('../../js/modules/authManager.js');
+    const { supabaseService } = require('../../js/services/supabaseService.js');
+    
+    authManager.isAuthenticated = jest.fn().mockResolvedValue(true);
+    authManager.getCurrentUser = jest.fn().mockReturnValue({ email: 'test@example.com' });
+    
+    supabaseService.isAvailable = jest.fn().mockReturnValue(true);
+    supabaseService.getClient = jest.fn().mockReturnValue({});
+    supabaseService.saveData = jest.fn().mockResolvedValue({});
+    supabaseService.loadData = jest.fn().mockResolvedValue([]);
+    
+    global.showNotification = jest.fn();
   });
 
   describe('constructor', () => {
@@ -18,32 +50,12 @@ describe('BasePage', () => {
 
   describe('initialize', () => {
     test('should initialize successfully', async () => {
-      // モックの設定
-      global.authManager = {
-        isAuthenticated: jest.fn().mockResolvedValue(true),
-        getCurrentUser: jest.fn().mockReturnValue({ email: 'test@example.com' })
-      };
-      global.supabaseService = {
-        getClient: jest.fn().mockReturnValue({})
-      };
-      global.showNotification = jest.fn();
-      
       await basePage.initialize();
       
       expect(basePage.isInitialized).toBe(true);
     });
 
     test('should not initialize if already initialized', async () => {
-      // モックの設定
-      global.authManager = {
-        isAuthenticated: jest.fn().mockResolvedValue(true),
-        getCurrentUser: jest.fn().mockReturnValue({ email: 'test@example.com' })
-      };
-      global.supabaseService = {
-        getClient: jest.fn().mockReturnValue({})
-      };
-      global.showNotification = jest.fn();
-      
       await basePage.initialize();
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
       

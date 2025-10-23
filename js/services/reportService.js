@@ -3,7 +3,7 @@
  * PDFエクスポート、統計レポート生成を管理
  */
 
-import { errorHandler } from '../utils/errorHandler.js';
+import { handleError } from '../utils/errorHandler.js';
 
 class ReportService {
     constructor() {
@@ -38,7 +38,7 @@ class ReportService {
                 this.isLibrariesLoaded = true;
             }
         } catch (error) {
-            errorHandler.handleError(error, 'ReportService.loadLibraries');
+            handleError(error, 'ReportService.loadLibraries');
             throw new Error('PDFライブラリの読み込みに失敗しました');
         }
     }
@@ -219,7 +219,7 @@ class ReportService {
 
             return pdf.output('blob');
         } catch (error) {
-            errorHandler.handleError(error, 'ReportService.generateProgressReportPDF');
+            handleError(error, 'ReportService.generateProgressReportPDF');
             throw error;
         }
     }
@@ -254,7 +254,7 @@ class ReportService {
             const imgData = chartImage.toDataURL('image/png');
             pdf.addImage(imgData, 'PNG', x, y, width, height);
         } catch (error) {
-            errorHandler.handleError(error, 'ReportService.addChartToPDF');
+            handleError(error, 'ReportService.addChartToPDF');
         }
     }
 
@@ -310,7 +310,7 @@ class ReportService {
                 weeklyData
             };
         } catch (error) {
-            errorHandler.handleError(error, 'ReportService.generateWeeklySummary');
+            handleError(error, 'ReportService.generateWeeklySummary');
             return null;
         }
     }
@@ -358,7 +358,7 @@ class ReportService {
                 recommendations: this.generateRecommendations(stats, trend, avgWeeklySessions)
             };
         } catch (error) {
-            errorHandler.handleError(error, 'ReportService.generateMonthlySummary');
+            handleError(error, 'ReportService.generateMonthlySummary');
             return null;
         }
     }
@@ -393,7 +393,7 @@ class ReportService {
 
             return Math.max(0, Math.min(100, Math.round(score)));
         } catch (error) {
-            errorHandler.handleError(error, 'ReportService.calculatePerformanceScore');
+            handleError(error, 'ReportService.calculatePerformanceScore');
             return 50;
         }
     }
@@ -458,7 +458,7 @@ class ReportService {
 
             return recommendations;
         } catch (error) {
-            errorHandler.handleError(error, 'ReportService.generateRecommendations');
+            handleError(error, 'ReportService.generateRecommendations');
             return ['データの分析中にエラーが発生しました'];
         }
     }
@@ -496,7 +496,7 @@ class ReportService {
             const csvString = csvContent.join('\n');
             return new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
         } catch (error) {
-            errorHandler.handleError(error, 'ReportService.exportToCSV');
+            handleError(error, 'ReportService.exportToCSV');
             throw error;
         }
     }
@@ -517,7 +517,7 @@ class ReportService {
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
         } catch (error) {
-            errorHandler.handleError(error, 'ReportService.downloadFile');
+            handleError(error, 'ReportService.downloadFile');
             throw error;
         }
     }

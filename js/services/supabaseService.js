@@ -569,6 +569,57 @@ export class SupabaseService {
             return null;
         }
     }
+
+    /**
+   * ユーザープロフィールを保存
+   */
+    async saveUserProfile(profileData) {
+        if (!this.isAvailable()) {
+            console.warn('Supabase is not available, cannot save user profile');
+            return false;
+        }
+
+        try {
+            const { data: { user } } = await this.client.auth.getUser();
+            if (!user) {
+                console.warn('No authenticated user found');
+                return false;
+            }
+
+            // プロフィールデータをローカルストレージに保存（実際の実装ではデータベースに保存）
+            localStorage.setItem('userProfile', JSON.stringify(profileData));
+            console.log('User profile saved to localStorage:', profileData);
+            return true;
+        } catch (error) {
+            console.error('Failed to save user profile:', error);
+            return false;
+        }
+    }
+
+    /**
+   * ユーザープロフィールを取得
+   */
+    async getUserProfile() {
+        if (!this.isAvailable()) {
+            console.warn('Supabase is not available, cannot get user profile');
+            return null;
+        }
+
+        try {
+            const { data: { user } } = await this.client.auth.getUser();
+            if (!user) {
+                console.warn('No authenticated user found');
+                return null;
+            }
+
+            // ローカルストレージからプロフィールを取得（実際の実装ではデータベースから取得）
+            const profileData = localStorage.getItem('userProfile');
+            return profileData ? JSON.parse(profileData) : {};
+        } catch (error) {
+            console.error('Failed to get user profile:', error);
+            return null;
+        }
+    }
 }
 
 // シングルトンインスタンスをエクスポート
