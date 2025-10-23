@@ -12,6 +12,8 @@ export class Navigation {
     constructor() {
         this.isInitialized = false;
         this.currentPage = '';
+        this.sidebarVisible = false;
+        this.focusTimeout = null;
         this.navigationItems = [
             { id: 'dashboard', name: 'ダッシュボード', icon: 'fas fa-tachometer-alt', href: '/dashboard.html', requiresAuth: true },
             { id: 'workout', name: 'ワークアウト', icon: 'fas fa-dumbbell', href: '/workout.html', requiresAuth: true },
@@ -53,6 +55,9 @@ export class Navigation {
 
             // ナビゲーションアイテムにツールチップを追加
             this.addNavigationTooltips();
+
+            // フォーカス管理機能を設定
+            this.setupFocusManagement();
 
             this.isInitialized = true;
             console.log('✅ Navigation initialized successfully');
@@ -366,6 +371,239 @@ export class Navigation {
 
         } catch (error) {
             console.error('❌ Failed to add navigation tooltips:', error);
+        }
+    }
+
+    /**
+     * フォーカス管理機能を設定
+     */
+    setupFocusManagement() {
+        console.log('🎯 Setting up focus management...');
+
+        try {
+            // デスクトップサイドバーのフォーカス管理
+            this.setupDesktopSidebarFocus();
+
+            // モバイルサイドバーのフォーカス管理
+            this.setupMobileSidebarFocus();
+
+            // キーボードナビゲーション
+            this.setupKeyboardNavigation();
+
+            console.log('✅ Focus management setup complete');
+
+        } catch (error) {
+            console.error('❌ Failed to setup focus management:', error);
+        }
+    }
+
+    /**
+     * デスクトップサイドバーのフォーカス管理
+     */
+    setupDesktopSidebarFocus() {
+        const desktopSidebar = document.getElementById('desktop-sidebar');
+        if (!desktopSidebar) return;
+
+        // サイドバーにフォーカスが当たった時の処理
+        desktopSidebar.addEventListener('focusin', (e) => {
+            console.log('🎯 Desktop sidebar focused');
+            this.showDesktopSidebar();
+        });
+
+        // サイドバーからフォーカスが外れた時の処理
+        desktopSidebar.addEventListener('focusout', (e) => {
+            // フォーカスがサイドバー内の他の要素に移動した場合は表示を維持
+            if (!desktopSidebar.contains(e.relatedTarget)) {
+                console.log('🎯 Desktop sidebar focus lost');
+                this.hideDesktopSidebar();
+            }
+        });
+
+        // ナビゲーションアイテムのフォーカス管理
+        const navItems = desktopSidebar.querySelectorAll('.nav-item');
+        navItems.forEach((item, index) => {
+            item.addEventListener('focus', () => {
+                this.showDesktopSidebar();
+            });
+
+            // キーボードナビゲーション
+            item.addEventListener('keydown', (e) => {
+                this.handleNavigationKeydown(e, navItems, index);
+            });
+        });
+    }
+
+    /**
+     * モバイルサイドバーのフォーカス管理
+     */
+    setupMobileSidebarFocus() {
+        const mobileSidebar = document.getElementById('mobile-sidebar');
+        if (!mobileSidebar) return;
+
+        // モバイルサイドバーのフォーカス管理
+        mobileSidebar.addEventListener('focusin', (e) => {
+            console.log('🎯 Mobile sidebar focused');
+            this.showMobileSidebar();
+        });
+
+        mobileSidebar.addEventListener('focusout', (e) => {
+            if (!mobileSidebar.contains(e.relatedTarget)) {
+                console.log('🎯 Mobile sidebar focus lost');
+                this.hideMobileSidebar();
+            }
+        });
+    }
+
+    /**
+     * キーボードナビゲーションを設定
+     */
+    setupKeyboardNavigation() {
+        document.addEventListener('keydown', (e) => {
+            // Alt + M: サイドバーを開く/閉じる
+            if (e.altKey && e.key === 'm') {
+                e.preventDefault();
+                this.toggleSidebar();
+            }
+
+            // Escape: サイドバーを閉じる
+            if (e.key === 'Escape') {
+                this.hideAllSidebars();
+            }
+        });
+    }
+
+    /**
+     * デスクトップサイドバーを表示
+     */
+    showDesktopSidebar() {
+        const desktopSidebar = document.getElementById('desktop-sidebar');
+        if (!desktopSidebar) return;
+
+        // モバイル表示の場合は何もしない
+        if (window.innerWidth < 768) return;
+
+        desktopSidebar.classList.remove('hidden');
+        desktopSidebar.classList.add('flex');
+        this.sidebarVisible = true;
+
+        // フォーカス可能な最初の要素にフォーカス
+        const firstFocusable = desktopSidebar.querySelector('.nav-item');
+        if (firstFocusable) {
+            firstFocusable.focus();
+        }
+
+        console.log('🎯 Desktop sidebar shown');
+    }
+
+    /**
+     * デスクトップサイドバーを非表示
+     */
+    hideDesktopSidebar() {
+        const desktopSidebar = document.getElementById('desktop-sidebar');
+        if (!desktopSidebar) return;
+
+        // モバイル表示の場合は何もしない
+        if (window.innerWidth < 768) return;
+
+        desktopSidebar.classList.add('hidden');
+        desktopSidebar.classList.remove('flex');
+        this.sidebarVisible = false;
+
+        console.log('🎯 Desktop sidebar hidden');
+    }
+
+    /**
+     * モバイルサイドバーを表示
+     */
+    showMobileSidebar() {
+        const mobileSidebar = document.getElementById('mobile-sidebar');
+        if (!mobileSidebar) return;
+
+        // デスクトップ表示の場合は何もしない
+        if (window.innerWidth >= 768) return;
+
+        mobileSidebar.classList.remove('hidden');
+        mobileSidebar.classList.add('block');
+        this.sidebarVisible = true;
+
+        console.log('🎯 Mobile sidebar shown');
+    }
+
+    /**
+     * モバイルサイドバーを非表示
+     */
+    hideMobileSidebar() {
+        const mobileSidebar = document.getElementById('mobile-sidebar');
+        if (!mobileSidebar) return;
+
+        // デスクトップ表示の場合は何もしない
+        if (window.innerWidth >= 768) return;
+
+        mobileSidebar.classList.add('hidden');
+        mobileSidebar.classList.remove('block');
+        this.sidebarVisible = false;
+
+        console.log('🎯 Mobile sidebar hidden');
+    }
+
+    /**
+     * サイドバーを切り替え
+     */
+    toggleSidebar() {
+        if (window.innerWidth < 768) {
+            // モバイル表示
+            const mobileSidebar = document.getElementById('mobile-sidebar');
+            if (mobileSidebar) {
+                if (mobileSidebar.classList.contains('hidden')) {
+                    this.showMobileSidebar();
+                } else {
+                    this.hideMobileSidebar();
+                }
+            }
+        } else {
+            // デスクトップ表示
+            const desktopSidebar = document.getElementById('desktop-sidebar');
+            if (desktopSidebar) {
+                if (desktopSidebar.classList.contains('hidden')) {
+                    this.showDesktopSidebar();
+                } else {
+                    this.hideDesktopSidebar();
+                }
+            }
+        }
+    }
+
+    /**
+     * すべてのサイドバーを非表示
+     */
+    hideAllSidebars() {
+        this.hideDesktopSidebar();
+        this.hideMobileSidebar();
+    }
+
+    /**
+     * ナビゲーションキーダウンを処理
+     */
+    handleNavigationKeydown(e, navItems, currentIndex) {
+        switch (e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                const nextIndex = (currentIndex + 1) % navItems.length;
+                navItems[nextIndex].focus();
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                const prevIndex = currentIndex === 0 ? navItems.length - 1 : currentIndex - 1;
+                navItems[prevIndex].focus();
+                break;
+            case 'Home':
+                e.preventDefault();
+                navItems[0].focus();
+                break;
+            case 'End':
+                e.preventDefault();
+                navItems[navItems.length - 1].focus();
+                break;
         }
     }
 
