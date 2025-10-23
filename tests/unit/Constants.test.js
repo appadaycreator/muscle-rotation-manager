@@ -83,5 +83,44 @@ describe('Constants', () => {
       const uniqueNames = [...new Set(names)];
       expect(names.length).toBe(uniqueNames.length);
     });
+
+    test('should have valid muscle group descriptions', () => {
+      MUSCLE_GROUPS.forEach(muscle => {
+        // 実際の実装に応じて調整
+        if (muscle.description) {
+          expect(typeof muscle.description).toBe('string');
+          expect(muscle.description.length).toBeGreaterThan(0);
+        }
+      });
+    });
+
+    test('should have valid muscle group exercises', () => {
+      MUSCLE_GROUPS.forEach(muscle => {
+        // 実際の実装に応じて調整
+        if (muscle.exercises) {
+          expect(Array.isArray(muscle.exercises)).toBe(true);
+          expect(muscle.exercises.length).toBeGreaterThan(0);
+        }
+      });
+    });
+
+    test('should have valid muscle group tips', () => {
+      MUSCLE_GROUPS.forEach(muscle => {
+        // 実際の実装に応じて調整
+        if (muscle.tips) {
+          expect(Array.isArray(muscle.tips)).toBe(true);
+          expect(muscle.tips.length).toBeGreaterThan(0);
+        }
+      });
+    });
+
+    test('should have valid muscle group warnings', () => {
+      MUSCLE_GROUPS.forEach(muscle => {
+        // 実際の実装に応じて調整
+        if (muscle.warnings) {
+          expect(Array.isArray(muscle.warnings)).toBe(true);
+        }
+      });
+    });
   });
 });

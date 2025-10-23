@@ -9,6 +9,7 @@ import { supabaseService } from '../services/supabaseService.js';
 import { reportService } from '../services/reportService.js';
 import { handleError } from '../utils/errorHandler.js';
 import { safeGetElement, safeGetElements } from '../utils/helpers.js';
+import { tooltipManager } from '../utils/tooltip.js';
 
 class ProgressPage {
     constructor() {
@@ -29,9 +30,13 @@ class ProgressPage {
                 throw new Error('ユーザーが認証されていません');
             }
 
+            // ツールチップ機能を初期化
+            tooltipManager.initialize();
+
             await this.render();
             await this.bindEvents();
             await this.loadExercises();
+            this.setupTooltips();
             this.isInitialized = true;
         } catch (error) {
             handleError(error, 'ProgressPage.init');
@@ -128,6 +133,51 @@ class ProgressPage {
                                 <p id="total-sessions" class="text-2xl font-bold">0</p>
                             </div>
                             <i class="fas fa-calendar-check text-3xl text-orange-200"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- プログレッシブ・オーバーロード分析 -->
+                <div id="progressive-overload-analysis" class="bg-white rounded-lg shadow-md p-6 mb-6" style="display: none;">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">
+                        <i class="fas fa-trending-up text-green-500 mr-2"></i>
+                        プログレッシブ・オーバーロード分析
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-4 text-white">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-green-100 text-sm">オーバーロード率</p>
+                                    <p id="overload-rate" class="text-2xl font-bold">0%</p>
+                                </div>
+                                <i class="fas fa-chart-line text-3xl text-green-200"></i>
+                            </div>
+                        </div>
+                        <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 text-white">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-blue-100 text-sm">トレンド</p>
+                                    <p id="trend-status" class="text-lg font-bold">分析中</p>
+                                </div>
+                                <i class="fas fa-arrow-up text-3xl text-blue-200"></i>
+                            </div>
+                        </div>
+                        <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-4 text-white">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-purple-100 text-sm">改善幅</p>
+                                    <p id="improvement-amount" class="text-2xl font-bold">0 kg</p>
+                                </div>
+                                <i class="fas fa-trophy text-3xl text-purple-200"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 推奨事項 -->
+                    <div class="mt-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">推奨事項</h3>
+                        <div id="recommendations-list" class="space-y-2">
+                            <!-- 推奨事項が動的に追加される -->
                         </div>
                     </div>
                 </div>
@@ -531,6 +581,9 @@ class ProgressPage {
 
             this.selectedExercise = exerciseId;
             await this.loadProgressData();
+            
+            // プログレッシブ・オーバーロード分析を表示
+            await this.displayProgressiveOverloadAnalysis(exerciseId);
         } catch (error) {
             handleError(error, 'ProgressPage.handleExerciseChange');
         }
@@ -1196,6 +1249,315 @@ class ProgressPage {
         window.dispatchEvent(new CustomEvent('showNotification', {
             detail: { message, type }
         }));
+    }
+
+    /**
+     * プログレッシブ・オーバーロードの計算
+     * @param {Array} progressData - 進捗データ
+     * @param {string} exerciseId - エクササイズID
+     * @returns {Object} プログレッシブ・オーバーロード分析結果
+     */
+    calculateProgressiveOverload(progressData, exerciseId) {
+        try {
+            if (!progressData || progressData.length < 2) {
+                return {
+                    isProgressive: false,
+                    overloadRate: 0,
+                    trend: 'insufficient_data',
+                    recommendations: ['より多くのデータが必要です']
+                };
+            }
+
+            // エクササイズ別のデータをフィルタリング
+            const exerciseData = progressData.filter(item => item.exercise_id === exerciseId);
+            
+            if (exerciseData.length < 2) {
+                return {
+                    isProgressive: false,
+                    overloadRate: 0,
+                    trend: 'insufficient_data',
+                    recommendations: ['このエクササイズのデータが不足しています']
+                };
+            }
+
+            // 日付順にソート
+            exerciseData.sort((a, b) => new Date(a.workout_date) - new Date(b.workout_date));
+
+            // 1RMの推移を計算
+            const oneRMHistory = exerciseData.map(item => this.calculateOneRM(item.weight, item.reps));
+            
+            // プログレッシブ・オーバーロード率を計算
+            const overloadRate = this.calculateOverloadRate(oneRMHistory);
+            
+            // トレンドを分析
+            const trend = this.analyzeTrend(oneRMHistory);
+            
+            // 推奨事項を生成
+            const recommendations = this.generateRecommendations(overloadRate, trend, oneRMHistory);
+
+            return {
+                isProgressive: overloadRate > 0,
+                overloadRate: overloadRate,
+                trend: trend,
+                recommendations: recommendations,
+                oneRMHistory: oneRMHistory,
+                lastOneRM: oneRMHistory[oneRMHistory.length - 1],
+                firstOneRM: oneRMHistory[0],
+                improvement: oneRMHistory[oneRMHistory.length - 1] - oneRMHistory[0]
+            };
+
+        } catch (error) {
+            handleError(error, 'ProgressPage.calculateProgressiveOverload');
+            return {
+                isProgressive: false,
+                overloadRate: 0,
+                trend: 'error',
+                recommendations: ['計算中にエラーが発生しました']
+            };
+        }
+    }
+
+    /**
+     * 1RMを計算（Epley公式）
+     * @param {number} weight - 重量
+     * @param {number} reps - 回数
+     * @returns {number} 推定1RM
+     */
+    calculateOneRM(weight, reps) {
+        if (reps <= 0 || weight <= 0) return 0;
+        if (reps === 1) return weight;
+        
+        // Epley公式: 1RM = weight * (1 + reps / 30)
+        return Math.round(weight * (1 + reps / 30) * 100) / 100;
+    }
+
+    /**
+     * プログレッシブ・オーバーロード率を計算
+     * @param {Array} oneRMHistory - 1RM履歴
+     * @returns {number} オーバーロード率（%）
+     */
+    calculateOverloadRate(oneRMHistory) {
+        if (oneRMHistory.length < 2) return 0;
+
+        const firstRM = oneRMHistory[0];
+        const lastRM = oneRMHistory[oneRMHistory.length - 1];
+        
+        if (firstRM === 0) return 0;
+        
+        return Math.round(((lastRM - firstRM) / firstRM) * 100 * 100) / 100;
+    }
+
+    /**
+     * トレンドを分析
+     * @param {Array} oneRMHistory - 1RM履歴
+     * @returns {string} トレンド（'improving', 'plateau', 'declining'）
+     */
+    analyzeTrend(oneRMHistory) {
+        if (oneRMHistory.length < 3) return 'insufficient_data';
+
+        // 最近の3回のデータでトレンドを判断
+        const recent = oneRMHistory.slice(-3);
+        const first = recent[0];
+        const last = recent[recent.length - 1];
+        
+        const change = ((last - first) / first) * 100;
+        
+        if (change > 5) return 'improving';
+        if (change < -5) return 'declining';
+        return 'plateau';
+    }
+
+    /**
+     * 推奨事項を生成
+     * @param {number} overloadRate - オーバーロード率
+     * @param {string} trend - トレンド
+     * @param {Array} oneRMHistory - 1RM履歴
+     * @returns {Array} 推奨事項の配列
+     */
+    generateRecommendations(overloadRate, trend, oneRMHistory) {
+        const recommendations = [];
+
+        if (overloadRate > 10) {
+            recommendations.push('素晴らしい進歩です！現在のトレーニングを継続してください。');
+        } else if (overloadRate > 0) {
+            recommendations.push('着実に進歩しています。もう少し強度を上げてみてください。');
+        } else if (overloadRate === 0) {
+            recommendations.push('プラトー状態です。トレーニング方法を見直してみてください。');
+        } else {
+            recommendations.push('パフォーマンスが低下しています。休息を取るか、トレーニング強度を調整してください。');
+        }
+
+        if (trend === 'plateau') {
+            recommendations.push('プラトーを打破するために、新しいエクササイズやトレーニング方法を試してみてください。');
+        } else if (trend === 'declining') {
+            recommendations.push('オーバートレーニングの可能性があります。休息日を増やしてください。');
+        }
+
+        // 具体的な数値目標を提案
+        const lastOneRM = oneRMHistory[oneRMHistory.length - 1];
+        if (lastOneRM > 0) {
+            const nextTarget = Math.round(lastOneRM * 1.05 * 100) / 100;
+            recommendations.push(`次の目標: ${nextTarget}kg（現在の1RMの5%増）`);
+        }
+
+        return recommendations;
+    }
+
+    /**
+     * プログレッシブ・オーバーロード分析を表示
+     * @param {string} exerciseId - エクササイズID
+     */
+    async displayProgressiveOverloadAnalysis(exerciseId) {
+        try {
+            if (!exerciseId || !this.progressData.length) {
+                return;
+            }
+
+            // プログレッシブ・オーバーロードを計算
+            const analysis = this.calculateProgressiveOverload(this.progressData, exerciseId);
+            
+            // 分析結果を表示
+            const analysisSection = safeGetElement('#progressive-overload-analysis');
+            if (analysisSection) {
+                analysisSection.style.display = 'block';
+            }
+
+            // オーバーロード率を表示
+            const overloadRateElement = safeGetElement('#overload-rate');
+            if (overloadRateElement) {
+                const rate = analysis.overloadRate;
+                overloadRateElement.textContent = `${rate > 0 ? '+' : ''}${rate}%`;
+                overloadRateElement.className = `text-2xl font-bold ${rate > 0 ? 'text-green-300' : rate < 0 ? 'text-red-300' : 'text-yellow-300'}`;
+            }
+
+            // トレンドを表示
+            const trendElement = safeGetElement('#trend-status');
+            if (trendElement) {
+                const trendText = this.getTrendText(analysis.trend);
+                const trendIcon = this.getTrendIcon(analysis.trend);
+                trendElement.innerHTML = `${trendIcon} ${trendText}`;
+            }
+
+            // 改善幅を表示
+            const improvementElement = safeGetElement('#improvement-amount');
+            if (improvementElement) {
+                const improvement = analysis.improvement || 0;
+                improvementElement.textContent = `${improvement > 0 ? '+' : ''}${improvement} kg`;
+                improvementElement.className = `text-2xl font-bold ${improvement > 0 ? 'text-purple-300' : improvement < 0 ? 'text-red-300' : 'text-yellow-300'}`;
+            }
+
+            // 推奨事項を表示
+            this.displayRecommendations(analysis.recommendations);
+
+        } catch (error) {
+            handleError(error, 'ProgressPage.displayProgressiveOverloadAnalysis');
+        }
+    }
+
+    /**
+     * トレンドテキストを取得
+     * @param {string} trend - トレンド
+     * @returns {string} トレンドテキスト
+     */
+    getTrendText(trend) {
+        const trendMap = {
+            'improving': '改善中',
+            'plateau': 'プラトー',
+            'declining': '低下中',
+            'insufficient_data': 'データ不足',
+            'error': 'エラー'
+        };
+        return trendMap[trend] || '不明';
+    }
+
+    /**
+     * トレンドアイコンを取得
+     * @param {string} trend - トレンド
+     * @returns {string} トレンドアイコン
+     */
+    getTrendIcon(trend) {
+        const iconMap = {
+            'improving': '<i class="fas fa-arrow-up text-green-300"></i>',
+            'plateau': '<i class="fas fa-minus text-yellow-300"></i>',
+            'declining': '<i class="fas fa-arrow-down text-red-300"></i>',
+            'insufficient_data': '<i class="fas fa-question text-gray-300"></i>',
+            'error': '<i class="fas fa-exclamation-triangle text-red-300"></i>'
+        };
+        return iconMap[trend] || '<i class="fas fa-question text-gray-300"></i>';
+    }
+
+    /**
+     * 推奨事項を表示
+     * @param {Array} recommendations - 推奨事項の配列
+     */
+    displayRecommendations(recommendations) {
+        const recommendationsList = safeGetElement('#recommendations-list');
+        if (!recommendationsList) return;
+
+        recommendationsList.innerHTML = '';
+
+        if (!recommendations || recommendations.length === 0) {
+            recommendationsList.innerHTML = '<p class="text-gray-500">推奨事項はありません。</p>';
+            return;
+        }
+
+        recommendations.forEach((recommendation, index) => {
+            const recommendationElement = document.createElement('div');
+            recommendationElement.className = 'flex items-start space-x-3 p-3 bg-gray-50 rounded-lg';
+            recommendationElement.innerHTML = `
+                <div class="flex-shrink-0">
+                    <i class="fas fa-lightbulb text-yellow-500 mt-1"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="text-sm text-gray-700">${recommendation}</p>
+                </div>
+            `;
+            recommendationsList.appendChild(recommendationElement);
+        });
+    }
+
+    /**
+     * ツールチップを設定
+     */
+    setupTooltips() {
+        try {
+            console.log('Setting up tooltips for progress page');
+
+            // 1RM計算のツールチップ
+            tooltipManager.addTooltip('#one-rm-calculator', {
+                content: 'Epley公式を使用して1RM（1回最大重量）を計算します。重量と回数を入力してください。',
+                position: 'top'
+            });
+
+            // プログレッシブ・オーバーロードのツールチップ
+            tooltipManager.addTooltip('#progressive-overload-card', {
+                content: 'プログレッシブ・オーバーロードは、時間の経過とともにトレーニング強度を徐々に増加させる原則です。',
+                position: 'top'
+            });
+
+            // 進捗グラフのツールチップ
+            tooltipManager.addTooltip('#progress-chart', {
+                content: '選択したエクササイズの1RM推移を表示します。上昇トレンドが理想です。',
+                position: 'top'
+            });
+
+            // 目標設定のツールチップ
+            tooltipManager.addTooltip('#goal-setting', {
+                content: '具体的な数値目標を設定して、モチベーションを維持しましょう。',
+                position: 'top'
+            });
+
+            // 推奨事項のツールチップ
+            tooltipManager.addTooltip('#recommendations', {
+                content: 'あなたの進捗データに基づいた個別の推奨事項です。',
+                position: 'top'
+            });
+
+            console.log('✅ Tooltips setup complete for progress page');
+
+        } catch (error) {
+            console.error('❌ Failed to setup tooltips:', error);
+        }
     }
 
     /**
