@@ -663,18 +663,18 @@ class WorkoutPage {
                 await this.updateWorkoutStatistics(workoutData);
 
                 console.log('✅ ワークアウトデータをSupabaseに保存しました');
-                return true;
             } else {
                 // オフライン時はローカルストレージに保存
                 await this.saveToLocalStorage(workoutData);
                 console.log('📱 オフライン: ローカルストレージに保存しました');
-                return true;
             }
 
             // カスタムイベントを発火
             window.dispatchEvent(new CustomEvent('workoutSaved', {
                 detail: workoutData
             }));
+
+            return true;
 
         } catch (error) {
             console.error('❌ ワークアウト保存エラー:', error);

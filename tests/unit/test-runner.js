@@ -400,7 +400,6 @@ export const beforeAll = testRunner.beforeAll.bind(testRunner);
 export const afterAll = testRunner.afterAll.bind(testRunner);
 export const mock = testRunner.mock.bind(testRunner);
 export const runTests = testRunner.run.bind(testRunner);
-export { testRunner };
 
 // 即座にグローバル関数を設定（Node.js環境）
 if (typeof global !== 'undefined') {
