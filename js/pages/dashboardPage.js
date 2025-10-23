@@ -5,6 +5,7 @@ import recommendationService from '../services/recommendationService.js';
 import { showNotification, createErrorHTML, formatWorkoutDate, getDaysAgo, getWorkoutColor, parseExercises } from '../utils/helpers.js';
 import { MUSCLE_GROUPS } from '../utils/constants.js';
 import { authManager } from '../modules/authManager.js';
+import { tooltipManager } from '../utils/tooltip.js';
 
 class DashboardPage {
     constructor() {
@@ -25,6 +26,9 @@ class DashboardPage {
                 this.showLoginPrompt();
                 return;
             }
+
+            // ツールチップ機能を初期化
+            tooltipManager.initialize();
 
             // ダッシュボードコンテンツを表示
             this.renderDashboard();
@@ -53,6 +57,9 @@ class DashboardPage {
             } catch (error) {
                 console.error('Recent workouts loading failed:', error);
             }
+
+            // ツールチップを設定
+            this.setupTooltips();
 
             // 筋肉部位クリックハンドラーを設定
             this.setupMusclePartHandlers();
@@ -706,6 +713,69 @@ class DashboardPage {
             console.error('Error fetching recent workouts:', error);
             showNotification('最近のワークアウトの取得に失敗しました', 'error');
             return [];
+        }
+    }
+
+    /**
+     * ツールチップを設定
+     */
+    setupTooltips() {
+        try {
+            console.log('Setting up tooltips for dashboard page');
+
+            // 統計カードのツールチップ
+            tooltipManager.addTooltip('#total-workouts', {
+                content: 'これまでに完了したワークアウトの総数です。',
+                position: 'top'
+            });
+
+            tooltipManager.addTooltip('#total-exercises', {
+                content: 'これまでに実行したエクササイズの総数です。',
+                position: 'top'
+            });
+
+            tooltipManager.addTooltip('#total-time', {
+                content: 'これまでのワークアウト時間の合計です。',
+                position: 'top'
+            });
+
+            tooltipManager.addTooltip('#current-streak', {
+                content: '連続してワークアウトを行っている日数です。',
+                position: 'top'
+            });
+
+            // 筋肉回復状況のツールチップ
+            tooltipManager.addTooltip('.muscle-recovery-card', {
+                content: '各筋肉部位の回復状況を表示します。緑：完全回復、黄：回復中、赤：疲労状態',
+                position: 'top'
+            });
+
+            // 推奨ワークアウトのツールチップ
+            tooltipManager.addTooltip('.recommendation-card', {
+                content: 'AIが分析した推奨ワークアウトです。あなたのトレーニング履歴と回復状況に基づいています。',
+                position: 'top'
+            });
+
+            // クイックアクションボタンのツールチップ
+            tooltipManager.addTooltip('#quick-start-workout', {
+                content: '推奨される筋肉部位のエクササイズを自動選択してワークアウトを開始します。',
+                position: 'top'
+            });
+
+            tooltipManager.addTooltip('#view-calendar', {
+                content: 'カレンダーで過去のワークアウト履歴を確認できます。',
+                position: 'top'
+            });
+
+            tooltipManager.addTooltip('#view-progress', {
+                content: '詳細な進捗分析とグラフを表示します。',
+                position: 'top'
+            });
+
+            console.log('✅ Tooltips setup complete for dashboard page');
+
+        } catch (error) {
+            console.error('❌ Failed to setup tooltips:', error);
         }
     }
 }

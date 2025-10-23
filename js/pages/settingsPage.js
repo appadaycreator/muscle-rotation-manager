@@ -8,6 +8,7 @@ import {
     safeGetElement
 } from '../utils/helpers.js';
 import { globalFormValidator } from '../utils/validation.js';
+import { tooltipManager } from '../utils/tooltip.js';
 
 class SettingsPage {
     constructor() {
@@ -36,12 +37,16 @@ class SettingsPage {
 
         await safeAsync(
             async () => {
+                // ツールチップ機能を初期化
+                tooltipManager.initialize();
+
                 // 設定ページのコンテンツを表示
                 this.renderSettingsPage();
 
                 await this.loadUserProfile();
                 this.setupSettingsInterface();
                 this.setupEventListeners();
+                this.setupTooltips();
             },
             '設定ページの初期化'
         );
@@ -635,6 +640,159 @@ class SettingsPage {
                 </div>
             </div>
         `;
+    }
+
+    /**
+     * ツールチップを設定
+     */
+    setupTooltips() {
+        try {
+            console.log('Setting up tooltips for settings page');
+
+            // 基本プロフィールのツールチップ
+            tooltipManager.addTooltip('#display_name', {
+                content: '他のユーザーに表示される名前です。本名ではなく、ニックネームを入力してください。',
+                position: 'right'
+            });
+
+            tooltipManager.addTooltip('#email', {
+                content: 'ログインに使用するメールアドレスです。変更する場合は、認証システムで更新してください。',
+                position: 'right'
+            });
+
+            tooltipManager.addTooltip('#age', {
+                content: '年齢は適切なトレーニング強度を計算するために使用されます。',
+                position: 'right'
+            });
+
+            tooltipManager.addTooltip('#weight', {
+                content: '現在の体重を入力してください。カロリー計算やトレーニング強度の調整に使用されます。',
+                position: 'right'
+            });
+
+            tooltipManager.addTooltip('#height', {
+                content: '身長を入力してください。BMI計算や適切なトレーニング強度の算出に使用されます。',
+                position: 'right'
+            });
+
+            // 体力レベルのツールチップ
+            tooltipManager.addTooltip('#fitness-level-beginner', {
+                content: '筋トレを始めたばかりの方。基本的なエクササイズから始めましょう。',
+                position: 'top'
+            });
+
+            tooltipManager.addTooltip('#fitness-level-intermediate', {
+                content: '筋トレ経験が1年以上の方。中級レベルのエクササイズに挑戦できます。',
+                position: 'top'
+            });
+
+            tooltipManager.addTooltip('#fitness-level-advanced', {
+                content: '筋トレ経験が豊富な方。高強度のエクササイズや上級テクニックに対応できます。',
+                position: 'top'
+            });
+
+            // 目標設定のツールチップ
+            tooltipManager.addTooltip('#primary-goal-muscle_gain', {
+                content: '筋肉量を増やしたい方。高強度・低回数のトレーニングがおすすめです。',
+                position: 'top'
+            });
+
+            tooltipManager.addTooltip('#primary-goal-strength', {
+                content: '筋力を向上させたい方。最大筋力の向上に特化したトレーニングを行います。',
+                position: 'top'
+            });
+
+            tooltipManager.addTooltip('#primary-goal-endurance', {
+                content: '持久力を向上させたい方。中強度・高回数のトレーニングが効果的です。',
+                position: 'top'
+            });
+
+            tooltipManager.addTooltip('#primary-goal-fat_loss', {
+                content: '体脂肪を減らしたい方。有酸素運動と筋力トレーニングの組み合わせがおすすめです。',
+                position: 'top'
+            });
+
+            // ワークアウト頻度のツールチップ
+            tooltipManager.addTooltip('#workout-frequency-1', {
+                content: '週1回：初心者向け。筋肉の回復に十分な時間を確保できます。',
+                position: 'top'
+            });
+
+            tooltipManager.addTooltip('#workout-frequency-2', {
+                content: '週2回：初心者〜中級者向け。バランスの良いトレーニング頻度です。',
+                position: 'top'
+            });
+
+            tooltipManager.addTooltip('#workout-frequency-3', {
+                content: '週3回：中級者向け。最も効果的なトレーニング頻度の一つです。',
+                position: 'top'
+            });
+
+            tooltipManager.addTooltip('#workout-frequency-4', {
+                content: '週4回：上級者向け。分割法を使用した高頻度トレーニングです。',
+                position: 'top'
+            });
+
+            tooltipManager.addTooltip('#workout-frequency-5', {
+                content: '週5回：上級者向け。高度な分割法と回復管理が必要です。',
+                position: 'top'
+            });
+
+            tooltipManager.addTooltip('#workout-frequency-6', {
+                content: '週6回：上級者向け。プロレベルのトレーニング頻度です。',
+                position: 'top'
+            });
+
+            // 回復設定のツールチップ
+            tooltipManager.addTooltip('#recovery-preference-conservative', {
+                content: '保守的：十分な回復時間を確保。初心者や高齢者におすすめ。',
+                position: 'top'
+            });
+
+            tooltipManager.addTooltip('#recovery-preference-standard', {
+                content: '標準：一般的な回復時間。ほとんどの人に適した設定です。',
+                position: 'top'
+            });
+
+            tooltipManager.addTooltip('#recovery-preference-aggressive', {
+                content: '積極的：短い回復時間。上級者向けの高強度トレーニング。',
+                position: 'top'
+            });
+
+            // ストレスレベルのツールチップ
+            tooltipManager.addTooltip('#stress-level', {
+                content: '現在のストレスレベル（1-10）。高いストレスは回復に影響するため、トレーニング強度を調整します。',
+                position: 'top'
+            });
+
+            // アバターアップロードのツールチップ
+            tooltipManager.addTooltip('#avatar-upload-btn', {
+                content: 'プロフィール画像をアップロードできます。JPG、PNG形式に対応（最大5MB）。',
+                position: 'top'
+            });
+
+            // データ管理のツールチップ
+            tooltipManager.addTooltip('#export-data-btn', {
+                content: 'すべてのトレーニングデータをJSON形式でエクスポートします。バックアップとして使用できます。',
+                position: 'top'
+            });
+
+            tooltipManager.addTooltip('#delete-data-btn', {
+                content: '⚠️ 注意：すべてのトレーニングデータが削除されます。この操作は取り消せません。',
+                position: 'top'
+            });
+
+            // ログアウトボタンのツールチップ
+            tooltipManager.addTooltip('#logout-btn', {
+                content: '現在のセッションを終了し、ログイン画面に戻ります。',
+                position: 'top'
+            });
+
+            console.log('✅ Tooltips setup complete for settings page');
+
+        } catch (error) {
+            console.error('❌ Failed to setup tooltips:', error);
+        }
     }
 
     /**

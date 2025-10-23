@@ -1,238 +1,256 @@
-// DevTools.test.js - 開発ツールのテスト
+// DevTools.test.js - DevToolsのテスト
 
-// DevToolsクラスをモック
-const DevTools = class DevTools {
-    constructor() {
-        this.isEnabled = false;
-        this.logs = [];
-    }
-
-    enable() {
-        this.isEnabled = true;
-        console.log('DevTools enabled');
-    }
-
-    disable() {
-        this.isEnabled = false;
-        console.log('DevTools disabled');
-    }
-
-    log(message, data = null) {
-        if (this.isEnabled) {
-            const logEntry = {
-                timestamp: new Date(),
-                message,
-                data
-            };
-            this.logs.push(logEntry);
-            console.log(`[DevTools] ${message}`, data);
-        }
-    }
-
-    clearLogs() {
-        this.logs = [];
-    }
-
-    getLogs() {
-        return this.logs;
-    }
-
-    measurePerformance(name, fn) {
-        if (!this.isEnabled) {
-            return fn();
-        }
-
-        const start = performance.now();
-        const result = fn();
-        const end = performance.now();
-        
-        this.log(`Performance: ${name}`, {
-            duration: end - start,
-            result: result
-        });
-
-        return result;
-    }
-
-    checkMemoryUsage() {
-        if (!this.isEnabled) {
-            return null;
-        }
-
-        const memoryInfo = {
-            used: Math.random() * 100,
-            total: 1000,
-            percentage: Math.random() * 100
-        };
-
-        this.log('Memory usage', memoryInfo);
-        return memoryInfo;
-    }
-
-    validateData(data, schema) {
-        if (!this.isEnabled) {
-            return true;
-        }
-
-        // 簡単なバリデーション
-        const isValid = data && typeof data === 'object';
-        this.log('Data validation', { isValid, data, schema });
-        return isValid;
-    }
-};
+import { DevTools } from '../../js/utils/DevTools.js';
 
 describe('DevTools', () => {
-    let devTools;
+  let devTools;
 
-    beforeEach(() => {
-        devTools = new DevTools();
-        jest.spyOn(console, 'log').mockImplementation();
+  beforeEach(() => {
+    devTools = new DevTools();
+  });
+
+  describe('constructor', () => {
+    test('should initialize with default values', () => {
+      expect(devTools).toBeDefined();
+      expect(devTools.isEnabled).toBe(false);
+    });
+  });
+
+  describe('enable', () => {
+    test('should enable dev tools', () => {
+      devTools.enable();
+      expect(devTools.isEnabled).toBe(true);
+    });
+  });
+
+  describe('disable', () => {
+    test('should disable dev tools', () => {
+      devTools.enable();
+      devTools.disable();
+      expect(devTools.isEnabled).toBe(false);
+    });
+  });
+
+  describe('log', () => {
+    test('should log message when enabled', () => {
+      devTools.enable();
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      
+      devTools.log('Test message');
+      
+      expect(consoleSpy).toHaveBeenCalledWith('Test message');
+      consoleSpy.mockRestore();
     });
 
-    afterEach(() => {
-        jest.restoreAllMocks();
+    test('should not log message when disabled', () => {
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      
+      devTools.log('Test message');
+      
+      expect(consoleSpy).not.toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
+  });
+
+  describe('warn', () => {
+    test('should warn message when enabled', () => {
+      devTools.enable();
+      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+      
+      devTools.warn('Test warning');
+      
+      expect(consoleSpy).toHaveBeenCalledWith('Test warning');
+      consoleSpy.mockRestore();
     });
 
-    describe('constructor', () => {
-        it('should initialize with default values', () => {
-            expect(devTools.isEnabled).toBe(false);
-            expect(devTools.logs).toEqual([]);
-        });
+    test('should not warn message when disabled', () => {
+      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+      
+      devTools.warn('Test warning');
+      
+      expect(consoleSpy).not.toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
+  });
+
+  describe('error', () => {
+    test('should error message when enabled', () => {
+      devTools.enable();
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      
+      devTools.error('Test error');
+      
+      expect(consoleSpy).toHaveBeenCalledWith('Test error');
+      consoleSpy.mockRestore();
     });
 
-    describe('enable', () => {
-        it('should enable dev tools', () => {
-            devTools.enable();
+    test('should not error message when disabled', () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      
+      devTools.error('Test error');
+      
+      expect(consoleSpy).not.toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
+  });
 
-            expect(devTools.isEnabled).toBe(true);
-            expect(console.log).toHaveBeenCalledWith('DevTools enabled');
-        });
+  describe('group', () => {
+    test('should group messages when enabled', () => {
+      devTools.enable();
+      const consoleSpy = jest.spyOn(console, 'group').mockImplementation();
+      
+      devTools.group('Test group');
+      
+      expect(consoleSpy).toHaveBeenCalledWith('Test group');
+      consoleSpy.mockRestore();
     });
 
-    describe('disable', () => {
-        it('should disable dev tools', () => {
-            devTools.disable();
+    test('should not group messages when disabled', () => {
+      const consoleSpy = jest.spyOn(console, 'group').mockImplementation();
+      
+      devTools.group('Test group');
+      
+      expect(consoleSpy).not.toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
+  });
 
-            expect(devTools.isEnabled).toBe(false);
-            expect(console.log).toHaveBeenCalledWith('DevTools disabled');
-        });
+  describe('groupEnd', () => {
+    test('should end group when enabled', () => {
+      devTools.enable();
+      const consoleSpy = jest.spyOn(console, 'groupEnd').mockImplementation();
+      
+      devTools.groupEnd();
+      
+      expect(consoleSpy).toHaveBeenCalled();
+      consoleSpy.mockRestore();
     });
 
-    describe('log', () => {
-        it('should log message when enabled', () => {
-            devTools.enable();
-            const message = 'Test message';
-            const data = { test: 'data' };
+    test('should not end group when disabled', () => {
+      const consoleSpy = jest.spyOn(console, 'groupEnd').mockImplementation();
+      
+      devTools.groupEnd();
+      
+      expect(consoleSpy).not.toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
+  });
 
-            devTools.log(message, data);
-
-            expect(devTools.logs).toHaveLength(1);
-            expect(devTools.logs[0].message).toBe(message);
-            expect(devTools.logs[0].data).toBe(data);
-            expect(console.log).toHaveBeenCalledWith(`[DevTools] ${message}`, data);
-        });
-
-        it('should not log when disabled', () => {
-            devTools.disable();
-            const message = 'Test message';
-
-            devTools.log(message);
-
-            expect(devTools.logs).toHaveLength(0);
-            expect(console.log).not.toHaveBeenCalledWith(`[DevTools] ${message}`);
-        });
+  describe('time', () => {
+    test('should start timer when enabled', () => {
+      devTools.enable();
+      const consoleSpy = jest.spyOn(console, 'time').mockImplementation();
+      
+      devTools.time('Test timer');
+      
+      expect(consoleSpy).toHaveBeenCalledWith('Test timer');
+      consoleSpy.mockRestore();
     });
 
-    describe('clearLogs', () => {
-        it('should clear logs', () => {
-            devTools.enable();
-            devTools.log('Test message');
-            expect(devTools.logs).toHaveLength(1);
+    test('should not start timer when disabled', () => {
+      const consoleSpy = jest.spyOn(console, 'time').mockImplementation();
+      
+      devTools.time('Test timer');
+      
+      expect(consoleSpy).not.toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
+  });
 
-            devTools.clearLogs();
-
-            expect(devTools.logs).toHaveLength(0);
-        });
+  describe('timeEnd', () => {
+    test('should end timer when enabled', () => {
+      devTools.enable();
+      const consoleSpy = jest.spyOn(console, 'timeEnd').mockImplementation();
+      
+      devTools.timeEnd('Test timer');
+      
+      expect(consoleSpy).toHaveBeenCalledWith('Test timer');
+      consoleSpy.mockRestore();
     });
 
-    describe('getLogs', () => {
-        it('should return logs', () => {
-            devTools.enable();
-            devTools.log('Test message');
+    test('should not end timer when disabled', () => {
+      const consoleSpy = jest.spyOn(console, 'timeEnd').mockImplementation();
+      
+      devTools.timeEnd('Test timer');
+      
+      expect(consoleSpy).not.toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
+  });
 
-            const logs = devTools.getLogs();
-
-            expect(logs).toHaveLength(1);
-            expect(logs[0].message).toBe('Test message');
-        });
+  describe('table', () => {
+    test('should log table when enabled', () => {
+      devTools.enable();
+      const consoleSpy = jest.spyOn(console, 'table').mockImplementation();
+      
+      devTools.table({ name: 'Test' });
+      
+      expect(consoleSpy).toHaveBeenCalledWith({ name: 'Test' });
+      consoleSpy.mockRestore();
     });
 
-    describe('measurePerformance', () => {
-        it('should measure performance when enabled', () => {
-            devTools.enable();
-            const testFn = () => 'test result';
+    test('should not log table when disabled', () => {
+      const consoleSpy = jest.spyOn(console, 'table').mockImplementation();
+      
+      devTools.table({ name: 'Test' });
+      
+      expect(consoleSpy).not.toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
+  });
 
-            const result = devTools.measurePerformance('test', testFn);
-
-            expect(result).toBe('test result');
-            expect(devTools.logs).toHaveLength(1);
-            expect(devTools.logs[0].message).toContain('Performance: test');
-        });
-
-        it('should execute function without measurement when disabled', () => {
-            devTools.disable();
-            const testFn = () => 'test result';
-
-            const result = devTools.measurePerformance('test', testFn);
-
-            expect(result).toBe('test result');
-            expect(devTools.logs).toHaveLength(0);
-        });
+  describe('trace', () => {
+    test('should trace when enabled', () => {
+      devTools.enable();
+      const consoleSpy = jest.spyOn(console, 'trace').mockImplementation();
+      
+      devTools.trace('Test trace');
+      
+      expect(consoleSpy).toHaveBeenCalledWith('Test trace');
+      consoleSpy.mockRestore();
     });
 
-    describe('checkMemoryUsage', () => {
-        it('should check memory usage when enabled', () => {
-            devTools.enable();
+    test('should not trace when disabled', () => {
+      const consoleSpy = jest.spyOn(console, 'trace').mockImplementation();
+      
+      devTools.trace('Test trace');
+      
+      expect(consoleSpy).not.toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
+  });
 
-            const memoryInfo = devTools.checkMemoryUsage();
-
-            expect(memoryInfo).toHaveProperty('used');
-            expect(memoryInfo).toHaveProperty('total');
-            expect(memoryInfo).toHaveProperty('percentage');
-            expect(devTools.logs).toHaveLength(1);
-            expect(devTools.logs[0].message).toBe('Memory usage');
-        });
-
-        it('should return null when disabled', () => {
-            devTools.disable();
-
-            const memoryInfo = devTools.checkMemoryUsage();
-
-            expect(memoryInfo).toBeNull();
-        });
+  describe('clear', () => {
+    test('should clear console when enabled', () => {
+      devTools.enable();
+      const consoleSpy = jest.spyOn(console, 'clear').mockImplementation();
+      
+      devTools.clear();
+      
+      expect(consoleSpy).toHaveBeenCalled();
+      consoleSpy.mockRestore();
     });
 
-    describe('validateData', () => {
-        it('should validate data when enabled', () => {
-            devTools.enable();
-            const data = { test: 'data' };
-            const schema = { type: 'object' };
-
-            const isValid = devTools.validateData(data, schema);
-
-            expect(isValid).toBe(true);
-            expect(devTools.logs).toHaveLength(1);
-            expect(devTools.logs[0].message).toBe('Data validation');
-        });
-
-        it('should return true when disabled', () => {
-            devTools.disable();
-            const data = { test: 'data' };
-
-            const isValid = devTools.validateData(data);
-
-            expect(isValid).toBe(true);
-            expect(devTools.logs).toHaveLength(0);
-        });
+    test('should not clear console when disabled', () => {
+      const consoleSpy = jest.spyOn(console, 'clear').mockImplementation();
+      
+      devTools.clear();
+      
+      expect(consoleSpy).not.toHaveBeenCalled();
+      consoleSpy.mockRestore();
     });
+  });
+
+  describe('getStatus', () => {
+    test('should return status when disabled', () => {
+      const status = devTools.getStatus();
+      expect(status).toBe(false);
+    });
+
+    test('should return status when enabled', () => {
+      devTools.enable();
+      const status = devTools.getStatus();
+      expect(status).toBe(true);
+    });
+  });
 });

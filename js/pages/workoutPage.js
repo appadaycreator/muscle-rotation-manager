@@ -5,6 +5,7 @@ import { Navigation } from '../components/Navigation.js';
 import { supabaseService } from '../services/supabaseService.js';
 import { authManager } from '../modules/authManager.js';
 import { showNotification } from '../utils/helpers.js';
+import { tooltipManager } from '../utils/tooltip.js';
 
 /**
  * ワークアウトページクラス（シンプル版）
@@ -57,6 +58,9 @@ export class WorkoutPage extends BasePage {
         // ナビゲーションを初期化
         await this.navigation.initialize();
 
+        // ツールチップ機能を初期化
+        tooltipManager.initialize();
+
         // エクササイズデータを読み込み
         await this.loadExerciseData();
 
@@ -74,6 +78,7 @@ export class WorkoutPage extends BasePage {
             // イベントリスナーが既に設定されている場合はスキップ
             if (!this.eventListenersSetup) {
                 this.setupEventListeners();
+                this.setupTooltips();
                 this.eventListenersSetup = true;
             }
             this.updateQuickStartButton();
@@ -732,6 +737,93 @@ export class WorkoutPage extends BasePage {
         } catch (error) {
             console.error(`Failed to load from localStorage (${key}):`, error);
             return [];
+        }
+    }
+
+    /**
+     * ツールチップを設定
+     */
+    setupTooltips() {
+        try {
+            console.log('Setting up tooltips for workout page');
+
+            // 筋肉部位ボタンのツールチップ
+            tooltipManager.addTooltip('.muscle-group-btn[data-muscle="胸"]', {
+                content: '胸筋（大胸筋）を鍛えるエクササイズ。ベンチプレス、プッシュアップなど。',
+                position: 'top'
+            });
+
+            tooltipManager.addTooltip('.muscle-group-btn[data-muscle="背中"]', {
+                content: '背筋群を鍛えるエクササイズ。ラットプルダウン、ローイングなど。',
+                position: 'top'
+            });
+
+            tooltipManager.addTooltip('.muscle-group-btn[data-muscle="肩"]', {
+                content: '肩（三角筋）を鍛えるエクササイズ。ショルダープレス、サイドレイズなど。',
+                position: 'top'
+            });
+
+            tooltipManager.addTooltip('.muscle-group-btn[data-muscle="腕"]', {
+                content: '上腕二頭筋・三頭筋を鍛えるエクササイズ。アームカール、トライセップスなど。',
+                position: 'top'
+            });
+
+            tooltipManager.addTooltip('.muscle-group-btn[data-muscle="脚"]', {
+                content: '脚部（大腿四頭筋・ハムストリング）を鍛えるエクササイズ。スクワット、レッグプレスなど。',
+                position: 'top'
+            });
+
+            tooltipManager.addTooltip('.muscle-group-btn[data-muscle="腹筋"]', {
+                content: '腹筋群を鍛えるエクササイズ。クランチ、プランクなど。',
+                position: 'top'
+            });
+
+            // クイックスタートボタンのツールチップ
+            tooltipManager.addTooltip('#quick-start-btn', {
+                content: '推奨される筋肉部位のエクササイズを自動選択してワークアウトを開始します。',
+                position: 'top'
+            });
+
+            // ワークアウト開始ボタンのツールチップ
+            tooltipManager.addTooltip('#start-workout-btn', {
+                content: '選択したエクササイズでワークアウトを開始します。タイマーが自動で開始されます。',
+                position: 'top'
+            });
+
+            // ワークアウト終了ボタンのツールチップ
+            tooltipManager.addTooltip('#end-workout-btn', {
+                content: '現在のワークアウトを終了し、結果を保存します。',
+                position: 'top'
+            });
+
+            // エクササイズ追加ボタンのツールチップ
+            tooltipManager.addTooltip('#add-exercise-btn', {
+                content: '新しいエクササイズをワークアウトに追加します。',
+                position: 'top'
+            });
+
+            // セット追加ボタンのツールチップ
+            tooltipManager.addTooltip('.add-set-btn', {
+                content: 'このエクササイズに新しいセットを追加します。',
+                position: 'top'
+            });
+
+            // セット削除ボタンのツールチップ
+            tooltipManager.addTooltip('.remove-set-btn', {
+                content: 'このセットを削除します。',
+                position: 'top'
+            });
+
+            // エクササイズ削除ボタンのツールチップ
+            tooltipManager.addTooltip('.remove-exercise-btn', {
+                content: 'このエクササイズをワークアウトから削除します。',
+                position: 'top'
+            });
+
+            console.log('✅ Tooltips setup complete for workout page');
+
+        } catch (error) {
+            console.error('❌ Failed to setup tooltips:', error);
         }
     }
 }

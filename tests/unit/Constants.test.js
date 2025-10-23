@@ -59,7 +59,7 @@ describe('Constants', () => {
     });
 
     test('should have valid categories', () => {
-      const validCategories = ['upper', 'lower', 'core', 'full', 'large', 'medium'];
+      const validCategories = ['upper', 'lower', 'core', 'full', 'large', 'medium', 'small'];
       MUSCLE_GROUPS.forEach(muscle => {
         expect(validCategories).toContain(muscle.category);
       });
