@@ -873,7 +873,7 @@ class WorkoutWizard {
      */
     showStep(stepNumber) {
         // 全てのステップを非表示
-        Array.from(safeGetElements('.wizard-step')).forEach(step => {
+        safeGetElements('.wizard-step').forEach(step => {
             step.classList.remove('active');
         });
 
@@ -1598,7 +1598,7 @@ class WorkoutWizard {
         this.updateStepButtons();
 
         // プリセット選択をクリア
-        Array.from(safeGetElements('.preset-btn')).forEach(btn => {
+        safeGetElements('.preset-btn').forEach(btn => {
             btn.classList.remove('selected');
         });
     }
@@ -1674,7 +1674,7 @@ class WorkoutWizard {
         }
 
         // ボタンにaria-label追加
-        Array.from(safeGetElements('button')).forEach(btn => {
+        safeGetElements('button').forEach(btn => {
             if (!btn.getAttribute('aria-label') && btn.textContent.trim()) {
                 btn.setAttribute('aria-label', btn.textContent.trim());
             }
