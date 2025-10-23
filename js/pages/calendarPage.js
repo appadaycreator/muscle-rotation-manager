@@ -1,5 +1,6 @@
 // calendarPage.js - カレンダーページの機能
 
+import { BasePage } from '../core/BasePage.js';
 import { supabaseService } from '../services/supabaseService.js';
 import {
     showNotification,
@@ -13,8 +14,9 @@ import {
 import { MUSCLE_GROUPS } from '../utils/constants.js';
 import { authManager } from '../modules/authManager.js';
 
-class CalendarPage {
+class CalendarPage extends BasePage {
     constructor() {
+        super();
         this.currentDate = new Date();
         this.workoutData = [];
         this.plannedWorkouts = [];
@@ -23,35 +25,41 @@ class CalendarPage {
     }
 
     /**
-     * カレンダーページを初期化
+     * カレンダーページの初期化（MPAInitializerから呼ばれる）
      */
     async initialize() {
-        console.log('Calendar page initialized');
+        // BasePageの初期化を呼ぶ（認証チェックを含む）
+        await super.initialize();
+    }
 
-        try {
-            // 認証状態を確認
-            const isAuthenticated = await authManager.isAuthenticated();
-            if (!isAuthenticated) {
-                this.showLoginPrompt();
-                return;
-            }
+    /**
+     * カレンダーページ固有の初期化処理
+     * BasePageの認証チェック後に実行される
+     */
+    async onInitialize() {
+        console.log('Calendar page initialized - User authenticated');
 
-            // まずカレンダーインターフェースを設定
+        // DOMの読み込みを待つ
+        if (document.readyState === 'loading') {
+            await new Promise(resolve => {
+                document.addEventListener('DOMContentLoaded', resolve);
+            });
+        }
+
+        // 少し遅延してからカレンダーインターフェースを設定
+        setTimeout(() => {
             this.setupCalendarInterface();
-
+            
             // データを読み込み
-            await this.loadWorkoutData();
-
+            this.loadWorkoutData();
+            
             // イベントリスナーを設定
             this.setupEventListeners();
             this.setupAuthButton();
-
+            
             // カレンダーをレンダリング
             this.renderCalendar();
-        } catch (error) {
-            console.error('Error initializing calendar page:', error);
-            showNotification('カレンダーページの初期化に失敗しました', 'error');
-        }
+        }, 100);
     }
 
     /**
@@ -141,6 +149,16 @@ class CalendarPage {
         const container = document.getElementById('calendar-container');
         if (!container) {
             console.error('Calendar container not found');
+            // 少し遅延してから再試行
+            setTimeout(() => {
+                const retryContainer = document.getElementById('calendar-container');
+                if (retryContainer) {
+                    console.log('Calendar container found on retry');
+                    this.setupCalendarInterface();
+                } else {
+                    console.error('Calendar container still not found after retry');
+                }
+            }, 200);
             return;
         }
 
@@ -292,6 +310,16 @@ class CalendarPage {
 
         if (!datesContainer) {
             console.error('Calendar dates container not found');
+            // 少し遅延してから再試行
+            setTimeout(() => {
+                const retryContainer = safeGetElement('#calendar-dates');
+                if (retryContainer) {
+                    console.log('Calendar dates container found on retry');
+                    this.renderCalendarDates();
+                } else {
+                    console.error('Calendar dates container still not found after retry');
+                }
+            }, 200);
             return;
         }
 

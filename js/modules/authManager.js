@@ -65,6 +65,27 @@ class AuthManager {
                 e.stopPropagation();
                 this.handleLogout();
             }
+
+            // アバター画像のクリック
+            if (e.target.matches('#user-avatar')) {
+                console.log('User avatar clicked');
+                e.preventDefault();
+                e.stopPropagation();
+                this.toggleUserDropdown();
+            }
+
+            // プロフィール設定のクリック
+            if (e.target.matches('#profile-settings')) {
+                console.log('Profile settings clicked');
+                e.preventDefault();
+                e.stopPropagation();
+                this.handleProfileSettings();
+            }
+
+            // ドロップダウンの外側をクリックした場合は閉じる
+            if (!e.target.closest('#user-profile')) {
+                this.closeUserDropdown();
+            }
         });
 
         console.log('Auth event listeners setup complete');
@@ -133,33 +154,70 @@ class AuthManager {
      */
     async updateAuthUI() {
         const loginBtn = document.getElementById('login-btn');
-        const logoutBtn = document.getElementById('logout-btn');
+        const userProfile = document.getElementById('user-profile');
+        const userAvatar = document.getElementById('user-avatar');
+        const userName = document.getElementById('user-name');
+        const userEmail = document.getElementById('user-email');
 
-        console.log('updateAuthUI called, buttons found:', { loginBtn: !!loginBtn, logoutBtn: !!logoutBtn });
+        console.log('updateAuthUI called, elements found:', { 
+            loginBtn: !!loginBtn, 
+            userProfile: !!userProfile, 
+            userAvatar: !!userAvatar 
+        });
 
         try {
             const currentUser = await this.getCurrentUser();
             console.log('Updating auth UI, currentUser:', currentUser);
 
             if (currentUser) {
-                console.log('User is logged in, hiding login button, showing logout button');
+                console.log('User is logged in, showing user profile');
+                
+                // ログインボタンを非表示
                 if (loginBtn) {
                     loginBtn.classList.add('hidden');
                     console.log('Login button hidden');
                 }
-                if (logoutBtn) {
-                    logoutBtn.classList.remove('hidden');
-                    console.log('Logout button shown');
+                
+                // ユーザープロフィールを表示
+                if (userProfile) {
+                    userProfile.classList.remove('hidden');
+                    console.log('User profile shown');
                 }
+                
+                // ユーザー情報を更新
+                if (userAvatar) {
+                    // アバター画像を設定（デフォルトまたはユーザーのアバター）
+                    const avatarUrl = currentUser.user_metadata?.avatar_url || 'assets/default-avatar.png';
+                    userAvatar.src = avatarUrl;
+                    userAvatar.alt = `${currentUser.email}のアバター`;
+                }
+                
+                if (userName) {
+                    // ユーザー名を設定（display_nameまたはemail）
+                    const displayName = currentUser.user_metadata?.display_name || 
+                                     currentUser.user_metadata?.full_name || 
+                                     currentUser.email?.split('@')[0] || 
+                                     'ユーザー';
+                    userName.textContent = displayName;
+                }
+                
+                if (userEmail) {
+                    userEmail.textContent = currentUser.email || '';
+                }
+                
             } else {
-                console.log('User is not logged in, showing login button, hiding logout button');
+                console.log('User is not logged in, showing login button');
+                
+                // ログインボタンを表示
                 if (loginBtn) {
                     loginBtn.classList.remove('hidden');
                     console.log('Login button shown');
                 }
-                if (logoutBtn) {
-                    logoutBtn.classList.add('hidden');
-                    console.log('Logout button hidden');
+                
+                // ユーザープロフィールを非表示
+                if (userProfile) {
+                    userProfile.classList.add('hidden');
+                    console.log('User profile hidden');
                 }
             }
         } catch (error) {
@@ -168,8 +226,8 @@ class AuthManager {
             if (loginBtn) {
                 loginBtn.classList.remove('hidden');
             }
-            if (logoutBtn) {
-                logoutBtn.classList.add('hidden');
+            if (userProfile) {
+                userProfile.classList.add('hidden');
             }
         }
     }
@@ -458,6 +516,37 @@ class AuthManager {
             console.error('Failed to get current user:', error);
             return null;
         }
+    }
+
+    /**
+     * ユーザードロップダウンを切り替え
+     */
+    toggleUserDropdown() {
+        const dropdown = document.getElementById('user-dropdown');
+        if (dropdown) {
+            dropdown.classList.toggle('hidden');
+            console.log('User dropdown toggled');
+        }
+    }
+
+    /**
+     * ユーザードロップダウンを閉じる
+     */
+    closeUserDropdown() {
+        const dropdown = document.getElementById('user-dropdown');
+        if (dropdown && !dropdown.classList.contains('hidden')) {
+            dropdown.classList.add('hidden');
+            console.log('User dropdown closed');
+        }
+    }
+
+    /**
+     * プロフィール設定を処理
+     */
+    handleProfileSettings() {
+        console.log('Opening profile settings');
+        // 設定ページに遷移
+        window.location.href = '/settings.html';
     }
 }
 

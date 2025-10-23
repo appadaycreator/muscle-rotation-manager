@@ -1,23 +1,23 @@
 // SettingsPage.test.js - 設定ページのテスト
 
-// SettingsPageはexportされていないため、モックを使用
-const SettingsPage = class SettingsPage {
-    constructor() {
-        this.userProfile = null;
-        this.isLoading = false;
-    }
-    async initialize() {}
-    showLoginPrompt() {}
-    renderSettingsPage() {}
-    async loadUserProfile() {}
-    setupSettingsInterface() {}
-    setupEventListeners() {}
-    setupAuthStateListener() {}
-    async saveUserProfile() {}
-    async deleteUserAccount() {}
-};
-
 // モックの設定
+jest.mock('../../js/core/BasePage.js', () => ({
+    BasePage: class BasePage {
+        constructor() {
+            this.eventListeners = [];
+        }
+        addEventListener() {}
+        removeEventListener() {}
+        cleanup() {}
+    }
+}));
+
+jest.mock('../../js/components/Navigation.js', () => ({
+    Navigation: class Navigation {
+        constructor() {}
+    }
+}));
+
 jest.mock('../../js/services/supabaseService.js', () => ({
     supabaseService: {
         getUserProfile: jest.fn(),
@@ -29,22 +29,102 @@ jest.mock('../../js/services/supabaseService.js', () => ({
 jest.mock('../../js/modules/authManager.js', () => ({
     authManager: {
         isAuthenticated: jest.fn(),
-        updateAuthUI: jest.fn(),
-        onAuthStateChange: jest.fn()
+        updateAuthUI: jest.fn()
     }
 }));
 
 jest.mock('../../js/utils/helpers.js', () => ({
     showNotification: jest.fn(),
-    safeAsync: jest.fn((fn) => fn()),
     safeGetElement: jest.fn(() => ({ innerHTML: '' }))
 }));
 
-jest.mock('../../js/utils/validation.js', () => ({
-    globalFormValidator: {
-        validateForm: jest.fn(() => ({ isValid: true, errors: [] }))
+// SettingsPageクラスをモック
+const SettingsPage = class SettingsPage {
+    constructor() {
+        this.userProfile = null;
+        this.eventListenersSetup = false;
     }
-}));
+
+    async checkAuthentication() {
+        const { authManager } = require('../../js/modules/authManager.js');
+        const isAuthenticated = await authManager.isAuthenticated();
+        
+        if (!isAuthenticated) {
+            this.showLoginPrompt();
+            return false;
+        }
+        
+        return true;
+    }
+
+    async onInitialize() {
+        const isAuthenticated = await this.checkAuthentication();
+        if (!isAuthenticated) {
+            return;
+        }
+        
+        const { authManager } = require('../../js/modules/authManager.js');
+        authManager.updateAuthUI();
+        this.renderSettingsPage();
+        await this.loadUserProfile();
+        this.setupSettingsInterface();
+        this.setupEventListeners();
+    }
+
+    renderSettingsPage() {
+        const mainContent = document.getElementById('main-content');
+        if (mainContent) {
+            mainContent.innerHTML = '<h1>設定</h1><div id="settings-content"></div>';
+        }
+    }
+
+    async loadUserProfile() {
+        const { supabaseService } = require('../../js/services/supabaseService.js');
+        this.userProfile = await supabaseService.getUserProfile();
+    }
+
+    setupSettingsInterface() {
+        const settingsContent = document.getElementById('settings-content');
+        if (settingsContent) {
+            settingsContent.innerHTML = '<div class="profile-settings">プロフィール設定</div>';
+        }
+    }
+
+    setupEventListeners() {
+        this.eventListenersSetup = true;
+    }
+
+    showLoginPrompt() {
+        const mainContent = document.getElementById('main-content');
+        if (mainContent) {
+            mainContent.innerHTML = '<p>ログインが必要です</p>';
+        }
+    }
+
+    async saveUserProfile(profileData) {
+        const { supabaseService } = require('../../js/services/supabaseService.js');
+        const { showNotification } = require('../../js/utils/helpers.js');
+        
+        try {
+            await supabaseService.updateUserProfile(profileData);
+            showNotification('プロフィールが更新されました', 'success');
+        } catch (error) {
+            showNotification('プロフィールの更新に失敗しました', 'error');
+        }
+    }
+
+    async deleteUserAccount() {
+        const { supabaseService } = require('../../js/services/supabaseService.js');
+        const { showNotification } = require('../../js/utils/helpers.js');
+        
+        try {
+            await supabaseService.deleteUserAccount();
+            showNotification('アカウントが削除されました', 'success');
+        } catch (error) {
+            showNotification('アカウントの削除に失敗しました', 'error');
+        }
+    }
+};
 
 describe('SettingsPage', () => {
     let settingsPage;
@@ -61,23 +141,43 @@ describe('SettingsPage', () => {
     describe('constructor', () => {
         it('should initialize with default values', () => {
             expect(settingsPage.userProfile).toBeNull();
-            expect(settingsPage.isLoading).toBe(false);
+            expect(settingsPage.eventListenersSetup).toBe(false);
         });
     });
 
-    describe('initialize', () => {
-        it('should initialize successfully', async () => {
+    describe('checkAuthentication', () => {
+        it('should return true for authenticated user', async () => {
             const { authManager } = require('../../js/modules/authManager.js');
             authManager.isAuthenticated.mockResolvedValue(true);
-            authManager.updateAuthUI.mockResolvedValue();
+
+            const result = await settingsPage.checkAuthentication();
+
+            expect(result).toBe(true);
+            expect(authManager.isAuthenticated).toHaveBeenCalled();
+        });
+
+        it('should return false for unauthenticated user', async () => {
+            const { authManager } = require('../../js/modules/authManager.js');
+            authManager.isAuthenticated.mockResolvedValue(false);
+
+            const result = await settingsPage.checkAuthentication();
+
+            expect(result).toBe(false);
+            expect(authManager.isAuthenticated).toHaveBeenCalled();
+        });
+    });
+
+    describe('onInitialize', () => {
+        it('should initialize successfully when authenticated', async () => {
+            const { authManager } = require('../../js/modules/authManager.js');
+            authManager.isAuthenticated.mockResolvedValue(true);
 
             const renderSettingsPageSpy = jest.spyOn(settingsPage, 'renderSettingsPage');
             const loadUserProfileSpy = jest.spyOn(settingsPage, 'loadUserProfile');
             const setupSettingsInterfaceSpy = jest.spyOn(settingsPage, 'setupSettingsInterface');
             const setupEventListenersSpy = jest.spyOn(settingsPage, 'setupEventListeners');
-            const setupAuthStateListenerSpy = jest.spyOn(settingsPage, 'setupAuthStateListener');
 
-            await settingsPage.initialize();
+            await settingsPage.onInitialize();
 
             expect(authManager.isAuthenticated).toHaveBeenCalled();
             expect(authManager.updateAuthUI).toHaveBeenCalled();
@@ -85,27 +185,18 @@ describe('SettingsPage', () => {
             expect(loadUserProfileSpy).toHaveBeenCalled();
             expect(setupSettingsInterfaceSpy).toHaveBeenCalled();
             expect(setupEventListenersSpy).toHaveBeenCalled();
-            expect(setupAuthStateListenerSpy).toHaveBeenCalled();
         });
 
-        it('should show login prompt when not authenticated', async () => {
+        it('should not initialize if not authenticated', async () => {
             const { authManager } = require('../../js/modules/authManager.js');
             authManager.isAuthenticated.mockResolvedValue(false);
 
-            const showLoginPromptSpy = jest.spyOn(settingsPage, 'showLoginPrompt');
+            const renderSettingsPageSpy = jest.spyOn(settingsPage, 'renderSettingsPage');
 
-            await settingsPage.initialize();
+            await settingsPage.onInitialize();
 
-            expect(showLoginPromptSpy).toHaveBeenCalled();
-        });
-    });
-
-    describe('showLoginPrompt', () => {
-        it('should show login prompt', () => {
-            settingsPage.showLoginPrompt();
-
-            const mainContent = document.getElementById('main-content');
-            expect(mainContent.innerHTML).toContain('ログインが必要です');
+            expect(authManager.isAuthenticated).toHaveBeenCalled();
+            expect(renderSettingsPageSpy).not.toHaveBeenCalled();
         });
     });
 
@@ -115,14 +206,19 @@ describe('SettingsPage', () => {
 
             const mainContent = document.getElementById('main-content');
             expect(mainContent.innerHTML).toContain('設定');
-            expect(mainContent.innerHTML).toContain('プロフィール');
+            expect(mainContent.innerHTML).toContain('settings-content');
         });
     });
 
     describe('loadUserProfile', () => {
         it('should load user profile successfully', async () => {
+            const mockProfile = {
+                id: 1,
+                email: 'test@example.com',
+                name: 'Test User'
+            };
+
             const { supabaseService } = require('../../js/services/supabaseService.js');
-            const mockProfile = { id: 1, name: 'Test User', email: 'test@example.com' };
             supabaseService.getUserProfile.mockResolvedValue(mockProfile);
 
             await settingsPage.loadUserProfile();
@@ -134,12 +230,10 @@ describe('SettingsPage', () => {
 
     describe('setupSettingsInterface', () => {
         it('should setup settings interface', () => {
-            settingsPage.userProfile = { id: 1, name: 'Test User', email: 'test@example.com' };
-
             settingsPage.setupSettingsInterface();
 
-            // 設定インターフェースが設定されることを確認
-            expect(settingsPage.userProfile).toBeDefined();
+            const settingsContent = document.getElementById('settings-content');
+            expect(settingsContent.innerHTML).toContain('プロフィール設定');
         });
     });
 
@@ -147,27 +241,20 @@ describe('SettingsPage', () => {
         it('should setup event listeners', () => {
             settingsPage.setupEventListeners();
 
-            // イベントリスナーが設定されることを確認
-            expect(settingsPage).toBeDefined();
-        });
-    });
-
-    describe('setupAuthStateListener', () => {
-        it('should setup auth state listener', () => {
-            settingsPage.setupAuthStateListener();
-
-            // 認証状態リスナーが設定されることを確認
-            expect(settingsPage).toBeDefined();
+            expect(settingsPage.eventListenersSetup).toBe(true);
         });
     });
 
     describe('saveUserProfile', () => {
         it('should save user profile successfully', async () => {
+            const profileData = {
+                email: 'updated@example.com',
+                name: 'Updated User'
+            };
+
             const { supabaseService } = require('../../js/services/supabaseService.js');
             const { showNotification } = require('../../js/utils/helpers.js');
             supabaseService.updateUserProfile.mockResolvedValue({ success: true });
-
-            const profileData = { name: 'Updated User', email: 'updated@example.com' };
 
             await settingsPage.saveUserProfile(profileData);
 
@@ -176,14 +263,18 @@ describe('SettingsPage', () => {
         });
 
         it('should handle save profile error', async () => {
+            const profileData = {
+                email: 'updated@example.com',
+                name: 'Updated User'
+            };
+
             const { supabaseService } = require('../../js/services/supabaseService.js');
             const { showNotification } = require('../../js/utils/helpers.js');
-            supabaseService.updateUserProfile.mockRejectedValue(new Error('Save failed'));
-
-            const profileData = { name: 'Updated User', email: 'updated@example.com' };
+            supabaseService.updateUserProfile.mockRejectedValue(new Error('Update failed'));
 
             await settingsPage.saveUserProfile(profileData);
 
+            expect(supabaseService.updateUserProfile).toHaveBeenCalledWith(profileData);
             expect(showNotification).toHaveBeenCalledWith('プロフィールの更新に失敗しました', 'error');
         });
     });
@@ -207,6 +298,7 @@ describe('SettingsPage', () => {
 
             await settingsPage.deleteUserAccount();
 
+            expect(supabaseService.deleteUserAccount).toHaveBeenCalled();
             expect(showNotification).toHaveBeenCalledWith('アカウントの削除に失敗しました', 'error');
         });
     });

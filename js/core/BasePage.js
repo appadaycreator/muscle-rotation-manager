@@ -101,6 +101,12 @@ export class BasePage {
         try {
             console.log(`🔐 Checking authentication for ${this.pageName} page (requiresAuth: ${this.requiresAuth})`);
             
+            // Supabaseが利用可能かチェック
+            if (!supabaseService.isAvailable()) {
+                console.log(`🔐 Supabase not available for ${this.pageName} page - skipping auth check`);
+                return true; // Supabaseが利用できない場合は認証チェックをスキップ
+            }
+            
             const isAuthenticated = await authManager.isAuthenticated();
             console.log(`🔐 Authentication result for ${this.pageName}:`, { isAuthenticated, requiresAuth: this.requiresAuth });
 

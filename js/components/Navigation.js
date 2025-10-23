@@ -238,7 +238,7 @@ export class Navigation {
         this.addEventListener(document, 'click', (e) => {
             const navLink = e.target.closest('a[href]');
             if (navLink && navLink.getAttribute('href').startsWith('/')) {
-                this.handleNavigationClick(navLink);
+                this.handleNavigationClick(navLink, e);
             }
         });
     }
@@ -264,18 +264,24 @@ export class Navigation {
     }
 
     /**
-   * ナビゲーションクリックを処理
-   */
+     * ナビゲーションクリックを処理
+     */
     async handleNavigationClick(navLink, event) {
         const href = navLink.getAttribute('href');
         const pageId = href.split('/').pop().replace('.html', '');
 
+        console.log('Navigation click:', { href, pageId });
+
         // 認証が必要なページかチェック
         const navItem = this.navigationItems.find(item => item.id === pageId);
         if (navItem && navItem.requiresAuth) {
+            console.log('Page requires auth, checking authentication...');
             const isAuthenticated = await authManager.isAuthenticated();
+            console.log('Authentication result:', isAuthenticated);
+            
             if (!isAuthenticated) {
                 event.preventDefault();
+                event.stopPropagation();
                 showNotification('ログインが必要です', 'warning');
                 return;
             }
@@ -283,6 +289,8 @@ export class Navigation {
 
         // モバイルサイドバーを閉じる
         this.closeMobileSidebar();
+        
+        console.log('Navigation allowed, proceeding to:', href);
     }
 
     /**
