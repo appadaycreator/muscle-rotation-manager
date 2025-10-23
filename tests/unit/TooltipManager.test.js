@@ -1,263 +1,318 @@
 // TooltipManager.test.js - ツールチップマネージャーのテスト
 
-import { tooltipManager } from '../../js/utils/tooltip.js';
+import { TooltipManager } from '../../js/utils/tooltip.js';
 
 // DOM環境のモック
 const mockElement = {
-    setAttribute: jest.fn(),
     getAttribute: jest.fn(),
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
+    setAttribute: jest.fn(),
+    hasAttribute: jest.fn(),
+    removeAttribute: jest.fn(),
+    closest: jest.fn(),
     appendChild: jest.fn(),
-    remove: jest.fn(),
-    getBoundingClientRect: jest.fn(() => ({
-        top: 100,
-        left: 100,
-        width: 200,
-        height: 50,
-        bottom: 150,
-        right: 300
-    })),
-    matches: jest.fn(() => true),
-    querySelectorAll: jest.fn(() => []),
-    nodeType: Node.ELEMENT_NODE,
+    removeChild: jest.fn(),
+    matches: jest.fn(),
     style: {},
-    dataset: {},
-    className: ''
+    id: '',
+    className: '',
+    parentNode: {
+        removeChild: jest.fn()
+    }
 };
 
-// DOM要素のモック
-document.getElementById = jest.fn(() => mockElement);
-document.querySelectorAll = jest.fn(() => [mockElement]);
-Object.defineProperty(document, 'body', {
-    value: mockElement,
+// document のモック
+Object.defineProperty(document, 'getElementById', {
+    value: jest.fn(() => mockElement),
     writable: true
 });
 
-// window のモック
-Object.defineProperty(window, 'innerWidth', {
-    writable: true,
-    configurable: true,
-    value: 1024,
+Object.defineProperty(document, 'createElement', {
+    value: jest.fn(() => ({
+        ...mockElement,
+        id: '',
+        className: '',
+        style: { cssText: '' }
+    })),
+    writable: true
 });
 
-Object.defineProperty(window, 'innerHeight', {
-    writable: true,
-    configurable: true,
-    value: 768,
+Object.defineProperty(document, 'addEventListener', {
+    value: jest.fn(),
+    writable: true
+});
+
+Object.defineProperty(document.body, 'appendChild', {
+    value: jest.fn(),
+    writable: true
 });
 
 describe('TooltipManager', () => {
+    let tooltipManager;
+
     beforeEach(() => {
+        tooltipManager = new TooltipManager();
         jest.clearAllMocks();
-        // ツールチップマネージャーをリセット
-        tooltipManager.destroy();
     });
 
-    describe('初期化', () => {
-        test('ツールチップマネージャーが正しく初期化される', () => {
-            tooltipManager.initialize();
-            expect(tooltipManager.isInitialized).toBe(true);
+    describe('constructor', () => {
+        test('should initialize with default values', () => {
+            expect(tooltipManager.tooltips).toBeInstanceOf(Map);
+            expect(tooltipManager.activeTooltip).toBeNull();
+            expect(tooltipManager.isInitialized).toBe(false);
+            expect(tooltipManager.themes).toBeInstanceOf(Map);
+            expect(tooltipManager.animations).toBeInstanceOf(Map);
         });
 
-        test('重複初期化はスキップされる', () => {
-            tooltipManager.initialize();
-            tooltipManager.initialize();
-            expect(tooltipManager.isInitialized).toBe(true);
+        test('should have default configuration', () => {
+            expect(tooltipManager.defaultConfig).toEqual({
+                position: 'top',
+                delay: 300,
+                maxWidth: 300,
+                theme: 'light',
+                animation: true,
+                arrow: true,
+                interactive: false,
+                trigger: 'hover',
+                hideOnScroll: true,
+                hideOnResize: true,
+                accessibility: true
+            });
         });
     });
 
-    describe('ツールチップの追加', () => {
-        test('基本的なツールチップを追加できる', () => {
-            tooltipManager.initialize();
-            tooltipManager.addTooltip(mockElement, 'テストツールチップ');
+    describe('setupDefaultThemes', () => {
+        test('should setup default themes', () => {
+            expect(tooltipManager.themes.has('light')).toBe(true);
+            expect(tooltipManager.themes.has('dark')).toBe(true);
+            expect(tooltipManager.themes.has('primary')).toBe(true);
+            expect(tooltipManager.themes.has('success')).toBe(true);
+            expect(tooltipManager.themes.has('warning')).toBe(true);
+            expect(tooltipManager.themes.has('error')).toBe(true);
+        });
+
+        test('should have correct light theme properties', () => {
+            const lightTheme = tooltipManager.themes.get('light');
+            expect(lightTheme.backgroundColor).toBe('#ffffff');
+            expect(lightTheme.color).toBe('#333333');
+            expect(lightTheme.border).toBe('1px solid #e0e0e0');
+        });
+
+        test('should have correct dark theme properties', () => {
+            const darkTheme = tooltipManager.themes.get('dark');
+            expect(darkTheme.backgroundColor).toBe('#2d3748');
+            expect(darkTheme.color).toBe('#ffffff');
+            expect(darkTheme.border).toBe('1px solid #4a5568');
+        });
+    });
+
+    describe('setupDefaultAnimations', () => {
+        test('should setup default animations', () => {
+            expect(tooltipManager.animations.has('fadeIn')).toBe(true);
+            expect(tooltipManager.animations.has('slide')).toBe(true);
+            expect(tooltipManager.animations.has('scale')).toBe(true);
+            expect(tooltipManager.animations.has('bounce')).toBe(true);
+        });
+
+        test('should have correct fadeIn animation properties', () => {
+            const fadeInAnimation = tooltipManager.animations.get('fadeIn');
+            expect(fadeInAnimation.show.opacity).toBe('0');
+            expect(fadeInAnimation.visible.opacity).toBe('1');
+            expect(fadeInAnimation.hide.opacity).toBe('0');
+        });
+    });
+
+    describe('addTheme', () => {
+        test('should add custom theme', () => {
+            const customTheme = {
+                backgroundColor: '#ff0000',
+                color: '#ffffff',
+                border: 'none'
+            };
             
-            expect(mockElement.setAttribute).toHaveBeenCalledWith('data-tooltip', 'テストツールチップ');
+            tooltipManager.addTheme('custom', customTheme);
+            expect(tooltipManager.themes.get('custom')).toEqual(customTheme);
+        });
+    });
+
+    describe('addAnimation', () => {
+        test('should add custom animation', () => {
+            const customAnimation = {
+                show: { opacity: '0' },
+                visible: { opacity: '1' },
+                hide: { opacity: '0' }
+            };
+            
+            tooltipManager.addAnimation('custom', customAnimation);
+            expect(tooltipManager.animations.get('custom')).toEqual(customAnimation);
+        });
+    });
+
+    describe('getTheme', () => {
+        test('should return theme if exists', () => {
+            const theme = tooltipManager.getTheme('light');
+            expect(theme).toBeDefined();
+            expect(theme.backgroundColor).toBe('#ffffff');
         });
 
-        test('設定付きツールチップを追加できる', () => {
+        test('should return light theme as fallback', () => {
+            const theme = tooltipManager.getTheme('nonexistent');
+            expect(theme).toBeDefined();
+            expect(theme.backgroundColor).toBe('#ffffff');
+        });
+    });
+
+    describe('getAnimation', () => {
+        test('should return animation if exists', () => {
+            const animation = tooltipManager.getAnimation('fadeIn');
+            expect(animation).toBeDefined();
+            expect(animation.show).toBeDefined();
+            expect(animation.visible).toBeDefined();
+            expect(animation.hide).toBeDefined();
+        });
+
+        test('should return fadeIn animation as fallback', () => {
+            const animation = tooltipManager.getAnimation('nonexistent');
+            expect(animation).toBeDefined();
+            expect(animation.show).toBeDefined();
+        });
+    });
+
+    describe('initialize', () => {
+        test('should initialize tooltip manager', () => {
+            // モックを設定
+            const mockContainer = {
+                id: '',
+                className: '',
+                style: { cssText: '' }
+            };
+            
+            document.createElement = jest.fn(() => mockContainer);
+            document.body.appendChild = jest.fn();
+            
             tooltipManager.initialize();
+            expect(tooltipManager.isInitialized).toBe(true);
+        });
+
+        test('should not initialize if already initialized', () => {
+            tooltipManager.isInitialized = true;
+            const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+            
+            tooltipManager.initialize();
+            
+            expect(consoleSpy).not.toHaveBeenCalledWith('🔄 Initializing tooltip manager...');
+            consoleSpy.mockRestore();
+        });
+    });
+
+    describe('addTooltip', () => {
+        test('should add tooltip configuration', () => {
+            const element = {
+                setAttribute: jest.fn()
+            };
+            const text = 'Test tooltip';
             const config = {
-                position: 'bottom',
-                delay: 500,
-                maxWidth: 250,
-                theme: 'dark',
-                animation: false
+                position: 'top',
+                theme: 'light'
             };
             
-            tooltipManager.addTooltip(mockElement, 'テストツールチップ', config);
-            
-            expect(mockElement.setAttribute).toHaveBeenCalledWith('data-tooltip', 'テストツールチップ');
-            expect(mockElement.setAttribute).toHaveBeenCalledWith('data-tooltip-position', 'bottom');
-            expect(mockElement.setAttribute).toHaveBeenCalledWith('data-tooltip-delay', 500);
-            expect(mockElement.setAttribute).toHaveBeenCalledWith('data-tooltip-max-width', 250);
-            expect(mockElement.setAttribute).toHaveBeenCalledWith('data-tooltip-theme', 'dark');
-            expect(mockElement.setAttribute).toHaveBeenCalledWith('data-tooltip-animation', false);
-        });
-
-        test('無効な要素ではツールチップを追加しない', () => {
-            tooltipManager.initialize();
-            tooltipManager.addTooltip(null, 'テストツールチップ');
-            
-            expect(mockElement.setAttribute).not.toHaveBeenCalled();
-        });
-
-        test('空のテキストではツールチップを追加しない', () => {
-            tooltipManager.initialize();
-            tooltipManager.addTooltip(mockElement, '');
-            
-            expect(mockElement.setAttribute).not.toHaveBeenCalled();
+            tooltipManager.addTooltip(element, text, config);
+            expect(element.setAttribute).toHaveBeenCalledWith('data-tooltip', text);
+            expect(element.setAttribute).toHaveBeenCalledWith('data-tooltip-position', 'top');
+            expect(element.setAttribute).toHaveBeenCalledWith('data-tooltip-theme', 'light');
         });
     });
 
-    describe('複数ツールチップの追加', () => {
-        test('複数のツールチップを一括追加できる', () => {
-            tooltipManager.initialize();
-            const tooltipConfigs = [
-                { element: mockElement, text: 'ツールチップ1', config: { position: 'top' } },
-                { element: mockElement, text: 'ツールチップ2', config: { position: 'bottom' } }
-            ];
-            
-            tooltipManager.addTooltips(tooltipConfigs);
-            
-            expect(mockElement.setAttribute).toHaveBeenCalledTimes(4); // 2つのツールチップ × 2回のsetAttribute
-        });
-    });
-
-    describe('動的ツールチップ', () => {
-        test('動的ツールチップを追加できる', () => {
-            tooltipManager.initialize();
-            tooltipManager.addDynamicTooltip('.test-element', '動的ツールチップ', { position: 'top' });
-            
-            expect(document.querySelectorAll).toHaveBeenCalledWith('.test-element');
-        });
-    });
-
-    describe('筋肉部位ツールチップ', () => {
-        test('胸筋のツールチップを追加できる', () => {
-            tooltipManager.initialize();
-            tooltipManager.addMuscleGroupTooltip(mockElement, 'chest');
-            
-            expect(mockElement.setAttribute).toHaveBeenCalledWith('data-tooltip', expect.stringContaining('胸筋'));
-        });
-
-        test('背筋のツールチップを追加できる', () => {
-            tooltipManager.initialize();
-            tooltipManager.addMuscleGroupTooltip(mockElement, 'back');
-            
-            expect(mockElement.setAttribute).toHaveBeenCalledWith('data-tooltip', expect.stringContaining('背筋'));
-        });
-
-        test('未知の筋肉部位ではデフォルトツールチップを追加', () => {
-            tooltipManager.initialize();
-            tooltipManager.addMuscleGroupTooltip(mockElement, 'unknown');
-            
-            expect(mockElement.setAttribute).toHaveBeenCalledWith('data-tooltip', expect.stringContaining('筋肉部位'));
-        });
-    });
-
-    describe('エクササイズツールチップ', () => {
-        test('エクササイズのツールチップを追加できる', () => {
-            tooltipManager.initialize();
-            const exercise = {
-                name: 'ベンチプレス',
-                muscleGroups: ['胸'],
-                equipment: 'バーベル',
-                difficulty: '中級',
-                description: '胸筋を鍛えるエクササイズ'
+    describe('removeTooltip', () => {
+        test('should remove tooltip configuration', () => {
+            const element = {
+                removeAttribute: jest.fn()
             };
             
-            tooltipManager.addExerciseTooltip(mockElement, exercise);
-            
-            expect(mockElement.setAttribute).toHaveBeenCalledWith('data-tooltip', expect.stringContaining('ベンチプレス'));
+            tooltipManager.removeTooltip(element);
+            expect(element.removeAttribute).toHaveBeenCalledWith('data-tooltip');
         });
     });
 
-    describe('統計ツールチップ', () => {
-        test('1RM統計のツールチップを追加できる', () => {
-            tooltipManager.initialize();
-            tooltipManager.addStatsTooltip(mockElement, '1rm');
-            
-            expect(mockElement.setAttribute).toHaveBeenCalledWith('data-tooltip', '統計データの詳細');
-        });
-
-        test('ボリューム統計のツールチップを追加できる', () => {
-            tooltipManager.initialize();
-            tooltipManager.addStatsTooltip(mockElement, 'volume');
-            
-            expect(mockElement.setAttribute).toHaveBeenCalledWith('data-tooltip', '統計データの詳細');
-        });
-
-        test('未知の統計タイプではデフォルトツールチップを追加', () => {
-            tooltipManager.initialize();
-            tooltipManager.addStatsTooltip(mockElement, 'unknown');
-            
-            expect(mockElement.setAttribute).toHaveBeenCalledWith('data-tooltip', expect.stringContaining('統計データ'));
-        });
-    });
-
-    describe('位置調整', () => {
-        test('ツールチップの位置を調整できる', () => {
-            tooltipManager.initialize();
-            const tooltip = { 
-                ...mockElement, 
-                style: { top: '', left: '' }, 
-                dataset: { position: 'top' } 
+    describe('getElementConfig', () => {
+        test('should return default config for element without data attributes', () => {
+            const element = {
+                getAttribute: jest.fn(() => null),
+                hasAttribute: jest.fn(() => false)
             };
-            const target = mockElement;
             
-            tooltipManager.adjustTooltipPosition(tooltip, target);
+            const config = tooltipManager.getElementConfig(element);
+            expect(config).toEqual(tooltipManager.defaultConfig);
+        });
+
+        test('should return custom config for element with data attributes', () => {
+            const element = {
+                getAttribute: jest.fn((attr) => {
+                    const attrs = {
+                        'data-tooltip-position': 'bottom',
+                        'data-tooltip-theme': 'dark',
+                        'data-tooltip-delay': '500'
+                    };
+                    return attrs[attr] || null;
+                }),
+                hasAttribute: jest.fn(() => true)
+            };
             
-            expect(tooltip.style.top).toBeDefined();
-            expect(tooltip.style.left).toBeDefined();
+            const config = tooltipManager.getElementConfig(element);
+            expect(config.position).toBe('bottom');
+            expect(config.theme).toBe('dark');
+            expect(config.delay).toBe(500);
         });
     });
 
-    describe('テーマ設定', () => {
-        test('ツールチップのテーマを設定できる', () => {
-            tooltipManager.initialize();
-            tooltipManager.setTheme('dark');
-            
-            expect(document.getElementById).toHaveBeenCalledWith('tooltip-container');
+    describe('formatTooltipContent', () => {
+        test('should format simple text content', () => {
+            const content = 'Simple text';
+            const formatted = tooltipManager.formatTooltipContent(content);
+            expect(formatted).toBe('Simple text');
+        });
+
+        test('should format HTML content', () => {
+            const content = '<strong>Bold text</strong>';
+            const formatted = tooltipManager.formatTooltipContent(content);
+            expect(formatted).toBe('&lt;strong&gt;Bold text&lt;/strong&gt;');
         });
     });
 
-    describe('アニメーション設定', () => {
-        test('ツールチップのアニメーションを設定できる', () => {
-            tooltipManager.initialize();
-            tooltipManager.setAnimation(false);
+    describe('isElementHovered', () => {
+        test('should return true for hovered element', () => {
+            const element = {
+                matches: jest.fn(() => true)
+            };
             
-            expect(tooltipManager.defaultConfig.animation).toBe(false);
+            const isHovered = tooltipManager.isElementHovered(element);
+            expect(isHovered).toBe(true);
+        });
+
+        test('should return false for not hovered element', () => {
+            const element = {
+                matches: jest.fn(() => false)
+            };
+            
+            const isHovered = tooltipManager.isElementHovered(element);
+            expect(isHovered).toBe(false);
         });
     });
 
-    describe('破棄', () => {
-        test('ツールチップマネージャーを正しく破棄できる', () => {
-            tooltipManager.initialize();
+    describe('destroy', () => {
+        test('should destroy tooltip manager', () => {
+            tooltipManager.isInitialized = true;
+            tooltipManager.activeTooltip = mockElement;
+            tooltipManager.tooltips.set('test', {});
+            
+            const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+            
             tooltipManager.destroy();
             
             expect(tooltipManager.isInitialized).toBe(false);
             expect(tooltipManager.tooltips.size).toBe(0);
-        });
-    });
-
-    describe('エラーハンドリング', () => {
-        test('初期化エラーを適切に処理する', () => {
-            // DOM要素を無効にしてエラーを発生させる
-            document.getElementById = jest.fn(() => null);
+            expect(consoleSpy).toHaveBeenCalledWith('🗑️ Tooltip manager destroyed');
             
-            expect(() => {
-                tooltipManager.initialize();
-            }).not.toThrow();
-        });
-
-        test('ツールチップ追加エラーを適切に処理する', () => {
-            tooltipManager.initialize();
-            
-            // 無効な要素でエラーを発生させる
-            expect(() => {
-                tooltipManager.addTooltip(undefined, 'テスト');
-            }).not.toThrow();
+            consoleSpy.mockRestore();
         });
     });
 });

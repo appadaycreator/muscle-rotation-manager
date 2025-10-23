@@ -652,43 +652,75 @@ class SettingsPage {
             // 基本プロフィールのツールチップ
             tooltipManager.addTooltip('#display_name', {
                 content: '他のユーザーに表示される名前です。本名ではなく、ニックネームを入力してください。',
-                position: 'right'
+                position: 'right',
+                theme: 'primary',
+                animation: 'fadeIn',
+                arrow: true,
+                delay: 300
             });
 
             tooltipManager.addTooltip('#email', {
                 content: 'ログインに使用するメールアドレスです。変更する場合は、認証システムで更新してください。',
-                position: 'right'
+                position: 'right',
+                theme: 'warning',
+                animation: 'slide',
+                arrow: true,
+                delay: 300
             });
 
             tooltipManager.addTooltip('#age', {
                 content: '年齢は適切なトレーニング強度を計算するために使用されます。',
-                position: 'right'
+                position: 'right',
+                theme: 'success',
+                animation: 'scale',
+                arrow: true,
+                delay: 300
             });
 
             tooltipManager.addTooltip('#weight', {
                 content: '現在の体重を入力してください。カロリー計算やトレーニング強度の調整に使用されます。',
-                position: 'right'
+                position: 'right',
+                theme: 'primary',
+                animation: 'bounce',
+                arrow: true,
+                delay: 300
             });
 
             tooltipManager.addTooltip('#height', {
                 content: '身長を入力してください。BMI計算や適切なトレーニング強度の算出に使用されます。',
-                position: 'right'
+                position: 'right',
+                theme: 'success',
+                animation: 'fadeIn',
+                arrow: true,
+                delay: 300
             });
 
             // 体力レベルのツールチップ
             tooltipManager.addTooltip('#fitness-level-beginner', {
                 content: '筋トレを始めたばかりの方。基本的なエクササイズから始めましょう。',
-                position: 'top'
+                position: 'top',
+                theme: 'success',
+                animation: 'bounce',
+                arrow: true,
+                delay: 200
             });
 
             tooltipManager.addTooltip('#fitness-level-intermediate', {
                 content: '筋トレ経験が1年以上の方。中級レベルのエクササイズに挑戦できます。',
-                position: 'top'
+                position: 'top',
+                theme: 'warning',
+                animation: 'slide',
+                arrow: true,
+                delay: 200
             });
 
             tooltipManager.addTooltip('#fitness-level-advanced', {
                 content: '筋トレ経験が豊富な方。高強度のエクササイズや上級テクニックに対応できます。',
-                position: 'top'
+                position: 'top',
+                theme: 'error',
+                animation: 'scale',
+                arrow: true,
+                delay: 200
             });
 
             // 目標設定のツールチップ
