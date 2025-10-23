@@ -423,12 +423,173 @@ export class TooltipManager {
     }
 
     /**
+     * 複数のツールチップを一括追加
+     * @param {Array} tooltipConfigs - ツールチップ設定の配列
+     */
+    addTooltips(tooltipConfigs) {
+        try {
+            tooltipConfigs.forEach(({ element, text, config }) => {
+                this.addTooltip(element, text, config);
+            });
+            console.log(`✅ Added ${tooltipConfigs.length} tooltips`);
+        } catch (error) {
+            console.error('❌ Failed to add multiple tooltips:', error);
+        }
+    }
+
+    /**
+     * 動的ツールチップを追加（要素が後から追加される場合）
+     * @param {string} selector - セレクター
+     * @param {string} text - ツールチップテキスト
+     * @param {Object} config - 設定オブジェクト
+     */
+    addDynamicTooltip(selector, text, config = {}) {
+        try {
+            // 既存の要素にツールチップを適用
+            const elements = document.querySelectorAll(selector);
+            elements.forEach(element => {
+                this.addTooltip(element, text, config);
+            });
+
+            // 新しい要素が追加された時の監視を設定
+            this.observeNewElements(selector, text, config);
+            
+            console.log(`✅ Dynamic tooltip added for selector: ${selector}`);
+
+        } catch (error) {
+            console.error(`❌ Failed to add dynamic tooltip for selector ${selector}:`, error);
+        }
+    }
+
+    /**
+     * 新しい要素の監視を設定
+     * @param {string} selector - セレクター
+     * @param {string} text - ツールチップテキスト
+     * @param {Object} config - 設定オブジェクト
+     */
+    observeNewElements(selector, text, config) {
+        try {
+            if (!this.observer) {
+                this.observer = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                        mutation.addedNodes.forEach((node) => {
+                            if (node.nodeType === Node.ELEMENT_NODE) {
+                                // 新しく追加された要素をチェック
+                                if (node.matches && node.matches(selector)) {
+                                    this.addTooltip(node, text, config);
+                                }
+                                
+                                // 子要素もチェック
+                                const childElements = node.querySelectorAll && node.querySelectorAll(selector);
+                                if (childElements) {
+                                    childElements.forEach(element => {
+                                        this.addTooltip(element, text, config);
+                                    });
+                                }
+                            }
+                        });
+                    });
+                });
+            }
+
+            this.observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+
+        } catch (error) {
+            console.error('❌ Failed to observe new elements:', error);
+        }
+    }
+
+    /**
+     * ツールチップの表示位置を自動調整
+     * @param {HTMLElement} tooltip - ツールチップ要素
+     * @param {HTMLElement} target - ターゲット要素
+     */
+    adjustTooltipPosition(tooltip, target) {
+        try {
+            const tooltipRect = tooltip.getBoundingClientRect();
+            const targetRect = target.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+
+            let position = tooltip.dataset.position || 'top';
+            let top = targetRect.top - tooltipRect.height - 10;
+            let left = targetRect.left + (targetRect.width / 2) - (tooltipRect.width / 2);
+
+            // 右端にはみ出す場合
+            if (left + tooltipRect.width > viewportWidth - 10) {
+                left = viewportWidth - tooltipRect.width - 10;
+            }
+
+            // 左端にはみ出す場合
+            if (left < 10) {
+                left = 10;
+            }
+
+            // 上端にはみ出す場合
+            if (top < 10) {
+                position = 'bottom';
+                top = targetRect.bottom + 10;
+            }
+
+            // 下端にはみ出す場合
+            if (top + tooltipRect.height > viewportHeight - 10) {
+                position = 'top';
+                top = targetRect.top - tooltipRect.height - 10;
+            }
+
+            tooltip.style.top = `${top}px`;
+            tooltip.style.left = `${left}px`;
+            tooltip.dataset.position = position;
+
+        } catch (error) {
+            console.error('❌ Failed to adjust tooltip position:', error);
+        }
+    }
+
+    /**
+     * ツールチップのテーマを設定
+     * @param {string} theme - テーマ名
+     */
+    setTheme(theme) {
+        try {
+            const tooltipContainer = document.getElementById('tooltip-container');
+            if (tooltipContainer) {
+                tooltipContainer.className = `tooltip-container theme-${theme}`;
+            }
+            console.log(`✅ Tooltip theme set to: ${theme}`);
+        } catch (error) {
+            console.error('❌ Failed to set tooltip theme:', error);
+        }
+    }
+
+    /**
+     * ツールチップのアニメーションを設定
+     * @param {boolean} enabled - アニメーション有効/無効
+     */
+    setAnimation(enabled) {
+        try {
+            this.defaultConfig.animation = enabled;
+            console.log(`✅ Tooltip animation ${enabled ? 'enabled' : 'disabled'}`);
+        } catch (error) {
+            console.error('❌ Failed to set tooltip animation:', error);
+        }
+    }
+
+    /**
      * ツールチップマネージャーを破棄
      */
     destroy() {
         this.hideTooltip();
         this.tooltips.clear();
         this.isInitialized = false;
+
+        // オブザーバーを停止
+        if (this.observer) {
+            this.observer.disconnect();
+        }
 
         const container = document.getElementById('tooltip-container');
         if (container) {

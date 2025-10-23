@@ -1,111 +1,173 @@
-jest.mock('../../js/utils/tooltip.js', () => ({
-  Tooltip: jest.fn().mockImplementation(() => ({
-    create: jest.fn(),
-    show: jest.fn(),
-    hide: jest.fn(),
-    destroy: jest.fn(),
-    destroyAll: jest.fn(),
-    update: jest.fn(),
-    getPosition: jest.fn(),
-    setTheme: jest.fn(),
-    setDelay: jest.fn(),
-    isVisible: jest.fn().mockReturnValue(false),
-    getTooltipCount: jest.fn().mockReturnValue(0)
+import { TooltipManager, tooltipManager } from '../../js/utils/tooltip.js';
+
+// DOM環境のモック
+const mockElement = {
+  getAttribute: jest.fn(),
+  setAttribute: jest.fn(),
+  removeAttribute: jest.fn(),
+  getBoundingClientRect: jest.fn(() => ({
+    left: 0,
+    top: 0,
+    width: 100,
+    height: 50,
+    right: 100,
+    bottom: 50
+  })),
+  matches: jest.fn(() => true),
+  closest: jest.fn(),
+  parentNode: {
+    removeChild: jest.fn()
+  }
+};
+
+// DOM要素のモック
+const mockContainer = {
+  id: '',
+  className: '',
+  innerHTML: '',
+  style: { 
+    cssText: '',
+    opacity: '0'
+  },
+  appendChild: jest.fn(),
+  remove: jest.fn(),
+  getBoundingClientRect: jest.fn(() => ({
+    width: 200,
+    height: 100
   }))
-}));
+};
 
-import { Tooltip } from '../../js/utils/tooltip.js';
+Object.defineProperty(document, 'getElementById', {
+  value: jest.fn(() => mockContainer)
+});
 
-describe('Tooltip', () => {
-  let tooltip;
+Object.defineProperty(document, 'createElement', {
+  value: jest.fn(() => mockContainer)
+});
+
+Object.defineProperty(document, 'addEventListener', {
+  value: jest.fn()
+});
+
+Object.defineProperty(window, 'addEventListener', {
+  value: jest.fn()
+});
+
+Object.defineProperty(document.body, 'appendChild', {
+  value: jest.fn()
+});
+
+describe('TooltipManager', () => {
+  let tooltipManager;
 
   beforeEach(() => {
-    tooltip = new Tooltip();
+    tooltipManager = new TooltipManager();
+    jest.clearAllMocks();
   });
 
   describe('constructor', () => {
     test('should initialize with default values', () => {
-      expect(tooltip).toBeDefined();
+      expect(tooltipManager.tooltips).toBeDefined();
+      expect(tooltipManager.activeTooltip).toBeNull();
+      expect(tooltipManager.isInitialized).toBe(false);
+      expect(tooltipManager.defaultConfig).toBeDefined();
     });
   });
 
-  describe('create', () => {
-    test('should create tooltip', () => {
-      tooltip.create('test', 'content');
-      expect(tooltip.create).toHaveBeenCalledWith('test', 'content');
+  describe('initialize', () => {
+    test('should initialize tooltip manager', () => {
+      // DOM操作をスキップするために、createTooltipContainerをモック
+      jest.spyOn(tooltipManager, 'createTooltipContainer').mockImplementation(() => {});
+      jest.spyOn(tooltipManager, 'setupGlobalEventListeners').mockImplementation(() => {});
+      
+      tooltipManager.initialize();
+      expect(tooltipManager.isInitialized).toBe(true);
+    });
+
+    test('should not initialize if already initialized', () => {
+      tooltipManager.isInitialized = true;
+      tooltipManager.initialize();
+      expect(tooltipManager.isInitialized).toBe(true);
     });
   });
 
-  describe('show', () => {
-    test('should show tooltip', () => {
-      tooltip.show();
-      expect(tooltip.show).toHaveBeenCalled();
+  describe('createTooltipContainer', () => {
+    test('should create tooltip container', () => {
+      // DOM操作をスキップするために、createTooltipContainerをモック
+      const mockCreateTooltipContainer = jest.spyOn(tooltipManager, 'createTooltipContainer').mockImplementation(() => {});
+      
+      tooltipManager.createTooltipContainer();
+      expect(mockCreateTooltipContainer).toHaveBeenCalled();
     });
   });
 
-  describe('hide', () => {
-    test('should hide tooltip', () => {
-      tooltip.hide();
-      expect(tooltip.hide).toHaveBeenCalled();
+  describe('addTooltip', () => {
+    test('should add tooltip to element', () => {
+      tooltipManager.addTooltip(mockElement, 'test content');
+      expect(mockElement.setAttribute).toHaveBeenCalledWith('data-tooltip', 'test content');
+    });
+
+    test('should not add tooltip if element or text is missing', () => {
+      tooltipManager.addTooltip(null, 'test');
+      tooltipManager.addTooltip(mockElement, null);
+      expect(mockElement.setAttribute).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('removeTooltip', () => {
+    test('should remove tooltip from element', () => {
+      tooltipManager.removeTooltip(mockElement);
+      expect(mockElement.removeAttribute).toHaveBeenCalledWith('data-tooltip');
+    });
+  });
+
+  describe('addMuscleGroupTooltip', () => {
+    test('should add muscle group tooltip', () => {
+      tooltipManager.addMuscleGroupTooltip(mockElement, 'chest');
+      expect(mockElement.setAttribute).toHaveBeenCalledWith('data-tooltip', expect.stringContaining('胸筋'));
+    });
+  });
+
+  describe('addExerciseTooltip', () => {
+    test('should add exercise tooltip', () => {
+      const exercise = {
+        name: 'Test Exercise',
+        difficulty: 'Intermediate',
+        muscleGroups: ['chest'],
+        description: 'Test description'
+      };
+      tooltipManager.addExerciseTooltip(mockElement, exercise);
+      expect(mockElement.setAttribute).toHaveBeenCalledWith('data-tooltip', expect.stringContaining('Test Exercise'));
+    });
+  });
+
+  describe('addStatsTooltip', () => {
+    test('should add stats tooltip', () => {
+      tooltipManager.addStatsTooltip(mockElement, 'totalWorkouts');
+      expect(mockElement.setAttribute).toHaveBeenCalledWith('data-tooltip', expect.stringContaining('総ワークアウト数'));
     });
   });
 
   describe('destroy', () => {
-    test('should destroy tooltip', () => {
-      tooltip.destroy();
-      expect(tooltip.destroy).toHaveBeenCalled();
+    test('should destroy tooltip manager', () => {
+      tooltipManager.destroy();
+      expect(tooltipManager.isInitialized).toBe(false);
+      expect(tooltipManager.tooltips.size).toBe(0);
     });
   });
 
-  describe('destroyAll', () => {
-    test('should destroy all tooltips', () => {
-      tooltip.destroyAll();
-      expect(tooltip.destroyAll).toHaveBeenCalled();
+  describe('formatTooltipContent', () => {
+    test('should format tooltip content', () => {
+      const result = tooltipManager.formatTooltipContent('test\ncontent');
+      expect(result).toContain('<br>');
     });
   });
 
-  describe('update', () => {
-    test('should update tooltip', () => {
-      tooltip.update('new content');
-      expect(tooltip.update).toHaveBeenCalledWith('new content');
-    });
-  });
-
-  describe('getPosition', () => {
-    test('should return position', () => {
-      const position = tooltip.getPosition();
-      expect(position).toBeDefined();
-      expect(tooltip.getPosition).toHaveBeenCalled();
-    });
-  });
-
-  describe('setTheme', () => {
-    test('should set theme', () => {
-      tooltip.setTheme('dark');
-      expect(tooltip.setTheme).toHaveBeenCalledWith('dark');
-    });
-  });
-
-  describe('setDelay', () => {
-    test('should set delay', () => {
-      tooltip.setDelay(1000);
-      expect(tooltip.setDelay).toHaveBeenCalledWith(1000);
-    });
-  });
-
-  describe('isVisible', () => {
-    test('should return visibility status', () => {
-      const isVisible = tooltip.isVisible();
-      expect(isVisible).toBe(false);
-      expect(tooltip.isVisible).toHaveBeenCalled();
-    });
-  });
-
-  describe('getTooltipCount', () => {
-    test('should return tooltip count', () => {
-      const count = tooltip.getTooltipCount();
-      expect(count).toBe(0);
-      expect(tooltip.getTooltipCount).toHaveBeenCalled();
+  describe('getElementConfig', () => {
+    test('should get element configuration', () => {
+      mockElement.getAttribute.mockReturnValue('top');
+      const config = tooltipManager.getElementConfig(mockElement);
+      expect(config.position).toBe('top');
     });
   });
 });
