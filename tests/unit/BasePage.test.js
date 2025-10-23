@@ -34,6 +34,16 @@ describe('BasePage', () => {
     });
 
     test('should not initialize if already initialized', async () => {
+      // モックの設定
+      global.authManager = {
+        isAuthenticated: jest.fn().mockResolvedValue(true),
+        getCurrentUser: jest.fn().mockReturnValue({ email: 'test@example.com' })
+      };
+      global.supabaseService = {
+        getClient: jest.fn().mockReturnValue({})
+      };
+      global.showNotification = jest.fn();
+      
       await basePage.initialize();
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
       
