@@ -266,9 +266,9 @@ class ExercisePage {
 
         try {
             const searchTerm = document.getElementById('exercise-search')?.value || '';
-            const filters = this.getCurrentFilters();
+        const filters = this.getCurrentFilters();
 
-            this.currentExercises = await exerciseService.searchExercises(searchTerm, filters);
+        this.currentExercises = await exerciseService.searchExercises(searchTerm, filters);
             this.renderExercises();
 
         } catch (error) {
@@ -808,15 +808,32 @@ class ExercisePage {
      * @param {string} categoryName - カテゴリ名
      */
     applyCategoryFilter(categoryName) {
-        console.log('applyCategoryFilter called with:', categoryName);
+        // カテゴリ名から筋肉部位のキーを取得
+        const muscleGroupKey = this.getMuscleGroupKeyFromName(categoryName);
+        
         const muscleGroupFilter = document.getElementById('muscle-group-filter');
         if (muscleGroupFilter) {
-            console.log('Setting muscle group filter to:', categoryName);
-            muscleGroupFilter.value = categoryName;
+            muscleGroupFilter.value = muscleGroupKey;
             this.applyFilters();
-        } else {
-            console.error('muscle-group-filter element not found');
         }
+    }
+
+    /**
+     * カテゴリ名から筋肉部位のキーを取得
+     * @param {string} categoryName - カテゴリ名
+     * @returns {string} 筋肉部位のキー
+     */
+    getMuscleGroupKeyFromName(categoryName) {
+        const nameToKeyMap = {
+            '胸筋': 'chest',
+            '背筋': 'back',
+            '脚': 'legs',
+            '肩': 'shoulders',
+            '腕': 'arms',
+            '体幹': 'core'
+        };
+        
+        return nameToKeyMap[categoryName] || categoryName.toLowerCase();
     }
 
     /**

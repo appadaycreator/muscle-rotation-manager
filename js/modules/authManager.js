@@ -100,11 +100,15 @@ class AuthManager {
      */
     setupAuthStateListener() {
         supabaseService.onAuthStateChange(async (event, session) => {
+            console.log('Auth state change detected:', { event, session: !!session, user: !!session?.user });
+            
             if (event === 'SIGNED_IN' && session) {
                 showNotification('ログインしました', 'success');
             } else if (event === 'SIGNED_OUT') {
                 showNotification('ログアウトしました', 'success');
             }
+            
+            // UIを更新
             await this.updateAuthUI();
         });
     }
@@ -174,7 +178,16 @@ class AuthManager {
 
         try {
             await supabaseService.signOut();
+            console.log('Sign out completed, updating UI...');
+            
+            // UIを即座に更新
             await this.updateAuthUI();
+            
+            // 少し遅延して再度UIを更新（認証状態の変更が反映されるまで待つ）
+            setTimeout(async () => {
+                await this.updateAuthUI();
+            }, 500);
+            
             showNotification('ログアウトしました', 'success');
         } catch (error) {
             console.error('Logout error:', error);
@@ -409,6 +422,7 @@ class AuthManager {
     async getCurrentUser() {
         try {
             const { user } = await supabaseService.getAuthState();
+            console.log('getCurrentUser result:', { user: !!user, userId: user?.id });
             return user;
         } catch (error) {
             console.error('Failed to get current user:', error);

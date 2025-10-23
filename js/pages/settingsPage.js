@@ -53,11 +53,14 @@ class SettingsPage {
     setupAuthStateListener() {
         // 認証状態が変更されたときにUIを更新
         supabaseService.onAuthStateChange(async (event, session) => {
-            console.log('Auth state changed in settings page:', event);
+            console.log('Auth state changed in settings page:', { event, session: !!session, user: !!session?.user });
+            
+            // 認証UIを更新
             await authManager.updateAuthUI();
             
             // ログアウトされた場合はログインプロンプトを表示
             if (event === 'SIGNED_OUT') {
+                console.log('User signed out, showing login prompt');
                 this.showLoginPrompt();
             }
         });
