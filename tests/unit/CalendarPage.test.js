@@ -238,6 +238,12 @@ describe('CalendarPage', () => {
 
     describe('renderCalendar', () => {
         it('should render calendar', () => {
+            // DOM要素をモック
+            const mockElement = {
+                innerHTML: ''
+            };
+            document.getElementById = jest.fn().mockReturnValue(mockElement);
+            
             calendarPage.renderCalendar();
 
             const calendarContent = document.getElementById('calendar-content');

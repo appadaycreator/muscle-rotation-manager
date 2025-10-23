@@ -243,7 +243,10 @@ describe('Navigation', () => {
         getAttribute: jest.fn().mockReturnValue('/dashboard.html'),
         preventDefault: jest.fn()
       };
-      const event = { preventDefault: jest.fn() };
+      const event = { 
+        preventDefault: jest.fn(),
+        stopPropagation: jest.fn()
+      };
       
       // 認証されていない状態をモック
       const { authManager } = require('../../js/modules/authManager.js');
@@ -252,6 +255,7 @@ describe('Navigation', () => {
       await navigation.handleNavigationClick(navLink, event);
       
       expect(event.preventDefault).toHaveBeenCalled();
+      expect(event.stopPropagation).toHaveBeenCalled();
       expect(global.showNotification).toHaveBeenCalledWith('ログインが必要です', 'warning');
     });
   });

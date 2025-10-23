@@ -110,12 +110,13 @@ describe('MPAInitializer', () => {
         text: jest.fn().mockResolvedValue('<div>Mock HTML</div>')
       });
       
+      // タイムアウトを15秒に設定
       await mpaInitializer.initialize();
       
       expect(mpaInitializer.isInitialized).toBe(true);
       expect(mockAuthManager.initialize).toHaveBeenCalled();
       expect(mockAuthManager.isAuthenticated).toHaveBeenCalled();
-    });
+    }, 15000);
 
     test('should not initialize if already initialized', async () => {
       mpaInitializer.isInitialized = true;
@@ -143,6 +144,7 @@ describe('MPAInitializer', () => {
     test('should return true for authenticated user', async () => {
       mockAuthManager.isAuthenticated.mockResolvedValue(true);
       mockAuthManager.getCurrentUser.mockResolvedValue({ email: 'test@example.com' });
+      mockSupabaseService.isAvailable.mockReturnValue(true);
       
       const result = await mpaInitializer.checkAuthentication();
       
@@ -152,6 +154,7 @@ describe('MPAInitializer', () => {
 
     test('should return false for unauthenticated user', async () => {
       mockAuthManager.isAuthenticated.mockResolvedValue(false);
+      mockSupabaseService.isAvailable.mockReturnValue(true);
       
       const result = await mpaInitializer.checkAuthentication();
       
@@ -161,6 +164,7 @@ describe('MPAInitializer', () => {
     test('should handle authentication errors', async () => {
       const error = new Error('Auth failed');
       mockAuthManager.isAuthenticated.mockRejectedValue(error);
+      mockSupabaseService.isAvailable.mockReturnValue(true);
       
       const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
       

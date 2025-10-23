@@ -184,20 +184,59 @@ class AuthManager {
                     console.log('User profile shown');
                 }
                 
+                // プロファイル情報を取得
+                console.log('Fetching user profile...');
+                const userProfileData = await this.getUserProfile();
+                console.log('User profile data:', userProfileData);
+                
                 // ユーザー情報を更新
                 if (userAvatar) {
-                    // アバター画像を設定（デフォルトまたはユーザーのアバター）
-                    const avatarUrl = currentUser.user_metadata?.avatar_url || 'assets/default-avatar.png';
+                    // アバター画像を設定（プロファイル、user_metadata、デフォルトの順で確認）
+                    let avatarUrl = 'assets/default-avatar.png';
+                    
+                    if (userProfileData?.avatar_url) {
+                        avatarUrl = userProfileData.avatar_url;
+                        console.log('Using profile avatar:', avatarUrl);
+                    } else if (currentUser.user_metadata?.avatar_url) {
+                        avatarUrl = currentUser.user_metadata.avatar_url;
+                        console.log('Using metadata avatar:', avatarUrl);
+                    } else {
+                        console.log('Using default avatar');
+                    }
+                    
                     userAvatar.src = avatarUrl;
                     userAvatar.alt = `${currentUser.email}のアバター`;
+                    
+                    // アバター画像の読み込みエラーを処理
+                    userAvatar.onerror = () => {
+                        console.warn('Avatar image failed to load, using default:', avatarUrl);
+                        userAvatar.src = 'assets/default-avatar.png';
+                    };
+                    
+                    // アバター画像の読み込み成功をログ
+                    userAvatar.onload = () => {
+                        console.log('Avatar image loaded successfully:', avatarUrl);
+                    };
                 }
                 
                 if (userName) {
-                    // ユーザー名を設定（display_nameまたはemail）
-                    const displayName = currentUser.user_metadata?.display_name || 
-                                     currentUser.user_metadata?.full_name || 
-                                     currentUser.email?.split('@')[0] || 
-                                     'ユーザー';
+                    // ユーザー名を設定（プロファイル、user_metadata、emailの順で確認）
+                    let displayName = 'ユーザー';
+                    
+                    if (userProfileData?.display_name) {
+                        displayName = userProfileData.display_name;
+                        console.log('Using profile display name:', displayName);
+                    } else if (currentUser.user_metadata?.display_name) {
+                        displayName = currentUser.user_metadata.display_name;
+                        console.log('Using metadata display name:', displayName);
+                    } else if (currentUser.user_metadata?.full_name) {
+                        displayName = currentUser.user_metadata.full_name;
+                        console.log('Using metadata full name:', displayName);
+                    } else if (currentUser.email) {
+                        displayName = currentUser.email.split('@')[0];
+                        console.log('Using email prefix:', displayName);
+                    }
+                    
                     userName.textContent = displayName;
                 }
                 
@@ -514,6 +553,55 @@ class AuthManager {
             return user;
         } catch (error) {
             console.error('Failed to get current user:', error);
+            return null;
+        }
+    }
+
+    /**
+     * ユーザープロファイルを取得
+     * @returns {Object|null} プロファイルオブジェクト
+     */
+    async getUserProfile() {
+        try {
+            // Supabaseが利用可能かチェック
+            if (!supabaseService.isAvailable()) {
+                console.log('Supabase not available, cannot get user profile');
+                return null;
+            }
+
+            const currentUser = await this.getCurrentUser();
+            if (!currentUser) {
+                console.log('No current user, cannot get profile');
+                return null;
+            }
+
+            console.log('Fetching user profile for user:', currentUser.id);
+
+            // supabaseService.clientが利用可能かチェック
+            if (!supabaseService.client) {
+                console.error('Supabase client is not available');
+                return null;
+            }
+
+            const { data, error } = await supabaseService.client
+                .from('user_profiles')
+                .select('*')
+                .eq('id', currentUser.id)
+                .single();
+
+            if (error) {
+                console.error('Failed to get user profile:', error);
+                return null;
+            }
+
+            console.log('User profile retrieved:', { 
+                id: data?.id, 
+                displayName: data?.display_name, 
+                avatarUrl: data?.avatar_url 
+            });
+            return data;
+        } catch (error) {
+            console.error('Failed to get user profile:', error);
             return null;
         }
     }

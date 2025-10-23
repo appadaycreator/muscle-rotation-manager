@@ -230,6 +230,12 @@ describe('SettingsPage', () => {
 
     describe('setupSettingsInterface', () => {
         it('should setup settings interface', () => {
+            // DOM要素をモック
+            const mockElement = {
+                innerHTML: ''
+            };
+            document.getElementById = jest.fn().mockReturnValue(mockElement);
+            
             settingsPage.setupSettingsInterface();
 
             const settingsContent = document.getElementById('settings-content');

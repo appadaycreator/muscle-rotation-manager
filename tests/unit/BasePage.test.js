@@ -65,6 +65,7 @@ describe('BasePage', () => {
   describe('initialize', () => {
     test('should initialize successfully', async () => {
       mockAuthManager.isAuthenticated.mockResolvedValue(true);
+      mockSupabaseService.isAvailable.mockReturnValue(true);
       
       await basePage.initialize();
       
@@ -83,6 +84,7 @@ describe('BasePage', () => {
     test('should handle initialization errors', async () => {
       const error = new Error('Initialization failed');
       mockAuthManager.isAuthenticated.mockRejectedValue(error);
+      mockSupabaseService.isAvailable.mockReturnValue(true);
       
       const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
       
@@ -99,6 +101,7 @@ describe('BasePage', () => {
   describe('checkAuthentication', () => {
     test('should redirect to index if not authenticated and requires auth', async () => {
       mockAuthManager.isAuthenticated.mockResolvedValue(false);
+      mockSupabaseService.isAvailable.mockReturnValue(true);
       
       // JSDOMの制限により、window.location.hrefの設定はテストできない
       // そのため、認証チェックの動作のみ確認

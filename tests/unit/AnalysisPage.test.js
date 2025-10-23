@@ -232,6 +232,12 @@ describe('AnalysisPage', () => {
 
     describe('renderStatistics', () => {
         it('should render statistics', () => {
+            // DOM要素をモック
+            const mockElement = {
+                innerHTML: ''
+            };
+            document.getElementById = jest.fn().mockReturnValue(mockElement);
+            
             analysisPage.renderStatistics();
 
             const analysisContent = document.getElementById('analysis-content');
@@ -241,6 +247,12 @@ describe('AnalysisPage', () => {
 
     describe('renderCharts', () => {
         it('should render charts', () => {
+            // DOM要素をモック
+            const mockElement = {
+                innerHTML: ''
+            };
+            document.getElementById = jest.fn().mockReturnValue(mockElement);
+            
             analysisPage.renderCharts();
 
             const analysisContent = document.getElementById('analysis-content');
