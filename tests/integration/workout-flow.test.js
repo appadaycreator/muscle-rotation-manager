@@ -244,23 +244,33 @@ describe('データ永続化統合テスト', () => {
         };
 
         dataManager = {
-            saveWorkout: async function(workoutData) {
-                const result = await mockSupabase.from('workouts').insert(workoutData);
+            saveWorkout: async function(sessionData) {
+                const result = await mockSupabase.from('workout_sessions').insert(sessionData);
                 if (result.error) throw new Error(result.error.message);
                 return result.data[0];
             },
 
             getWorkouts: async function(userId) {
-                const result = await mockSupabase.from('workouts')
-                    .select('*')
+                const result = await mockSupabase.from('workout_sessions')
+                    .select(`
+                        *,
+                        training_logs (
+                            id,
+                            exercise_name,
+                            sets,
+                            reps,
+                            weights,
+                            muscle_group_id
+                        )
+                    `)
                     .eq('user_id', userId)
-                    .order('date', { ascending: false });
+                    .order('workout_date', { ascending: false });
                 if (result.error) throw new Error(result.error.message);
                 return result.data;
             },
 
             updateWorkout: async function(workoutId, updates) {
-                const result = await mockSupabase.from('workouts')
+                const result = await mockSupabase.from('workout_sessions')
                     .update(updates)
                     .eq('id', workoutId);
                 if (result.error) throw new Error(result.error.message);
@@ -268,11 +278,23 @@ describe('データ永続化統合テスト', () => {
             },
 
             deleteWorkout: async function(workoutId) {
-                const result = await mockSupabase.from('workouts')
+                const result = await mockSupabase.from('workout_sessions')
                     .delete()
                     .eq('id', workoutId);
                 if (result.error) throw new Error(result.error.message);
                 return true;
+            },
+
+            saveTrainingLog: async function(trainingLogData) {
+                const result = await mockSupabase.from('training_logs').insert(trainingLogData);
+                if (result.error) throw new Error(result.error.message);
+                return result.data[0];
+            },
+
+            saveTrainingLogs: async function(trainingLogs) {
+                const result = await mockSupabase.from('training_logs').insert(trainingLogs);
+                if (result.error) throw new Error(result.error.message);
+                return result.data;
             }
         };
     });

@@ -60,7 +60,8 @@ export default [
                 EvalError: 'readonly',
                 URIError: 'readonly',
                 Chart: 'readonly',
-                Notification: 'readonly'
+                Notification: 'readonly',
+                navigator: 'readonly'
             }
         },
         rules: {

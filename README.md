@@ -10,6 +10,9 @@
 
 - **ダッシュボード**: ワークアウト概要と今日の推奨部位
 - **ワークアウト記録**: トレーニング内容の詳細記録
+  - **オンライン/オフライン対応**: Supabaseクラウド保存とローカルストレージによるオフライン保存
+  - **自動同期**: オンライン復帰時の自動データ同期
+  - **堅牢なエラーハンドリング**: 保存失敗時のフォールバック機能
 - **カレンダー**: トレーニング履歴の視覚化
 - **分析機能**: データに基づくパフォーマンス分析
 - **エクササイズ管理**: 部位別エクササイズの管理
@@ -66,6 +69,10 @@ http://localhost:8000/lp.html
 - **スタイリング**: Tailwind CSS
 - **バックエンド**: Supabase (Database & Authentication)
 - **PWA**: Service Worker, Web App Manifest
+- **データ永続化**: 
+  - **オンライン**: Supabase PostgreSQL (workout_sessions テーブル)
+  - **オフライン**: LocalStorage + IndexedDB (Service Worker経由)
+  - **同期**: 自動オフライン同期キュー
 - **自動化**: GitHub Actions (Supabaseキープアライブ、CI/CD、セキュリティ監査)
 - **MCP統合**: Supabase MCP サーバー対応
 - **コード品質**: ESLint, Prettier

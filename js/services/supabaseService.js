@@ -133,9 +133,9 @@ class SupabaseService {
     }
 
     /**
-     * ワークアウト履歴を取得
+     * ワークアウトセッション履歴を取得
      * @param {number} limit - 取得件数
-     * @returns {Promise<Array>} ワークアウト配列
+     * @returns {Promise<Array>} ワークアウトセッション配列
      */
     async getWorkouts(limit = 20) {
         if (!this.client || !this.currentUser) {
@@ -144,37 +144,99 @@ class SupabaseService {
 
         try {
             const { data, error } = await this.client
-                .from('workouts')
-                .select('*')
+                .from('workout_sessions')
+                .select(`
+                    *,
+                    training_logs (
+                        id,
+                        exercise_name,
+                        sets,
+                        reps,
+                        weights,
+                        muscle_group_id,
+                        muscle_groups (
+                            name,
+                            name_ja,
+                            color_code
+                        )
+                    )
+                `)
                 .eq('user_id', this.currentUser.id)
-                .order('date', { ascending: false })
+                .order('workout_date', { ascending: false })
                 .limit(limit);
 
             if (error) {throw error;}
             return data || [];
         } catch (error) {
-            console.error('Error fetching workouts:', error);
+            console.error('Error fetching workout sessions:', error);
             showNotification('ワークアウト履歴の取得に失敗しました', 'error');
             return [];
         }
     }
 
     /**
-     * ワークアウトを保存
-     * @param {Object} workoutData - ワークアウトデータ
+     * ワークアウトセッションを保存
+     * @param {Object} sessionData - ワークアウトセッションデータ
      * @returns {Promise<Object>} 保存されたデータ
      */
-    async saveWorkout(workoutData) {
+    async saveWorkout(sessionData) {
         if (!this.client || !this.currentUser) {
             throw new Error('認証情報がありません');
         }
 
         const { data, error } = await this.client
-            .from('workouts')
+            .from('workout_sessions')
             .insert([{
-                ...workoutData,
+                ...sessionData,
                 user_id: this.currentUser.id
-            }]);
+            }])
+            .select();
+
+        if (error) {throw error;}
+        return data;
+    }
+
+    /**
+     * トレーニングログを保存
+     * @param {Object} trainingLogData - トレーニングログデータ
+     * @returns {Promise<Object>} 保存されたデータ
+     */
+    async saveTrainingLog(trainingLogData) {
+        if (!this.client || !this.currentUser) {
+            throw new Error('認証情報がありません');
+        }
+
+        const { data, error } = await this.client
+            .from('training_logs')
+            .insert([{
+                ...trainingLogData,
+                user_id: this.currentUser.id
+            }])
+            .select();
+
+        if (error) {throw error;}
+        return data;
+    }
+
+    /**
+     * 複数のトレーニングログを一括保存
+     * @param {Array} trainingLogs - トレーニングログ配列
+     * @returns {Promise<Array>} 保存されたデータ配列
+     */
+    async saveTrainingLogs(trainingLogs) {
+        if (!this.client || !this.currentUser) {
+            throw new Error('認証情報がありません');
+        }
+
+        const logsWithUserId = trainingLogs.map(log => ({
+            ...log,
+            user_id: this.currentUser.id
+        }));
+
+        const { data, error } = await this.client
+            .from('training_logs')
+            .insert(logsWithUserId)
+            .select();
 
         if (error) {throw error;}
         return data;

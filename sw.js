@@ -239,20 +239,20 @@ async function syncWorkoutData() {
 
         if (offlineData.length > 0) {
             // Send to Supabase
-            const response = await fetch('/api/sync-workouts', {
+            const response = await fetch('/api/sync-workout-sessions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ workouts: offlineData })
+                body: JSON.stringify({ workout_sessions: offlineData })
             });
 
             if (response.ok) {
                 await clearOfflineWorkoutData();
-                console.log('[SW] Workout data synced successfully');
+                console.log('[SW] Workout session data synced successfully');
 
                 // Notify all clients
                 const clients = await self.clients.matchAll();
                 clients.forEach(client => {
-                    client.postMessage({ type: 'SYNC_COMPLETE', data: 'workouts' });
+                    client.postMessage({ type: 'SYNC_COMPLETE', data: 'workout_sessions' });
                 });
             }
         }

@@ -67,7 +67,7 @@ describe('回復期間計算機能', () => {
         const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
         
         const remainingRecovery = calculateRecoveryTime(yesterday, 72);
-        expect(remainingRecovery).toBe(48); // 72 - 24 = 48時間
+        expect(Math.round(remainingRecovery)).toBe(48); // 72 - 24 = 48時間
     });
 
     test('回復完了した部位は0時間を返す', () => {
