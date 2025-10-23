@@ -5,20 +5,18 @@ const CACHE_NAME = 'muscle-rotation-v1.0.0';
 const STATIC_CACHE = 'muscle-rotation-static-v1.0.0';
 const DYNAMIC_CACHE = 'muscle-rotation-dynamic-v1.0.0';
 
-// Files to cache immediately
+// Files to cache immediately - 最適化されたキャッシュリスト
 const STATIC_FILES = [
     '/',
     '/index.html',
     '/lp.html',
     '/manifest.json',
-    '/css/style.css',
-    '/js/app.js',
-    '/js/muscle-data.js',
-    '/js/i18n.js',
-    '/js/offline.js',
-    '/icons/icon-192x192.png',
-    '/icons/icon-512x512.png',
-    '/offline.html'
+    '/style.css',
+    '/app-refactored.js',
+    '/assets/default-avatar.png',
+    '/android-chrome-192x192.png',
+    '/android-chrome-512x512.png',
+    '/favicon.ico'
 ];
 
 // API endpoints to cache

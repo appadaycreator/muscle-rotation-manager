@@ -50,12 +50,31 @@ class MuscleRotationApp {
 
     /**
      * 基本コンポーネントを読み込み
+     * パフォーマンス最適化: 並列読み込みとエラーハンドリング
      */
     async loadBasicComponents() {
-        await Promise.all([
-            pageManager.loadHeader(),
-            pageManager.loadSidebar()
-        ]);
+        try {
+            const [headerResult, sidebarResult] = await Promise.allSettled([
+                pageManager.loadHeader(),
+                pageManager.loadSidebar()
+            ]);
+
+            // 個別のエラーハンドリング
+            if (headerResult.status === 'rejected') {
+                console.warn('Header loading failed:', headerResult.reason);
+            }
+            if (sidebarResult.status === 'rejected') {
+                console.warn('Sidebar loading failed:', sidebarResult.reason);
+            }
+
+            // 最低限のコンポーネントが読み込まれていることを確認
+            if (headerResult.status === 'rejected' && sidebarResult.status === 'rejected') {
+                throw new Error('Critical components failed to load');
+            }
+        } catch (error) {
+            console.error('Failed to load basic components:', error);
+            throw error;
+        }
     }
 
     /**
