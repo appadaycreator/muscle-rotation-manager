@@ -403,6 +403,13 @@ export function showInputDialog(message, defaultValue = '') {
             }
         };
         document.addEventListener('keydown', handleKeydown);
+
+        // 背景クリックでキャンセル
+        dialog.addEventListener('click', (e) => {
+            if (e.target === dialog) {
+                handleCancel();
+            }
+        });
     });
 }
 

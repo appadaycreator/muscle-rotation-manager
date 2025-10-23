@@ -92,6 +92,12 @@ class ExercisePage {
             });
         });
 
+        // フィルターリセットボタン
+        const resetFiltersBtn = document.getElementById('reset-filters-btn');
+        if (resetFiltersBtn) {
+            resetFiltersBtn.addEventListener('click', () => this.resetFilters());
+        }
+
 
         // モーダル関連
         this.setupModalEventListeners();
@@ -327,7 +333,10 @@ class ExercisePage {
                 filters.muscleGroupId = muscleGroup;
             } else {
                 // 文字列値の場合は筋肉部位名でフィルター
-                filters.muscleGroupName = muscleGroup;
+                const muscleGroupName = this.getMuscleGroupName(muscleGroup);
+                if (muscleGroupName) {
+                    filters.muscleGroupName = muscleGroupName;
+                }
             }
         }
 
@@ -383,6 +392,49 @@ class ExercisePage {
      * フィルターを適用
      */
     async applyFilters() {
+        await this.loadExercises();
+    }
+
+    /**
+     * フィルターをリセット
+     */
+    async resetFilters() {
+        // 検索ボックスをクリア
+        const searchInput = document.getElementById('exercise-search');
+        if (searchInput) {
+            searchInput.value = '';
+        }
+
+        // セレクトボックスをリセット
+        const selectElements = [
+            'muscle-group-filter',
+            'equipment-filter',
+            'difficulty-filter',
+            'exercise-type-filter'
+        ];
+
+        selectElements.forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.selectedIndex = 0;
+            }
+        });
+
+        // チェックボックスをリセット
+        const checkboxElements = [
+            'bodyweight-filter',
+            'compound-filter',
+            'beginner-filter'
+        ];
+
+        checkboxElements.forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.checked = false;
+            }
+        });
+
+        // エクササイズ一覧を再読み込み
         await this.loadExercises();
     }
 
@@ -839,6 +891,8 @@ class ExercisePage {
             filterBtn.addEventListener('click', async () => {
                 await this.applyCategoryFilter(categoryInfo.name);
                 this.closeDetailModal();
+                // エクササイズ一覧にスクロール
+                this.scrollToExerciseList();
             });
         }
     }
@@ -859,13 +913,18 @@ class ExercisePage {
                 const muscleGroupFilter = document.getElementById('muscle-group-filter');
                 if (muscleGroupFilter) {
                     muscleGroupFilter.value = muscleGroup.id;
-                    this.applyFilters();
+                    await this.applyFilters();
+                    
+                    // フィルター適用の通知を表示
+                    showNotification(`${categoryName}のエクササイズで絞り込みました`, 'success');
                 }
             } else {
                 console.warn('Muscle group not found:', categoryName);
+                showNotification('フィルターの適用に失敗しました', 'error');
             }
         } catch (error) {
             console.error('Failed to apply category filter:', error);
+            showNotification('フィルターの適用に失敗しました', 'error');
         }
     }
 
@@ -1477,6 +1536,43 @@ class ExercisePage {
     }
 
     /**
+     * エクササイズ一覧にスクロール
+     */
+    scrollToExerciseList() {
+        const exerciseList = document.getElementById('exercises-list');
+        if (exerciseList) {
+            // 少し上にオフセットを設けて、ヘッダーに隠れないようにする
+            const offset = 100;
+            const elementPosition = exerciseList.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: 'smooth'
+            });
+
+            // フィルター適用の視覚的フィードバック
+            this.highlightExerciseList();
+        }
+    }
+
+    /**
+     * エクササイズ一覧をハイライト
+     */
+    highlightExerciseList() {
+        const exerciseList = document.getElementById('exercises-list');
+        if (exerciseList) {
+            // ハイライト効果を追加
+            exerciseList.classList.add('ring-2', 'ring-blue-500', 'ring-opacity-50');
+            
+            // 2秒後にハイライトを削除
+            setTimeout(() => {
+                exerciseList.classList.remove('ring-2', 'ring-blue-500', 'ring-opacity-50');
+            }, 2000);
+        }
+    }
+
+    /**
      * 削除確認ダイアログを表示
      * @param {string} message - 確認メッセージ
      * @returns {Promise<boolean>} 削除するかどうか
@@ -1533,6 +1629,14 @@ class ExercisePage {
                 }
             };
             document.addEventListener('keydown', handleKeydown);
+
+            // 背景クリックでキャンセル
+            dialog.addEventListener('click', (e) => {
+                if (e.target === dialog) {
+                    cleanup();
+                    resolve(false);
+                }
+            });
         });
     }
 }

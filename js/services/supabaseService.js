@@ -712,9 +712,9 @@ export class SupabaseService {
                 throw new Error('No authenticated user found');
             }
 
-            // ファイル名を生成
+            // ファイル名を生成（ユーザーIDをフォルダ名として使用）
             const fileExt = file.name.split('.').pop();
-            const fileName = `avatar_${user.id}_${Date.now()}.${fileExt}`;
+            const fileName = `${user.id}/avatar_${Date.now()}.${fileExt}`;
 
             // アバター用のバケットにアップロード
             const { error } = await this.client.storage

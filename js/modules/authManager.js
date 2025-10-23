@@ -270,6 +270,13 @@ class AuthManager {
             }
         };
         window.addEventListener('keydown', escapeHandler);
+
+        // 背景クリックで閉じる
+        authModal.addEventListener('click', (e) => {
+            if (e.target === authModal) {
+                this.hideAuthModal();
+            }
+        });
     }
 
     /**

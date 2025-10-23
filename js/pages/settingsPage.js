@@ -170,8 +170,15 @@ class SettingsPage {
 
         const currentUser = supabaseService.getCurrentUser();
         const userEmail = currentUser?.email || this.userProfile.email || '';
-        const userNickname = this.userProfile.display_name || this.userProfile.nickname || '';
-        const fontSize = this.userProfile.font_size || 'md';
+        const userNickname = this.userProfile.display_name || '';
+        
+        // フォントサイズのマッピング（データベースの値 → アプリの値）
+        const fontSizeMapping = {
+            'small': 'sm',
+            'medium': 'md',
+            'large': 'lg'
+        };
+        const fontSize = fontSizeMapping[this.userProfile.font_size] || 'md';
 
         // デフォルト値を設定
         const profile = {
@@ -203,19 +210,19 @@ class SettingsPage {
                     <form id="profile-form" class="space-y-4">
                         <!-- ニックネーム -->
                         <div>
-                            <label for="nickname" 
+                            <label for="display_name" 
                                    class="block text-sm font-medium text-gray-700 mb-2">
                                 ニックネーム <span class="text-red-500">*</span>
                             </label>
                             <input type="text" 
-                                   id="nickname" 
+                                   id="display_name" 
                                    name="display_name"
                                    value="${userNickname}"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg 
                                           focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                    placeholder="ニックネームを入力"
                                    required>
-                            <div id="nickname-error" class="text-red-600 text-sm mt-1 hidden"></div>
+                            <div id="display_name-error" class="text-red-600 text-sm mt-1 hidden"></div>
                         </div>
 
                         <!-- メールアドレス -->
@@ -795,11 +802,10 @@ class SettingsPage {
         const formData = new FormData(e.target);
         const profileData = {
             display_name: formData.get('display_name'),
-            nickname: formData.get('nickname'),
             email: formData.get('email'),
-            age: formData.get('age'),
-            weight: formData.get('weight'),
-            height: formData.get('height')
+            age: parseInt(formData.get('age')) || null,
+            weight: parseFloat(formData.get('weight')) || null,
+            height: parseFloat(formData.get('height')) || null
         };
 
         console.log('Profile data to save:', profileData);
@@ -970,9 +976,16 @@ class SettingsPage {
         this.isLoading = true;
 
         const formData = new FormData(e.target);
+        // フォントサイズのマッピング（アプリの値 → データベースの値）
+        const fontSizeMapping = {
+            'sm': 'small',
+            'md': 'medium', 
+            'lg': 'large'
+        };
+        
         const displaySettings = {
             theme_preference: formData.get('theme_preference'),
-            font_size: formData.get('font_size'),
+            font_size: fontSizeMapping[formData.get('font_size')] || 'medium',
             weight_unit: formData.get('weight_unit'),
             preferred_language: formData.get('preferred_language')
         };
@@ -1211,8 +1224,7 @@ class SettingsPage {
     displayFieldErrors(errors) {
         // エラー表示用のマッピング
         const fieldErrorMap = {
-            'display_name': 'nickname-error',
-            'nickname': 'nickname-error',
+            'display_name': 'display_name-error',
             'email': 'email-error',
             'age': 'age-error',
             'weight': 'weight-error',
@@ -1253,7 +1265,6 @@ class SettingsPage {
     getFieldDisplayName(fieldName) {
         const displayNames = {
             'display_name': 'ニックネーム',
-            'nickname': 'ニックネーム',
             'age': '年齢',
             'weight': '体重',
             'height': '身長',

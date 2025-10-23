@@ -289,7 +289,7 @@ class MPAInitializer {
         try {
             const moduleMap = {
                 dashboard: () => import('../pages/dashboardPage.js'),
-                workout: () => import('../pages/workoutPageWizard.js'),
+                workout: () => import('../pages/workoutPage.js'),
                 calendar: () => import('../pages/calendarPage.js'),
                 analysis: () => import('../pages/analysisPage.js'),
                 progress: () => import('../pages/progressPage.js'),
