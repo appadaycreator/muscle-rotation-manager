@@ -67,7 +67,8 @@ class SettingsPage {
                     <form id="profile-form" class="space-y-4">
                         <!-- ニックネーム -->
                         <div>
-                            <label for="nickname" class="block text-sm font-medium text-gray-700 mb-2">
+                            <label for="nickname" 
+                                   class="block text-sm font-medium text-gray-700 mb-2">
                                 ニックネーム
                             </label>
                             <input type="text" 
@@ -81,7 +82,8 @@ class SettingsPage {
 
                         <!-- メールアドレス -->
                         <div>
-                            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                            <label for="email" 
+                                   class="block text-sm font-medium text-gray-700 mb-2">
                                 メールアドレス
                             </label>
                             <input type="email" 
@@ -95,19 +97,21 @@ class SettingsPage {
 
                         <!-- アバター画像 -->
                         <div>
-                            <label for="avatar" class="block text-sm font-medium text-gray-700 mb-2">
+                            <label for="avatar" 
+                                   class="block text-sm font-medium text-gray-700 mb-2">
                                 アバター画像
                             </label>
                             <div class="flex items-center space-x-4">
-                                <div id="avatar-preview" class="w-16 h-16 bg-gray-200 rounded-full 
-                                     flex items-center justify-center overflow-hidden">
+                                <div id="avatar-preview" 
+                                     class="w-16 h-16 bg-gray-200 rounded-full 
+                                            flex items-center justify-center overflow-hidden">
                                     ${this.userProfile.avatar_url ?
         `<img src="${this.userProfile.avatar_url}" 
-                                              alt="Avatar" class="w-full h-full object-cover">` :
+              alt="Avatar" class="w-full h-full object-cover">` :
         `<img src="assets/default-avatar.png" 
-                                              alt="Default Avatar" class="w-full h-full object-cover"
-                                              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                         <i class="fas fa-user text-gray-400 text-xl" style="display:none;"></i>`
+              alt="Default Avatar" class="w-full h-full object-cover"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+         <i class="fas fa-user text-gray-400 text-xl" style="display:none;"></i>`
 }
                                 </div>
                                 <input type="file" 
@@ -147,13 +151,15 @@ class SettingsPage {
                     <form id="display-form" class="space-y-4">
                         <!-- フォントサイズ -->
                         <div>
-                            <label for="font-size" class="block text-sm font-medium text-gray-700 mb-2">
+                            <label for="font-size" 
+                                   class="block text-sm font-medium text-gray-700 mb-2">
                                 フォントサイズ
                             </label>
                             <select id="font-size" 
                                     name="font_size"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg 
-                                           focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                           focus:ring-2 focus:ring-blue-500 
+                                           focus:border-transparent">
                                 <option value="sm" ${fontSize === 'sm' ? 'selected' : ''}>小</option>
                                 <option value="md" ${fontSize === 'md' ? 'selected' : ''}>中</option>
                                 <option value="lg" ${fontSize === 'lg' ? 'selected' : ''}>大</option>
@@ -162,13 +168,15 @@ class SettingsPage {
 
                         <!-- 言語設定 -->
                         <div>
-                            <label for="language" class="block text-sm font-medium text-gray-700 mb-2">
+                            <label for="language" 
+                                   class="block text-sm font-medium text-gray-700 mb-2">
                                 言語
                             </label>
                             <select id="language" 
                                     name="language"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg 
-                                           focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                           focus:ring-2 focus:ring-blue-500 
+                                           focus:border-transparent">
                                 <option value="ja" selected>日本語</option>
                                 <option value="en" disabled>English (準備中)</option>
                             </select>
@@ -424,13 +432,61 @@ class SettingsPage {
     }
 
     /**
+     * 削除確認ダイアログを表示
+     * @returns {Promise<boolean>} ユーザーの確認結果
+     */
+    async showDeleteConfirmDialog() {
+        return new Promise((resolve) => {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white p-6 rounded-lg max-w-md mx-4">
+                    <h3 class="text-lg font-semibold mb-4 text-red-600">データ削除の確認</h3>
+                    <p class="mb-6 text-gray-700">
+                        本当に全てのデータを削除しますか？<br>
+                        この操作は取り消すことができません。
+                    </p>
+                    <div class="flex space-x-3 justify-end">
+                        <button id="cancel-delete" 
+                                class="px-4 py-2 bg-gray-300 text-gray-700 rounded 
+                                       hover:bg-gray-400">
+                            キャンセル
+                        </button>
+                        <button id="confirm-delete" 
+                                class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+                            削除する
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            modal.querySelector('#cancel-delete').addEventListener('click', () => {
+                document.body.removeChild(modal);
+                resolve(false);
+            });
+
+            modal.querySelector('#confirm-delete').addEventListener('click', () => {
+                document.body.removeChild(modal);
+                resolve(true);
+            });
+
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    document.body.removeChild(modal);
+                    resolve(false);
+                }
+            });
+        });
+    }
+
+    /**
      * 全データを削除
      */
     async deleteAllData() {
-        const confirmed = window.confirm(
-            '本当に全てのデータを削除しますか？\n' +
-            'この操作は取り消すことができません。'
-        );
+        // ユーザー確認ダイアログを表示
+        const confirmed = await this.showDeleteConfirmDialog();
 
         if (!confirmed) {return;}
 

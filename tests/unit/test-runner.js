@@ -3,6 +3,58 @@
  * テスト駆動開発用の軽量テストフレームワーク
  */
 
+// Node.js環境でDOM環境をセットアップ
+if (typeof window === 'undefined' && typeof global !== 'undefined') {
+    try {
+        const { JSDOM } = require('jsdom');
+        const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', {
+            url: 'http://localhost',
+            pretendToBeVisual: true,
+            resources: 'usable'
+        });
+        
+        global.window = dom.window;
+        global.document = dom.window.document;
+        global.HTMLElement = dom.window.HTMLElement;
+        global.Event = dom.window.Event;
+        global.CustomEvent = dom.window.CustomEvent;
+        
+        // navigatorは読み取り専用なので、別の方法で設定
+        Object.defineProperty(global, 'navigator', {
+            value: dom.window.navigator,
+            writable: true
+        });
+        
+        console.log('✅ DOM environment initialized for testing');
+    } catch (error) {
+        console.warn('⚠️ JSDOM not available, DOM tests may fail:', error.message);
+        
+        // フォールバック: 最小限のDOM環境を手動で作成
+        global.document = {
+            createElement: () => ({
+                id: '',
+                className: '',
+                textContent: '',
+                innerHTML: '',
+                addEventListener: () => {},
+                removeEventListener: () => {},
+                appendChild: () => {},
+                removeChild: () => {},
+                querySelector: () => null,
+                querySelectorAll: () => []
+            }),
+            getElementById: () => null,
+            querySelector: () => null,
+            querySelectorAll: () => [],
+            body: {
+                appendChild: () => {},
+                removeChild: () => {}
+            }
+        };
+        global.window = { document: global.document };
+    }
+}
+
 class TestRunner {
     constructor() {
         this.tests = [];
@@ -304,6 +356,20 @@ class TestRunner {
 // グローバルインスタンス
 const testRunner = new TestRunner();
 
+// 即座にグローバル関数を設定（Node.js環境）
+if (typeof global !== 'undefined') {
+    global.test = testRunner.test.bind(testRunner);
+    global.describe = testRunner.describe.bind(testRunner);
+    global.expect = testRunner.expect.bind(testRunner);
+    global.beforeEach = testRunner.beforeEach.bind(testRunner);
+    global.afterEach = testRunner.afterEach.bind(testRunner);
+    global.beforeAll = testRunner.beforeAll.bind(testRunner);
+    global.afterAll = testRunner.afterAll.bind(testRunner);
+    global.mock = testRunner.mock.bind(testRunner);
+    global.runTests = testRunner.run.bind(testRunner);
+    global.testRunner = testRunner;
+}
+
 // グローバル関数として公開
 if (typeof window !== 'undefined') {
     // ブラウザ環境
@@ -319,7 +385,7 @@ if (typeof window !== 'undefined') {
     window.testRunner = testRunner;
 } else if (typeof module !== 'undefined') {
     // Node.js環境
-    // グローバルスコープに関数を設定
+    // 即座にグローバルスコープに関数を設定
     global.test = testRunner.test.bind(testRunner);
     global.describe = testRunner.describe.bind(testRunner);
     global.expect = testRunner.expect.bind(testRunner);
@@ -330,6 +396,8 @@ if (typeof window !== 'undefined') {
     global.mock = testRunner.mock.bind(testRunner);
     global.runTests = testRunner.run.bind(testRunner);
     global.testRunner = testRunner;
+    
+    console.log('✅ Test functions exported to global scope');
     
     module.exports = {
         test: testRunner.test.bind(testRunner),

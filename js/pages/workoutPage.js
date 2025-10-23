@@ -287,7 +287,9 @@ class WorkoutPage {
         }
 
         this.currentWorkout.endTime = new Date();
-        const duration = Math.floor((this.currentWorkout.endTime - this.currentWorkout.startTime) / 1000);
+        const duration = Math.floor(
+            (this.currentWorkout.endTime - this.currentWorkout.startTime) / 1000
+        );
 
         try {
             // ワークアウトデータを保存

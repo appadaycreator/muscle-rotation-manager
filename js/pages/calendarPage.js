@@ -67,7 +67,8 @@ class CalendarPage {
                                            hover:bg-gray-100 rounded-lg transition-colors">
                                 <i class="fas fa-chevron-left"></i>
                             </button>
-                            <span id="current-month" class="text-lg font-semibold min-w-[200px] text-center">
+                            <span id="current-month" 
+                                  class="text-lg font-semibold min-w-[200px] text-center">
                             </span>
                             <button id="next-month" 
                                     class="p-2 text-gray-600 hover:text-gray-800 
@@ -186,7 +187,6 @@ class CalendarPage {
 
         // 月の最初の日と最後の日
         const firstDay = new Date(year, month, 1);
-        const lastDay = new Date(year, month + 1, 0);
 
         // 最初の週の開始日（日曜日から）
         const startDate = new Date(firstDay);
@@ -343,7 +343,9 @@ class CalendarPage {
                 <div class="text-sm text-gray-600">トレーニング日数</div>
             </div>
             <div class="text-center">
-                <div class="text-2xl font-bold text-purple-600">${Math.floor(totalDuration / 3600)}</div>
+                <div class="text-2xl font-bold text-purple-600">
+                    ${Math.floor(totalDuration / 3600)}
+                </div>
                 <div class="text-sm text-gray-600">総時間（時間）</div>
             </div>
             <div class="text-center">
