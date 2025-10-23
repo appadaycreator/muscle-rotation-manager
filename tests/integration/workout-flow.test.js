@@ -12,19 +12,19 @@ describe('ワークアウトフロー統合テスト', () => {
     beforeEach(() => {
         // Supabaseのモック
         mockSupabase = {
-            from: mock().mockReturnValue({
-                select: mock().mockReturnValue({
-                    eq: mock().mockReturnValue({
-                        single: mock().mockReturnValue(Promise.resolve({ data: null, error: null }))
+            from: jest.fn().mockReturnValue({
+                select: jest.fn().mockReturnValue({
+                    eq: jest.fn().mockReturnValue({
+                        single: jest.fn().mockReturnValue(Promise.resolve({ data: null, error: null }))
                     })
                 }),
-                insert: mock().mockReturnValue(Promise.resolve({ data: {}, error: null })),
-                update: mock().mockReturnValue({
-                    eq: mock().mockReturnValue(Promise.resolve({ data: {}, error: null }))
+                insert: jest.fn().mockReturnValue(Promise.resolve({ data: {}, error: null })),
+                update: jest.fn().mockReturnValue({
+                    eq: jest.fn().mockReturnValue(Promise.resolve({ data: {}, error: null }))
                 })
             }),
             auth: {
-                getUser: mock().mockReturnValue(Promise.resolve({ 
+                getUser: jest.fn().mockReturnValue(Promise.resolve({ 
                     data: { user: { id: 'test-user-id' } }, 
                     error: null 
                 }))

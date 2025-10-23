@@ -222,8 +222,9 @@ describe('バリデーション統合テスト', () => {
             const errorDiv = document.getElementById('email-error');
 
             // リアルタイムバリデーションを設定
-            const realtimeValidator = new (await import('../../js/utils/validation.js')).RealtimeValidator(globalFormValidator);
-            realtimeValidator.setupFieldValidation(emailInput, errorDiv, (await import('../../js/utils/validation.js')).Validator.email, 100);
+            const validationModule = await import('../../js/utils/validation.js');
+            const realtimeValidator = new validationModule.RealtimeValidator(globalFormValidator);
+            realtimeValidator.setupFieldValidation(emailInput, errorDiv, validationModule.Validator.email, 100);
 
             // 無効なメールアドレスを入力
             emailInput.value = 'invalid-email';

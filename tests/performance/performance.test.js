@@ -1,7 +1,7 @@
 // performance.test.js - パフォーマンステスト
 
 // テストランナーをインポート
-import '../unit/test-runner.js';
+import { testRunner } from '../test-runner.js';
 
 // テスト対象モジュールをインポート
 import { lazyLoader } from '../../js/utils/lazyLoader.js';

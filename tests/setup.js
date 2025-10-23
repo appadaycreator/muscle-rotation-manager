@@ -10,6 +10,12 @@ global.window = {
   dispatchEvent: jest.fn(),
   performance: {
     now: jest.fn(() => Date.now())
+  },
+  CustomEvent: class CustomEvent {
+    constructor(type, options = {}) {
+      this.type = type;
+      this.detail = options.detail;
+    }
   }
 };
 
@@ -29,10 +35,14 @@ global.document = {
     },
     style: {},
     textContent: '',
-    innerHTML: ''
+    innerHTML: '',
+    insertAdjacentHTML: jest.fn()
   })),
   addEventListener: jest.fn(),
-  removeEventListener: jest.fn()
+  removeEventListener: jest.fn(),
+  body: {
+    insertAdjacentHTML: jest.fn()
+  }
 };
 
 global.navigator = {

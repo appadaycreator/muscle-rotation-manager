@@ -17,7 +17,14 @@ describe('BasePage', () => {
     mockSupabaseService = {
       isAvailable: jest.fn().mockReturnValue(true),
       saveData: jest.fn().mockResolvedValue({ id: 1 }),
-      loadData: jest.fn().mockResolvedValue([])
+      loadData: jest.fn().mockResolvedValue([]),
+      getClient: jest.fn().mockReturnValue({
+        from: jest.fn().mockReturnValue({
+          insert: jest.fn().mockReturnValue({
+            select: jest.fn().mockResolvedValue({ data: [{ id: 1 }], error: null })
+          })
+        })
+      })
     };
 
     // グローバルモックの設定
@@ -36,7 +43,7 @@ describe('BasePage', () => {
 
   describe('constructor', () => {
     test('should initialize with default values', () => {
-      expect(basePage.pageName).toBe('basepage');
+      expect(basePage.pageName).toBe('base');
       expect(basePage.isInitialized).toBe(false);
       expect(basePage.eventListeners).toBeInstanceOf(Map);
     });
@@ -66,7 +73,7 @@ describe('BasePage', () => {
 
       await basePage.initialize();
 
-      expect(consoleSpy).toHaveBeenCalledWith('Page basepage already initialized');
+      expect(consoleSpy).toHaveBeenCalledWith('Page base already initialized');
       consoleSpy.mockRestore();
     });
 
@@ -79,7 +86,7 @@ describe('BasePage', () => {
 
       await basePage.initialize();
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith('❌ Failed to initialize basepage page:', error);
+      expect(consoleErrorSpy).toHaveBeenCalledWith('❌ Failed to initialize base page:', error);
       expect(handleErrorSpy).toHaveBeenCalledWith(error);
       
       consoleErrorSpy.mockRestore();
@@ -229,7 +236,7 @@ describe('BasePage', () => {
 
       const result = await basePage.loadDataFromStorage();
 
-      expect(mockSupabaseService.loadData).toHaveBeenCalledWith('basepage');
+      expect(mockSupabaseService.loadData).toHaveBeenCalledWith('base');
       expect(result).toEqual(mockData);
     });
 
@@ -266,7 +273,7 @@ describe('BasePage', () => {
       const state = basePage.getState();
       
       expect(state).toEqual({
-        pageName: 'basepage',
+        pageName: 'base',
         isInitialized: false,
         eventListenersCount: 0
       });
