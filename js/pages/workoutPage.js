@@ -58,6 +58,14 @@ export class WorkoutPage extends BasePage {
         // DOM要素が読み込まれた後にイベントリスナーを設定
         setTimeout(() => {
             console.log('Setting up event listeners after DOM load...');
+            
+            // 筋肉部位ボタンの存在を確認
+            const muscleButtons = document.querySelectorAll('.muscle-group-btn');
+            console.log('Found muscle group buttons:', muscleButtons.length);
+            muscleButtons.forEach((btn, index) => {
+                console.log(`Button ${index}:`, btn.dataset.muscle, btn);
+            });
+            
         this.setupEventListeners();
             this.updateQuickStartButton();
             console.log('Event listeners setup complete');
@@ -153,10 +161,16 @@ export class WorkoutPage extends BasePage {
 
         // 筋肉部位ボタンのクリック
         document.addEventListener('click', (e) => {
+            console.log('Click event detected on:', e.target);
+            console.log('Event target classList:', e.target.classList);
+            console.log('Closest muscle-group-btn:', e.target.closest('.muscle-group-btn'));
+            
             if (e.target.closest('.muscle-group-btn')) {
                 const button = e.target.closest('.muscle-group-btn');
                 console.log('Muscle group button clicked:', button.dataset.muscle);
                 this.toggleMuscleGroup(button);
+            } else {
+                console.log('Click was not on a muscle group button');
             }
         });
 
