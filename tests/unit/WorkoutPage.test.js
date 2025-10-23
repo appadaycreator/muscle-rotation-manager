@@ -90,55 +90,144 @@ describe('WorkoutPage', () => {
     });
   });
 
+  describe('showLoginPrompt', () => {
+    test('should show login prompt', () => {
+      expect(() => workoutPage.showLoginPrompt()).not.toThrow();
+    });
+  });
+
+  describe('loadExerciseData', () => {
+    test('should load exercise data', async () => {
+      await expect(workoutPage.loadExerciseData()).resolves.not.toThrow();
+    });
+  });
+
+  describe('loadWorkoutHistory', () => {
+    test('should load workout history', async () => {
+      await expect(workoutPage.loadWorkoutHistory()).resolves.not.toThrow();
+    });
+  });
+
+  describe('setupEventListeners', () => {
+    test('should setup event listeners', () => {
+      expect(() => workoutPage.setupEventListeners()).not.toThrow();
+    });
+  });
+
+  describe('removeEventListeners', () => {
+    test('should remove event listeners', () => {
+      expect(() => workoutPage.removeEventListeners()).not.toThrow();
+    });
+  });
+
+  describe('startQuickWorkout', () => {
+    test('should start quick workout', () => {
+      expect(() => workoutPage.startQuickWorkout()).not.toThrow();
+    });
+  });
+
+  describe('toggleMuscleGroup', () => {
+    test('should toggle muscle group', () => {
+      const mockButton = document.createElement('button');
+      mockButton.dataset.muscle = 'chest';
+      expect(() => workoutPage.toggleMuscleGroup(mockButton)).not.toThrow();
+    });
+  });
+
+  describe('updateQuickStartButton', () => {
+    test('should update quick start button', () => {
+      expect(() => workoutPage.updateQuickStartButton()).not.toThrow();
+    });
+  });
+
   describe('startWorkout', () => {
     test('should start workout', () => {
-      expect(() => workoutPage.startWorkout()).not.toThrow();
+      expect(() => workoutPage.startWorkout('chest')).not.toThrow();
     });
   });
 
-  describe('endWorkout', () => {
-    test('should end workout', () => {
-      expect(() => workoutPage.endWorkout()).not.toThrow();
-    });
-  });
-
-  describe('pauseWorkout', () => {
-    test('should pause workout', () => {
-      expect(() => workoutPage.pauseWorkout()).not.toThrow();
-    });
-  });
-
-  describe('resumeWorkout', () => {
-    test('should resume workout', () => {
-      expect(() => workoutPage.resumeWorkout()).not.toThrow();
+  describe('stopWorkout', () => {
+    test('should stop workout', async () => {
+      await expect(workoutPage.stopWorkout()).resolves.not.toThrow();
     });
   });
 
   describe('addExercise', () => {
     test('should add exercise', () => {
-      const exercise = { name: 'Push-ups', sets: 3, reps: 10 };
-      expect(() => workoutPage.addExercise(exercise)).not.toThrow();
+      expect(() => workoutPage.addExercise()).not.toThrow();
     });
   });
 
-  describe('removeExercise', () => {
-    test('should remove exercise', () => {
-      const exerciseId = 1;
-      expect(() => workoutPage.removeExercise(exerciseId)).not.toThrow();
+  describe('addExerciseToWorkout', () => {
+    test('should add exercise to workout', () => {
+      expect(() => workoutPage.addExerciseToWorkout('Push-ups')).not.toThrow();
     });
   });
 
-  describe('updateExercise', () => {
-    test('should update exercise', () => {
-      const exercise = { id: 1, name: 'Push-ups', sets: 3, reps: 10 };
-      expect(() => workoutPage.updateExercise(exercise)).not.toThrow();
+  describe('initializeMuscleGroupCache', () => {
+    test('should initialize muscle group cache', async () => {
+      await expect(workoutPage.initializeMuscleGroupCache()).resolves.not.toThrow();
     });
   });
 
-  describe('getWorkoutDuration', () => {
-    test('should get workout duration', () => {
-      const duration = workoutPage.getWorkoutDuration();
-      expect(typeof duration).toBe('number');
+  describe('convertMuscleGroupsToUUIDs', () => {
+    test('should convert muscle groups to UUIDs', async () => {
+      const muscleGroups = ['chest', 'back'];
+      await expect(workoutPage.convertMuscleGroupsToUUIDs(muscleGroups)).resolves.not.toThrow();
+    });
+  });
+
+  describe('saveWorkoutToHistory', () => {
+    test('should save workout to history', async () => {
+      await expect(workoutPage.saveWorkoutToHistory()).resolves.not.toThrow();
+    });
+  });
+
+  describe('startWorkoutTimer', () => {
+    test('should start workout timer', () => {
+      expect(() => workoutPage.startWorkoutTimer()).not.toThrow();
+    });
+  });
+
+  describe('updateWorkoutTimer', () => {
+    test('should update workout timer', () => {
+      expect(() => workoutPage.updateWorkoutTimer()).not.toThrow();
+    });
+  });
+
+  describe('getDefaultExercises', () => {
+    test('should get default exercises', () => {
+      const exercises = workoutPage.getDefaultExercises();
+      expect(Array.isArray(exercises)).toBe(true);
+    });
+  });
+
+  describe('updateWorkoutHistory', () => {
+    test('should update workout history', () => {
+      const workoutHistory = [];
+      expect(() => workoutPage.updateWorkoutHistory(workoutHistory)).not.toThrow();
+    });
+  });
+
+  describe('formatDate', () => {
+    test('should format date', () => {
+      const dateString = '2023-01-01';
+      const formatted = workoutPage.formatDate(dateString);
+      expect(typeof formatted).toBe('string');
+    });
+  });
+
+  describe('loadFromLocalStorage', () => {
+    test('should load from localStorage', () => {
+      const key = 'test-key';
+      const result = workoutPage.loadFromLocalStorage(key);
+      expect(Array.isArray(result)).toBe(true);
+    });
+  });
+
+  describe('setupTooltips', () => {
+    test('should setup tooltips', () => {
+      expect(() => workoutPage.setupTooltips()).not.toThrow();
     });
   });
 });

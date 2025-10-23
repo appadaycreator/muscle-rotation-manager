@@ -77,9 +77,15 @@ describe('DashboardPage', () => {
     });
   });
 
-  describe('loadDashboardData', () => {
-    test('should load dashboard data', async () => {
-      await expect(dashboardPage.loadDashboardData()).resolves.not.toThrow();
+  describe('setupMusclePartHandlers', () => {
+    test('should setup muscle part handlers', () => {
+      expect(() => dashboardPage.setupMusclePartHandlers()).not.toThrow();
+    });
+  });
+
+  describe('showLoginPrompt', () => {
+    test('should show login prompt', () => {
+      expect(() => dashboardPage.showLoginPrompt()).not.toThrow();
     });
   });
 
@@ -89,16 +95,93 @@ describe('DashboardPage', () => {
     });
   });
 
-  describe('updateDashboard', () => {
-    test('should update dashboard', () => {
-      expect(() => dashboardPage.updateDashboard()).not.toThrow();
+  describe('setupAuthButton', () => {
+    test('should setup auth button', () => {
+      expect(() => dashboardPage.setupAuthButton()).not.toThrow();
     });
   });
 
-  describe('getWorkoutStats', () => {
-    test('should get workout stats', () => {
-      const stats = dashboardPage.getWorkoutStats();
-      expect(typeof stats).toBe('object');
+  describe('loadStats', () => {
+    test('should load stats', async () => {
+      await expect(dashboardPage.loadStats()).resolves.not.toThrow();
+    });
+  });
+
+  describe('updateStatsDisplay', () => {
+    test('should update stats display', () => {
+      const stats = { totalWorkouts: 10, currentStreak: 5, weeklyProgress: 2, lastWorkout: null };
+      expect(() => dashboardPage.updateStatsDisplay(stats)).not.toThrow();
+    });
+  });
+
+  describe('handleMusclePartClick', () => {
+    test('should handle muscle part click', () => {
+      const muscle = 'chest';
+      expect(() => dashboardPage.handleMusclePartClick(muscle)).not.toThrow();
+    });
+  });
+
+  describe('showRecommendationDetails', () => {
+    test('should show recommendation details', () => {
+      const index = 0;
+      expect(() => dashboardPage.showRecommendationDetails(index)).not.toThrow();
+    });
+  });
+
+  describe('showMuscleDetails', () => {
+    test('should show muscle details', () => {
+      const muscleId = 'chest';
+      expect(() => dashboardPage.showMuscleDetails(muscleId)).not.toThrow();
+    });
+  });
+
+  describe('getFitnessLevelName', () => {
+    test('should get fitness level name', () => {
+      const level = 'beginner';
+      const name = dashboardPage.getFitnessLevelName(level);
+      expect(typeof name).toBe('string');
+    });
+  });
+
+  describe('loadRecommendations', () => {
+    test('should load recommendations', async () => {
+      await expect(dashboardPage.loadRecommendations()).resolves.not.toThrow();
+    });
+  });
+
+  describe('loadMuscleRecoveryData', () => {
+    test('should load muscle recovery data', async () => {
+      await expect(dashboardPage.loadMuscleRecoveryData()).resolves.not.toThrow();
+    });
+  });
+
+  describe('loadRecentWorkouts', () => {
+    test('should load recent workouts', async () => {
+      await expect(dashboardPage.loadRecentWorkouts()).resolves.not.toThrow();
+    });
+  });
+
+  describe('getRecommendations', () => {
+    test('should get recommendations', async () => {
+      await expect(dashboardPage.getRecommendations()).resolves.not.toThrow();
+    });
+  });
+
+  describe('getMuscleRecoveryData', () => {
+    test('should get muscle recovery data', async () => {
+      await expect(dashboardPage.getMuscleRecoveryData()).resolves.not.toThrow();
+    });
+  });
+
+  describe('getRecentWorkouts', () => {
+    test('should get recent workouts', async () => {
+      await expect(dashboardPage.getRecentWorkouts()).resolves.not.toThrow();
+    });
+  });
+
+  describe('setupTooltips', () => {
+    test('should setup tooltips', () => {
+      expect(() => dashboardPage.setupTooltips()).not.toThrow();
     });
   });
 });
