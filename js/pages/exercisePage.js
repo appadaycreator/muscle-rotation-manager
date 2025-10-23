@@ -18,7 +18,9 @@ class ExercisePage {
         this.isLoading = false;
 
         // デバウンス検索
-        this.debouncedSearch = debounce(this.performSearch.bind(this), 300);
+        this.debouncedSearch = debounce((searchTerm) => {
+            this.performSearch(searchTerm);
+        }, 300);
 
         this.init();
     }
@@ -301,7 +303,13 @@ class ExercisePage {
 
             this.currentExercises = await exerciseService.searchExercises(searchTerm, filters);
             this.renderExercises();
-            this.updateExerciseCount();
+            
+            // updateExerciseCountメソッドが存在することを確認してから呼び出し
+            if (typeof this.updateExerciseCount === 'function') {
+                this.updateExerciseCount();
+            } else {
+                console.error('updateExerciseCount method not found');
+            }
 
         } catch (error) {
             handleError(error, {
@@ -363,7 +371,13 @@ class ExercisePage {
             const filters = this.getCurrentFilters();
             this.currentExercises = await exerciseService.searchExercises(searchTerm, filters);
             this.renderExercises();
-            this.updateExerciseCount();
+            
+            // updateExerciseCountメソッドが存在することを確認してから呼び出し
+            if (typeof this.updateExerciseCount === 'function') {
+                this.updateExerciseCount();
+            } else {
+                console.error('updateExerciseCount method not found');
+            }
 
         } catch (error) {
             handleError(error, {
@@ -386,30 +400,34 @@ class ExercisePage {
      * エクササイズ件数を更新
      */
     updateExerciseCount() {
-        const currentCountElement = document.getElementById('current-count');
-        const totalCountElement = document.getElementById('total-count');
-        
-        if (currentCountElement && totalCountElement) {
-            const currentCount = this.currentExercises.length;
-            const totalCount = this.totalExercises || currentCount;
+        try {
+            const currentCountElement = document.getElementById('current-count');
+            const totalCountElement = document.getElementById('total-count');
             
-            currentCountElement.textContent = currentCount;
-            totalCountElement.textContent = totalCount;
-            
-            // フィルターが適用されている場合の表示を更新
-            const countElement = document.getElementById('exercise-count');
-            if (countElement) {
-                if (this.hasActiveFilters()) {
-                    countElement.innerHTML = `
-                        <span id="current-count">${currentCount}</span>件中 <span id="total-count">${totalCount}</span>件を表示
-                        <span class="text-blue-600 ml-2">（フィルター適用中）</span>
-                    `;
-                } else {
-                    countElement.innerHTML = `
-                        <span id="current-count">${currentCount}</span>件中 <span id="total-count">${totalCount}</span>件を表示
-                    `;
+            if (currentCountElement && totalCountElement) {
+                const currentCount = this.currentExercises ? this.currentExercises.length : 0;
+                const totalCount = this.totalExercises || currentCount;
+                
+                currentCountElement.textContent = currentCount;
+                totalCountElement.textContent = totalCount;
+                
+                // フィルターが適用されている場合の表示を更新
+                const countElement = document.getElementById('exercise-count');
+                if (countElement) {
+                    if (this.hasActiveFilters()) {
+                        countElement.innerHTML = `
+                            <span id="current-count">${currentCount}</span>件中 <span id="total-count">${totalCount}</span>件を表示
+                            <span class="text-blue-600 ml-2">（フィルター適用中）</span>
+                        `;
+                    } else {
+                        countElement.innerHTML = `
+                            <span id="current-count">${currentCount}</span>件中 <span id="total-count">${totalCount}</span>件を表示
+                        `;
+                    }
                 }
             }
+        } catch (error) {
+            console.error('Error updating exercise count:', error);
         }
     }
 
@@ -472,6 +490,7 @@ class ExercisePage {
 
         // エクササイズ一覧を再読み込み
         await this.loadExercises();
+        this.updateExerciseCount();
     }
 
     /**
@@ -587,12 +606,21 @@ class ExercisePage {
      * @param {string} muscleGroup - 筋肉部位
      */
     async showCategoryDetail(muscleGroup) {
-        const categoryInfo = await muscleGroupService.getMuscleGroupCategoryInfo(muscleGroup);
-        if (categoryInfo) {
-            this.renderCategoryDetail(categoryInfo);
-            this.showDetailModal();
-        } else {
-            showNotification('カテゴリ情報を取得できませんでした', 'error');
+        console.log('Showing category detail for:', muscleGroup);
+        try {
+            const categoryInfo = await muscleGroupService.getMuscleGroupCategoryInfo(muscleGroup);
+            console.log('Retrieved category info:', categoryInfo);
+            
+            if (categoryInfo) {
+                this.renderCategoryDetail(categoryInfo);
+                this.showDetailModal();
+            } else {
+                console.error('Category info is null or undefined for:', muscleGroup);
+                showNotification('カテゴリ情報を取得できませんでした', 'error');
+            }
+        } catch (error) {
+            console.error('Error getting category info:', error);
+            showNotification('カテゴリ情報の取得中にエラーが発生しました', 'error');
         }
     }
 
@@ -729,6 +757,7 @@ class ExercisePage {
                 if (muscleGroupFilter) {
                     muscleGroupFilter.value = muscleGroup.id;
                     await this.applyFilters();
+                    this.updateExerciseCount();
                     
                     // フィルター適用の通知を表示
                     showNotification(`${muscleGroup.name_ja}のエクササイズで絞り込みました`, 'success');

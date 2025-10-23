@@ -170,8 +170,8 @@ export class SupabaseService {
     }
 
     /**
-   * ワークアウト履歴を取得
-   */
+     * ワークアウト履歴を取得
+     */
     async getWorkoutHistory(limit = 50) {
         if (!this.isAvailable()) {
             throw new Error('Supabase is not available');
@@ -193,6 +193,13 @@ export class SupabaseService {
             console.error('Failed to get workout history:', error);
             throw error;
         }
+    }
+
+    /**
+     * ワークアウトを取得（getWorkoutHistoryのエイリアス）
+     */
+    async getWorkouts(limit = 50) {
+        return this.getWorkoutHistory(limit);
     }
 
     /**

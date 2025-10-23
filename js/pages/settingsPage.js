@@ -532,14 +532,6 @@ class SettingsPage {
                             </div>
                         </div>
 
-                        <!-- 保存ボタン -->
-                        <button type="submit" 
-                                id="save-recovery-btn"
-                                class="w-full bg-indigo-500 hover:bg-indigo-600 text-white 
-                                       font-semibold py-2 px-4 rounded-lg transition-colors">
-                            <i class="fas fa-save mr-2"></i>
-                            回復設定を保存
-                        </button>
                     </form>
                 </div>
 
@@ -584,6 +576,23 @@ class SettingsPage {
                         <i class="fas fa-external-link-alt mr-2"></i>
                         プライバシーポリシーを確認
                     </a>
+                </div>
+
+                <!-- 統合保存ボタン -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="text-center">
+                        <button type="button" 
+                                id="save-all-settings-btn"
+                                class="w-full bg-blue-600 hover:bg-blue-700 text-white 
+                                       font-semibold py-3 px-6 rounded-lg transition-colors
+                                       disabled:bg-gray-300 disabled:cursor-not-allowed">
+                            <i class="fas fa-save mr-2"></i>
+                            すべての設定を保存
+                        </button>
+                        <p class="text-sm text-gray-500 mt-2">
+                            すべての設定項目を一度に保存します
+                        </p>
+                    </div>
                 </div>
             </div>
         `;
@@ -654,6 +663,117 @@ class SettingsPage {
         if (deleteBtn) {
             deleteBtn.addEventListener('click', () => this.deleteAllData());
         }
+
+        // 統合保存ボタン
+        const saveAllBtn = safeGetElement('#save-all-settings-btn');
+        if (saveAllBtn) {
+            saveAllBtn.addEventListener('click', () => this.handleSaveAllSettings());
+        }
+    }
+
+    /**
+     * 統合保存処理
+     */
+    async handleSaveAllSettings() {
+        console.log('統合保存処理を開始');
+        
+        if (this.isLoading) {
+            console.log('既に保存処理中です');
+            return;
+        }
+        
+        this.isLoading = true;
+        
+        // 保存ボタンを無効化
+        const saveBtn = safeGetElement('#save-all-settings-btn');
+        if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>保存中...';
+        }
+
+        try {
+            // すべてのフォームデータを収集
+            const allSettings = this.collectAllSettings();
+            console.log('収集した設定データ:', allSettings);
+
+            // 設定を保存
+            await this.saveProfile(allSettings);
+            
+            showNotification('すべての設定を保存しました', 'success');
+            console.log('統合保存処理が完了しました');
+            
+        } catch (error) {
+            console.error('統合保存処理でエラーが発生:', error);
+            showNotification('設定の保存に失敗しました', 'error');
+        } finally {
+            this.isLoading = false;
+            
+            // 保存ボタンを有効化
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<i class="fas fa-save mr-2"></i>すべての設定を保存';
+            }
+        }
+    }
+
+    /**
+     * すべての設定データを収集
+     * @returns {Object} 収集した設定データ
+     */
+    collectAllSettings() {
+        const settings = {};
+        console.log('設定データ収集を開始');
+
+        // プロフィール設定
+        const profileForm = safeGetElement('#profile-form');
+        if (profileForm) {
+            const formData = new FormData(profileForm);
+            settings.display_name = formData.get('display_name');
+            settings.email = formData.get('email');
+            settings.age = parseInt(formData.get('age')) || null;
+            settings.weight = parseFloat(formData.get('weight')) || null;
+            settings.height = parseFloat(formData.get('height')) || null;
+            console.log('プロフィール設定を収集:', { display_name: settings.display_name, email: settings.email });
+        } else {
+            console.warn('プロフィール設定フォームが見つかりません');
+        }
+
+        // 体力レベル設定
+        const fitnessForm = safeGetElement('#fitness-form');
+        if (fitnessForm) {
+            const formData = new FormData(fitnessForm);
+            settings.fitness_level = formData.get('fitness_level');
+            console.log('体力レベル設定を収集:', settings.fitness_level);
+        } else {
+            console.warn('体力レベル設定フォームが見つかりません');
+        }
+
+        // 目標設定
+        const goalsForm = safeGetElement('#goals-form');
+        if (goalsForm) {
+            const formData = new FormData(goalsForm);
+            settings.primary_goal = formData.get('primary_goal');
+        }
+
+        // 頻度設定
+        const frequencyForm = safeGetElement('#frequency-form');
+        if (frequencyForm) {
+            const formData = new FormData(frequencyForm);
+            settings.workout_frequency = parseInt(formData.get('workout_frequency')) || 3;
+            settings.preferred_workout_time = formData.get('preferred_workout_time');
+            settings.preferred_workout_duration = parseInt(formData.get('preferred_workout_duration')) || 60;
+        }
+
+        // 回復設定
+        const recoveryForm = safeGetElement('#recovery-form');
+        if (recoveryForm) {
+            const formData = new FormData(recoveryForm);
+            settings.recovery_preference = formData.get('recovery_preference');
+            settings.sleep_hours_per_night = parseFloat(formData.get('sleep_hours_per_night')) || 7.0;
+            settings.stress_level = parseInt(formData.get('stress_level')) || 5;
+        }
+
+        return settings;
     }
 
     /**

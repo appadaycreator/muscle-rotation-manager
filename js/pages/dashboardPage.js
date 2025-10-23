@@ -26,22 +26,33 @@ class DashboardPage {
                 return;
             }
 
-            // データを並行して読み込み
-            try {
-                await Promise.all([
-                    this.loadRecommendations(),
-                    this.loadMuscleRecoveryData(),
-                    this.loadRecentWorkouts(),
-                    this.loadStats()
-                ]);
-            } catch (error) {
-                console.error('Dashboard data loading failed:', error);
-                // エラーが発生してもダッシュボードを表示
-                showNotification('一部のデータの読み込みに失敗しました', 'warning');
-            }
-
             // ダッシュボードコンテンツを表示
             this.renderDashboard();
+
+            // データを順次読み込み（エラーを個別に処理）
+            try {
+                await this.loadStats();
+            } catch (error) {
+                console.error('Stats loading failed:', error);
+            }
+
+            try {
+                await this.loadRecommendations();
+            } catch (error) {
+                console.error('Recommendations loading failed:', error);
+            }
+
+            try {
+                await this.loadMuscleRecoveryData();
+            } catch (error) {
+                console.error('Muscle recovery data loading failed:', error);
+            }
+
+            try {
+                await this.loadRecentWorkouts();
+            } catch (error) {
+                console.error('Recent workouts loading failed:', error);
+            }
 
             // 筋肉部位クリックハンドラーを設定
             this.setupMusclePartHandlers();
@@ -475,27 +486,32 @@ class DashboardPage {
             }
 
             container.innerHTML = this.recommendations.map((rec, index) => `
-                <div class="flex items-center space-x-3 p-3 ${rec.bgColor} rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
-                     onclick="dashboardPage.showRecommendationDetails(${index})">
-                    <div class="w-3 h-3 ${rec.dotColor} rounded-full"></div>
+                <div class="flex items-center space-x-3 p-3 ${rec.bgColor || 'bg-blue-50'} rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                     onclick="window.dashboardPage?.showRecommendationDetails(${index})">
+                    <div class="w-3 h-3 ${rec.dotColor || 'bg-blue-500'} rounded-full"></div>
                     <div class="flex-1">
-                        <span class="${rec.textColor}">${rec.message}</span>
+                        <span class="${rec.textColor || 'text-blue-700'}">${rec.message}</span>
                         ${rec.scientificBasis ? `
-                            <div class="text-xs ${rec.textColor} opacity-75 mt-1">
+                            <div class="text-xs ${rec.textColor || 'text-blue-600'} opacity-75 mt-1">
                                 <i class="fas fa-info-circle mr-1"></i>
                                 科学的根拠: ${rec.scientificBasis}
                             </div>
                         ` : ''}
                     </div>
                     ${rec.type === 'primary' || rec.type === 'secondary' ? `
-                        <i class="fas fa-chevron-right ${rec.textColor} opacity-50"></i>
+                        <i class="fas fa-chevron-right ${rec.textColor || 'text-blue-600'} opacity-50"></i>
                     ` : ''}
                 </div>
             `).join('');
 
         } catch (error) {
             console.error('Error loading recommendations:', error);
-            container.innerHTML = createErrorHTML('おすすめの読み込みに失敗しました');
+            container.innerHTML = `
+                <div class="text-center text-gray-500 py-4">
+                    <i class="fas fa-exclamation-triangle text-xl mb-2"></i>
+                    <p>推奨事項の読み込みに失敗しました</p>
+                </div>
+            `;
         }
     }
 
@@ -510,34 +526,38 @@ class DashboardPage {
             this.muscleRecoveryData = await this.getMuscleRecoveryData();
 
             if (this.muscleRecoveryData.length === 0) {
-                container.innerHTML = createErrorHTML(
-                    '回復度データがありません',
-                    'fas fa-info-circle'
-                );
+                container.innerHTML = `
+                    <div class="text-center text-gray-500 py-4">
+                        <i class="fas fa-info-circle text-xl mb-2"></i>
+                        <p>回復度データがありません</p>
+                    </div>
+                `;
                 return;
             }
 
             container.innerHTML = this.muscleRecoveryData.map(muscle => `
-                <div class="muscle-card muscle-part rounded-lg p-6" data-muscle="${muscle.id}">
+                <div class="muscle-card muscle-part rounded-lg p-6 bg-white shadow-sm border cursor-pointer hover:shadow-md transition-shadow" data-muscle="${muscle.id}">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-semibold text-gray-800">
-                            <i class="fas fa-male ${muscle.iconColor} mr-2"></i>
+                            <i class="fas fa-male ${muscle.iconColor || 'text-blue-600'} mr-2"></i>
                             <span data-i18n="muscle.${muscle.id}">${muscle.name}</span>
                         </h3>
-                        <span class="text-sm text-gray-500">最終: ${muscle.lastTrained}</span>
+                        <span class="text-sm text-gray-500">最終: ${muscle.lastTrained || '未記録'}</span>
                     </div>
                     <div class="mb-3">
                         <div class="flex justify-between text-sm mb-1">
                             <span data-i18n="dashboard.recovery">回復度</span>
-                            <span class="font-semibold ${muscle.recoveryColor}">
-                                ${muscle.recovery}%
+                            <span class="font-semibold ${muscle.recoveryColor || 'text-green-600'}">
+                                ${muscle.recovery || 0}%
                             </span>
                         </div>
-                        <div class="recovery-bar ${muscle.recoveryClass} rounded-full"
-                             style="width: ${muscle.recovery}%;"></div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="recovery-bar ${muscle.recoveryClass || 'bg-green-500'} rounded-full h-2"
+                                 style="width: ${muscle.recovery || 0}%;"></div>
+                        </div>
                     </div>
                     <div class="text-sm text-gray-600">
-                        次回推奨: ${muscle.nextRecommended}
+                        次回推奨: ${muscle.nextRecommended || '未設定'}
                     </div>
                 </div>
             `).join('');
@@ -547,7 +567,12 @@ class DashboardPage {
 
         } catch (error) {
             console.error('Error loading muscle recovery data:', error);
-            container.innerHTML = createErrorHTML('回復度データの読み込みに失敗しました');
+            container.innerHTML = `
+                <div class="text-center text-gray-500 py-4">
+                    <i class="fas fa-exclamation-triangle text-xl mb-2"></i>
+                    <p>回復度データの読み込みに失敗しました</p>
+                </div>
+            `;
         }
     }
 
@@ -612,7 +637,9 @@ class DashboardPage {
      */
     async getRecommendations() {
         try {
-            return await recommendationService.getRecommendations();
+            const recommendations = await recommendationService.getRecommendations();
+            console.log('Recommendations loaded:', recommendations);
+            return recommendations;
         } catch (error) {
             console.error('推奨事項の取得に失敗:', error);
             return recommendationService.getFallbackRecommendations();
@@ -625,7 +652,9 @@ class DashboardPage {
      */
     async getMuscleRecoveryData() {
         try {
-            return await recommendationService.getMuscleRecoveryData();
+            const recoveryData = await recommendationService.getMuscleRecoveryData();
+            console.log('Muscle recovery data loaded:', recoveryData);
+            return recoveryData;
         } catch (error) {
             console.error('筋肉回復データの取得に失敗:', error);
             // フォールバック: 基本的なモックデータを返す
@@ -682,10 +711,14 @@ class DashboardPage {
 }
 
 // デフォルトエクスポート
+const dashboardPage = new DashboardPage();
+
+// グローバルアクセス用に設定
+window.dashboardPage = dashboardPage;
+
 // ページが読み込まれた時に自動初期化
 document.addEventListener('DOMContentLoaded', async () => {
-    const dashboardPage = new DashboardPage();
     await dashboardPage.initialize();
 });
 
-export default new DashboardPage();
+export default dashboardPage;

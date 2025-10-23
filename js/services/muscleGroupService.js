@@ -237,8 +237,26 @@ class MuscleGroupService {
      * @returns {Promise<Object|null>} カテゴリ詳細情報
      */
     async getMuscleGroupCategoryInfo(muscleGroupId) {
-        const muscleGroup = await this.getMuscleGroupById(muscleGroupId);
-        if (!muscleGroup) return null;
+        // 筋肉部位IDのマッピング（HTMLのdata-muscle属性とサービス内のIDを対応）
+        const muscleGroupMapping = {
+            'chest': 'chest',
+            'back': 'back',
+            'legs': 'legs',
+            'shoulders': 'shoulders',
+            'arms': 'arms',
+            'core': 'abs'  // HTMLでは'core'だが、データベースでは'abs'
+        };
+
+        const mappedId = muscleGroupMapping[muscleGroupId] || muscleGroupId;
+        console.log('Getting category info for:', muscleGroupId, 'mapped to:', mappedId);
+        
+        const muscleGroup = await this.getMuscleGroupById(mappedId);
+        if (!muscleGroup) {
+            console.warn('Muscle group not found:', muscleGroupId, 'mapped to:', mappedId);
+            return null;
+        }
+        
+        console.log('Found muscle group:', muscleGroup);
 
         const categoryInfo = {
             chest: {
@@ -453,7 +471,9 @@ class MuscleGroupService {
             }
         };
 
-        return categoryInfo[muscleGroupId] || null;
+        const result = categoryInfo[mappedId] || null;
+        console.log('Category info result:', result);
+        return result;
     }
 
     /**
