@@ -4,10 +4,12 @@ import { supabaseService } from '../services/supabaseService.js';
 import { showNotification } from '../utils/helpers.js';
 import { pageManager } from './pageManager.js';
 import { globalFormValidator, globalRealtimeValidator } from '../utils/validation.js';
+import { handleError } from '../utils/errorHandler.js';
 
 class AuthManager {
     constructor() {
         this.isInitialized = false;
+        this.onlineStatusCleanup = null;
     }
 
     /**
@@ -272,8 +274,11 @@ class AuthManager {
             showNotification('ログインしました', 'success');
 
         } catch (error) {
-            console.error('Login error:', error);
-            this.showAuthError(errorDiv, error.message || 'ログインに失敗しました');
+            const errorInfo = handleError(error, {
+                context: 'ログイン',
+                showNotification: false
+            });
+            this.showAuthError(errorDiv, errorInfo.message);
         }
     }
 

@@ -236,19 +236,20 @@ export function createErrorHTML(message, icon = 'fas fa-exclamation-triangle') {
 }
 
 /**
- * 統一されたエラーハンドリング
+ * 統一されたエラーハンドリング (非推奨 - errorHandler.jsを使用)
+ * @deprecated Use errorHandler.js instead
  * @param {Error} error - エラーオブジェクト
  * @param {string} context - エラーが発生したコンテキスト
- * @param {boolean} showNotification - 通知を表示するか
+ * @param {boolean} showNotificationFlag - 通知を表示するか
  * @returns {string} エラーメッセージ
  */
-export function handleError(error, context = 'Unknown', showNotification = true) {
+export function handleError(error, context = 'Unknown', showNotificationFlag = true) {
     const errorMessage = error?.message || 'Unknown error occurred';
     const fullMessage = `${context}: ${errorMessage}`;
 
     console.error(fullMessage, error);
 
-    if (showNotification) {
+    if (showNotificationFlag) {
         showNotification(
             `${context}でエラーが発生しました`,
             'error'

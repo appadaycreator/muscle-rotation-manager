@@ -2,6 +2,7 @@
 
 import { SUPABASE_CONFIG } from '../utils/constants.js';
 import { showNotification } from '../utils/helpers.js';
+import { handleError, executeWithRetry } from '../utils/errorHandler.js';
 
 class SupabaseService {
     constructor() {
@@ -50,7 +51,11 @@ class SupabaseService {
                 return null;
             }
         } catch (error) {
-            console.error('Session check error:', error);
+            handleError(error, {
+                context: 'セッション確認',
+                showNotification: false,
+                logToConsole: true
+            });
             this.currentUser = null;
             return null;
         }
@@ -64,20 +69,34 @@ class SupabaseService {
      */
     async signIn(email, password) {
         if (!this.client) {
-            throw new Error('Supabaseが設定されていません。設定を確認してください。');
+            const error = new Error('Supabaseが設定されていません。設定を確認してください。');
+            throw handleError(error, {
+                context: 'ログイン',
+                showNotification: true
+            }).originalError;
         }
 
-        console.log('Attempting login with email:', email);
-        const { data, error } = await this.client.auth.signInWithPassword({
-            email,
-            password
+        return executeWithRetry(async () => {
+            console.log('Attempting login with email:', email);
+            const { data, error } = await this.client.auth.signInWithPassword({
+                email,
+                password
+            });
+
+            if (error) {
+                throw handleError(error, {
+                    context: 'ログイン',
+                    showNotification: true
+                }).originalError;
+            }
+
+            console.log('Login successful, user data:', data.user);
+            this.currentUser = data.user;
+            return data.user;
+        }, {
+            maxRetries: 2,
+            context: 'ログイン'
         });
-
-        if (error) {throw error;}
-
-        console.log('Login successful, user data:', data.user);
-        this.currentUser = data.user;
-        return data.user;
     }
 
     /**
@@ -88,16 +107,30 @@ class SupabaseService {
      */
     async signUp(email, password) {
         if (!this.client) {
-            throw new Error('Supabaseが設定されていません。設定を確認してください。');
+            const error = new Error('Supabaseが設定されていません。設定を確認してください。');
+            throw handleError(error, {
+                context: '新規登録',
+                showNotification: true
+            }).originalError;
         }
 
-        const { data, error } = await this.client.auth.signUp({
-            email,
-            password
-        });
+        return executeWithRetry(async () => {
+            const { data, error } = await this.client.auth.signUp({
+                email,
+                password
+            });
 
-        if (error) {throw error;}
-        return data;
+            if (error) {
+                throw handleError(error, {
+                    context: '新規登録',
+                    showNotification: true
+                }).originalError;
+            }
+            return data;
+        }, {
+            maxRetries: 2,
+            context: '新規登録'
+        });
     }
 
     /**
@@ -105,13 +138,30 @@ class SupabaseService {
      */
     async signOut() {
         if (!this.client) {
-            throw new Error('Supabaseが設定されていません。');
+            const error = new Error('Supabaseが設定されていません。');
+            throw handleError(error, {
+                context: 'ログアウト',
+                showNotification: true
+            }).originalError;
         }
 
-        const { error } = await this.client.auth.signOut();
-        if (error) {throw error;}
+        try {
+            const { error } = await this.client.auth.signOut();
+            if (error) {
+                throw handleError(error, {
+                    context: 'ログアウト',
+                    showNotification: true
+                }).originalError;
+            }
 
-        this.currentUser = null;
+            this.currentUser = null;
+        } catch (error) {
+            handleError(error, {
+                context: 'ログアウト',
+                showNotification: true
+            });
+            throw error;
+        }
     }
 
     /**
@@ -168,8 +218,10 @@ class SupabaseService {
             if (error) {throw error;}
             return data || [];
         } catch (error) {
-            console.error('Error fetching workout sessions:', error);
-            showNotification('ワークアウト履歴の取得に失敗しました', 'error');
+            handleError(error, {
+                context: 'ワークアウト履歴取得',
+                showNotification: true
+            });
             return [];
         }
     }
@@ -181,19 +233,33 @@ class SupabaseService {
      */
     async saveWorkout(sessionData) {
         if (!this.client || !this.currentUser) {
-            throw new Error('認証情報がありません');
+            const error = new Error('認証情報がありません');
+            throw handleError(error, {
+                context: 'ワークアウト保存',
+                showNotification: true
+            }).originalError;
         }
 
-        const { data, error } = await this.client
-            .from('workout_sessions')
-            .insert([{
-                ...sessionData,
-                user_id: this.currentUser.id
-            }])
-            .select();
+        return executeWithRetry(async () => {
+            const { data, error } = await this.client
+                .from('workout_sessions')
+                .insert([{
+                    ...sessionData,
+                    user_id: this.currentUser.id
+                }])
+                .select();
 
-        if (error) {throw error;}
-        return data;
+            if (error) {
+                throw handleError(error, {
+                    context: 'ワークアウト保存',
+                    showNotification: true
+                }).originalError;
+            }
+            return data;
+        }, {
+            maxRetries: 3,
+            context: 'ワークアウト保存'
+        });
     }
 
     /**
@@ -203,19 +269,33 @@ class SupabaseService {
      */
     async saveTrainingLog(trainingLogData) {
         if (!this.client || !this.currentUser) {
-            throw new Error('認証情報がありません');
+            const error = new Error('認証情報がありません');
+            throw handleError(error, {
+                context: 'トレーニングログ保存',
+                showNotification: true
+            }).originalError;
         }
 
-        const { data, error } = await this.client
-            .from('training_logs')
-            .insert([{
-                ...trainingLogData,
-                user_id: this.currentUser.id
-            }])
-            .select();
+        return executeWithRetry(async () => {
+            const { data, error } = await this.client
+                .from('training_logs')
+                .insert([{
+                    ...trainingLogData,
+                    user_id: this.currentUser.id
+                }])
+                .select();
 
-        if (error) {throw error;}
-        return data;
+            if (error) {
+                throw handleError(error, {
+                    context: 'トレーニングログ保存',
+                    showNotification: true
+                }).originalError;
+            }
+            return data;
+        }, {
+            maxRetries: 3,
+            context: 'トレーニングログ保存'
+        });
     }
 
     /**
@@ -225,21 +305,35 @@ class SupabaseService {
      */
     async saveTrainingLogs(trainingLogs) {
         if (!this.client || !this.currentUser) {
-            throw new Error('認証情報がありません');
+            const error = new Error('認証情報がありません');
+            throw handleError(error, {
+                context: 'トレーニングログ一括保存',
+                showNotification: true
+            }).originalError;
         }
 
-        const logsWithUserId = trainingLogs.map(log => ({
-            ...log,
-            user_id: this.currentUser.id
-        }));
+        return executeWithRetry(async () => {
+            const logsWithUserId = trainingLogs.map(log => ({
+                ...log,
+                user_id: this.currentUser.id
+            }));
 
-        const { data, error } = await this.client
-            .from('training_logs')
-            .insert(logsWithUserId)
-            .select();
+            const { data, error } = await this.client
+                .from('training_logs')
+                .insert(logsWithUserId)
+                .select();
 
-        if (error) {throw error;}
-        return data;
+            if (error) {
+                throw handleError(error, {
+                    context: 'トレーニングログ一括保存',
+                    showNotification: true
+                }).originalError;
+            }
+            return data;
+        }, {
+            maxRetries: 3,
+            context: 'トレーニングログ一括保存'
+        });
     }
 
     /**

@@ -4,6 +4,7 @@ import { pageManager } from './js/modules/pageManager.js';
 import { authManager } from './js/modules/authManager.js';
 import { supabaseService } from './js/services/supabaseService.js';
 import { showNotification } from './js/utils/helpers.js';
+import { handleError, watchOnlineStatus } from './js/utils/errorHandler.js';
 
 class MuscleRotationApp {
     constructor() {
@@ -13,6 +14,7 @@ class MuscleRotationApp {
         this.workoutStartTime = null;
         this.currentLanguage = 'ja';
         this.currentFontSize = 'base';
+        this.onlineStatusCleanup = null;
     }
 
     /**
@@ -24,6 +26,9 @@ class MuscleRotationApp {
         console.log('🏋️ MuscleRotationManager - Starting Application');
 
         try {
+            // オンライン状態の監視を開始
+            this.setupOnlineStatusMonitoring();
+
             // 基本コンポーネントを読み込み
             await this.loadBasicComponents();
 
@@ -47,9 +52,36 @@ class MuscleRotationApp {
             console.log('Current user:', authManager.getCurrentUser());
 
         } catch (error) {
-            console.error('❌ App initialization failed:', error);
-            showNotification('アプリケーションの初期化に失敗しました', 'error');
+            handleError(error, {
+                context: 'アプリケーション初期化',
+                showNotification: true
+            });
         }
+    }
+
+    /**
+     * オンライン状態の監視を設定
+     */
+    setupOnlineStatusMonitoring() {
+        this.onlineStatusCleanup = watchOnlineStatus(
+            // オンライン時のコールバック
+            async () => {
+                console.log('🌐 オンライン状態になりました - オフラインデータを同期します');
+                try {
+                    await this.syncOfflineData();
+                } catch (error) {
+                    handleError(error, {
+                        context: 'オフラインデータ同期',
+                        showNotification: true
+                    });
+                }
+            },
+            // オフライン時のコールバック
+            () => {
+                console.log('📴 オフライン状態になりました');
+                // オフライン状態での処理があれば追加
+            }
+        );
     }
 
     /**

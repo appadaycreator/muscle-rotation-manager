@@ -431,6 +431,7 @@ if (typeof module !== 'undefined' && require.main === module) {
         require('./validation.test.js');
         require('./page-modules.test.js');
         require('./workout-save.test.js');
+        require('./error-handler.test.js');
         testRunner.run().then(() => {
             process.exit(testRunner.results.failed > 0 ? 1 : 0);
         });
