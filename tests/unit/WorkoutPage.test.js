@@ -1,6 +1,6 @@
 // WorkoutPage.test.js - WorkoutPageクラスのテスト
 
-import WorkoutPage from '../../js/pages/workoutPage.js';
+import { workoutPage as WorkoutPage } from '../../js/pages/workoutPage.js';
 
 // モックの設定
 jest.mock('../../js/core/BasePage.js', () => ({

@@ -1,6 +1,6 @@
 // ExerciseService.test.js - ExerciseServiceクラスのテスト
 
-import { exerciseService as ExerciseService } from '../../js/services/exerciseService.js';
+import ExerciseService from '../../js/services/exerciseService.js';
 
 // モックの設定
 jest.mock('../../js/services/supabaseService.js', () => ({
