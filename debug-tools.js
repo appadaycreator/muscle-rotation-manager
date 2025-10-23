@@ -105,7 +105,7 @@ class DebugTools {
                 try {
                     const response = await originalFetch(...args);
                     const endTime = performance.now();
-                    
+
                     this.network.push({
                         url: args[0],
                         method: args[1]?.method || 'GET',
@@ -113,11 +113,11 @@ class DebugTools {
                         duration: endTime - startTime,
                         timestamp: new Date().toISOString()
                     });
-                    
+
                     return response;
                 } catch (error) {
                     const endTime = performance.now();
-                    
+
                     this.network.push({
                         url: args[0],
                         method: args[1]?.method || 'GET',
@@ -126,7 +126,7 @@ class DebugTools {
                         error: error.message,
                         timestamp: new Date().toISOString()
                     });
-                    
+
                     throw error;
                 }
             };
@@ -196,34 +196,34 @@ class DebugTools {
     // デバッグ情報を表示
     displayDebugInfo() {
         const info = this.getDebugInfo();
-        
+
         console.group('🔍 デバッグ情報');
         console.log('📊 サマリー:', info.summary);
-        
+
         if (info.errors.length > 0) {
             console.group('❌ エラー');
             info.errors.forEach(error => console.error(error));
             console.groupEnd();
         }
-        
+
         if (info.warnings.length > 0) {
             console.group('⚠️ 警告');
             info.warnings.forEach(warning => console.warn(warning));
             console.groupEnd();
         }
-        
+
         if (info.performance.length > 0) {
             console.group('⚡ パフォーマンス');
             info.performance.forEach(perf => console.log(perf));
             console.groupEnd();
         }
-        
+
         if (info.network.length > 0) {
             console.group('🌐 ネットワーク');
             info.network.forEach(req => console.log(req));
             console.groupEnd();
         }
-        
+
         console.groupEnd();
     }
 
@@ -232,7 +232,7 @@ class DebugTools {
         const info = this.getDebugInfo();
         const blob = new Blob([JSON.stringify(info, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
-        
+
         const a = document.createElement('a');
         a.href = url;
         a.download = `debug-info-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
@@ -245,18 +245,18 @@ class DebugTools {
     // 初期化
     initialize() {
         console.log('🔧 デバッグツールを初期化中...');
-        
+
         this.collectLogs();
         this.monitorPerformance();
         this.monitorNetwork();
         this.monitorDOMChanges();
         this.monitorErrors();
-        
+
         // デバッグ情報を定期的に表示
         setInterval(() => {
             this.displayDebugInfo();
         }, 30000); // 30秒ごと
-        
+
         console.log('✅ デバッグツール初期化完了');
     }
 }

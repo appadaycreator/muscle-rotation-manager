@@ -65,14 +65,14 @@ class MPAInitializer {
 
             const initTime = performance.now() - startTime;
             console.log(`✅ MPA initialization complete (${initTime.toFixed(2)}ms)`);
-            
+
             this.isInitialized = true;
 
             // 初期化完了イベントを発火
             window.dispatchEvent(new CustomEvent('mpaInitialized', {
-                detail: { 
+                detail: {
                     page: this.currentPage,
-                    initTime 
+                    initTime
                 }
             }));
 
@@ -233,7 +233,7 @@ class MPAInitializer {
 
             // ページ固有のJavaScriptモジュールを動的インポート
             const pageModule = await this.loadPageModule(this.currentPage);
-            
+
             if (pageModule && typeof pageModule.initialize === 'function') {
                 await pageModule.initialize();
                 console.log(`✅ Page-specific initialization complete for: ${this.currentPage}`);
@@ -251,13 +251,13 @@ class MPAInitializer {
     async loadPageModule(pageName) {
         try {
             const moduleMap = {
-                'dashboard': () => import('../pages/dashboardPage.js'),
-                'workout': () => import('../pages/workoutPageWizard.js'),
-                'calendar': () => import('../pages/calendarPage.js'),
-                'analysis': () => import('../pages/analysisPage.js'),
-                'progress': () => import('../pages/progressPage.js'),
-                'exercises': () => import('../pages/exercisePage.js'),
-                'settings': () => import('../pages/settingsPage.js')
+                dashboard: () => import('../pages/dashboardPage.js'),
+                workout: () => import('../pages/workoutPageWizard.js'),
+                calendar: () => import('../pages/calendarPage.js'),
+                analysis: () => import('../pages/analysisPage.js'),
+                progress: () => import('../pages/progressPage.js'),
+                exercises: () => import('../pages/exercisePage.js'),
+                settings: () => import('../pages/settingsPage.js')
             };
 
             const moduleLoader = moduleMap[pageName];

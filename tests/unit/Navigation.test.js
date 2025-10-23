@@ -25,8 +25,35 @@ describe('Navigation', () => {
       logout: jest.fn().mockResolvedValue()
     };
 
+    // グローバルモックの設定
     global.authManager = mockAuthManager;
     global.showNotification = jest.fn();
+    
+    // DOM要素のモック設定
+    const mockElement = {
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      click: jest.fn(),
+      classList: {
+        add: jest.fn(),
+        remove: jest.fn(),
+        contains: jest.fn(),
+        toggle: jest.fn()
+      },
+      style: {},
+      textContent: '',
+      innerHTML: '',
+      insertAdjacentHTML: jest.fn(),
+      appendChild: jest.fn(),
+      removeChild: jest.fn()
+    };
+
+    document.getElementById = jest.fn((id) => {
+      if (id === 'mobile-sidebar') {
+        return { ...mockElement, classList: { add: jest.fn(), remove: jest.fn(), contains: jest.fn() } };
+      }
+      return mockElement;
+    });
 
     navigation = new Navigation();
   });

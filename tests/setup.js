@@ -16,7 +16,14 @@ global.window = {
       this.type = type;
       this.detail = options.detail;
     }
-  }
+  },
+  innerWidth: 1024,
+  innerHeight: 768,
+  screen: {
+    width: 1920,
+    height: 1080
+  },
+  devicePixelRatio: 1
 };
 
 global.document = {
@@ -36,12 +43,16 @@ global.document = {
     style: {},
     textContent: '',
     innerHTML: '',
-    insertAdjacentHTML: jest.fn()
+    insertAdjacentHTML: jest.fn(),
+    appendChild: jest.fn(),
+    removeChild: jest.fn()
   })),
   addEventListener: jest.fn(),
   removeEventListener: jest.fn(),
   body: {
-    insertAdjacentHTML: jest.fn()
+    insertAdjacentHTML: jest.fn(),
+    appendChild: jest.fn(),
+    removeChild: jest.fn()
   }
 };
 
@@ -77,6 +88,12 @@ global.console = {
 global.alert = jest.fn();
 global.confirm = jest.fn();
 global.prompt = jest.fn();
+
+// グローバル関数の設定
+global.showNotification = jest.fn();
+global.hideNotification = jest.fn();
+global.showAuthModal = jest.fn();
+global.hideAuthModal = jest.fn();
 
 // タイマーの設定
 jest.useFakeTimers();

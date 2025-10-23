@@ -1,37 +1,102 @@
 // jest.config.js - Jest設定ファイル
 
 export default {
-  testEnvironment: 'node',
-  setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
-  collectCoverageFrom: [
-    'js/core/**/*.js',
-    'js/components/**/*.js',
-    'js/pages/**/*.js',
-    'js/services/**/*.js',
-    'js/utils/**/*.js',
-    '!js/**/*.test.js',
-    '!js/**/*.spec.js',
-    '!**/node_modules/**'
-  ],
-  coverageThreshold: {
-    global: {
-      branches: 80,
-      functions: 80,
-      lines: 80,
-      statements: 80
+    testEnvironment: 'node',
+    setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
+    collectCoverageFrom: [
+        'js/core/**/*.js',
+        'js/components/**/*.js',
+        'js/pages/**/*.js',
+        'js/services/**/*.js',
+        'js/utils/**/*.js',
+        '!js/**/*.test.js',
+        '!js/**/*.spec.js',
+        '!**/node_modules/**'
+    ],
+    coverageThreshold: {
+        global: {
+            branches: 98,
+            functions: 98,
+            lines: 98,
+            statements: 98
+        }
+    },
+    testMatch: [
+        '**/tests/**/*.test.js',
+        '**/tests/**/*.spec.js'
+    ],
+    moduleNameMapper: {
+        '^@/(.*)$': '<rootDir>/js/$1',
+        '\\.(css|less|scss|sass)$': 'identity-obj-proxy'
+    },
+    transform: {
+        '^.+\\.js$': 'babel-jest'
+    },
+    moduleFileExtensions: ['js', 'json'],
+    testTimeout: 10000,
+    verbose: true,
+    globals: {
+        'window': {},
+        'document': {},
+        'navigator': {},
+        'localStorage': {},
+        'sessionStorage': {},
+        'fetch': {},
+        'URL': {},
+        'URLSearchParams': {},
+        'FormData': {},
+        'FileReader': {},
+        'File': {},
+        'Blob': {},
+        'Event': {},
+        'CustomEvent': {},
+        'EventTarget': {},
+        'Element': {},
+        'HTMLElement': {},
+        'Node': {},
+        'NodeList': {},
+        'HTMLCollection': {},
+        'DOMParser': {},
+        'XMLHttpRequest': {},
+        'Promise': {},
+        'Map': {},
+        'Set': {},
+        'WeakMap': {},
+        'WeakSet': {},
+        'Symbol': {},
+        'Proxy': {},
+        'Reflect': {},
+        'Array': {},
+        'Object': {},
+        'String': {},
+        'Number': {},
+        'Boolean': {},
+        'Date': {},
+        'RegExp': {},
+        'Math': {},
+        'JSON': {},
+        'Error': {},
+        'TypeError': {},
+        'ReferenceError': {},
+        'SyntaxError': {},
+        'RangeError': {},
+        'EvalError': {},
+        'URIError': {},
+        'Chart': {},
+        'Notification': {},
+        'performance': {},
+        'MessageChannel': {},
+        'PerformanceObserver': {},
+        'IntersectionObserver': {},
+        'crypto': {},
+        'indexedDB': {},
+        'Image': {},
+        'MutationObserver': {},
+        'SpeechSynthesisUtterance': {},
+        'speechSynthesis': {},
+        'requestAnimationFrame': {},
+        'btoa': {},
+        'atob': {},
+        'process': {}
     }
-  },
-  testMatch: [
-    '**/tests/**/*.test.js',
-    '**/tests/**/*.spec.js'
-  ],
-  moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/js/$1'
-  },
-  transform: {
-    '^.+\\.js$': 'babel-jest'
-  },
-  moduleFileExtensions: ['js', 'json'],
-  testTimeout: 10000,
-  verbose: true
 };

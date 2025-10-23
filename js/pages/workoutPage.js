@@ -9,38 +9,38 @@ import { showNotification } from '../utils/helpers.js';
  * ワークアウトページクラス
  */
 export class WorkoutPage extends BasePage {
-  constructor() {
-    super();
-    this.navigation = new Navigation();
-    this.currentWorkout = null;
-    this.workoutTimer = null;
-    this.workoutStartTime = null;
-    this.exercises = [];
-    this.muscleGroups = ['胸', '背中', '肩', '腕', '脚', '腹筋'];
-  }
+    constructor() {
+        super();
+        this.navigation = new Navigation();
+        this.currentWorkout = null;
+        this.workoutTimer = null;
+        this.workoutStartTime = null;
+        this.exercises = [];
+        this.muscleGroups = ['胸', '背中', '肩', '腕', '脚', '腹筋'];
+    }
 
-  /**
+    /**
    * ページ固有の初期化処理
    */
-  async onInitialize() {
+    async onInitialize() {
     // ナビゲーションを初期化
-    await this.navigation.initialize();
-    
-    // ワークアウトコンテンツを生成
-    this.generateWorkoutContent();
-    
-    // エクササイズデータを読み込み
-    await this.loadExerciseData();
-  }
+        await this.navigation.initialize();
 
-  /**
+        // ワークアウトコンテンツを生成
+        this.generateWorkoutContent();
+
+        // エクササイズデータを読み込み
+        await this.loadExerciseData();
+    }
+
+    /**
    * ワークアウトコンテンツを生成
    */
-  generateWorkoutContent() {
-    const mainContent = document.getElementById('main-content');
-    if (!mainContent) return;
+    generateWorkoutContent() {
+        const mainContent = document.getElementById('main-content');
+        if (!mainContent) {return;}
 
-    mainContent.innerHTML = `
+        mainContent.innerHTML = `
       <div class="space-y-6">
         <!-- ページヘッダー -->
         <div class="bg-white rounded-lg shadow p-6">
@@ -156,222 +156,222 @@ export class WorkoutPage extends BasePage {
         </div>
       </div>
     `;
-  }
+    }
 
-  /**
+    /**
    * エクササイズデータを読み込み
    */
-  async loadExerciseData() {
-    try {
-      if (supabaseService.isAvailable()) {
-        this.exercises = await supabaseService.getExercises();
-      } else {
-        this.exercises = this.getDefaultExercises();
-      }
-      
-      // ワークアウト履歴を読み込み
-      await this.loadWorkoutHistory();
-      
-    } catch (error) {
-      console.error('Failed to load exercise data:', error);
-      showNotification('エクササイズデータの読み込みに失敗しました', 'error');
-    }
-  }
+    async loadExerciseData() {
+        try {
+            if (supabaseService.isAvailable()) {
+                this.exercises = await supabaseService.getExercises();
+            } else {
+                this.exercises = this.getDefaultExercises();
+            }
 
-  /**
+            // ワークアウト履歴を読み込み
+            await this.loadWorkoutHistory();
+
+        } catch (error) {
+            console.error('Failed to load exercise data:', error);
+            showNotification('エクササイズデータの読み込みに失敗しました', 'error');
+        }
+    }
+
+    /**
    * ワークアウト履歴を読み込み
    */
-  async loadWorkoutHistory() {
-    try {
-      let workoutHistory = [];
-      
-      if (supabaseService.isAvailable()) {
-        workoutHistory = await supabaseService.getWorkoutHistory();
-      } else {
-        workoutHistory = this.loadFromLocalStorage('workoutHistory');
-      }
-      
-      this.updateWorkoutHistory(workoutHistory);
-      
-    } catch (error) {
-      console.error('Failed to load workout history:', error);
-    }
-  }
+    async loadWorkoutHistory() {
+        try {
+            let workoutHistory = [];
 
-  /**
+            if (supabaseService.isAvailable()) {
+                workoutHistory = await supabaseService.getWorkoutHistory();
+            } else {
+                workoutHistory = this.loadFromLocalStorage('workoutHistory');
+            }
+
+            this.updateWorkoutHistory(workoutHistory);
+
+        } catch (error) {
+            console.error('Failed to load workout history:', error);
+        }
+    }
+
+    /**
    * イベントリスナーを設定
    */
-  setupEventListeners() {
+    setupEventListeners() {
     // 筋肉部位ボタンのクリック
-    document.querySelectorAll('.muscle-group-btn').forEach(btn => {
-      this.addEventListener(btn, 'click', (e) => {
-        const muscle = e.currentTarget.dataset.muscle;
-        this.startWorkout(muscle);
-      });
-    });
+        document.querySelectorAll('.muscle-group-btn').forEach(btn => {
+            this.addEventListener(btn, 'click', (e) => {
+                const muscle = e.currentTarget.dataset.muscle;
+                this.startWorkout(muscle);
+            });
+        });
 
-    // ワークアウト終了ボタン
-    this.addEventListener(document.getElementById('stop-workout-btn'), 'click', () => {
-      this.stopWorkout();
-    });
+        // ワークアウト終了ボタン
+        this.addEventListener(document.getElementById('stop-workout-btn'), 'click', () => {
+            this.stopWorkout();
+        });
 
-    // エクササイズ追加ボタン
-    this.addEventListener(document.getElementById('add-exercise-btn'), 'click', () => {
-      this.addExercise();
-    });
-  }
+        // エクササイズ追加ボタン
+        this.addEventListener(document.getElementById('add-exercise-btn'), 'click', () => {
+            this.addExercise();
+        });
+    }
 
-  /**
+    /**
    * ワークアウトを開始
    */
-  startWorkout(muscleGroup) {
-    console.log(`Starting workout for: ${muscleGroup}`);
-    
-    this.currentWorkout = {
-      muscleGroup,
-      startTime: new Date(),
-      exercises: [],
-      sessionName: `${muscleGroup}のワークアウト - ${new Date().toLocaleDateString('ja-JP')}`
-    };
+    startWorkout(muscleGroup) {
+        console.log(`Starting workout for: ${muscleGroup}`);
 
-    // タイマーを開始
-    this.startWorkoutTimer();
+        this.currentWorkout = {
+            muscleGroup,
+            startTime: new Date(),
+            exercises: [],
+            sessionName: `${muscleGroup}のワークアウト - ${new Date().toLocaleDateString('ja-JP')}`
+        };
 
-    // UIを更新
-    this.updateWorkoutUI();
+        // タイマーを開始
+        this.startWorkoutTimer();
 
-    showNotification(`${muscleGroup}のワークアウトを開始しました`, 'success');
-  }
+        // UIを更新
+        this.updateWorkoutUI();
 
-  /**
+        showNotification(`${muscleGroup}のワークアウトを開始しました`, 'success');
+    }
+
+    /**
    * ワークアウトを停止
    */
-  async stopWorkout() {
-    if (!this.currentWorkout) return;
+    async stopWorkout() {
+        if (!this.currentWorkout) {return;}
 
-    console.log('Stopping workout');
-    
-    // タイマーを停止
-    this.stopWorkoutTimer();
+        console.log('Stopping workout');
 
-    // ワークアウトデータを保存
-    try {
-      await this.saveWorkout();
-      showNotification('ワークアウトを保存しました', 'success');
-    } catch (error) {
-      console.error('Failed to save workout:', error);
-      showNotification('ワークアウトの保存に失敗しました', 'error');
+        // タイマーを停止
+        this.stopWorkoutTimer();
+
+        // ワークアウトデータを保存
+        try {
+            await this.saveWorkout();
+            showNotification('ワークアウトを保存しました', 'success');
+        } catch (error) {
+            console.error('Failed to save workout:', error);
+            showNotification('ワークアウトの保存に失敗しました', 'error');
+        }
+
+        // UIをリセット
+        this.resetWorkoutUI();
     }
 
-    // UIをリセット
-    this.resetWorkoutUI();
-  }
-
-  /**
+    /**
    * ワークアウトタイマーを開始
    */
-  startWorkoutTimer() {
-    this.workoutStartTime = new Date();
-    this.workoutTimer = setInterval(() => {
-      this.updateWorkoutTimer();
-    }, 1000);
-  }
+    startWorkoutTimer() {
+        this.workoutStartTime = new Date();
+        this.workoutTimer = setInterval(() => {
+            this.updateWorkoutTimer();
+        }, 1000);
+    }
 
-  /**
+    /**
    * ワークアウトタイマーを停止
    */
-  stopWorkoutTimer() {
-    if (this.workoutTimer) {
-      clearInterval(this.workoutTimer);
-      this.workoutTimer = null;
+    stopWorkoutTimer() {
+        if (this.workoutTimer) {
+            clearInterval(this.workoutTimer);
+            this.workoutTimer = null;
+        }
     }
-  }
 
-  /**
+    /**
    * ワークアウトタイマーを更新
    */
-  updateWorkoutTimer() {
-    if (!this.workoutStartTime) return;
+    updateWorkoutTimer() {
+        if (!this.workoutStartTime) {return;}
 
-    const now = new Date();
-    const diff = now - this.workoutStartTime;
-    const minutes = Math.floor(diff / 60000);
-    const seconds = Math.floor((diff % 60000) / 1000);
+        const now = new Date();
+        const diff = now - this.workoutStartTime;
+        const minutes = Math.floor(diff / 60000);
+        const seconds = Math.floor((diff % 60000) / 1000);
 
-    const timerDisplay = document.getElementById('workout-timer');
-    if (timerDisplay) {
-      timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        const timerDisplay = document.getElementById('workout-timer');
+        if (timerDisplay) {
+            timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
     }
-  }
 
-  /**
+    /**
    * エクササイズを追加
    */
-  addExercise() {
-    const name = document.getElementById('exercise-name').value.trim();
-    const sets = parseInt(document.getElementById('exercise-sets').value);
-    const weight = parseFloat(document.getElementById('exercise-weight').value);
-    const reps = parseInt(document.getElementById('exercise-reps').value);
+    addExercise() {
+        const name = document.getElementById('exercise-name').value.trim();
+        const sets = parseInt(document.getElementById('exercise-sets').value);
+        const weight = parseFloat(document.getElementById('exercise-weight').value);
+        const reps = parseInt(document.getElementById('exercise-reps').value);
 
-    if (!name || !sets || !weight || !reps) {
-      showNotification('すべてのフィールドを入力してください', 'warning');
-      return;
+        if (!name || !sets || !weight || !reps) {
+            showNotification('すべてのフィールドを入力してください', 'warning');
+            return;
+        }
+
+        const exercise = {
+            name,
+            sets,
+            weight,
+            reps,
+            timestamp: new Date().toISOString()
+        };
+
+        this.currentWorkout.exercises.push(exercise);
+        this.updateExercisesList();
+        this.clearExerciseForm();
+
+        showNotification('エクササイズを追加しました', 'success');
     }
 
-    const exercise = {
-      name,
-      sets,
-      weight,
-      reps,
-      timestamp: new Date().toISOString()
-    };
-
-    this.currentWorkout.exercises.push(exercise);
-    this.updateExercisesList();
-    this.clearExerciseForm();
-
-    showNotification('エクササイズを追加しました', 'success');
-  }
-
-  /**
+    /**
    * ワークアウトUIを更新
    */
-  updateWorkoutUI() {
+    updateWorkoutUI() {
     // 現在のワークアウトセクションを表示
-    document.getElementById('current-workout-section').classList.remove('hidden');
-    document.getElementById('add-exercise-section').classList.remove('hidden');
-    document.getElementById('exercises-list').classList.remove('hidden');
+        document.getElementById('current-workout-section').classList.remove('hidden');
+        document.getElementById('add-exercise-section').classList.remove('hidden');
+        document.getElementById('exercises-list').classList.remove('hidden');
 
-    // ワークアウト詳細を更新
-    const workoutDetails = document.getElementById('workout-details');
-    if (workoutDetails) {
-      workoutDetails.innerHTML = `
+        // ワークアウト詳細を更新
+        const workoutDetails = document.getElementById('workout-details');
+        if (workoutDetails) {
+            workoutDetails.innerHTML = `
         <div class="bg-blue-50 p-4 rounded-lg">
           <h3 class="font-bold text-blue-900">${this.currentWorkout.muscleGroup}のワークアウト</h3>
           <p class="text-blue-700">開始時刻: ${this.currentWorkout.startTime.toLocaleTimeString('ja-JP')}</p>
         </div>
       `;
+        }
     }
-  }
 
-  /**
+    /**
    * エクササイズ一覧を更新
    */
-  updateExercisesList() {
-    const container = document.getElementById('exercises-container');
-    if (!container) return;
+    updateExercisesList() {
+        const container = document.getElementById('exercises-container');
+        if (!container) {return;}
 
-    if (this.currentWorkout.exercises.length === 0) {
-      container.innerHTML = `
+        if (this.currentWorkout.exercises.length === 0) {
+            container.innerHTML = `
         <div class="text-center py-8 text-gray-500">
           <i class="fas fa-dumbbell text-4xl mb-4"></i>
           <p>まだエクササイズが追加されていません</p>
         </div>
       `;
-      return;
-    }
+            return;
+        }
 
-    container.innerHTML = this.currentWorkout.exercises.map((exercise, index) => `
+        container.innerHTML = this.currentWorkout.exercises.map((exercise, index) => `
       <div class="flex items-center justify-between p-4 border-b border-gray-200">
         <div class="flex items-center">
           <div class="flex-shrink-0">
@@ -393,30 +393,30 @@ export class WorkoutPage extends BasePage {
         </div>
       </div>
     `).join('');
-  }
+    }
 
-  /**
+    /**
    * ワークアウト履歴を更新
    */
-  updateWorkoutHistory(workoutHistory) {
-    const container = document.getElementById('workout-history');
-    if (!container) return;
+    updateWorkoutHistory(workoutHistory) {
+        const container = document.getElementById('workout-history');
+        if (!container) {return;}
 
-    if (workoutHistory.length === 0) {
-      container.innerHTML = `
+        if (workoutHistory.length === 0) {
+            container.innerHTML = `
         <div class="text-center py-8 text-gray-500">
           <i class="fas fa-history text-4xl mb-4"></i>
           <p>まだワークアウトが記録されていません</p>
         </div>
       `;
-      return;
-    }
+            return;
+        }
 
-    const recentWorkouts = workoutHistory
-      .sort((a, b) => new Date(b.workout_date) - new Date(a.workout_date))
-      .slice(0, 10);
+        const recentWorkouts = workoutHistory
+            .sort((a, b) => new Date(b.workout_date) - new Date(a.workout_date))
+            .slice(0, 10);
 
-    container.innerHTML = recentWorkouts.map(workout => `
+        container.innerHTML = recentWorkouts.map(workout => `
       <div class="flex items-center justify-between p-4 border-b border-gray-200">
         <div class="flex items-center">
           <div class="flex-shrink-0">
@@ -433,128 +433,128 @@ export class WorkoutPage extends BasePage {
         </div>
       </div>
     `).join('');
-  }
+    }
 
-  /**
+    /**
    * ワークアウトを保存
    */
-  async saveWorkout() {
-    if (!this.currentWorkout) return;
+    async saveWorkout() {
+        if (!this.currentWorkout) {return;}
 
-    const endTime = new Date();
-    const duration = Math.floor((endTime - this.currentWorkout.startTime) / 60000);
+        const endTime = new Date();
+        const duration = Math.floor((endTime - this.currentWorkout.startTime) / 60000);
 
-    const workoutData = {
-      session_name: this.currentWorkout.sessionName,
-      workout_date: new Date().toISOString().split('T')[0],
-      start_time: this.currentWorkout.startTime.toISOString(),
-      end_time: endTime.toISOString(),
-      total_duration_minutes: Math.max(1, duration),
-      muscle_groups_trained: [this.currentWorkout.muscleGroup],
-      session_type: 'strength',
-      is_completed: true,
-      exercises: this.currentWorkout.exercises,
-      notes: '',
-      created_at: new Date().toISOString()
-    };
+        const workoutData = {
+            session_name: this.currentWorkout.sessionName,
+            workout_date: new Date().toISOString().split('T')[0],
+            start_time: this.currentWorkout.startTime.toISOString(),
+            end_time: endTime.toISOString(),
+            total_duration_minutes: Math.max(1, duration),
+            muscle_groups_trained: [this.currentWorkout.muscleGroup],
+            session_type: 'strength',
+            is_completed: true,
+            exercises: this.currentWorkout.exercises,
+            notes: '',
+            created_at: new Date().toISOString()
+        };
 
-    if (supabaseService.isAvailable()) {
-      await supabaseService.saveWorkout(workoutData);
-    } else {
-      await this.saveToLocalStorage('workoutHistory', workoutData);
+        if (supabaseService.isAvailable()) {
+            await supabaseService.saveWorkout(workoutData);
+        } else {
+            await this.saveToLocalStorage('workoutHistory', workoutData);
+        }
     }
-  }
 
-  /**
+    /**
    * ワークアウトUIをリセット
    */
-  resetWorkoutUI() {
-    this.currentWorkout = null;
-    this.workoutStartTime = null;
-    
-    document.getElementById('current-workout-section').classList.add('hidden');
-    document.getElementById('add-exercise-section').classList.add('hidden');
-    document.getElementById('exercises-list').classList.add('hidden');
-    
-    this.clearExerciseForm();
-  }
+    resetWorkoutUI() {
+        this.currentWorkout = null;
+        this.workoutStartTime = null;
 
-  /**
+        document.getElementById('current-workout-section').classList.add('hidden');
+        document.getElementById('add-exercise-section').classList.add('hidden');
+        document.getElementById('exercises-list').classList.add('hidden');
+
+        this.clearExerciseForm();
+    }
+
+    /**
    * エクササイズフォームをクリア
    */
-  clearExerciseForm() {
-    document.getElementById('exercise-name').value = '';
-    document.getElementById('exercise-sets').value = '3';
-    document.getElementById('exercise-weight').value = '';
-    document.getElementById('exercise-reps').value = '';
-  }
+    clearExerciseForm() {
+        document.getElementById('exercise-name').value = '';
+        document.getElementById('exercise-sets').value = '3';
+        document.getElementById('exercise-weight').value = '';
+        document.getElementById('exercise-reps').value = '';
+    }
 
-  /**
+    /**
    * 筋肉部位のアイコンを取得
    */
-  getMuscleIcon(muscle) {
-    const icons = {
-      '胸': '💪',
-      '背中': '🏋️',
-      '肩': '🤸',
-      '腕': '💪',
-      '脚': '🏃',
-      '腹筋': '🔥'
-    };
-    return icons[muscle] || '💪';
-  }
+    getMuscleIcon(muscle) {
+        const icons = {
+            胸: '💪',
+            背中: '🏋️',
+            肩: '🤸',
+            腕: '💪',
+            脚: '🏃',
+            腹筋: '🔥'
+        };
+        return icons[muscle] || '💪';
+    }
 
-  /**
+    /**
    * デフォルトエクササイズを取得
    */
-  getDefaultExercises() {
-    return [
-      { name: 'ベンチプレス', muscle_group: '胸' },
-      { name: 'スクワット', muscle_group: '脚' },
-      { name: 'デッドリフト', muscle_group: '背中' },
-      { name: 'オーバーヘッドプレス', muscle_group: '肩' },
-      { name: 'バーベルカール', muscle_group: '腕' },
-      { name: 'プランク', muscle_group: '腹筋' }
-    ];
-  }
+    getDefaultExercises() {
+        return [
+            { name: 'ベンチプレス', muscle_group: '胸' },
+            { name: 'スクワット', muscle_group: '脚' },
+            { name: 'デッドリフト', muscle_group: '背中' },
+            { name: 'オーバーヘッドプレス', muscle_group: '肩' },
+            { name: 'バーベルカール', muscle_group: '腕' },
+            { name: 'プランク', muscle_group: '腹筋' }
+        ];
+    }
 
-  /**
+    /**
    * ローカルストレージに保存
    */
-  async saveToLocalStorage(key, data) {
-    try {
-      const existingData = JSON.parse(localStorage.getItem(key) || '[]');
-      existingData.unshift(data);
-      localStorage.setItem(key, JSON.stringify(existingData));
-    } catch (error) {
-      console.error(`Failed to save to localStorage (${key}):`, error);
-      throw error;
+    async saveToLocalStorage(key, data) {
+        try {
+            const existingData = JSON.parse(localStorage.getItem(key) || '[]');
+            existingData.unshift(data);
+            localStorage.setItem(key, JSON.stringify(existingData));
+        } catch (error) {
+            console.error(`Failed to save to localStorage (${key}):`, error);
+            throw error;
+        }
     }
-  }
 
-  /**
+    /**
    * ローカルストレージから読み込み
    */
-  loadFromLocalStorage(key) {
-    try {
-      return JSON.parse(localStorage.getItem(key) || '[]');
-    } catch (error) {
-      console.error(`Failed to load from localStorage (${key}):`, error);
-      return [];
+    loadFromLocalStorage(key) {
+        try {
+            return JSON.parse(localStorage.getItem(key) || '[]');
+        } catch (error) {
+            console.error(`Failed to load from localStorage (${key}):`, error);
+            return [];
+        }
     }
-  }
 
-  /**
+    /**
    * 日付をフォーマット
    */
-  formatDate(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ja-JP');
-  }
+    formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('ja-JP');
+    }
 }
 
 // ページが読み込まれた時に初期化
 document.addEventListener('DOMContentLoaded', async () => {
-  const workoutPage = new WorkoutPage();
-  await workoutPage.initialize();
+    const workoutPage = new WorkoutPage();
+    await workoutPage.initialize();
 });

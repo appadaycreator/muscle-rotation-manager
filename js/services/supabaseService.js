@@ -8,495 +8,495 @@ import { SUPABASE_CONFIG } from '../utils/constants.js';
  * データベース操作と認証を管理
  */
 export class SupabaseService {
-  constructor() {
-    this.client = null;
-    this.isConnected = false;
-    this.initialize();
-  }
+    constructor() {
+        this.client = null;
+        this.isConnected = false;
+        this.initialize();
+    }
 
-  /**
+    /**
    * Supabaseクライアントを初期化
    */
-  initialize() {
-    try {
-      if (!SUPABASE_CONFIG.url || !SUPABASE_CONFIG.key) {
-        console.warn('Supabase configuration not found');
-        return;
-      }
+    initialize() {
+        try {
+            if (!SUPABASE_CONFIG.url || !SUPABASE_CONFIG.key) {
+                console.warn('Supabase configuration not found');
+                return;
+            }
 
-      this.client = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
-      this.isConnected = true;
-      console.log('✅ Supabase client initialized');
-    } catch (error) {
-      console.error('❌ Failed to initialize Supabase client:', error);
-      this.isConnected = false;
+            this.client = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
+            this.isConnected = true;
+            console.log('✅ Supabase client initialized');
+        } catch (error) {
+            console.error('❌ Failed to initialize Supabase client:', error);
+            this.isConnected = false;
+        }
     }
-  }
 
-  /**
+    /**
    * Supabaseが利用可能かチェック
    */
-  isAvailable() {
-    return this.isConnected && this.client !== null;
-  }
+    isAvailable() {
+        return this.isConnected && this.client !== null;
+    }
 
-  /**
+    /**
    * 認証状態を取得
    */
-  async getAuthState() {
-    if (!this.isAvailable()) {
-      return { user: null, session: null };
+    async getAuthState() {
+        if (!this.isAvailable()) {
+            return { user: null, session: null };
+        }
+
+        try {
+            const { data: { session }, error } = await this.client.auth.getSession();
+            if (error) {
+                console.error('Auth state error:', error);
+                return { user: null, session: null };
+            }
+            return { user: session?.user || null, session };
+        } catch (error) {
+            console.error('Failed to get auth state:', error);
+            return { user: null, session: null };
+        }
     }
 
-    try {
-      const { data: { session }, error } = await this.client.auth.getSession();
-      if (error) {
-        console.error('Auth state error:', error);
-        return { user: null, session: null };
-      }
-      return { user: session?.user || null, session };
-    } catch (error) {
-      console.error('Failed to get auth state:', error);
-      return { user: null, session: null };
-    }
-  }
-
-  /**
+    /**
    * ユーザー登録
    */
-  async signUp(email, password, userData = {}) {
-    if (!this.isAvailable()) {
-      throw new Error('Supabase is not available');
-    }
-
-    try {
-      const { data, error } = await this.client.auth.signUp({
-        email,
-        password,
-        options: {
-          data: userData
+    async signUp(email, password, userData = {}) {
+        if (!this.isAvailable()) {
+            throw new Error('Supabase is not available');
         }
-      });
 
-      if (error) {
-        throw new Error(error.message);
-      }
+        try {
+            const { data, error } = await this.client.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: userData
+                }
+            });
 
-      return data;
-    } catch (error) {
-      console.error('Sign up error:', error);
-      throw error;
+            if (error) {
+                throw new Error(error.message);
+            }
+
+            return data;
+        } catch (error) {
+            console.error('Sign up error:', error);
+            throw error;
+        }
     }
-  }
 
-  /**
+    /**
    * ユーザーログイン
    */
-  async signIn(email, password) {
-    if (!this.isAvailable()) {
-      throw new Error('Supabase is not available');
+    async signIn(email, password) {
+        if (!this.isAvailable()) {
+            throw new Error('Supabase is not available');
+        }
+
+        try {
+            const { data, error } = await this.client.auth.signInWithPassword({
+                email,
+                password
+            });
+
+            if (error) {
+                throw new Error(error.message);
+            }
+
+            return data;
+        } catch (error) {
+            console.error('Sign in error:', error);
+            throw error;
+        }
     }
 
-    try {
-      const { data, error } = await this.client.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Sign in error:', error);
-      throw error;
-    }
-  }
-
-  /**
+    /**
    * ユーザーログアウト
    */
-  async signOut() {
-    if (!this.isAvailable()) {
-      throw new Error('Supabase is not available');
+    async signOut() {
+        if (!this.isAvailable()) {
+            throw new Error('Supabase is not available');
+        }
+
+        try {
+            const { error } = await this.client.auth.signOut();
+            if (error) {
+                throw new Error(error.message);
+            }
+        } catch (error) {
+            console.error('Sign out error:', error);
+            throw error;
+        }
     }
 
-    try {
-      const { error } = await this.client.auth.signOut();
-      if (error) {
-        throw new Error(error.message);
-      }
-    } catch (error) {
-      console.error('Sign out error:', error);
-      throw error;
-    }
-  }
-
-  /**
+    /**
    * ワークアウト履歴を取得
    */
-  async getWorkoutHistory(limit = 50) {
-    if (!this.isAvailable()) {
-      throw new Error('Supabase is not available');
+    async getWorkoutHistory(limit = 50) {
+        if (!this.isAvailable()) {
+            throw new Error('Supabase is not available');
+        }
+
+        try {
+            const { data, error } = await this.client
+                .from('workout_sessions')
+                .select('*')
+                .order('workout_date', { ascending: false })
+                .limit(limit);
+
+            if (error) {
+                throw new Error(error.message);
+            }
+
+            return data || [];
+        } catch (error) {
+            console.error('Failed to get workout history:', error);
+            throw error;
+        }
     }
 
-    try {
-      const { data, error } = await this.client
-        .from('workout_sessions')
-        .select('*')
-        .order('workout_date', { ascending: false })
-        .limit(limit);
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      return data || [];
-    } catch (error) {
-      console.error('Failed to get workout history:', error);
-      throw error;
-    }
-  }
-
-  /**
+    /**
    * ワークアウトを保存
    */
-  async saveWorkout(workoutData) {
-    if (!this.isAvailable()) {
-      throw new Error('Supabase is not available');
+    async saveWorkout(workoutData) {
+        if (!this.isAvailable()) {
+            throw new Error('Supabase is not available');
+        }
+
+        try {
+            const { data, error } = await this.client
+                .from('workout_sessions')
+                .insert([workoutData])
+                .select();
+
+            if (error) {
+                throw new Error(error.message);
+            }
+
+            return data;
+        } catch (error) {
+            console.error('Failed to save workout:', error);
+            throw error;
+        }
     }
 
-    try {
-      const { data, error } = await this.client
-        .from('workout_sessions')
-        .insert([workoutData])
-        .select();
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Failed to save workout:', error);
-      throw error;
-    }
-  }
-
-  /**
+    /**
    * トレーニングログを保存
    */
-  async saveTrainingLogs(trainingLogs) {
-    if (!this.isAvailable()) {
-      throw new Error('Supabase is not available');
+    async saveTrainingLogs(trainingLogs) {
+        if (!this.isAvailable()) {
+            throw new Error('Supabase is not available');
+        }
+
+        try {
+            const { data, error } = await this.client
+                .from('training_logs')
+                .insert(trainingLogs)
+                .select();
+
+            if (error) {
+                throw new Error(error.message);
+            }
+
+            return data;
+        } catch (error) {
+            console.error('Failed to save training logs:', error);
+            throw error;
+        }
     }
 
-    try {
-      const { data, error } = await this.client
-        .from('training_logs')
-        .insert(trainingLogs)
-        .select();
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Failed to save training logs:', error);
-      throw error;
-    }
-  }
-
-  /**
+    /**
    * エクササイズ一覧を取得
    */
-  async getExercises() {
-    if (!this.isAvailable()) {
-      throw new Error('Supabase is not available');
+    async getExercises() {
+        if (!this.isAvailable()) {
+            throw new Error('Supabase is not available');
+        }
+
+        try {
+            const { data, error } = await this.client
+                .from('exercises')
+                .select('*')
+                .order('name');
+
+            if (error) {
+                throw new Error(error.message);
+            }
+
+            return data || [];
+        } catch (error) {
+            console.error('Failed to get exercises:', error);
+            throw error;
+        }
     }
 
-    try {
-      const { data, error } = await this.client
-        .from('exercises')
-        .select('*')
-        .order('name');
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      return data || [];
-    } catch (error) {
-      console.error('Failed to get exercises:', error);
-      throw error;
-    }
-  }
-
-  /**
+    /**
    * 筋肉回復データを取得
    */
-  async getMuscleRecoveryData() {
-    if (!this.isAvailable()) {
-      throw new Error('Supabase is not available');
+    async getMuscleRecoveryData() {
+        if (!this.isAvailable()) {
+            throw new Error('Supabase is not available');
+        }
+
+        try {
+            const { data, error } = await this.client
+                .from('muscle_recovery')
+                .select('*')
+                .order('last_trained', { ascending: false });
+
+            if (error) {
+                throw new Error(error.message);
+            }
+
+            return data || [];
+        } catch (error) {
+            console.error('Failed to get muscle recovery data:', error);
+            throw error;
+        }
     }
 
-    try {
-      const { data, error } = await this.client
-        .from('muscle_recovery')
-        .select('*')
-        .order('last_trained', { ascending: false });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      return data || [];
-    } catch (error) {
-      console.error('Failed to get muscle recovery data:', error);
-      throw error;
-    }
-  }
-
-  /**
+    /**
    * 推奨事項を取得
    */
-  async getRecommendations() {
-    if (!this.isAvailable()) {
-      throw new Error('Supabase is not available');
+    async getRecommendations() {
+        if (!this.isAvailable()) {
+            throw new Error('Supabase is not available');
+        }
+
+        try {
+            const { data, error } = await this.client
+                .from('recommendations')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(10);
+
+            if (error) {
+                throw new Error(error.message);
+            }
+
+            return data || [];
+        } catch (error) {
+            console.error('Failed to get recommendations:', error);
+            throw error;
+        }
     }
 
-    try {
-      const { data, error } = await this.client
-        .from('recommendations')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      return data || [];
-    } catch (error) {
-      console.error('Failed to get recommendations:', error);
-      throw error;
-    }
-  }
-
-  /**
+    /**
    * ユーザープロフィールを取得
    */
-  async getUserProfile() {
-    if (!this.isAvailable()) {
-      throw new Error('Supabase is not available');
+    async getUserProfile() {
+        if (!this.isAvailable()) {
+            throw new Error('Supabase is not available');
+        }
+
+        try {
+            const { data, error } = await this.client
+                .from('user_profiles')
+                .select('*')
+                .single();
+
+            if (error) {
+                throw new Error(error.message);
+            }
+
+            return data;
+        } catch (error) {
+            console.error('Failed to get user profile:', error);
+            throw error;
+        }
     }
 
-    try {
-      const { data, error } = await this.client
-        .from('user_profiles')
-        .select('*')
-        .single();
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Failed to get user profile:', error);
-      throw error;
-    }
-  }
-
-  /**
+    /**
    * ユーザープロフィールを更新
    */
-  async updateUserProfile(profileData) {
-    if (!this.isAvailable()) {
-      throw new Error('Supabase is not available');
+    async updateUserProfile(profileData) {
+        if (!this.isAvailable()) {
+            throw new Error('Supabase is not available');
+        }
+
+        try {
+            const { data, error } = await this.client
+                .from('user_profiles')
+                .upsert([profileData])
+                .select();
+
+            if (error) {
+                throw new Error(error.message);
+            }
+
+            return data;
+        } catch (error) {
+            console.error('Failed to update user profile:', error);
+            throw error;
+        }
     }
 
-    try {
-      const { data, error } = await this.client
-        .from('user_profiles')
-        .upsert([profileData])
-        .select();
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Failed to update user profile:', error);
-      throw error;
-    }
-  }
-
-  /**
+    /**
    * データを保存（汎用）
    */
-  async saveData(tableName, data) {
-    if (!this.isAvailable()) {
-      throw new Error('Supabase is not available');
+    async saveData(tableName, data) {
+        if (!this.isAvailable()) {
+            throw new Error('Supabase is not available');
+        }
+
+        try {
+            const { data: result, error } = await this.client
+                .from(tableName)
+                .insert([data])
+                .select();
+
+            if (error) {
+                throw new Error(error.message);
+            }
+
+            return result;
+        } catch (error) {
+            console.error(`Failed to save data to ${tableName}:`, error);
+            throw error;
+        }
     }
 
-    try {
-      const { data: result, error } = await this.client
-        .from(tableName)
-        .insert([data])
-        .select();
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      return result;
-    } catch (error) {
-      console.error(`Failed to save data to ${tableName}:`, error);
-      throw error;
-    }
-  }
-
-  /**
+    /**
    * データを読み込み（汎用）
    */
-  async loadData(tableName, filters = {}) {
-    if (!this.isAvailable()) {
-      throw new Error('Supabase is not available');
+    async loadData(tableName, filters = {}) {
+        if (!this.isAvailable()) {
+            throw new Error('Supabase is not available');
+        }
+
+        try {
+            let query = this.client.from(tableName).select('*');
+
+            // フィルターを適用
+            Object.entries(filters).forEach(([key, value]) => {
+                query = query.eq(key, value);
+            });
+
+            const { data, error } = await query;
+
+            if (error) {
+                throw new Error(error.message);
+            }
+
+            return data || [];
+        } catch (error) {
+            console.error(`Failed to load data from ${tableName}:`, error);
+            throw error;
+        }
     }
 
-    try {
-      let query = this.client.from(tableName).select('*');
-
-      // フィルターを適用
-      Object.entries(filters).forEach(([key, value]) => {
-        query = query.eq(key, value);
-      });
-
-      const { data, error } = await query;
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      return data || [];
-    } catch (error) {
-      console.error(`Failed to load data from ${tableName}:`, error);
-      throw error;
-    }
-  }
-
-  /**
+    /**
    * リアルタイム購読を設定
    */
-  subscribeToTable(tableName, callback) {
-    if (!this.isAvailable()) {
-      throw new Error('Supabase is not available');
+    subscribeToTable(tableName, callback) {
+        if (!this.isAvailable()) {
+            throw new Error('Supabase is not available');
+        }
+
+        try {
+            return this.client
+                .channel(`${tableName}_changes`)
+                .on('postgres_changes', {
+                    event: '*',
+                    schema: 'public',
+                    table: tableName
+                }, callback)
+                .subscribe();
+        } catch (error) {
+            console.error(`Failed to subscribe to ${tableName}:`, error);
+            throw error;
+        }
     }
 
-    try {
-      return this.client
-        .channel(`${tableName}_changes`)
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: tableName
-        }, callback)
-        .subscribe();
-    } catch (error) {
-      console.error(`Failed to subscribe to ${tableName}:`, error);
-      throw error;
-    }
-  }
-
-  /**
+    /**
    * 接続状態をチェック
    */
-  async checkConnection() {
-    if (!this.isAvailable()) {
-      return false;
+    async checkConnection() {
+        if (!this.isAvailable()) {
+            return false;
+        }
+
+        try {
+            const { data, error } = await this.client
+                .from('workout_sessions')
+                .select('count')
+                .limit(1);
+
+            return !error;
+        } catch (error) {
+            console.error('Connection check failed:', error);
+            return false;
+        }
     }
 
-    try {
-      const { data, error } = await this.client
-        .from('workout_sessions')
-        .select('count')
-        .limit(1);
-
-      return !error;
-    } catch (error) {
-      console.error('Connection check failed:', error);
-      return false;
-    }
-  }
-
-  /**
+    /**
    * オフライン同期キューを処理
    */
-  async processOfflineQueue() {
-    try {
-      const offlineQueue = JSON.parse(localStorage.getItem('offlineWorkoutQueue') || '[]');
-      
-      if (offlineQueue.length === 0) {
-        return { synced: 0, failed: 0 };
-      }
-
-      let synced = 0;
-      let failed = 0;
-
-      for (const item of offlineQueue) {
+    async processOfflineQueue() {
         try {
-          await this.saveWorkout(item.data);
-          this.removeFromOfflineQueue(item.id);
-          synced++;
+            const offlineQueue = JSON.parse(localStorage.getItem('offlineWorkoutQueue') || '[]');
+
+            if (offlineQueue.length === 0) {
+                return { synced: 0, failed: 0 };
+            }
+
+            let synced = 0;
+            let failed = 0;
+
+            for (const item of offlineQueue) {
+                try {
+                    await this.saveWorkout(item.data);
+                    this.removeFromOfflineQueue(item.id);
+                    synced++;
+                } catch (error) {
+                    console.error(`Failed to sync ${item.id}:`, error);
+                    failed++;
+                }
+            }
+
+            return { synced, failed };
         } catch (error) {
-          console.error(`Failed to sync ${item.id}:`, error);
-          failed++;
+            console.error('Failed to process offline queue:', error);
+            throw error;
         }
-      }
-
-      return { synced, failed };
-    } catch (error) {
-      console.error('Failed to process offline queue:', error);
-      throw error;
     }
-  }
 
-  /**
+    /**
    * オフラインキューからアイテムを削除
    */
-  removeFromOfflineQueue(id) {
-    try {
-      const offlineQueue = JSON.parse(localStorage.getItem('offlineWorkoutQueue') || '[]');
-      const filteredQueue = offlineQueue.filter(item => item.id !== id);
-      localStorage.setItem('offlineWorkoutQueue', JSON.stringify(filteredQueue));
-    } catch (error) {
-      console.error('Failed to remove from offline queue:', error);
+    removeFromOfflineQueue(id) {
+        try {
+            const offlineQueue = JSON.parse(localStorage.getItem('offlineWorkoutQueue') || '[]');
+            const filteredQueue = offlineQueue.filter(item => item.id !== id);
+            localStorage.setItem('offlineWorkoutQueue', JSON.stringify(filteredQueue));
+        } catch (error) {
+            console.error('Failed to remove from offline queue:', error);
+        }
     }
-  }
 
-  /**
+    /**
    * オフラインキューにアイテムを追加
    */
-  addToOfflineQueue(data) {
-    try {
-      const offlineQueue = JSON.parse(localStorage.getItem('offlineWorkoutQueue') || '[]');
-      const item = {
-        id: data.id || `offline_${Date.now()}`,
-        data,
-        timestamp: new Date().toISOString(),
-        retryCount: 0
-      };
-      
-      offlineQueue.push(item);
-      localStorage.setItem('offlineWorkoutQueue', JSON.stringify(offlineQueue));
-    } catch (error) {
-      console.error('Failed to add to offline queue:', error);
+    addToOfflineQueue(data) {
+        try {
+            const offlineQueue = JSON.parse(localStorage.getItem('offlineWorkoutQueue') || '[]');
+            const item = {
+                id: data.id || `offline_${Date.now()}`,
+                data,
+                timestamp: new Date().toISOString(),
+                retryCount: 0
+            };
+
+            offlineQueue.push(item);
+            localStorage.setItem('offlineWorkoutQueue', JSON.stringify(offlineQueue));
+        } catch (error) {
+            console.error('Failed to add to offline queue:', error);
+        }
     }
-  }
 }
 
 // シングルトンインスタンスをエクスポート

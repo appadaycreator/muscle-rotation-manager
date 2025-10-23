@@ -74,7 +74,8 @@ export default [
                 speechSynthesis: 'readonly',
                 requestAnimationFrame: 'readonly',
                 btoa: 'readonly',
-                atob: 'readonly'
+                atob: 'readonly',
+                process: 'readonly'
             }
         },
         rules: {
@@ -111,6 +112,14 @@ export default [
         files: ['**/*.html'],
         rules: {
             // HTMLファイル用のルール（必要に応じて追加）
+        }
+    },
+    {
+        files: ['js/utils/securityManager.js'],
+        rules: {
+            'no-eval': 'off',
+            'no-new-func': 'off',
+            'no-script-url': 'off'
         }
     },
     {
