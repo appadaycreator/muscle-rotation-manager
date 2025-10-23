@@ -31,7 +31,7 @@ class WorkoutPage {
             async () => {
                 await this.setupWorkoutInterface();
                 this.setupEventListeners();
-        this.initializeOfflineSync();
+                this.initializeOfflineSync();
             },
             'ワークアウトページの初期化'
         );
@@ -466,12 +466,12 @@ class WorkoutPage {
      * @returns {string} 経過時間
      */
     getElapsedTimeString() {
-        if (!this.startTime) return '0分';
-        
+        if (!this.startTime) {return '0分';}
+
         const elapsed = Math.floor((new Date() - this.startTime) / (1000 * 60));
         const hours = Math.floor(elapsed / 60);
         const minutes = elapsed % 60;
-        
+
         if (hours > 0) {
             return `${hours}時間${minutes}分`;
         }
@@ -485,7 +485,7 @@ class WorkoutPage {
     async completeWorkout(workoutData) {
         // データ保存
         await this.saveWorkoutData(workoutData);
-        
+
         // セッション完了をSupabaseに更新
         if (workoutData.sessionId && supabaseService.isAvailable()) {
             try {
@@ -495,13 +495,13 @@ class WorkoutPage {
                 console.error('セッション完了更新エラー:', error);
             }
         }
-        
+
         // 統計更新
         await this.updateWorkoutStatistics(workoutData);
-        
+
         // 筋肉回復データ更新
         await this.updateMuscleRecoveryData(workoutData);
-        
+
         console.log('🎉 ワークアウト完了処理が完了しました');
     }
 
@@ -513,17 +513,17 @@ class WorkoutPage {
         try {
             const recoveryData = JSON.parse(localStorage.getItem('muscleRecoveryData') || '{}');
             const today = new Date().toISOString().split('T')[0];
-            
+
             // 各筋肉部位の最終ワークアウト日を更新
             workoutData.muscleGroups.forEach(muscleGroup => {
                 recoveryData[muscleGroup] = {
                     lastWorkout: today,
                     workoutCount: (recoveryData[muscleGroup]?.workoutCount || 0) + 1,
-                    totalSets: (recoveryData[muscleGroup]?.totalSets || 0) + 
+                    totalSets: (recoveryData[muscleGroup]?.totalSets || 0) +
                               workoutData.exercises.reduce((sum, ex) => sum + ex.sets, 0)
                 };
             });
-            
+
             localStorage.setItem('muscleRecoveryData', JSON.stringify(recoveryData));
             console.log('💪 筋肉回復データを更新しました:', recoveryData);
         } catch (error) {
@@ -539,7 +539,7 @@ class WorkoutPage {
         const totalSets = workoutData.exercises.reduce((sum, ex) => sum + ex.sets, 0);
         const totalReps = workoutData.exercises.reduce((sum, ex) => sum + (ex.reps * ex.sets), 0);
         const maxWeight = Math.max(...workoutData.exercises.map(ex => ex.weight));
-        
+
         const modalHtml = `
             <div id="workout-summary-modal" 
                  class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -662,7 +662,7 @@ class WorkoutPage {
 
                 // 統計情報を更新
                 await this.updateWorkoutStatistics(workoutData);
-                
+
                 console.log('✅ ワークアウトデータをSupabaseに保存しました');
             } else {
                 // オフライン時はローカルストレージに保存
@@ -695,10 +695,10 @@ class WorkoutPage {
             savedAt: new Date().toISOString(),
             syncStatus: 'pending'
         };
-        
+
         history.unshift(enhancedData);
         localStorage.setItem('workoutHistory', JSON.stringify(history.slice(0, 50)));
-        
+
         // オフライン同期キューに追加
         const syncQueue = JSON.parse(localStorage.getItem('offlineWorkoutQueue') || '[]');
         syncQueue.push({
@@ -717,12 +717,12 @@ class WorkoutPage {
      */
     getMuscleGroupId(muscleName) {
         const muscleMap = {
-            'chest': 'chest',
-            'back': 'back', 
-            'shoulders': 'shoulders',
-            'arms': 'arms',
-            'legs': 'legs',
-            'abs': 'abs'
+            chest: 'chest',
+            back: 'back',
+            shoulders: 'shoulders',
+            arms: 'arms',
+            legs: 'legs',
+            abs: 'abs'
         };
         return muscleMap[muscleName] || muscleName;
     }
@@ -736,7 +736,7 @@ class WorkoutPage {
             // ローカル統計を更新
             const stats = JSON.parse(localStorage.getItem('workoutStats') || '{}');
             const today = new Date().toISOString().split('T')[0];
-            
+
             if (!stats[today]) {
                 stats[today] = {
                     workouts: 0,
@@ -745,7 +745,7 @@ class WorkoutPage {
                     muscleGroups: []
                 };
             }
-            
+
             stats[today].workouts += 1;
             stats[today].exercises += workoutData.exercises.length;
             stats[today].duration += workoutData.duration;
@@ -753,9 +753,9 @@ class WorkoutPage {
                 ...stats[today].muscleGroups,
                 ...workoutData.muscleGroups
             ])];
-            
+
             localStorage.setItem('workoutStats', JSON.stringify(stats));
-            
+
             console.log('📊 統計情報を更新しました:', stats[today]);
         } catch (error) {
             console.error('統計更新エラー:', error);
@@ -974,7 +974,7 @@ class WorkoutPage {
         this.exercises.push(exercise);
         if (this.currentWorkout) {
             this.currentWorkout.exercises.push(exercise);
-            
+
             // リアルタイム保存（エクササイズ追加時）
             await this.saveExerciseRealtime(exercise);
         }
@@ -984,7 +984,7 @@ class WorkoutPage {
         this.hideExerciseModal();
 
         showNotification(`${exercise.name}を追加しました`, 'success');
-        
+
         console.log('✅ エクササイズを追加:', exercise);
     }
 
@@ -1168,12 +1168,12 @@ class WorkoutPage {
                 try {
                     await this.syncSingleWorkout(item.data);
                     syncedCount++;
-                    
+
                     // 同期成功したアイテムをキューから削除
                     const updatedQueue = JSON.parse(localStorage.getItem('offlineWorkoutQueue') || '[]')
                         .filter(queueItem => queueItem.id !== item.id);
                     localStorage.setItem('offlineWorkoutQueue', JSON.stringify(updatedQueue));
-                    
+
                 } catch (error) {
                     console.error(`❌ 同期失敗 (ID: ${item.id}):`, error);
                     failedCount++;
@@ -1236,7 +1236,7 @@ class WorkoutPage {
         const syncQueue = JSON.parse(localStorage.getItem('offlineWorkoutQueue') || '[]');
         if (syncQueue.length > 0) {
             console.log(`📋 ${syncQueue.length}件の未同期データがあります`);
-            
+
             if (navigator.onLine && supabaseService.isAvailable() && supabaseService.getCurrentUser()) {
                 showNotification(`${syncQueue.length}件の未同期データを同期中...`, 'info');
                 await this.syncOfflineData();
@@ -1262,10 +1262,10 @@ class WorkoutPage {
 
             // ローカルデータを追加
             const localHistory = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
-            
+
             // 重複を除去してマージ
             const allWorkouts = [...workouts, ...localHistory];
-            const uniqueWorkouts = allWorkouts.filter((workout, index, self) => 
+            const uniqueWorkouts = allWorkouts.filter((workout, index, self) =>
                 index === self.findIndex(w => w.id === workout.id)
             );
 
@@ -1287,26 +1287,26 @@ class WorkoutPage {
         try {
             const localHistory = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
             const syncQueue = JSON.parse(localStorage.getItem('offlineWorkoutQueue') || '[]');
-            
+
             console.log('📊 データ整合性チェック:');
             console.log(`  - ローカル履歴: ${localHistory.length}件`);
             console.log(`  - 未同期キュー: ${syncQueue.length}件`);
-            
+
             // 重複チェック
-            const duplicates = localHistory.filter((item, index, self) => 
+            const duplicates = localHistory.filter((item, index, self) =>
                 index !== self.findIndex(other => other.id === item.id)
             );
-            
+
             if (duplicates.length > 0) {
                 console.warn(`⚠️ 重複データを検出: ${duplicates.length}件`);
                 // 重複を削除
-                const uniqueHistory = localHistory.filter((item, index, self) => 
+                const uniqueHistory = localHistory.filter((item, index, self) =>
                     index === self.findIndex(other => other.id === item.id)
                 );
                 localStorage.setItem('workoutHistory', JSON.stringify(uniqueHistory));
                 console.log('✅ 重複データを削除しました');
             }
-            
+
             return {
                 localCount: localHistory.length,
                 pendingSync: syncQueue.length,

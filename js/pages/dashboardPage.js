@@ -1,6 +1,7 @@
 // dashboardPage.js - ダッシュボードページの機能
 
 import { supabaseService } from '../services/supabaseService.js';
+import recommendationService from '../services/recommendationService.js';
 import { showNotification, createErrorHTML, formatWorkoutDate, getDaysAgo, getWorkoutColor, parseExercises } from '../utils/helpers.js';
 import { MUSCLE_GROUPS } from '../utils/constants.js';
 
@@ -53,9 +54,170 @@ class DashboardPage {
     handleMusclePartClick(muscle) {
         const muscleGroup = MUSCLE_GROUPS.find(group => group.id === muscle);
         if (muscleGroup) {
-            showNotification(`${muscleGroup.name}の詳細を表示します`, 'info');
-            // 将来的にはワークアウトページに遷移するなどの処理を追加
+            this.showMuscleDetails(muscle);
         }
+    }
+
+    /**
+     * 推奨詳細を表示
+     * @param {number} index - 推奨事項のインデックス
+     */
+    showRecommendationDetails(index) {
+        const recommendation = this.recommendations[index];
+        if (!recommendation || !recommendation.muscleId) {return;}
+
+        const details = recommendationService.getRecommendationDetails(recommendation.muscleId);
+        if (!details) {return;}
+
+        const modalContent = `
+            <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" 
+                 onclick="this.remove()">
+                <div class="bg-white rounded-lg p-6 max-w-md mx-4" onclick="event.stopPropagation()">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">
+                            ${details.muscleName}の推奨理由
+                        </h3>
+                        <button onclick="this.closest('.fixed').remove()" 
+                                class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <h4 class="font-medium text-gray-700 mb-2">科学的根拠</h4>
+                            <p class="text-sm text-gray-600">${details.scientificBasis}</p>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-medium text-gray-700 mb-2">回復メカニズム</h4>
+                            <p class="text-sm text-gray-600">${details.recoveryScience}</p>
+                        </div>
+                        
+                        <div class="bg-gray-50 p-3 rounded-lg">
+                            <h4 class="font-medium text-gray-700 mb-2">詳細情報</h4>
+                            <ul class="text-sm text-gray-600 space-y-1">
+                                <li>• 筋肉カテゴリ: ${details.category === 'large' ? '大筋群' : details.category === 'medium' ? '中筋群' : '小筋群'}</li>
+                                <li>• 標準回復時間: ${details.recoveryHours}時間</li>
+                                <li>• あなたの体力レベル: ${this.getFitnessLevelName(details.userFitnessLevel)}</li>
+                                <li>• 回復時間調整: ${Math.round((details.fitnessLevelAdjustment - 1) * 100)}%</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="flex space-x-2">
+                            <button onclick="this.closest('.fixed').remove(); window.pageManager?.showPage('workout')" 
+                                    class="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                                ワークアウト開始
+                            </button>
+                            <button onclick="this.closest('.fixed').remove()" 
+                                    class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                                閉じる
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalContent);
+    }
+
+    /**
+     * 筋肉詳細を表示
+     * @param {string} muscleId - 筋肉部位ID
+     */
+    showMuscleDetails(muscleId) {
+        const muscleData = this.muscleRecoveryData.find(m => m.id === muscleId);
+        if (!muscleData) {return;}
+
+        const modalContent = `
+            <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" 
+                 onclick="this.remove()">
+                <div class="bg-white rounded-lg p-6 max-w-md mx-4" onclick="event.stopPropagation()">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">
+                            <i class="fas fa-male ${muscleData.iconColor} mr-2"></i>
+                            ${muscleData.name}の状態
+                        </h3>
+                        <button onclick="this.closest('.fixed').remove()" 
+                                class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="text-center">
+                            <div class="text-3xl font-bold ${muscleData.recoveryColor} mb-2">
+                                ${muscleData.recovery}%
+                            </div>
+                            <div class="text-sm text-gray-600">回復度</div>
+                            <div class="w-full bg-gray-200 rounded-full h-3 mt-2">
+                                <div class="recovery-bar ${muscleData.recoveryClass} rounded-full h-3" 
+                                     style="width: ${muscleData.recovery}%;"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <div class="text-gray-500">最終トレーニング</div>
+                                <div class="font-medium">${muscleData.lastTrained}</div>
+                            </div>
+                            <div>
+                                <div class="text-gray-500">次回推奨</div>
+                                <div class="font-medium">${muscleData.nextRecommended}</div>
+                            </div>
+                        </div>
+                        
+                        ${muscleData.recoveryFactors ? `
+                            <div class="bg-gray-50 p-3 rounded-lg">
+                                <h4 class="font-medium text-gray-700 mb-2">回復計算詳細</h4>
+                                <ul class="text-xs text-gray-600 space-y-1">
+                                    <li>• 基本回復時間: ${muscleData.recoveryFactors.baseHours}時間</li>
+                                    <li>• 前回強度: ${muscleData.recoveryFactors.lastIntensity}</li>
+                                    <li>• 強度調整: ×${muscleData.recoveryFactors.intensityMultiplier}</li>
+                                    <li>• 体力レベル調整: ×${muscleData.recoveryFactors.fitnessMultiplier}</li>
+                                </ul>
+                            </div>
+                        ` : ''}
+                        
+                        <div class="flex space-x-2">
+                            ${muscleData.isReady ? `
+                                <button onclick="this.closest('.fixed').remove(); window.pageManager?.showPage('workout')" 
+                                        class="flex-1 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
+                                    トレーニング開始
+                                </button>
+                            ` : `
+                                <button disabled 
+                                        class="flex-1 bg-gray-300 text-gray-500 px-4 py-2 rounded-lg cursor-not-allowed">
+                                    回復中（${muscleData.hoursUntilRecovery}時間後）
+                                </button>
+                            `}
+                            <button onclick="this.closest('.fixed').remove()" 
+                                    class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                                閉じる
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalContent);
+    }
+
+    /**
+     * 体力レベル名を取得
+     * @param {string} level - 体力レベル
+     * @returns {string} 日本語名
+     */
+    getFitnessLevelName(level) {
+        const levelNames = {
+            beginner: '初心者',
+            intermediate: '中級者',
+            advanced: '上級者',
+            expert: 'エキスパート'
+        };
+        return levelNames[level] || '中級者';
     }
 
     /**
@@ -78,10 +240,22 @@ class DashboardPage {
                 return;
             }
 
-            container.innerHTML = this.recommendations.map(rec => `
-                <div class="flex items-center space-x-3 p-3 ${rec.bgColor} rounded-lg">
+            container.innerHTML = this.recommendations.map((rec, index) => `
+                <div class="flex items-center space-x-3 p-3 ${rec.bgColor} rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                     onclick="dashboardPage.showRecommendationDetails(${index})">
                     <div class="w-3 h-3 ${rec.dotColor} rounded-full"></div>
-                    <span class="${rec.textColor}">${rec.message}</span>
+                    <div class="flex-1">
+                        <span class="${rec.textColor}">${rec.message}</span>
+                        ${rec.scientificBasis ? `
+                            <div class="text-xs ${rec.textColor} opacity-75 mt-1">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                科学的根拠: ${rec.scientificBasis}
+                            </div>
+                        ` : ''}
+                    </div>
+                    ${rec.type === 'primary' || rec.type === 'secondary' ? `
+                        <i class="fas fa-chevron-right ${rec.textColor} opacity-50"></i>
+                    ` : ''}
                 </div>
             `).join('');
 
@@ -199,47 +373,37 @@ class DashboardPage {
     }
 
     /**
-     * 推奨事項を取得（モック）
+     * 推奨事項を取得（科学的根拠に基づく）
      * @returns {Promise<Array>} 推奨事項配列
      */
     async getRecommendations() {
-        // 実際のAPIコールに置き換える
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        // モックデータ
-        return [
-            {
-                message: '今日は胸筋のトレーニングがおすすめです',
-                bgColor: 'bg-blue-50',
-                dotColor: 'bg-blue-500',
-                textColor: 'text-blue-700'
-            },
-            {
-                message: '前回から48時間経過しています',
-                bgColor: 'bg-green-50',
-                dotColor: 'bg-green-500',
-                textColor: 'text-green-700'
-            }
-        ];
+        try {
+            return await recommendationService.getRecommendations();
+        } catch (error) {
+            console.error('推奨事項の取得に失敗:', error);
+            return recommendationService.getFallbackRecommendations();
+        }
     }
 
     /**
-     * 筋肉回復データを取得（モック）
+     * 筋肉回復データを取得（科学的根拠に基づく）
      * @returns {Promise<Array>} 筋肉回復データ配列
      */
     async getMuscleRecoveryData() {
-        // 実際のAPIコールに置き換える
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        // モックデータ
-        return MUSCLE_GROUPS.map((muscle, index) => ({
-            ...muscle,
-            lastTrained: `${index + 1}日前`,
-            recovery: Math.floor(Math.random() * 100),
-            recoveryColor: 'text-green-600',
-            recoveryClass: 'bg-green-500',
-            nextRecommended: '明日'
-        }));
+        try {
+            return await recommendationService.getMuscleRecoveryData();
+        } catch (error) {
+            console.error('筋肉回復データの取得に失敗:', error);
+            // フォールバック: 基本的なモックデータを返す
+            return MUSCLE_GROUPS.map((muscle, index) => ({
+                ...muscle,
+                lastTrained: `${index + 1}日前`,
+                recovery: Math.floor(Math.random() * 100),
+                recoveryColor: 'text-green-600',
+                recoveryClass: 'bg-green-500',
+                nextRecommended: '明日'
+            }));
+        }
     }
 
     /**

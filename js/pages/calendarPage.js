@@ -1,14 +1,30 @@
 // calendarPage.js - カレンダーページの機能
 
 import { supabaseService } from '../services/supabaseService.js';
-import { showNotification, formatDate, getWorkoutColor } from '../utils/helpers.js';
+import {
+    showNotification,
+    formatDate,
+    getWorkoutColor,
+    getMuscleColor,
+    getMuscleBgColor,
+    getMuscleTextColor,
+    isFutureDate,
+    isPastDate,
+    isTodayDate,
+    createCalendarModalHTML,
+    safeGetElement,
+    escapeHtml,
+    showInputDialog
+} from '../utils/helpers.js';
 import { MUSCLE_GROUPS } from '../utils/constants.js';
 
 class CalendarPage {
     constructor() {
         this.currentDate = new Date();
         this.workoutData = [];
+        this.plannedWorkouts = [];
         this.selectedDate = null;
+        this.isLoading = false;
     }
 
     /**
@@ -33,15 +49,43 @@ class CalendarPage {
      */
     async loadWorkoutData() {
         try {
+            this.isLoading = true;
+
             if (supabaseService.isAvailable() && supabaseService.getCurrentUser()) {
-                this.workoutData = await supabaseService.getWorkouts(100);
+                // Supabaseからデータを取得
+                this.workoutData = await supabaseService.getWorkouts(200);
+
+                // 予定されたワークアウトも取得（将来の機能拡張用）
+                this.plannedWorkouts = await this.loadPlannedWorkouts();
             } else {
                 // ローカルストレージから読み込み
                 this.workoutData = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
+                this.plannedWorkouts = JSON.parse(localStorage.getItem('plannedWorkouts') || '[]');
             }
+
+            console.log(`Loaded ${this.workoutData.length} workouts and ${this.plannedWorkouts.length} planned workouts`);
         } catch (error) {
             console.error('Error loading workout data:', error);
             this.workoutData = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
+            this.plannedWorkouts = JSON.parse(localStorage.getItem('plannedWorkouts') || '[]');
+            showNotification('ワークアウトデータの読み込みに失敗しました', 'error');
+        } finally {
+            this.isLoading = false;
+        }
+    }
+
+    /**
+     * 予定されたワークアウトを読み込み（将来の機能拡張用）
+     * @returns {Array} 予定されたワークアウト配列
+     */
+    async loadPlannedWorkouts() {
+        try {
+            // 将来的にはSupabaseから予定データを取得
+            // 現在はローカルストレージから取得
+            return JSON.parse(localStorage.getItem('plannedWorkouts') || '[]');
+        } catch (error) {
+            console.error('Error loading planned workouts:', error);
+            return [];
         }
     }
 
@@ -82,28 +126,42 @@ class CalendarPage {
                     <div class="calendar-grid">
                         <!-- 曜日ヘッダー -->
                         <div class="grid grid-cols-7 gap-1 mb-2">
-                            <div class="text-center text-sm font-medium text-gray-600 py-2">日</div>
+                            <div class="text-center text-sm font-medium text-red-500 py-2">日</div>
                             <div class="text-center text-sm font-medium text-gray-600 py-2">月</div>
                             <div class="text-center text-sm font-medium text-gray-600 py-2">火</div>
                             <div class="text-center text-sm font-medium text-gray-600 py-2">水</div>
                             <div class="text-center text-sm font-medium text-gray-600 py-2">木</div>
                             <div class="text-center text-sm font-medium text-gray-600 py-2">金</div>
-                            <div class="text-center text-sm font-medium text-gray-600 py-2">土</div>
+                            <div class="text-center text-sm font-medium text-blue-500 py-2">土</div>
                         </div>
                         
                         <!-- 日付グリッド -->
                         <div id="calendar-dates" class="grid grid-cols-7 gap-1">
+                            <!-- ローディング表示 -->
+                            <div id="calendar-loading" class="col-span-7 text-center py-8 hidden">
+                                <i class="fas fa-spinner fa-spin text-2xl text-gray-400 mb-2"></i>
+                                <p class="text-gray-500">カレンダーを読み込み中...</p>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 選択された日の詳細 -->
-                <div id="date-details" class="bg-white rounded-lg shadow-md p-6 hidden">
+                <!-- カレンダー凡例 -->
+                <div class="bg-white rounded-lg shadow-md p-6">
                     <h3 class="text-lg font-bold text-gray-800 mb-4">
-                        <i class="fas fa-info-circle text-green-500 mr-2"></i>
-                        <span id="selected-date-title"></span>
+                        <i class="fas fa-palette text-purple-500 mr-2"></i>
+                        部位別色分け
                     </h3>
-                    <div id="date-workout-list" class="space-y-3">
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                        ${MUSCLE_GROUPS.map(group => `
+                            <div class="flex items-center space-x-2 p-2 rounded-lg ${group.bgColor}">
+                                <div class="w-4 h-4 ${group.color} rounded-full"></div>
+                                <span class="text-sm font-medium ${group.textColor}">${group.name}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="mt-4 text-sm text-gray-600">
+                        <p><i class="fas fa-info-circle mr-1"></i>各日付の色付きドットは、その日に行ったトレーニング部位を表します</p>
                     </div>
                 </div>
 
@@ -179,13 +237,23 @@ class CalendarPage {
      * カレンダーの日付をレンダリング
      */
     renderCalendarDates() {
-        const datesContainer = document.getElementById('calendar-dates');
+        const datesContainer = safeGetElement('#calendar-dates');
+        const loadingElement = safeGetElement('#calendar-loading');
+
         if (!datesContainer) {return;}
+
+        // ローディング表示
+        if (this.isLoading && loadingElement) {
+            loadingElement.classList.remove('hidden');
+            return;
+        } else if (loadingElement) {
+            loadingElement.classList.add('hidden');
+        }
 
         const year = this.currentDate.getFullYear();
         const month = this.currentDate.getMonth();
 
-        // 月の最初の日と最後の日
+        // 月の最初の日
         const firstDay = new Date(year, month, 1);
 
         // 最初の週の開始日（日曜日から）
@@ -200,16 +268,26 @@ class CalendarPage {
             for (let day = 0; day < 7; day++) {
                 const dateStr = this.formatDateString(currentDate);
                 const workouts = this.getWorkoutsForDate(dateStr);
+                const plannedWorkouts = this.getPlannedWorkoutsForDate(dateStr);
                 const isCurrentMonth = currentDate.getMonth() === month;
                 const isToday = this.isToday(currentDate);
+                const isFuture = isFutureDate(dateStr);
+                const isPast = isPastDate(dateStr);
+                const isSunday = currentDate.getDay() === 0;
+                const isSaturday = currentDate.getDay() === 6;
 
                 dates.push({
                     date: new Date(currentDate),
                     dateStr,
                     day: currentDate.getDate(),
                     workouts,
+                    plannedWorkouts,
                     isCurrentMonth,
-                    isToday
+                    isToday,
+                    isFuture,
+                    isPast,
+                    isSunday,
+                    isSaturday
                 });
 
                 currentDate.setDate(currentDate.getDate() + 1);
@@ -218,24 +296,64 @@ class CalendarPage {
 
         // 日付セルをレンダリング
         datesContainer.innerHTML = dates.map(dateInfo => {
+            // 実際のワークアウトドット
             const workoutDots = dateInfo.workouts.map(workout => {
-                const color = getWorkoutColor(workout.name || workout.muscle_groups?.[0] || '');
-                return `<div class="w-2 h-2 ${color} rounded-full"></div>`;
+                const muscles = Array.isArray(workout.muscle_groups) ?
+                    workout.muscle_groups : [workout.muscle_groups || 'chest'];
+                return muscles.map(muscle => {
+                    const color = getMuscleColor(muscle);
+                    return `<div class="w-2 h-2 ${color} rounded-full shadow-sm" title="${muscle}"></div>`;
+                }).join('');
             }).join('');
 
+            // 予定されたワークアウトドット
+            const plannedDots = dateInfo.plannedWorkouts.map(workout => {
+                const muscles = Array.isArray(workout.muscle_groups) ?
+                    workout.muscle_groups : [workout.muscle_groups || 'chest'];
+                return muscles.map(muscle => {
+                    const color = getMuscleColor(muscle);
+                    return `<div class="w-2 h-2 ${color} rounded-full opacity-50 border border-white" title="予定: ${muscle}"></div>`;
+                }).join('');
+            }).join('');
+
+            // セルの背景色とスタイル
+            let cellClasses = 'calendar-date-cell h-20 md:h-24 p-1 border border-gray-200 cursor-pointer transition-all duration-200 hover:shadow-md';
+
+            if (!dateInfo.isCurrentMonth) {
+                cellClasses += ' bg-gray-50 text-gray-400';
+            } else if (dateInfo.isToday) {
+                cellClasses += ' bg-blue-50 border-blue-300 shadow-sm';
+            } else if (dateInfo.isFuture) {
+                cellClasses += ' bg-white hover:bg-green-50';
+            } else {
+                cellClasses += ' bg-white hover:bg-gray-50';
+            }
+
+            // 日曜日と土曜日の色分け
+            let dayTextColor = dateInfo.isCurrentMonth ? 'text-gray-800' : 'text-gray-400';
+            if (dateInfo.isToday) {
+                dayTextColor = 'text-blue-600 font-bold';
+            } else if (dateInfo.isSunday && dateInfo.isCurrentMonth) {
+                dayTextColor = 'text-red-500';
+            } else if (dateInfo.isSaturday && dateInfo.isCurrentMonth) {
+                dayTextColor = 'text-blue-500';
+            }
+
             return `
-                <div class="calendar-date-cell h-20 p-1 border border-gray-200 
-                     ${dateInfo.isCurrentMonth ? 'bg-white hover:bg-gray-50' : 'bg-gray-100'} 
-                     ${dateInfo.isToday ? 'bg-blue-50 border-blue-300' : ''} 
-                     cursor-pointer transition-colors"
-                     data-date="${dateInfo.dateStr}">
-                    <div class="text-sm ${dateInfo.isCurrentMonth ? 'text-gray-800' : 'text-gray-400'} 
-                         ${dateInfo.isToday ? 'font-bold text-blue-600' : ''}">
+                <div class="${cellClasses}" data-date="${dateInfo.dateStr}">
+                    <div class="text-sm ${dayTextColor} mb-1">
                         ${dateInfo.day}
                     </div>
-                    <div class="flex flex-wrap gap-1 mt-1">
+                    <div class="flex flex-wrap gap-0.5 overflow-hidden">
                         ${workoutDots}
+                        ${plannedDots}
                     </div>
+                    ${dateInfo.workouts.length > 0 || dateInfo.plannedWorkouts.length > 0 ? `
+                        <div class="text-xs text-gray-500 mt-1 truncate">
+                            ${dateInfo.workouts.length > 0 ? `${dateInfo.workouts.length}件` : ''}
+                            ${dateInfo.plannedWorkouts.length > 0 ? ` 予${dateInfo.plannedWorkouts.length}件` : ''}
+                        </div>
+                    ` : ''}
                 </div>
             `;
         }).join('');
@@ -256,7 +374,7 @@ class CalendarPage {
      */
     getWorkoutsForDate(dateStr) {
         return this.workoutData.filter(workout => {
-            const workoutDate = workout.date || workout.startTime;
+            const workoutDate = workout.date || workout.startTime || workout.workout_date;
             if (!workoutDate) {return false;}
 
             const date = new Date(workoutDate);
@@ -265,50 +383,57 @@ class CalendarPage {
     }
 
     /**
-     * 日付を選択
+     * 指定日の予定されたワークアウトを取得
+     * @param {string} dateStr - 日付文字列 (YYYY-MM-DD)
+     * @returns {Array} 予定されたワークアウト配列
+     */
+    getPlannedWorkoutsForDate(dateStr) {
+        return this.plannedWorkouts.filter(workout => {
+            const plannedDate = workout.planned_date || workout.date;
+            if (!plannedDate) {return false;}
+
+            const date = new Date(plannedDate);
+            return this.formatDateString(date) === dateStr;
+        });
+    }
+
+    /**
+     * 日付を選択してモーダルを表示
      * @param {string} dateStr - 日付文字列
      */
     selectDate(dateStr) {
         this.selectedDate = dateStr;
         const workouts = this.getWorkoutsForDate(dateStr);
+        const plannedWorkouts = this.getPlannedWorkoutsForDate(dateStr);
 
-        const detailsContainer = document.getElementById('date-details');
-        const titleElement = document.getElementById('selected-date-title');
-        const listElement = document.getElementById('date-workout-list');
-
-        if (!detailsContainer || !titleElement || !listElement) {return;}
-
-        // タイトルを更新
-        titleElement.textContent = formatDate(dateStr);
-
-        if (workouts.length === 0) {
-            listElement.innerHTML = `
-                <div class="text-center text-gray-500 py-4">
-                    <i class="fas fa-info-circle text-xl mb-2"></i>
-                    <p>この日はトレーニングを行っていません</p>
-                </div>
-            `;
-        } else {
-            listElement.innerHTML = workouts.map(workout => `
-                <div class="bg-gray-50 rounded-lg p-4">
-                    <div class="flex items-center justify-between mb-2">
-                        <h4 class="font-semibold text-gray-800">
-                            ${workout.name || 'ワークアウト'}
-                        </h4>
-                        <span class="text-sm text-gray-500">
-                            ${workout.duration ? `${Math.floor(workout.duration / 60)}分` : ''}
-                        </span>
-                    </div>
-                    <div class="text-sm text-gray-600">
-                        ${Array.isArray(workout.muscle_groups) ?
-        workout.muscle_groups.join(', ') :
-        workout.muscle_groups || '部位不明'}
-                    </div>
-                </div>
-            `).join('');
+        // 既存のモーダルを削除
+        const existingModal = document.getElementById('calendar-modal');
+        if (existingModal) {
+            existingModal.remove();
         }
 
-        detailsContainer.classList.remove('hidden');
+        // 新しいモーダルを作成
+        const modalHTML = createCalendarModalHTML(dateStr, workouts, plannedWorkouts);
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+        // モーダルのクリックイベント（背景クリックで閉じる）
+        const modal = document.getElementById('calendar-modal');
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+
+            // ESCキーで閉じる
+            const handleEscape = (e) => {
+                if (e.key === 'Escape') {
+                    modal.remove();
+                    document.removeEventListener('keydown', handleEscape);
+                }
+            };
+            document.addEventListener('keydown', handleEscape);
+        }
     }
 
     /**
@@ -418,7 +543,86 @@ class CalendarPage {
         const today = new Date();
         return this.formatDateString(date) === this.formatDateString(today);
     }
+
+    /**
+     * 予定されたワークアウトを追加
+     * @param {string} dateStr - 日付文字列
+     * @param {Object} workoutData - ワークアウトデータ
+     */
+    async addPlannedWorkout(dateStr, workoutData) {
+        try {
+            const plannedWorkout = {
+                id: `planned_${Date.now()}`,
+                planned_date: dateStr,
+                name: workoutData.name || 'トレーニング予定',
+                muscle_groups: workoutData.muscle_groups || ['chest'],
+                created_at: new Date().toISOString()
+            };
+
+            this.plannedWorkouts.push(plannedWorkout);
+
+            // ローカルストレージに保存
+            localStorage.setItem('plannedWorkouts', JSON.stringify(this.plannedWorkouts));
+
+            // カレンダーを再描画
+            this.renderCalendar();
+
+            showNotification('トレーニング予定を追加しました', 'success');
+        } catch (error) {
+            console.error('Error adding planned workout:', error);
+            showNotification('予定の追加に失敗しました', 'error');
+        }
+    }
+
+    /**
+     * 予定されたワークアウトを削除
+     * @param {string} plannedWorkoutId - 予定ID
+     */
+    async removePlannedWorkout(plannedWorkoutId) {
+        try {
+            this.plannedWorkouts = this.plannedWorkouts.filter(
+                workout => workout.id !== plannedWorkoutId
+            );
+
+            // ローカルストレージを更新
+            localStorage.setItem('plannedWorkouts', JSON.stringify(this.plannedWorkouts));
+
+            // カレンダーを再描画
+            this.renderCalendar();
+
+            showNotification('予定を削除しました', 'success');
+        } catch (error) {
+            console.error('Error removing planned workout:', error);
+            showNotification('予定の削除に失敗しました', 'error');
+        }
+    }
 }
 
+// グローバル関数として予定追加機能を公開
+window.addPlannedWorkout = async function(dateStr) {
+    // カスタム入力ダイアログを使用
+    const workoutName = await showInputDialog('トレーニング名を入力してください:', 'トレーニング');
+    if (!workoutName) {return;}
+
+    const muscleGroups = await showInputDialog('対象部位を入力してください (例: chest,back):', 'chest');
+    const muscles = muscleGroups ? muscleGroups.split(',').map(m => m.trim()) : ['chest'];
+
+    const calendarPage = window.calendarPageInstance;
+    if (calendarPage) {
+        calendarPage.addPlannedWorkout(dateStr, {
+            name: workoutName,
+            muscle_groups: muscles
+        });
+
+        // モーダルを閉じる
+        const modal = document.getElementById('calendar-modal');
+        if (modal) {
+            modal.remove();
+        }
+    }
+};
+
 // デフォルトエクスポート
-export default new CalendarPage();
+const calendarPage = new CalendarPage();
+window.calendarPageInstance = calendarPage;
+export default calendarPage;

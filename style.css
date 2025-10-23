@@ -234,4 +234,251 @@ body {
     .no-print { display: none; }
     body { font-size: 12px; }
     .container { max-width: none; }
+}
+
+/* カレンダー専用スタイル */
+.calendar-container {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.calendar-date-cell {
+    position: relative;
+    overflow: hidden;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.calendar-date-cell:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-grid {
+    user-select: none;
+}
+
+/* カレンダーモーダル */
+.calendar-modal {
+    backdrop-filter: blur(4px);
+}
+
+.calendar-modal .modal-content {
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* 部位別色分けの改善 */
+.muscle-legend {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.muscle-legend-item {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.muscle-legend-item:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* カレンダーナビゲーション */
+.calendar-nav-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.calendar-nav-button:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    transform: scale(1.05);
+}
+
+.calendar-nav-button:active {
+    transform: scale(0.95);
+}
+
+/* 統計カードのスタイル */
+.stats-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.stats-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* カレンダーローディング */
+.calendar-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    color: #6b7280;
+}
+
+.calendar-loading .spinner {
+    width: 2rem;
+    height: 2rem;
+    margin-bottom: 1rem;
+}
+
+/* ワークアウトドットのアニメーション */
+.workout-dot {
+    animation: dotPulse 2s infinite;
+}
+
+.workout-dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.workout-dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes dotPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+}
+
+/* ホバー効果の改善 */
+.calendar-date-cell:hover .workout-dot {
+    animation-play-state: paused;
+    transform: scale(1.2);
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    /* カレンダーのモバイル対応 */
+    .calendar-date-cell {
+        min-height: 60px;
+        font-size: 0.875rem;
+    }
+    
+    .calendar-grid {
+        gap: 1px;
+    }
+    
+    .workout-dot {
+        width: 6px;
+        height: 6px;
+        margin: 0.5px;
+    }
+    
+    /* モーダルのモバイル対応 */
+    .calendar-modal .modal-content {
+        margin: 1rem;
+        max-height: calc(100vh - 2rem);
+    }
+    
+    /* 凡例のモバイル対応 */
+    .muscle-legend {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .muscle-legend-item {
+        padding: 0.375rem;
+        font-size: 0.75rem;
+    }
+}
+
+@media (min-width: 769px) {
+    /* デスクトップでのカレンダー表示 */
+    .calendar-date-cell {
+        min-height: 96px;
+    }
+    
+    .muscle-legend {
+        grid-template-columns: repeat(6, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    /* 大画面での最適化 */
+    .calendar-date-cell {
+        min-height: 120px;
+    }
+    
+    .calendar-grid {
+        gap: 2px;
+    }
+}
+
+/* タブレット対応 */
+@media (min-width: 640px) and (max-width: 1023px) {
+    .calendar-date-cell {
+        min-height: 80px;
+    }
+    
+    .muscle-legend {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* アクセシビリティ対応 */
+@media (prefers-reduced-motion: reduce) {
+    .workout-dot,
+    .calendar-date-cell,
+    .modal-content {
+        animation: none;
+        transition: none;
+    }
+    
+    .calendar-date-cell:hover {
+        transform: none;
+    }
+}
+
+/* ダークモード対応（将来の拡張用） */
+@media (prefers-color-scheme: dark) {
+    .calendar-date-cell {
+        border-color: #374151;
+    }
+    
+    .calendar-date-cell:hover {
+        background-color: #1f2937;
+    }
+}
+
+/* カレンダー印刷対応 */
+@media print {
+    .calendar-nav-button,
+    .calendar-modal,
+    .notification {
+        display: none !important;
+    }
+    
+    .calendar-date-cell {
+        border: 1px solid #000;
+        min-height: 60px;
+        break-inside: avoid;
+    }
+    
+    .workout-dot {
+        background: #000 !important;
+    }
 } 

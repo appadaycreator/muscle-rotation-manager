@@ -1,6 +1,7 @@
 // pageManager.js - ページ管理とナビゲーション
 
 import { showNotification } from '../utils/helpers.js';
+import onboardingManager from './onboardingManager.js';
 
 class PageManager {
     constructor() {
@@ -50,7 +51,8 @@ class PageManager {
 
             // ページコンテンツを読み込み
             const mainContent = document.querySelector('main');
-            const content = await this.loadPartial(pageName);
+            const partialName = this.getPartialName(pageName);
+            const content = await this.loadPartial(partialName);
 
             // コンテンツを置換
             mainContent.innerHTML = content;
@@ -69,6 +71,19 @@ class PageManager {
     }
 
     /**
+     * ページ名からパーシャル名を取得
+     * @param {string} pageName - ページ名
+     * @returns {string} パーシャル名
+     */
+    getPartialName(pageName) {
+        const partialMap = {
+            'exercises-management': 'exercises-management',
+            exercises: 'exercises-management'
+        };
+        return partialMap[pageName] || pageName;
+    }
+
+    /**
      * ページ固有の機能を初期化
      * @param {string} pageName - ページ名
      */
@@ -83,7 +98,15 @@ class PageManager {
      */
     async loadPageModule(pageName) {
         try {
-            const module = await import(`../pages/${pageName}Page.js`);
+            let module;
+
+            // エクササイズ管理ページの特別処理
+            if (pageName === 'exercises-management' || pageName === 'exercises') {
+                module = await import('../pages/exercisePage.js');
+            } else {
+                module = await import(`../pages/${pageName}Page.js`);
+            }
+
             if (module.default && typeof module.default.initialize === 'function') {
                 module.default.initialize();
             }
@@ -114,6 +137,9 @@ class PageManager {
             case 'analytics':
                 this.initializeAnalytics();
                 break;
+            case 'progress':
+                this.initializeProgress();
+                break;
             case 'exercises':
                 this.initializeExercises();
                 break;
@@ -136,6 +162,15 @@ class PageManager {
      */
     initializeDashboard() {
         console.log('Dashboard page initialized');
+
+        // オンボーディングチェック（ダッシュボード初期化時）
+        if (onboardingManager.isOnboardingNeeded()) {
+            console.log('オンボーディングが必要です');
+            setTimeout(() => {
+                onboardingManager.startOnboarding();
+            }, 1000); // 1秒後に開始（UIの初期化を待つ）
+        }
+
         // 筋肉部位クリックハンドラー
         document.querySelectorAll('.muscle-part').forEach(part => {
             part.addEventListener('click', () => {
@@ -164,6 +199,13 @@ class PageManager {
      */
     initializeAnalytics() {
         console.log('Analytics page initialized');
+    }
+
+    /**
+     * プログレッシブ・オーバーロードページの初期化
+     */
+    initializeProgress() {
+        console.log('Progress page initialized');
     }
 
     /**

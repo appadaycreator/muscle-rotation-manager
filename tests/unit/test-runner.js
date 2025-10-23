@@ -433,6 +433,7 @@ if (typeof window !== 'undefined') {
     console.log('✅ Test functions exported to global scope');
     
     module.exports = {
+        TestRunner,
         test: testRunner.test.bind(testRunner),
         describe: testRunner.describe.bind(testRunner),
         expect: testRunner.expect.bind(testRunner),

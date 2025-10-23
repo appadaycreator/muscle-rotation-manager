@@ -1,0 +1,23 @@
+<!-- プログレッシブ・オーバーロード追跡ページ -->
+<div id="progress-page-container"></div>
+
+<script type="module">
+    import { progressPage } from '../js/pages/progressPage.js';
+    
+    // ページを初期化
+    progressPage.init().catch(error => {
+        console.error('Progress page initialization failed:', error);
+    });
+    
+    // ページがアンロードされる際のクリーンアップ
+    window.addEventListener('beforeunload', () => {
+        progressPage.cleanup();
+    });
+    
+    // ナビゲーション時のクリーンアップ
+    window.addEventListener('navigate', (event) => {
+        if (event.detail.page !== 'progress') {
+            progressPage.cleanup();
+        }
+    });
+</script>

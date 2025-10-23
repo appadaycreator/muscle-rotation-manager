@@ -6,7 +6,7 @@ export const SUPABASE_CONFIG = {
     key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13d2xxcG9rZmdkdXh5amJxb2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1MTU3MTIsImV4cCI6MjA2ODA5MTcxMn0.0vyxxQ7zBfRKrH-JhpHMor_UvuBbQu3wE9HStGjsfGQ'
 };
 
-// 筋肉部位の定義
+// 筋肉部位の定義（科学的根拠に基づく回復期間を含む）
 export const MUSCLE_GROUPS = [
     {
         id: 'chest',
@@ -15,7 +15,10 @@ export const MUSCLE_GROUPS = [
         hoverColor: 'bg-red-200',
         iconColor: 'text-red-500',
         textColor: 'text-red-700',
-        color: 'chest-color'
+        color: 'chest-color',
+        recoveryHours: 72, // 大筋群：72時間
+        category: 'large',
+        scientificBasis: '大胸筋は大筋群のため、完全回復に72時間必要'
     },
     {
         id: 'back',
@@ -24,7 +27,10 @@ export const MUSCLE_GROUPS = [
         hoverColor: 'bg-green-200',
         iconColor: 'text-green-500',
         textColor: 'text-green-700',
-        color: 'back-color'
+        color: 'back-color',
+        recoveryHours: 72, // 大筋群：72時間
+        category: 'large',
+        scientificBasis: '広背筋・僧帽筋は大筋群のため、完全回復に72時間必要'
     },
     {
         id: 'shoulder',
@@ -33,7 +39,10 @@ export const MUSCLE_GROUPS = [
         hoverColor: 'bg-yellow-200',
         iconColor: 'text-yellow-500',
         textColor: 'text-yellow-700',
-        color: 'shoulder-color'
+        color: 'shoulder-color',
+        recoveryHours: 48, // 中筋群：48時間
+        category: 'medium',
+        scientificBasis: '三角筋は中筋群のため、完全回復に48時間必要'
     },
     {
         id: 'arm',
@@ -42,7 +51,10 @@ export const MUSCLE_GROUPS = [
         hoverColor: 'bg-purple-200',
         iconColor: 'text-purple-500',
         textColor: 'text-purple-700',
-        color: 'arm-color'
+        color: 'arm-color',
+        recoveryHours: 48, // 中筋群：48時間
+        category: 'medium',
+        scientificBasis: '上腕二頭筋・三頭筋は中筋群のため、完全回復に48時間必要'
     },
     {
         id: 'leg',
@@ -51,7 +63,10 @@ export const MUSCLE_GROUPS = [
         hoverColor: 'bg-blue-200',
         iconColor: 'text-blue-500',
         textColor: 'text-blue-700',
-        color: 'leg-color'
+        color: 'leg-color',
+        recoveryHours: 72, // 大筋群：72時間
+        category: 'large',
+        scientificBasis: '大腿四頭筋・ハムストリングは大筋群のため、完全回復に72時間必要'
     },
     {
         id: 'core',
@@ -60,9 +75,47 @@ export const MUSCLE_GROUPS = [
         hoverColor: 'bg-pink-200',
         iconColor: 'text-pink-500',
         textColor: 'text-pink-700',
-        color: 'core-color'
+        color: 'core-color',
+        recoveryHours: 24, // 小筋群：24時間
+        category: 'small',
+        scientificBasis: '腹筋群は小筋群のため、完全回復に24時間必要'
     }
 ];
+
+// 回復期間の科学的根拠
+export const RECOVERY_SCIENCE = {
+    large: {
+        hours: 72,
+        description: '大筋群（胸筋、背筋、脚）',
+        reason: '筋繊維の損傷が大きく、タンパク質合成に時間を要するため'
+    },
+    medium: {
+        hours: 48,
+        description: '中筋群（肩、腕）',
+        reason: '中程度の筋繊維損傷で、適度な回復時間が必要'
+    },
+    small: {
+        hours: 24,
+        description: '小筋群（体幹）',
+        reason: '筋繊維の損傷が軽微で、比較的早期回復が可能'
+    }
+};
+
+// トレーニング強度による回復時間調整係数
+export const INTENSITY_MULTIPLIERS = {
+    light: 0.7,    // 軽い強度：回復時間30%短縮
+    moderate: 1.0, // 中程度：標準回復時間
+    high: 1.3,     // 高強度：回復時間30%延長
+    extreme: 1.5   // 極高強度：回復時間50%延長
+};
+
+// ユーザー体力レベルによる回復時間調整係数
+export const FITNESS_LEVEL_MULTIPLIERS = {
+    beginner: 1.2,     // 初心者：回復時間20%延長
+    intermediate: 1.0, // 中級者：標準回復時間
+    advanced: 0.8,     // 上級者：回復時間20%短縮
+    expert: 0.7        // エキスパート：回復時間30%短縮
+};
 
 // エクササイズデータ
 export const EXERCISES = {
