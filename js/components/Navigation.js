@@ -330,8 +330,48 @@ export class Navigation {
     }
 
     /**
-   * ナビゲーションを破棄
-   */
+     * ナビゲーションアイテムにツールチップを追加
+     */
+    addNavigationTooltips() {
+        console.log('💡 Adding tooltips to navigation items...');
+
+        try {
+            // ナビゲーションアイテムのツールチップ設定
+            const navTooltips = [
+                { id: 'dashboard', text: 'ダッシュボード\nトレーニングの概要と進捗を確認' },
+                { id: 'workout', text: 'ワークアウト\n新しいトレーニングを開始' },
+                { id: 'calendar', text: 'カレンダー\nトレーニングスケジュールを管理' },
+                { id: 'analysis', text: '分析\nトレーニングデータを分析' },
+                { id: 'progress', text: 'プログレッシブ・オーバーロード\n筋力向上の進捗を追跡' },
+                { id: 'exercises', text: 'エクササイズデータベース\nエクササイズの詳細情報を確認' },
+                { id: 'settings', text: '設定\nアプリケーションの設定を変更' },
+                { id: 'help', text: '使い方\nアプリケーションの使い方を確認' },
+                { id: 'privacy', text: 'プライバシーポリシー\nプライバシーに関する情報' }
+            ];
+
+            // 各ナビゲーションアイテムにツールチップを追加
+            navTooltips.forEach(item => {
+                const elements = document.querySelectorAll(`a[href*="${item.id}"]`);
+                elements.forEach(element => {
+                    tooltipManager.addTooltip(element, item.text, {
+                        position: 'right',
+                        maxWidth: 200,
+                        theme: 'light',
+                        delay: 500
+                    });
+                });
+            });
+
+            console.log('✅ Navigation tooltips added successfully');
+
+        } catch (error) {
+            console.error('❌ Failed to add navigation tooltips:', error);
+        }
+    }
+
+    /**
+     * ナビゲーションを破棄
+     */
     destroy() {
         this.isInitialized = false;
         console.log('🗑️ Navigation destroyed');

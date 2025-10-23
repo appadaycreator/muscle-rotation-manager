@@ -155,16 +155,18 @@ class MPAInitializer {
         try {
             console.log('🔄 Loading common components...');
 
-            // ヘッダーとサイドバーを並行読み込み
-            const [headerResult, sidebarResult] = await Promise.allSettled([
+            // ヘッダー、サイドバー、フッターを並行読み込み
+            const [headerResult, sidebarResult, footerResult] = await Promise.allSettled([
                 this.loadHeader(),
-                this.loadSidebar()
+                this.loadSidebar(),
+                this.loadFooter()
             ]);
 
             // 結果をログ出力
             console.log('Component loading results:', {
                 header: headerResult.status,
-                sidebar: sidebarResult.status
+                sidebar: sidebarResult.status,
+                footer: footerResult.status
             });
 
             // エラーハンドリング
