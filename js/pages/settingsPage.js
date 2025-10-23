@@ -594,6 +594,45 @@ class SettingsPage {
                         </p>
                     </div>
                 </div>
+
+                <!-- アカウント設定 -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-user-circle text-red-500 mr-2"></i>
+                        アカウント管理
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <!-- 現在のユーザー情報 -->
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">現在のアカウント情報</h3>
+                            <div class="space-y-2">
+                                <div class="flex items-center">
+                                    <i class="fas fa-envelope text-gray-500 w-5"></i>
+                                    <span class="ml-2 text-gray-700">${userEmail}</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-user text-gray-500 w-5"></i>
+                                    <span class="ml-2 text-gray-700">${userNickname || '未設定'}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ログアウトボタン -->
+                        <div class="border-t pt-4">
+                            <button id="logout-btn" 
+                                    class="w-full bg-red-600 text-white py-3 px-4 rounded-lg 
+                                           hover:bg-red-700 focus:ring-2 focus:ring-red-500 
+                                           focus:ring-offset-2 transition-colors">
+                                <i class="fas fa-sign-out-alt mr-2"></i>
+                                ログアウト
+                            </button>
+                            <p class="text-sm text-gray-500 mt-2">
+                                現在のセッションを終了し、ログイン画面に戻ります
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
         `;
     }
@@ -642,6 +681,12 @@ class SettingsPage {
                     stressValue.textContent = e.target.value;
                 }
             });
+        }
+
+        // ログアウトボタン
+        const logoutBtn = safeGetElement('#logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', (e) => this.handleLogout(e));
         }
 
         // アバターアップロード
@@ -1236,6 +1281,86 @@ class SettingsPage {
             console.error('Delete error:', error);
             showNotification('データの削除に失敗しました', 'error');
         }
+    }
+
+    /**
+     * ログアウト処理
+     * @param {Event} e - イベントオブジェクト
+     */
+    async handleLogout(e) {
+        e.preventDefault();
+        
+        try {
+            console.log('Logout button clicked in settings page');
+            
+            // 確認ダイアログを表示
+            const confirmed = await this.showLogoutConfirmDialog();
+            if (!confirmed) {
+                return;
+            }
+
+            // ログアウト処理を実行
+            await authManager.logout();
+            
+            showNotification('ログアウトしました', 'success');
+            
+            // ログイン画面にリダイレクト
+            window.location.href = '/index.html';
+            
+        } catch (error) {
+            console.error('Logout error:', error);
+            showNotification('ログアウトに失敗しました', 'error');
+        }
+    }
+
+    /**
+     * ログアウト確認ダイアログを表示
+     * @returns {Promise<boolean>} ユーザーの確認結果
+     */
+    async showLogoutConfirmDialog() {
+        return new Promise((resolve) => {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white p-6 rounded-lg max-w-md mx-4">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-800">ログアウトの確認</h3>
+                    <p class="mb-6 text-gray-700">
+                        本当にログアウトしますか？<br>
+                        現在のセッションが終了し、ログイン画面に戻ります。
+                    </p>
+                    <div class="flex space-x-3 justify-end">
+                        <button id="cancel-logout" 
+                                class="px-4 py-2 bg-gray-300 text-gray-700 rounded 
+                                       hover:bg-gray-400">
+                            キャンセル
+                        </button>
+                        <button id="confirm-logout" 
+                                class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+                            ログアウト
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            modal.querySelector('#cancel-logout').addEventListener('click', () => {
+                document.body.removeChild(modal);
+                resolve(false);
+            });
+
+            modal.querySelector('#confirm-logout').addEventListener('click', () => {
+                document.body.removeChild(modal);
+                resolve(true);
+            });
+
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    document.body.removeChild(modal);
+                    resolve(false);
+                }
+            });
+        });
     }
 }
 

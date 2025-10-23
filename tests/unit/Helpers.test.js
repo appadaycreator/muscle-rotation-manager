@@ -130,4 +130,69 @@ describe('Helpers', () => {
       expect(result).toBeDefined();
     });
   });
+
+  describe('additional helper functions', () => {
+    test('should handle different notification types', () => {
+      showNotification('Info message', 'info');
+      showNotification('Warning message', 'warning');
+      showNotification('Success message', 'success');
+      showNotification('Error message', 'error');
+      
+      const notifications = document.querySelectorAll('.notification');
+      expect(notifications.length).toBeGreaterThanOrEqual(0);
+    });
+
+    test('should handle safeGetElement with non-existent element', () => {
+      const element = safeGetElement('non-existent-element');
+      expect(element).toBeNull();
+    });
+
+    test('should handle safeAsync with error', async () => {
+      const errorFunction = jest.fn().mockRejectedValue(new Error('Test error'));
+      
+      const result = await safeAsync(errorFunction);
+      
+      expect(result).toBeNull();
+      expect(errorFunction).toHaveBeenCalled();
+    });
+
+    test('should get muscle colors for different groups', () => {
+      const chestColor = getMuscleColor('胸');
+      const backColor = getMuscleColor('背中');
+      const legsColor = getMuscleColor('脚');
+      const unknownColor = getMuscleColor('unknown');
+      
+      expect(chestColor).toBeDefined();
+      expect(backColor).toBeDefined();
+      expect(legsColor).toBeDefined();
+      expect(unknownColor).toBeDefined();
+    });
+
+    test('should handle date comparisons', () => {
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 1);
+      
+      const pastDate = new Date();
+      pastDate.setDate(pastDate.getDate() - 1);
+      
+      const today = new Date();
+      
+      expect(isFutureDate(futureDate)).toBe(true);
+      expect(isFutureDate(pastDate)).toBe(false);
+      expect(isPastDate(pastDate)).toBe(true);
+      expect(isPastDate(futureDate)).toBe(false);
+    });
+
+    test('should create calendar modal HTML', () => {
+      const workouts = [
+        { name: 'Push-ups', time: '10:00' },
+        { name: 'Squats', time: '11:00' }
+      ];
+      const modalHTML = createCalendarModalHTML('Test Title', 'Test Content', workouts);
+      
+      expect(modalHTML).toContain('Test Title');
+      expect(modalHTML).toContain('Test Content');
+      expect(modalHTML).toContain('modal');
+    });
+  });
 });

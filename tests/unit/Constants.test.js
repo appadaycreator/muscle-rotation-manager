@@ -41,4 +41,47 @@ describe('Constants', () => {
       expect(typeof SUPABASE_CONFIG.key).toBe('string');
     });
   });
+
+  describe('additional constants tests', () => {
+    test('should have valid muscle group IDs', () => {
+      MUSCLE_GROUPS.forEach(muscle => {
+        expect(typeof muscle.id).toBe('string');
+        expect(muscle.id.length).toBeGreaterThan(0);
+      });
+    });
+
+    test('should have valid recovery hours', () => {
+      MUSCLE_GROUPS.forEach(muscle => {
+        expect(typeof muscle.recoveryHours).toBe('number');
+        expect(muscle.recoveryHours).toBeGreaterThan(0);
+        expect(muscle.recoveryHours).toBeLessThanOrEqual(168); // 1週間以内
+      });
+    });
+
+    test('should have valid categories', () => {
+      const validCategories = ['upper', 'lower', 'core', 'full', 'large', 'medium'];
+      MUSCLE_GROUPS.forEach(muscle => {
+        expect(validCategories).toContain(muscle.category);
+      });
+    });
+
+    test('should have scientific basis for each muscle group', () => {
+      MUSCLE_GROUPS.forEach(muscle => {
+        expect(typeof muscle.scientificBasis).toBe('string');
+        expect(muscle.scientificBasis.length).toBeGreaterThan(0);
+      });
+    });
+
+    test('should have unique muscle group IDs', () => {
+      const ids = MUSCLE_GROUPS.map(muscle => muscle.id);
+      const uniqueIds = [...new Set(ids)];
+      expect(ids.length).toBe(uniqueIds.length);
+    });
+
+    test('should have unique muscle group names', () => {
+      const names = MUSCLE_GROUPS.map(muscle => muscle.name);
+      const uniqueNames = [...new Set(names)];
+      expect(names.length).toBe(uniqueNames.length);
+    });
+  });
 });
