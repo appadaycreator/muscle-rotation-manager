@@ -205,13 +205,26 @@ class ExercisePage {
         // デフォルトオプションをクリア
         select.innerHTML = '<option value="">すべての部位</option>';
 
-        // 筋肉部位を追加
-        MUSCLE_GROUPS.forEach(group => {
-            const option = document.createElement('option');
-            option.value = group.id;
-            option.textContent = group.name;
-            select.appendChild(option);
-        });
+        try {
+            // データベースから筋肉部位を取得
+            const muscleGroups = await supabaseService.getMuscleGroups();
+            
+            muscleGroups.forEach(group => {
+                const option = document.createElement('option');
+                option.value = group.id; // UUID形式のID
+                option.textContent = group.name_ja || group.name_en;
+                select.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Failed to load muscle groups:', error);
+            // フォールバック：定数から筋肉部位を設定
+            MUSCLE_GROUPS.forEach(group => {
+                const option = document.createElement('option');
+                option.value = group.id;
+                option.textContent = group.name;
+                select.appendChild(option);
+            });
+        }
     }
 
     /**
@@ -267,8 +280,10 @@ class ExercisePage {
         try {
             const searchTerm = document.getElementById('exercise-search')?.value || '';
         const filters = this.getCurrentFilters();
+        console.log('Filters being applied:', filters);
 
         this.currentExercises = await exerciseService.searchExercises(searchTerm, filters);
+        console.log('Search results:', this.currentExercises.length, 'exercises found');
             this.renderExercises();
 
         } catch (error) {
@@ -290,6 +305,7 @@ class ExercisePage {
 
         // セレクトボックスフィルター
         const muscleGroup = document.getElementById('muscle-group-filter')?.value;
+        console.log('Current muscle group filter value:', muscleGroup);
         if (muscleGroup) {filters.muscleGroupId = muscleGroup;}
 
         const difficulty = document.getElementById('difficulty-filter')?.value;
@@ -353,6 +369,9 @@ class ExercisePage {
     renderExercises() {
         const container = document.getElementById('exercises-list');
         if (!container) {return;}
+
+        console.log('Rendering exercises:', this.currentExercises.length, 'exercises found');
+        console.log('Current exercises:', this.currentExercises);
 
         if (this.currentExercises.length === 0) {
             container.innerHTML = `
