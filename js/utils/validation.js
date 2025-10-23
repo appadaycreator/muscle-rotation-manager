@@ -432,6 +432,13 @@ export class FormValidator {
         const sanitizedData = {
             display_name: this.validateField('display_name', formData.display_name, Validator.nickname),
             nickname: this.validateField('nickname', formData.nickname, Validator.nickname),
+            email: this.validateField('email', formData.email, (value) => {
+                // メールアドレスは空の場合はスキップ、入力がある場合はバリデーション
+                if (!value || value.trim() === '') {
+                    return { isValid: true, errors: [], sanitizedData: '' };
+                }
+                return Validator.email(value);
+            }),
             age: this.validateField('age', formData.age, (value) => Validator.numberRange(value, 10, 100, '歳')),
             weight: this.validateField('weight', formData.weight, Validator.weight),
             height: this.validateField('height', formData.height, (value) => Validator.numberRange(value, 100, 250, 'cm'))

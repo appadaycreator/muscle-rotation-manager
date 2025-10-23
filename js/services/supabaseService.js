@@ -597,8 +597,8 @@ export class SupabaseService {
     }
 
     /**
-   * ユーザープロフィールを取得
-   */
+     * ユーザープロフィールを取得
+     */
     async getUserProfile() {
         if (!this.isAvailable()) {
             console.warn('Supabase is not available, cannot get user profile');
@@ -618,6 +618,58 @@ export class SupabaseService {
         } catch (error) {
             console.error('Failed to get user profile:', error);
             return null;
+        }
+    }
+
+    /**
+     * アバター画像をアップロード
+     * @param {File} file - アップロードするファイル
+     * @returns {Promise<string>} アップロードされた画像のURL
+     */
+    async uploadAvatar(file) {
+        if (!this.isAvailable()) {
+            throw new Error('Supabase is not available');
+        }
+
+        try {
+            const { data: { user } } = await this.client.auth.getUser();
+            if (!user) {
+                throw new Error('No authenticated user found');
+            }
+
+            // ファイル名を生成
+            const fileExt = file.name.split('.').pop();
+            const fileName = `avatar_${user.id}_${Date.now()}.${fileExt}`;
+
+            // アバター用のバケットにアップロード
+            const { error } = await this.client.storage
+                .from('avatars')
+                .upload(fileName, file, {
+                    cacheControl: '3600',
+                    upsert: true,
+                    contentType: file.type
+                });
+
+            if (error) {
+                console.error('Avatar upload error:', error);
+                throw new Error(`アバター画像のアップロードに失敗しました: ${error.message}`);
+            }
+
+            // 公開URLを取得
+            const { data: publicUrlData } = this.client.storage
+                .from('avatars')
+                .getPublicUrl(fileName);
+
+            if (!publicUrlData?.publicUrl) {
+                throw new Error('アバター画像のURL取得に失敗しました');
+            }
+
+            console.log('Avatar uploaded successfully:', publicUrlData.publicUrl);
+            return publicUrlData.publicUrl;
+
+        } catch (error) {
+            console.error('Avatar upload failed:', error);
+            throw error;
         }
     }
 }

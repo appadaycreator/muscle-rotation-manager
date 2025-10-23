@@ -206,6 +206,22 @@ class SettingsPage {
                             <div id="nickname-error" class="text-red-600 text-sm mt-1 hidden"></div>
                         </div>
 
+                        <!-- メールアドレス -->
+                        <div>
+                            <label for="email" 
+                                   class="block text-sm font-medium text-gray-700 mb-2">
+                                メールアドレス
+                            </label>
+                            <input type="email" 
+                                   id="email" 
+                                   name="email"
+                                   value="${userEmail}"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg 
+                                          focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                   placeholder="メールアドレスを入力">
+                            <div id="email-error" class="text-red-600 text-sm mt-1 hidden"></div>
+                        </div>
+
 
                         <!-- 基本情報 -->
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -766,6 +782,7 @@ class SettingsPage {
         const profileData = {
             display_name: formData.get('display_name'),
             nickname: formData.get('nickname'),
+            email: formData.get('email'),
             age: formData.get('age'),
             weight: formData.get('weight'),
             height: formData.get('height')
@@ -1002,28 +1019,48 @@ class SettingsPage {
             return;
         }
 
+        // ファイル形式チェック
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            showNotification('JPEG、PNG、GIF、WebP形式の画像ファイルを選択してください', 'error');
+            return;
+        }
+
         try {
-            // プレビュー表示
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const preview = safeGetElement('#avatar-preview');
-                if (preview) {
-                    preview.innerHTML = `
-                        <img src="${e.target.result}" 
-                             alt="Avatar Preview" 
-                             class="w-full h-full object-cover">
-                    `;
-                }
-            };
-            reader.readAsDataURL(file);
+            // プレビュー表示とローカルURL取得
+            const localUrl = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const preview = safeGetElement('#avatar-preview');
+                    if (preview) {
+                        preview.innerHTML = `
+                            <img src="${e.target.result}" 
+                                 alt="Avatar Preview" 
+                                 class="w-full h-full object-cover">
+                        `;
+                    }
+                    resolve(e.target.result);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
 
             // Supabaseにアップロード（利用可能な場合）
-            if (supabaseService.isAvailable() && supabaseService.getCurrentUser()) {
-                const avatarUrl = await supabaseService.uploadAvatar(file);
-                await this.saveProfile({ avatar_url: avatarUrl });
-                showNotification('アバター画像をアップロードしました', 'success');
+            if (supabaseService.isAvailable()) {
+                try {
+                    const avatarUrl = await supabaseService.uploadAvatar(file);
+                    await this.saveProfile({ avatar_url: avatarUrl });
+                    showNotification('アバター画像をアップロードしました', 'success');
+                } catch (uploadError) {
+                    console.error('Supabase upload failed:', uploadError);
+                    // Supabaseアップロードに失敗した場合は、ローカルに保存
+                    await this.saveProfile({ avatar_url: localUrl });
+                    showNotification('アバター画像をローカルに保存しました', 'info');
+                }
             } else {
-                showNotification('アバター画像のプレビューを更新しました', 'info');
+                // Supabaseが利用できない場合は、ローカルに保存
+                await this.saveProfile({ avatar_url: localUrl });
+                showNotification('アバター画像をローカルに保存しました', 'info');
             }
         } catch (error) {
             console.error('Avatar upload error:', error);
@@ -1134,6 +1171,7 @@ class SettingsPage {
         const fieldErrorMap = {
             'display_name': 'nickname-error',
             'nickname': 'nickname-error',
+            'email': 'email-error',
             'age': 'age-error',
             'weight': 'weight-error',
             'height': 'height-error'
