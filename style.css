@@ -20,11 +20,159 @@ header {
 /* ヘッダー固定時のメインコンテンツ調整 */
 body {
     padding-top: 64px; /* ヘッダーの高さ分のパディングを追加 */
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
-/* ヘッダー固定時のページコンテンツ調整 */
+/* フッター固定スタイル */
+footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: #1f2937;
+    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* ヘッダー・フッター固定時のページコンテンツ調整 */
 #app {
+    flex: 1;
     padding-top: 0; /* アプリコンテナのパディングをリセット */
+    padding-bottom: 200px; /* フッターの高さ分のパディングを追加 */
+}
+
+/* サイドバーフォーカス管理 */
+.desktop-sidebar {
+    transition: all 0.3s ease;
+}
+
+.desktop-sidebar:focus-within {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.desktop-sidebar.hidden {
+    display: none !important;
+}
+
+.desktop-sidebar.flex {
+    display: flex !important;
+}
+
+/* ナビゲーションアイテムのフォーカススタイル */
+.nav-item {
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+.nav-item:focus {
+    background-color: #eff6ff;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    transform: translateX(2px);
+}
+
+.nav-item:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+.nav-item:hover:not(:focus) {
+    background-color: #f9fafb;
+    transform: translateX(1px);
+}
+
+/* モバイルサイドバーのフォーカス管理 */
+.mobile-sidebar {
+    transition: all 0.3s ease;
+}
+
+.mobile-sidebar:focus-within {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.mobile-sidebar.hidden {
+    display: none !important;
+}
+
+.mobile-sidebar.block {
+    display: block !important;
+}
+
+/* サイドバー表示時のアニメーション */
+@keyframes slideInFromLeft {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.desktop-sidebar.show,
+.mobile-sidebar.show {
+    animation: slideInFromLeft 0.3s ease-out;
+}
+
+/* フォーカス時のサイドバー表示 */
+.sidebar-focused {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 1000;
+}
+
+/* キーボードナビゲーション用のスタイル */
+.nav-item[tabindex="0"] {
+    position: relative;
+}
+
+.nav-item[tabindex="0"]::before {
+    content: '';
+    position: absolute;
+    left: -4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 20px;
+    background: #3b82f6;
+    border-radius: 2px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.nav-item[tabindex="0"]:focus::before {
+    opacity: 1;
+}
+
+/* アクセシビリティ対応 */
+@media (prefers-reduced-motion: reduce) {
+    .desktop-sidebar,
+    .mobile-sidebar,
+    .nav-item {
+        transition: none;
+        animation: none;
+    }
+}
+
+/* 高コントラストモード対応 */
+@media (prefers-contrast: high) {
+    .nav-item:focus {
+        background-color: #000;
+        color: #fff;
+        border: 2px solid #fff;
+    }
+    
+    .nav-item:focus-visible {
+        outline: 3px solid #fff;
+    }
 }
 
 /* ヘッダー内のコンテンツ調整 */
@@ -40,6 +188,15 @@ header .max-w-7xl {
     
     header .max-w-7xl {
         height: 56px;
+    }
+    
+    /* モバイルでのフッター調整 */
+    #app {
+        padding-bottom: 150px; /* モバイルでのフッター高さ調整 */
+    }
+    
+    footer {
+        padding: 16px 0; /* モバイルでのフッターパディング調整 */
     }
 }
 

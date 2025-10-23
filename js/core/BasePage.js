@@ -33,9 +33,6 @@ export class BasePage {
             // ページ固有の初期化処理
             await this.onInitialize();
 
-            // イベントリスナーの設定
-            this.setupEventListeners();
-
             // データの読み込み
             await this.loadData();
 

@@ -54,8 +54,10 @@ export class WorkoutPage extends BasePage {
         // エクササイズデータを読み込み
         await this.loadExerciseData();
 
-        // イベントリスナーを設定
-        this.setupEventListeners();
+        // DOM要素が生成された後にイベントリスナーを設定
+        setTimeout(() => {
+            this.setupEventListeners();
+        }, 100);
     }
 
     /**
@@ -219,46 +221,53 @@ export class WorkoutPage extends BasePage {
      * イベントリスナーを設定
      */
     setupEventListeners() {
-        // 筋肉部位ボタンのクリック
-        document.querySelectorAll('.muscle-group-btn').forEach(btn => {
-            this.addEventListener(btn, 'click', (e) => {
-                const muscle = e.currentTarget.dataset.muscle;
-                this.startWorkout(muscle);
-            });
-        });
-
-        // ワークアウト終了ボタン
-        this.addEventListener(document.getElementById('stop-workout-btn'), 'click', () => {
-            this.stopWorkout();
-        });
-
-        // エクササイズ追加ボタン
-        this.addEventListener(document.getElementById('add-exercise-btn'), 'click', () => {
-            this.addExercise();
-        });
-
+        console.log('Setting up event listeners...');
+        
         // ワークアウトウィザードの「次へ」ボタン
-        this.addEventListener(document.getElementById('step1-next'), 'click', () => {
-            this.nextStep(2);
-        });
+        const step1NextBtn = document.getElementById('step1-next');
+        if (step1NextBtn) {
+            console.log('Adding event listener to step1-next button');
+            this.addEventListener(step1NextBtn, 'click', () => {
+                console.log('Step1 next button clicked');
+                this.nextStep(2);
+            });
+        } else {
+            console.warn('step1-next button not found');
+        }
 
-        this.addEventListener(document.getElementById('step2-next'), 'click', () => {
-            this.nextStep(3);
-        });
+        const step2NextBtn = document.getElementById('step2-next');
+        if (step2NextBtn) {
+            console.log('Adding event listener to step2-next button');
+            this.addEventListener(step2NextBtn, 'click', () => {
+                console.log('Step2 next button clicked');
+                this.nextStep(3);
+            });
+        } else {
+            console.warn('step2-next button not found');
+        }
 
         // ワークアウトウィザードの「戻る」ボタン
-        this.addEventListener(document.getElementById('step2-back'), 'click', () => {
-            this.previousStep(1);
-        });
+        const step2BackBtn = document.getElementById('step2-back');
+        if (step2BackBtn) {
+            this.addEventListener(step2BackBtn, 'click', () => {
+                this.previousStep(1);
+            });
+        }
 
-        this.addEventListener(document.getElementById('step3-back'), 'click', () => {
-            this.previousStep(2);
-        });
+        const step3BackBtn = document.getElementById('step3-back');
+        if (step3BackBtn) {
+            this.addEventListener(step3BackBtn, 'click', () => {
+                this.previousStep(2);
+            });
+        }
 
         // ワークアウト開始ボタン
-        this.addEventListener(document.getElementById('start-workout'), 'click', () => {
-            this.startWorkoutFromWizard();
-        });
+        const startWorkoutBtn = document.getElementById('start-workout');
+        if (startWorkoutBtn) {
+            this.addEventListener(startWorkoutBtn, 'click', () => {
+                this.startWorkoutFromWizard();
+            });
+        }
 
         // プリセットボタン
         document.querySelectorAll('.preset-btn').forEach(btn => {
@@ -276,9 +285,36 @@ export class WorkoutPage extends BasePage {
         });
 
         // カスタムエクササイズ追加
-        this.addEventListener(document.getElementById('add-custom-exercise'), 'click', () => {
-            this.addCustomExercise();
+        const addCustomExerciseBtn = document.getElementById('add-custom-exercise');
+        if (addCustomExerciseBtn) {
+            this.addEventListener(addCustomExerciseBtn, 'click', () => {
+                this.addCustomExercise();
+            });
+        }
+
+        // 筋肉部位ボタンのクリック（従来のワークアウト開始用）
+        document.querySelectorAll('.muscle-group-btn').forEach(btn => {
+            this.addEventListener(btn, 'click', (e) => {
+                const muscle = e.currentTarget.dataset.muscle;
+                this.startWorkout(muscle);
+            });
         });
+
+        // ワークアウト終了ボタン
+        const stopWorkoutBtn = document.getElementById('stop-workout-btn');
+        if (stopWorkoutBtn) {
+            this.addEventListener(stopWorkoutBtn, 'click', () => {
+                this.stopWorkout();
+            });
+        }
+
+        // エクササイズ追加ボタン
+        const addExerciseBtn = document.getElementById('add-exercise-btn');
+        if (addExerciseBtn) {
+            this.addEventListener(addExerciseBtn, 'click', () => {
+                this.addExercise();
+            });
+        }
     }
 
     /**
@@ -651,6 +687,8 @@ export class WorkoutPage extends BasePage {
      * ワークアウトウィザードの次のステップに進む
      */
     nextStep(stepNumber) {
+        console.log(`Moving to step ${stepNumber}`);
+        
         // 現在のステップを非表示
         document.querySelectorAll('.wizard-step').forEach(step => {
             step.classList.remove('active');
@@ -659,10 +697,12 @@ export class WorkoutPage extends BasePage {
         // ステップインジケーターを更新
         for (let i = 1; i <= 3; i++) {
             const stepIndicator = document.getElementById(`step-${i}`);
-            if (i <= stepNumber) {
-                stepIndicator.classList.add('active');
-            } else {
-                stepIndicator.classList.remove('active');
+            if (stepIndicator) {
+                if (i <= stepNumber) {
+                    stepIndicator.classList.add('active');
+                } else {
+                    stepIndicator.classList.remove('active');
+                }
             }
         }
 
@@ -670,12 +710,17 @@ export class WorkoutPage extends BasePage {
         const nextStepElement = document.getElementById(`wizard-step-${stepNumber}`);
         if (nextStepElement) {
             nextStepElement.classList.add('active');
+            console.log(`Step ${stepNumber} is now active`);
+        } else {
+            console.error(`Step ${stepNumber} element not found`);
         }
 
         // ステップ固有の処理
         if (stepNumber === 2) {
+            console.log('Loading exercise presets...');
             this.loadExercisePresets();
         } else if (stepNumber === 3) {
+            console.log('Updating workout summary...');
             this.updateWorkoutSummary();
         }
     }
