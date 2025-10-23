@@ -377,7 +377,7 @@ export class WorkoutPage extends BasePage {
      * エクササイズを追加
      */
     addExercise() {
-        const exerciseName = prompt('エクササイズ名を入力してください:');
+        const exerciseName = window.prompt('エクササイズ名を入力してください:');
         if (exerciseName && exerciseName.trim()) {
             this.addExerciseToWorkout(exerciseName.trim());
         }

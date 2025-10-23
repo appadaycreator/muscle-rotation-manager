@@ -586,16 +586,18 @@ export class Navigation {
      */
     handleNavigationKeydown(e, navItems, currentIndex) {
         switch (e.key) {
-            case 'ArrowDown':
+            case 'ArrowDown': {
                 e.preventDefault();
                 const nextIndex = (currentIndex + 1) % navItems.length;
                 navItems[nextIndex].focus();
                 break;
-            case 'ArrowUp':
+            }
+            case 'ArrowUp': {
                 e.preventDefault();
                 const prevIndex = currentIndex === 0 ? navItems.length - 1 : currentIndex - 1;
                 navItems[prevIndex].focus();
                 break;
+            }
             case 'Home':
                 e.preventDefault();
                 navItems[0].focus();

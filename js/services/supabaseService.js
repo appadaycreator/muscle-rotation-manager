@@ -954,9 +954,9 @@ export class SupabaseService {
     }
 
     /**
-     * ユーザープロフィールを取得
+     * ユーザープロフィールを取得（重複メソッド名を修正）
      */
-    async getUserProfile() {
+    async getUserProfileData() {
         if (!this.isAvailable()) {
             console.warn('Supabase is not available, cannot get user profile');
             return null;
