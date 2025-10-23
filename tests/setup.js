@@ -4,12 +4,6 @@ import '@testing-library/jest-dom';
 
 // 基本的なDOM環境のモック
 global.window = {
-  location: { 
-    href: 'http://localhost:8000', 
-    pathname: '/',
-    search: '',
-    hash: ''
-  },
   addEventListener: jest.fn(),
   removeEventListener: jest.fn(),
   dispatchEvent: jest.fn(),
@@ -23,6 +17,9 @@ global.window = {
     }
   }
 };
+
+// window.locationのモック設定（JSDOMの制限を回避）
+// JSDOMではlocationの直接設定が制限されているため、テストファイル内で個別にモック
 
 // window.location のモック設定（Jest環境では既に設定されている可能性があるため削除）
 

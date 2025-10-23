@@ -78,7 +78,7 @@ class DashboardPage {
                     <i class="fas fa-lock text-4xl text-gray-400 mb-4"></i>
                     <h2 class="text-2xl font-bold text-gray-900 mb-2">ログインが必要です</h2>
                     <p class="text-gray-600 mb-6">ダッシュボードを表示するにはログインしてください</p>
-                    <button id="login-btn" class="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700">
+                    <button id="login-btn" data-action="login" class="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700">
                         ログイン
                     </button>
                 </div>

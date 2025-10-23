@@ -135,7 +135,7 @@ class MPAInitializer {
                                     <i class="fas fa-home mr-2"></i>
                                     ホームに戻る
                                 </button>
-                                <button onclick="showAuthModal()"
+                                <button data-action="login"
                                         class="group relative w-full flex justify-center py-2 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                     <i class="fas fa-sign-in-alt mr-2"></i>
                                     ログイン
