@@ -245,7 +245,7 @@ class ExercisePage {
             'legs': '脚',
             'shoulders': '肩',
             'arms': '腕',
-            'core': '体幹'
+            'core': '腹'  // データベースでは'腹'として保存されている
         };
         return muscleGroupMap[muscleGroupString] || null;
     }
