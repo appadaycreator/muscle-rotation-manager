@@ -519,8 +519,11 @@ export class WorkoutPage extends BasePage {
     }
 }
 
-// ページが読み込まれた時に初期化
-document.addEventListener('DOMContentLoaded', async () => {
-    const workoutPage = new WorkoutPage();
-    await workoutPage.initialize();
-});
+// MPAInitializer用のエクスポート
+const workoutPage = new WorkoutPage();
+
+export default {
+    initialize: async () => {
+        await workoutPage.initialize();
+    }
+};
