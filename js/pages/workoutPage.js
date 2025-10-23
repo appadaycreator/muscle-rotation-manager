@@ -57,6 +57,8 @@ export class WorkoutPage extends BasePage {
         // DOM要素が生成された後にイベントリスナーを設定
         setTimeout(() => {
             this.setupEventListeners();
+            // 初期状態でステップ1の次へボタンを無効化
+            this.updateStep1NextButton();
         }, 100);
     }
 
@@ -225,10 +227,13 @@ export class WorkoutPage extends BasePage {
         
         // ワークアウトウィザードの「次へ」ボタン
         const step1NextBtn = document.getElementById('step1-next');
+        console.log('step1-next button:', step1NextBtn);
         if (step1NextBtn) {
             console.log('Adding event listener to step1-next button');
-            this.addEventListener(step1NextBtn, 'click', () => {
+            // 直接addEventListenerを使用
+            step1NextBtn.addEventListener('click', (e) => {
                 console.log('Step1 next button clicked');
+                e.preventDefault();
                 this.nextStep(2);
             });
         } else {
@@ -236,10 +241,13 @@ export class WorkoutPage extends BasePage {
         }
 
         const step2NextBtn = document.getElementById('step2-next');
+        console.log('step2-next button:', step2NextBtn);
         if (step2NextBtn) {
             console.log('Adding event listener to step2-next button');
-            this.addEventListener(step2NextBtn, 'click', () => {
+            // 直接addEventListenerを使用
+            step2NextBtn.addEventListener('click', (e) => {
                 console.log('Step2 next button clicked');
+                e.preventDefault();
                 this.nextStep(3);
             });
         } else {
@@ -279,7 +287,8 @@ export class WorkoutPage extends BasePage {
 
         // 筋肉部位選択ボタン
         document.querySelectorAll('.muscle-group-btn').forEach(btn => {
-            this.addEventListener(btn, 'click', (e) => {
+            btn.addEventListener('click', (e) => {
+                console.log('Muscle group button clicked:', e.currentTarget.dataset.muscle);
                 this.toggleMuscleGroup(e.currentTarget);
             });
         });
@@ -763,7 +772,20 @@ export class WorkoutPage extends BasePage {
      * 筋肉部位の選択状態を切り替え
      */
     toggleMuscleGroup(button) {
+        console.log('Toggling muscle group:', button.dataset.muscle);
         button.classList.toggle('selected');
+        
+        // 選択状態の視覚的フィードバック
+        if (button.classList.contains('selected')) {
+            button.style.backgroundColor = '#3B82F6';
+            button.style.color = 'white';
+            button.style.borderColor = '#3B82F6';
+        } else {
+            button.style.backgroundColor = '';
+            button.style.color = '';
+            button.style.borderColor = '';
+        }
+        
         this.updateStep1NextButton();
     }
 
@@ -774,10 +796,21 @@ export class WorkoutPage extends BasePage {
         const selectedMuscles = document.querySelectorAll('.muscle-group-btn.selected');
         const nextButton = document.getElementById('step1-next');
         
-        if (selectedMuscles.length > 0) {
-            nextButton.disabled = false;
-        } else {
-            nextButton.disabled = true;
+        console.log('Selected muscles count:', selectedMuscles.length);
+        console.log('Next button:', nextButton);
+        
+        if (nextButton) {
+            if (selectedMuscles.length > 0) {
+                nextButton.disabled = false;
+                nextButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                nextButton.classList.add('hover:bg-blue-700');
+                console.log('Step1 next button enabled');
+            } else {
+                nextButton.disabled = true;
+                nextButton.classList.add('opacity-50', 'cursor-not-allowed');
+                nextButton.classList.remove('hover:bg-blue-700');
+                console.log('Step1 next button disabled');
+            }
         }
     }
 
