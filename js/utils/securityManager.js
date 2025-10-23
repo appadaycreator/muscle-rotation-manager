@@ -39,7 +39,7 @@ class SecurityManager {
             "script-src-elem 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://www.googletagmanager.com https://www.clarity.ms https://scripts.clarity.ms",
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
             "style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
-            "font-src 'self' https://fonts.gstatic.com",
+            "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net",
             "img-src 'self' data: https: blob:",
             "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://www.google-analytics.com https://www.clarity.ms https://scripts.clarity.ms https://www.googletagmanager.com https://analytics.google.com https://stats.g.doubleclick.net https://www.google.com https://*.google.com https://*.googleapis.com https://*.gstatic.com https://*.doubleclick.net https://*.googlesyndication.com",
             "frame-src 'none'",
