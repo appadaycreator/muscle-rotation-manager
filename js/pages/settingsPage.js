@@ -174,9 +174,11 @@ class SettingsPage {
         
         // フォントサイズのマッピング（データベースの値 → アプリの値）
         const fontSizeMapping = {
-            'small': 'sm',
-            'medium': 'md',
-            'large': 'lg'
+            'xs': 'sm',
+            'sm': 'sm',
+            'md': 'md',
+            'lg': 'lg',
+            'xl': 'lg'
         };
         const fontSize = fontSizeMapping[this.userProfile.font_size] || 'md';
 
@@ -978,15 +980,14 @@ class SettingsPage {
         const formData = new FormData(e.target);
         // フォントサイズのマッピング（アプリの値 → データベースの値）
         const fontSizeMapping = {
-            'sm': 'small',
-            'md': 'medium', 
-            'lg': 'large'
+            'sm': 'sm',
+            'md': 'md', 
+            'lg': 'lg'
         };
         
         const displaySettings = {
             theme_preference: formData.get('theme_preference'),
-            font_size: fontSizeMapping[formData.get('font_size')] || 'medium',
-            weight_unit: formData.get('weight_unit'),
+            font_size: fontSizeMapping[formData.get('font_size')] || 'md',
             preferred_language: formData.get('preferred_language')
         };
 

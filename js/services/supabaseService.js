@@ -622,12 +622,46 @@ export class SupabaseService {
                 return false;
             }
 
+            // user_profilesテーブルに存在するカラムのみをフィルタリング
+            const allowedColumns = [
+                'display_name', 'email', 'avatar_url', 'bio', 'fitness_level',
+                'primary_goals', 'preferred_language', 'timezone', 'weight', 'height',
+                'age', 'gender', 'activity_level', 'workout_frequency',
+                'preferred_workout_duration', 'notifications_enabled',
+                'email_notifications', 'push_notifications', 'theme_preference',
+                'font_size'
+            ];
+            
+            const filteredProfileData = {};
+            Object.keys(profileData).forEach(key => {
+                if (allowedColumns.includes(key)) {
+                    filteredProfileData[key] = profileData[key];
+                }
+            });
+
             // プロフィールデータにユーザーIDを追加
             const profileWithUserId = {
-                ...profileData,
+                ...filteredProfileData,
                 id: user.id,  // user_profilesテーブルのidフィールドはauth.users.idと一致
                 updated_at: new Date().toISOString()
             };
+
+            // 制約に合致するデフォルト値を設定
+            const defaults = {
+                font_size: 'md',
+                fitness_level: 'beginner',
+                activity_level: 'moderate',
+                theme_preference: 'auto',
+                preferred_language: 'ja',
+                workout_frequency: 3
+            };
+
+            // 各フィールドにデフォルト値を設定
+            Object.keys(defaults).forEach(key => {
+                if (!profileWithUserId[key]) {
+                    profileWithUserId[key] = defaults[key];
+                }
+            });
 
             // Supabaseデータベースに保存
             const { data, error } = await this.client

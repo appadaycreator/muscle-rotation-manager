@@ -20,6 +20,9 @@ export class WorkoutPage extends BasePage {
         this.muscleGroups = ['胸', '背中', '肩', '腕', '脚', '腹筋'];
         this.selectedMuscles = [];
         this.selectedExercises = [];
+        
+        console.log('WorkoutPage constructor called');
+        console.log('Muscle groups initialized:', this.muscleGroups);
     }
 
     /**
@@ -52,11 +55,11 @@ export class WorkoutPage extends BasePage {
         // エクササイズデータを読み込み
         await this.loadExerciseData();
 
-        // 筋肉部位ボタンを生成
-        this.generateMuscleGroupButtons();
-
-        // イベントリスナーを設定
+        // DOM要素が読み込まれた後にイベントリスナーを設定
+        setTimeout(() => {
         this.setupEventListeners();
+            this.updateQuickStartButton();
+        }, 100);
     }
 
     /**
@@ -100,25 +103,6 @@ export class WorkoutPage extends BasePage {
     }
 
 
-    /**
-     * 筋肉部位ボタンを動的に生成
-     */
-    generateMuscleGroupButtons() {
-        const container = document.getElementById('muscle-groups-grid');
-        if (!container) return;
-
-        container.innerHTML = this.muscleGroups.map(muscle => `
-            <button 
-                class="muscle-group-btn p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
-                data-muscle="${muscle}"
-            >
-                <div class="text-center">
-                    <div class="text-2xl mb-2">${this.getMuscleIcon(muscle)}</div>
-                    <div class="font-medium text-gray-900">${muscle}</div>
-                </div>
-            </button>
-        `).join('');
-    }
 
     /**
    * エクササイズデータを読み込み
@@ -185,7 +169,7 @@ export class WorkoutPage extends BasePage {
         document.addEventListener('click', (e) => {
             if (e.target.id === 'stop-workout') {
                 e.preventDefault();
-                this.stopWorkout();
+            this.stopWorkout();
             }
         });
 
@@ -193,7 +177,7 @@ export class WorkoutPage extends BasePage {
         document.addEventListener('click', (e) => {
             if (e.target.id === 'add-exercise-btn') {
                 e.preventDefault();
-                this.addExercise();
+            this.addExercise();
             }
         });
     }
@@ -276,11 +260,11 @@ export class WorkoutPage extends BasePage {
     }
 
     /**
-     * ワークアウトを開始
-     */
+   * ワークアウトを開始
+   */
     startWorkout(muscleGroup) {
         console.log(`Starting workout for: ${muscleGroup}`);
-        
+
         this.currentWorkout = {
             muscleGroup: muscleGroup,
             startTime: new Date(),
@@ -301,8 +285,8 @@ export class WorkoutPage extends BasePage {
     }
 
     /**
-     * ワークアウトを停止
-     */
+   * ワークアウトを停止
+   */
     stopWorkout() {
         if (this.workoutTimer) {
             clearInterval(this.workoutTimer);
@@ -389,8 +373,8 @@ export class WorkoutPage extends BasePage {
     }
 
     /**
-     * ワークアウトタイマーを開始
-     */
+   * ワークアウトタイマーを開始
+   */
     startWorkoutTimer() {
         this.workoutStartTime = new Date();
         this.workoutTimer = setInterval(() => {
@@ -399,8 +383,8 @@ export class WorkoutPage extends BasePage {
     }
 
     /**
-     * ワークアウトタイマーを更新
-     */
+   * ワークアウトタイマーを更新
+   */
     updateWorkoutTimer() {
         if (!this.workoutStartTime) return;
 
@@ -415,20 +399,6 @@ export class WorkoutPage extends BasePage {
         }
     }
 
-    /**
-     * 筋肉部位のアイコンを取得
-     */
-    getMuscleIcon(muscle) {
-        const icons = {
-            胸: '💪',
-            背中: '🏋️',
-            肩: '🤸',
-            腕: '💪',
-            脚: '🏃',
-            腹筋: '🔥'
-        };
-        return icons[muscle] || '💪';
-    }
 
     /**
      * デフォルトエクササイズを取得
@@ -480,19 +450,19 @@ export class WorkoutPage extends BasePage {
     }
 
     /**
-     * ワークアウト履歴を更新
-     */
+   * ワークアウト履歴を更新
+   */
     updateWorkoutHistory(workoutHistory) {
         const container = document.getElementById('workout-history');
         if (!container) return;
 
         if (workoutHistory.length === 0) {
             container.innerHTML = `
-                <div class="text-center py-8 text-gray-500">
-                    <i class="fas fa-history text-4xl mb-4"></i>
-                    <p>まだワークアウトが記録されていません</p>
-                </div>
-            `;
+        <div class="text-center py-8 text-gray-500">
+          <i class="fas fa-history text-4xl mb-4"></i>
+          <p>まだワークアウトが記録されていません</p>
+        </div>
+      `;
             return;
         }
 
@@ -501,22 +471,22 @@ export class WorkoutPage extends BasePage {
             .slice(0, 10);
 
         container.innerHTML = recentWorkouts.map(workout => `
-            <div class="flex items-center justify-between p-4 border-b border-gray-200">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-dumbbell text-blue-600"></i>
-                    </div>
-                    <div class="ml-4">
-                        <div class="text-sm font-medium text-gray-900">${workout.session_name}</div>
-                        <div class="text-sm text-gray-500">${workout.muscle_groups_trained?.join(', ') || '部位不明'}</div>
-                    </div>
-                </div>
-                <div class="text-right">
-                    <div class="text-sm text-gray-900">${workout.total_duration_minutes}分</div>
-                    <div class="text-sm text-gray-500">${this.formatDate(workout.workout_date)}</div>
-                </div>
-            </div>
-        `).join('');
+      <div class="flex items-center justify-between p-4 border-b border-gray-200">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <i class="fas fa-dumbbell text-blue-600"></i>
+          </div>
+          <div class="ml-4">
+            <div class="text-sm font-medium text-gray-900">${workout.session_name}</div>
+            <div class="text-sm text-gray-500">${workout.muscle_groups_trained?.join(', ') || '部位不明'}</div>
+          </div>
+        </div>
+        <div class="text-right">
+          <div class="text-sm text-gray-900">${workout.total_duration_minutes}分</div>
+          <div class="text-sm text-gray-500">${this.formatDate(workout.workout_date)}</div>
+        </div>
+      </div>
+    `).join('');
     }
 
     /**
@@ -528,8 +498,8 @@ export class WorkoutPage extends BasePage {
     }
 
     /**
-     * ローカルストレージから読み込み
-     */
+   * ローカルストレージから読み込み
+   */
     loadFromLocalStorage(key) {
         try {
             return JSON.parse(localStorage.getItem(key) || '[]');

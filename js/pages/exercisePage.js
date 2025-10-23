@@ -2,7 +2,7 @@
 
 import { exerciseService } from '../services/exerciseService.js';
 import { supabaseService } from '../services/supabaseService.js';
-import { MUSCLE_GROUPS } from '../utils/constants.js';
+import { muscleGroupService } from '../services/muscleGroupService.js';
 import { showNotification, debounce } from '../utils/helpers.js';
 import { handleError } from '../utils/errorHandler.js';
 
@@ -212,43 +212,21 @@ class ExercisePage {
         select.innerHTML = '<option value="">すべての部位</option>';
 
         try {
-            // データベースから筋肉部位を取得
-            const muscleGroups = await supabaseService.getMuscleGroups();
+            // 筋肉部位サービスから筋肉部位を取得
+            const muscleGroups = await muscleGroupService.getMuscleGroups();
+            console.log('Loaded muscle groups:', muscleGroups);
             
             muscleGroups.forEach(group => {
                 const option = document.createElement('option');
-                option.value = group.id; // UUID形式のID
+                option.value = group.id;
                 option.textContent = group.name_ja || group.name_en;
                 select.appendChild(option);
             });
         } catch (error) {
             console.error('Failed to load muscle groups:', error);
-            // フォールバック：定数から筋肉部位を設定
-            MUSCLE_GROUPS.forEach(group => {
-                const option = document.createElement('option');
-                option.value = group.id;
-                option.textContent = group.name;
-                select.appendChild(option);
-            });
         }
     }
 
-    /**
-     * 筋肉部位の文字列をデータベースの値にマッピング
-     * @param {string} muscleGroupString - 筋肉部位の文字列
-     * @returns {string|null} 筋肉部位名
-     */
-    getMuscleGroupName(muscleGroupString) {
-        const muscleGroupMap = {
-            'chest': '胸',
-            'back': '背中', 
-            'legs': '脚',
-            'shoulders': '肩',
-            'arms': '腕',
-            'core': '腹'  // データベースでは'腹'として保存されている
-        };
-        return muscleGroupMap[muscleGroupString] || null;
-    }
 
     /**
      * 器具フィルターの設定
@@ -327,17 +305,7 @@ class ExercisePage {
         // セレクトボックスフィルター
         const muscleGroup = document.getElementById('muscle-group-filter')?.value;
         if (muscleGroup) {
-            // UUID形式かどうかをチェック
-            const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(muscleGroup);
-            if (isUUID) {
-                filters.muscleGroupId = muscleGroup;
-            } else {
-                // 文字列値の場合は筋肉部位名でフィルター
-                const muscleGroupName = this.getMuscleGroupName(muscleGroup);
-                if (muscleGroupName) {
-                    filters.muscleGroupName = muscleGroupName;
-                }
-            }
+            filters.muscleGroupId = muscleGroup;
         }
 
         const difficulty = document.getElementById('difficulty-filter')?.value;
@@ -550,232 +518,14 @@ class ExercisePage {
      * カテゴリ詳細を表示
      * @param {string} muscleGroup - 筋肉部位
      */
-    showCategoryDetail(muscleGroup) {
-        const categoryInfo = this.getCategoryInfo(muscleGroup);
-        this.renderCategoryDetail(categoryInfo);
-        this.showDetailModal();
-    }
-
-    /**
-     * カテゴリ情報を取得
-     * @param {string} muscleGroup - 筋肉部位
-     * @returns {Object} カテゴリ情報
-     */
-    getCategoryInfo(muscleGroup) {
-        const categories = {
-            chest: {
-                name: '胸筋',
-                nameEn: 'Chest',
-                icon: 'fas fa-heart',
-                color: 'text-red-500',
-                description: '大胸筋、小胸筋、前鋸筋を鍛えるエクササイズ',
-                benefits: [
-                    '胸筋の厚みと幅を向上',
-                    '上半身の安定性向上',
-                    '姿勢の改善',
-                    'プッシュ系動作の強化'
-                ],
-                exercises: [
-                    'プッシュアップ（腕立て伏せ）',
-                    'ベンチプレス',
-                    'ダンベルフライ',
-                    'インクラインプレス',
-                    'ディップス',
-                    'ケーブルクロスオーバー',
-                    'プッシュアップバリエーション',
-                    'ダンベルプレス'
-                ],
-                tips: [
-                    '胸筋を意識して動作を行う',
-                    '肩甲骨を安定させる',
-                    '適切な可動域を保つ',
-                    '呼吸を意識する'
-                ],
-                commonMistakes: [
-                    '肩が前に出すぎる',
-                    '可動域が狭い',
-                    '反動を使いすぎる',
-                    '呼吸を止める'
-                ]
-            },
-            back: {
-                name: '背筋',
-                nameEn: 'Back',
-                icon: 'fas fa-user',
-                color: 'text-green-500',
-                description: '広背筋、僧帽筋、菱形筋、脊柱起立筋を鍛えるエクササイズ',
-                benefits: [
-                    '背中の厚みと幅を向上',
-                    '姿勢の改善',
-                    '肩甲骨の安定性向上',
-                    '引く動作の強化'
-                ],
-                exercises: [
-                    'プルアップ（懸垂）',
-                    'ラットプルダウン',
-                    'ベントオーバーロウ',
-                    'ワンハンドダンベルロウ',
-                    'シーテッドロウ',
-                    'フェイスプル',
-                    'デッドリフト',
-                    'リバースフライ'
-                ],
-                tips: [
-                    '肩甲骨を寄せる動作を意識',
-                    '胸を張って姿勢を保つ',
-                    '背筋を意識して動作',
-                    '適切な重量を選択'
-                ],
-                commonMistakes: [
-                    '肩が上がる',
-                    '腰が丸まる',
-                    '反動を使いすぎる',
-                    '可動域が狭い'
-                ]
-            },
-            legs: {
-                name: '脚筋',
-                nameEn: 'Legs',
-                icon: 'fas fa-running',
-                color: 'text-purple-500',
-                description: '大腿四頭筋、ハムストリングス、臀筋、ふくらはぎを鍛えるエクササイズ',
-                benefits: [
-                    '下半身の筋力向上',
-                    'バランス能力向上',
-                    '代謝の向上',
-                    '日常動作の改善'
-                ],
-                exercises: [
-                    'スクワット',
-                    'ランジ',
-                    'デッドリフト',
-                    'レッグプレス',
-                    'レッグカール',
-                    'レッグエクステンション',
-                    'カーフレイズ',
-                    'ブルガリアンスクワット'
-                ],
-                tips: [
-                    '膝の向きに注意',
-                    '重心を安定させる',
-                    '深い可動域を意識',
-                    '呼吸を意識する'
-                ],
-                commonMistakes: [
-                    '膝が内側に入る',
-                    '腰が丸まる',
-                    '可動域が浅い',
-                    '反動を使いすぎる'
-                ]
-            },
-            shoulders: {
-                name: '肩筋',
-                nameEn: 'Shoulders',
-                icon: 'fas fa-dumbbell',
-                color: 'text-blue-500',
-                description: '三角筋（前部・中部・後部）を鍛えるエクササイズ',
-                benefits: [
-                    '肩の幅と厚みを向上',
-                    '肩の安定性向上',
-                    '姿勢の改善',
-                    'オーバーヘッド動作の強化'
-                ],
-                exercises: [
-                    'ショルダープレス',
-                    'サイドレイズ',
-                    'フロントレイズ',
-                    'リアデルトフライ',
-                    'アーノルドプレス',
-                    'アップライトロウ',
-                    'フェイスプル',
-                    'バックフライ'
-                ],
-                tips: [
-                    '肩甲骨を安定させる',
-                    '適切な重量を選択',
-                    '可動域を意識',
-                    'バランスよく鍛える'
-                ],
-                commonMistakes: [
-                    '重量が重すぎる',
-                    '肩が上がる',
-                    '可動域が狭い',
-                    '前部ばかり鍛える'
-                ]
-            },
-            arms: {
-                name: '腕筋',
-                nameEn: 'Arms',
-                icon: 'fas fa-fist-raised',
-                color: 'text-orange-500',
-                description: '上腕二頭筋、上腕三頭筋、前腕筋を鍛えるエクササイズ',
-                benefits: [
-                    '腕の筋力向上',
-                    '握力の向上',
-                    '腕の太さと形の改善',
-                    'プッシュ・プル動作の強化'
-                ],
-                exercises: [
-                    'ダンベルカール',
-                    'ハンマーカール',
-                    'トライセップディップス',
-                    'トライセッププッシュダウン',
-                    'オーバーヘッドエクステンション',
-                    'クローズグリッププッシュアップ',
-                    'リバースカール',
-                    'プリーチャーカール'
-                ],
-                tips: [
-                    '適切な重量を選択',
-                    '可動域を意識',
-                    '反動を使わない',
-                    'バランスよく鍛える'
-                ],
-                commonMistakes: [
-                    '反動を使いすぎる',
-                    '重量が重すぎる',
-                    '可動域が狭い',
-                    '片方ばかり鍛える'
-                ]
-            },
-            core: {
-                name: '体幹',
-                nameEn: 'Core',
-                icon: 'fas fa-circle',
-                color: 'text-yellow-500',
-                description: '腹筋、背筋、横腹筋、深層筋を鍛えるエクササイズ',
-                benefits: [
-                    '体幹の安定性向上',
-                    '姿勢の改善',
-                    '腰痛の予防',
-                    'パフォーマンス向上'
-                ],
-                exercises: [
-                    'プランク',
-                    'クランチ',
-                    'サイドプランク',
-                    'ロシアンツイスト',
-                    'マウンテンクライマー',
-                    'デッドバグ',
-                    'バードドッグ',
-                    'レッグレイズ'
-                ],
-                tips: [
-                    '呼吸を意識する',
-                    '正しい姿勢を保つ',
-                    'ゆっくりと動作',
-                    '継続的に行う'
-                ],
-                commonMistakes: [
-                    '呼吸を止める',
-                    '腰を反らしすぎる',
-                    '反動を使う',
-                    '継続しない'
-                ]
-            }
-        };
-
-        return categories[muscleGroup] || categories.chest;
+    async showCategoryDetail(muscleGroup) {
+        const categoryInfo = await muscleGroupService.getMuscleGroupCategoryInfo(muscleGroup);
+        if (categoryInfo) {
+            this.renderCategoryDetail(categoryInfo);
+            this.showDetailModal();
+        } else {
+            showNotification('カテゴリ情報を取得できませんでした', 'error');
+        }
     }
 
     /**
@@ -903,11 +653,8 @@ class ExercisePage {
      */
     async applyCategoryFilter(categoryName) {
         try {
-            // データベースから筋肉部位を取得してマッピング
-            const muscleGroups = await supabaseService.getMuscleGroups();
-            const muscleGroup = muscleGroups.find(group => 
-                group.name_ja === categoryName || group.name_en === categoryName
-            );
+            // 筋肉部位サービスから筋肉部位を取得
+            const muscleGroup = await muscleGroupService.getMuscleGroupByName(categoryName);
             
             if (muscleGroup) {
                 const muscleGroupFilter = document.getElementById('muscle-group-filter');
@@ -916,11 +663,11 @@ class ExercisePage {
                     await this.applyFilters();
                     
                     // フィルター適用の通知を表示
-                    showNotification(`${categoryName}のエクササイズで絞り込みました`, 'success');
+                    showNotification(`${muscleGroup.name_ja}のエクササイズで絞り込みました`, 'success');
                 }
             } else {
                 console.warn('Muscle group not found:', categoryName);
-                showNotification('フィルターの適用に失敗しました', 'error');
+                showNotification(`筋肉部位「${categoryName}」が見つかりませんでした`, 'error');
             }
         } catch (error) {
             console.error('Failed to apply category filter:', error);

@@ -431,7 +431,6 @@ export class FormValidator {
 
         const sanitizedData = {
             display_name: this.validateField('display_name', formData.display_name, Validator.nickname),
-            nickname: this.validateField('nickname', formData.nickname, Validator.nickname),
             email: this.validateField('email', formData.email, (value) => {
                 // メールアドレスは空の場合はスキップ、入力がある場合はバリデーション
                 if (!value || value.trim() === '') {

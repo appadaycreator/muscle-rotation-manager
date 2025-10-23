@@ -272,8 +272,11 @@ class MPAInitializer {
             const pageModule = await this.loadPageModule(this.currentPage);
 
             if (pageModule && typeof pageModule.initialize === 'function') {
+                console.log(`🔄 Calling initialize for ${this.currentPage} page module`);
                 await pageModule.initialize();
                 console.log(`✅ Page-specific initialization complete for: ${this.currentPage}`);
+            } else {
+                console.warn(`⚠️ No initialize method found for ${this.currentPage} page module`);
             }
 
         } catch (error) {
