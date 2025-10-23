@@ -3,17 +3,11 @@
 import { supabaseService } from '../services/supabaseService.js';
 import {
     showNotification,
-    formatDate,
-    getWorkoutColor,
     getMuscleColor,
-    getMuscleBgColor,
-    getMuscleTextColor,
     isFutureDate,
     isPastDate,
-    isTodayDate,
     createCalendarModalHTML,
     safeGetElement,
-    escapeHtml,
     showInputDialog
 } from '../utils/helpers.js';
 import { MUSCLE_GROUPS } from '../utils/constants.js';

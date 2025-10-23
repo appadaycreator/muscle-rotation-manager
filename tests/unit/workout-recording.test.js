@@ -129,27 +129,32 @@ testRunner.describe('ワークアウト記録機能', () => {
             
             // 統計更新
             updateWorkoutStatistics: async function(workoutData) {
-                const stats = JSON.parse(localStorage.getItem('workoutStats') || '{}');
-                const today = new Date().toISOString().split('T')[0];
-                
-                if (!stats[today]) {
-                    stats[today] = {
-                        workouts: 0,
-                        exercises: 0,
-                        duration: 0,
-                        muscleGroups: []
-                    };
+                try {
+                    const stats = JSON.parse(localStorage.getItem('workoutStats') || '{}');
+                    const today = new Date().toISOString().split('T')[0];
+                    
+                    if (!stats[today]) {
+                        stats[today] = {
+                            workouts: 0,
+                            exercises: 0,
+                            duration: 0,
+                            muscleGroups: []
+                        };
+                    }
+                    
+                    stats[today].workouts += 1;
+                    stats[today].exercises += workoutData.exercises.length;
+                    stats[today].duration += workoutData.duration;
+                    stats[today].muscleGroups = [...new Set([
+                        ...stats[today].muscleGroups,
+                        ...workoutData.muscleGroups
+                    ])];
+                    
+                    localStorage.setItem('workoutStats', JSON.stringify(stats));
+                    return true;
+                } catch (error) {
+                    return false;
                 }
-                
-                stats[today].workouts += 1;
-                stats[today].exercises += workoutData.exercises.length;
-                stats[today].duration += workoutData.duration;
-                stats[today].muscleGroups = [...new Set([
-                    ...stats[today].muscleGroups,
-                    ...workoutData.muscleGroups
-                ])];
-                
-                localStorage.setItem('workoutStats', JSON.stringify(stats));
             },
             
             // ワークアウト開始
@@ -257,6 +262,20 @@ testRunner.describe('ワークアウト記録機能', () => {
         });
         
         const result = await workoutPage.completeWorkout();
+        
+        console.log('Test 2 Debug - result:', result);
+        console.log('Test 2 Debug - result.success:', result.success);
+        console.log('Test 2 Debug - typeof result.success:', typeof result.success);
+        console.log('Test 2 Debug - result.success === true:', result.success === true);
+        
+        // 直接比較をテスト
+        if (result.success !== true) {
+            console.log('❌ Direct comparison failed!');
+            console.log('result.success:', result.success);
+            console.log('true:', true);
+        } else {
+            console.log('✅ Direct comparison passed!');
+        }
         
         testRunner.expect(result.success).toBe(true);
         testRunner.expect(result.workout.exercises.length).toBe(2);

@@ -692,7 +692,7 @@ class ChartService {
      */
     destroyAllCharts() {
         try {
-            this.charts.forEach((chart, chartId) => {
+            this.charts.forEach((chart) => {
                 chart.destroy();
             });
             this.charts.clear();

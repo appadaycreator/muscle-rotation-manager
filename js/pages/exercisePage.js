@@ -982,7 +982,7 @@ class ExercisePage {
      * @param {File} file - 動画ファイル
      * @param {Object} videoInfo - 動画情報
      */
-    showVideoPreview(file, videoInfo) {
+    showVideoPreview(file) {
         const placeholder = document.getElementById('video-placeholder');
         const preview = document.getElementById('video-preview');
         const previewVideo = document.getElementById('video-preview-video');
@@ -1033,7 +1033,7 @@ class ExercisePage {
             placeholder.classList.remove('hidden');
             preview.classList.add('hidden');
             removeBtn.classList.add('hidden');
-            
+
             // 動画URLを解放
             if (previewVideo.src) {
                 URL.revokeObjectURL(previewVideo.src);

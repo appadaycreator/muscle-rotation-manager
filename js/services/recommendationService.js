@@ -260,7 +260,7 @@ class RecommendationService {
      * @param {Array} allMuscles - 全筋肉部位データ
      * @returns {Array} 優先度付きリスト
      */
-    prioritizeMuscles(readyMuscles, allMuscles) {
+    prioritizeMuscles(readyMuscles) {
         return readyMuscles.map(muscle => {
             let priority = 0;
 
@@ -293,7 +293,7 @@ class RecommendationService {
      * @param {Array} allMuscles - 全筋肉部位データ
      * @returns {Array} 推奨メッセージ配列
      */
-    generateRecommendationMessages(prioritizedMuscles, allMuscles) {
+    generateRecommendationMessages(prioritizedMuscles) {
         const recommendations = [];
 
         if (prioritizedMuscles.length === 0) {

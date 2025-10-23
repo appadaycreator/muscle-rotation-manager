@@ -389,6 +389,19 @@ class TestRunner {
 // グローバルインスタンス
 const testRunner = new TestRunner();
 
+// ESモジュールのexport
+export { TestRunner };
+export const test = testRunner.test.bind(testRunner);
+export const describe = testRunner.describe.bind(testRunner);
+export const expect = testRunner.expect.bind(testRunner);
+export const beforeEach = testRunner.beforeEach.bind(testRunner);
+export const afterEach = testRunner.afterEach.bind(testRunner);
+export const beforeAll = testRunner.beforeAll.bind(testRunner);
+export const afterAll = testRunner.afterAll.bind(testRunner);
+export const mock = testRunner.mock.bind(testRunner);
+export const runTests = testRunner.run.bind(testRunner);
+export { testRunner };
+
 // 即座にグローバル関数を設定（Node.js環境）
 if (typeof global !== 'undefined') {
     global.test = testRunner.test.bind(testRunner);
@@ -446,6 +459,7 @@ if (typeof window !== 'undefined') {
         testRunner
     };
 }
+
 
 // Node.js環境で直接実行された場合のテスト実行
 if (typeof module !== 'undefined' && require.main === module) {

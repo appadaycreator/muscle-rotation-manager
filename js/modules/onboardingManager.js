@@ -4,10 +4,8 @@ import { supabaseService } from '../services/supabaseService.js';
 import recommendationService from '../services/recommendationService.js';
 import {
     showNotification,
-    safeAsync,
     safeGetElement
 } from '../utils/helpers.js';
-import { globalFormValidator } from '../utils/validation.js';
 
 /**
  * オンボーディングマネージャー
@@ -126,7 +124,6 @@ class OnboardingManager {
      * モーダルイベントリスナーを設定
      */
     setupModalEventListeners() {
-        const modal = safeGetElement('#onboarding-modal');
         const closeBtn = safeGetElement('#close-onboarding');
         const prevBtn = safeGetElement('#prev-step');
         const nextBtn = safeGetElement('#next-step');
@@ -611,7 +608,7 @@ class OnboardingManager {
         radioInputs.forEach(input => {
             input.addEventListener('change', (e) => {
                 const name = e.target.name;
-                const labels = document.querySelectorAll(`input[name="${name}"]`).forEach(radio => {
+                document.querySelectorAll(`input[name="${name}"]`).forEach(radio => {
                     const label = radio.closest('label');
                     if (label) {
                         if (radio.checked) {

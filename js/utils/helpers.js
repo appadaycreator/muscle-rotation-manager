@@ -480,7 +480,6 @@ export function createCalendarModalHTML(dateStr, workouts, plannedWorkouts = [])
     const formattedDate = formatDate(dateStr);
     const isToday = isTodayDate(dateStr);
     const isFuture = isFutureDate(dateStr);
-    const isPast = isPastDate(dateStr);
 
     let content = '';
 

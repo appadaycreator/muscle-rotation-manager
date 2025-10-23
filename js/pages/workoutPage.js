@@ -537,7 +537,6 @@ class WorkoutPage {
      */
     async showWorkoutSummary(workoutData) {
         const totalSets = workoutData.exercises.reduce((sum, ex) => sum + ex.sets, 0);
-        const totalReps = workoutData.exercises.reduce((sum, ex) => sum + (ex.reps * ex.sets), 0);
         const maxWeight = Math.max(...workoutData.exercises.map(ex => ex.weight));
 
         const modalHtml = `
@@ -664,10 +663,12 @@ class WorkoutPage {
                 await this.updateWorkoutStatistics(workoutData);
 
                 console.log('✅ ワークアウトデータをSupabaseに保存しました');
+                return true;
             } else {
                 // オフライン時はローカルストレージに保存
                 await this.saveToLocalStorage(workoutData);
                 console.log('📱 オフライン: ローカルストレージに保存しました');
+                return true;
             }
 
             // カスタムイベントを発火
@@ -680,6 +681,7 @@ class WorkoutPage {
             // フォールバック: ローカルストレージに保存
             await this.saveToLocalStorage(workoutData);
             showNotification('オンライン保存に失敗しました。ローカルに保存されました。', 'warning');
+            return false;
         }
     }
 
@@ -757,8 +759,10 @@ class WorkoutPage {
             localStorage.setItem('workoutStats', JSON.stringify(stats));
 
             console.log('📊 統計情報を更新しました:', stats[today]);
+            return true;
         } catch (error) {
             console.error('統計更新エラー:', error);
+            return false;
         }
     }
 

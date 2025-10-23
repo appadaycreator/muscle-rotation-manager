@@ -3,10 +3,8 @@
  * Red → Green → Refactor サイクルの実演
  */
 
-// テストランナーの読み込み（ブラウザ環境では不要）
-if (typeof require !== 'undefined') {
-    const { test, describe, expect, beforeEach } = require('../unit/test-runner.js');
-}
+// テストランナーの読み込み
+import { test, describe, expect, beforeEach, runTests } from '../unit/test-runner.js';
 
 /**
  * TDD実践例: ワークアウト統計計算機能
@@ -346,3 +344,6 @@ TDDサイクルの実践ポイント:
    - 小さなサイクルを繰り返す
    - テストがあることで安心してリファクタリング可能
 */
+
+// テスト実行
+runTests();

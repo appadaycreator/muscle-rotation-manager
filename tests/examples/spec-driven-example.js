@@ -3,10 +3,8 @@
  * SPEC.mdの要件から直接テストケースを生成
  */
 
-// テストランナーの読み込み（ブラウザ環境では不要）
-if (typeof require !== 'undefined') {
-    const { test, describe, expect, beforeEach } = require('../unit/test-runner.js');
-}
+// テストランナーの読み込み
+import { test, describe, expect, beforeEach, runTests } from '../unit/test-runner.js';
 
 /**
  * 仕様書駆動開発実践例: カレンダー機能
@@ -383,3 +381,6 @@ if (typeof module !== 'undefined') {
    - 受け入れテストとしての活用
    - 仕様理解の共有
 */
+
+// テスト実行
+runTests();

@@ -293,7 +293,6 @@ class ProgressPage {
 
             // 目標設定関連
             const addGoalBtn = safeGetElement('add-goal-btn');
-            const goalModal = safeGetElement('goal-modal');
             const closeGoalModal = safeGetElement('close-goal-modal');
             const cancelGoal = safeGetElement('cancel-goal');
             const goalForm = safeGetElement('goal-form');
