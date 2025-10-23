@@ -418,8 +418,15 @@ export class WorkoutPage extends BasePage {
         const weight = parseFloat(document.getElementById('exercise-weight').value);
         const reps = parseInt(document.getElementById('exercise-reps').value);
 
-        if (!name || !sets || !weight || !reps) {
-            showNotification('すべてのフィールドを入力してください', 'warning');
+        // バリデーション
+        const errors = [];
+        if (!name) errors.push('エクササイズ名');
+        if (!sets) errors.push('セット数');
+        if (!weight) errors.push('重量');
+        if (!reps) errors.push('回数');
+
+        if (errors.length > 0) {
+            showNotification(`以下の項目を入力してください: ${errors.join(', ')}`, 'warning');
             return;
         }
 

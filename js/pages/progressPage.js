@@ -894,8 +894,13 @@ class ProgressPage {
             const notifyDeadline = safeGetElement('notify-deadline')?.checked || false;
 
             // バリデーション
-            if (!goalType || !targetValue || !targetDate) {
-                throw new Error('必須項目を入力してください');
+            const errors = [];
+            if (!goalType) errors.push('目標タイプ');
+            if (!targetValue) errors.push('目標値');
+            if (!targetDate) errors.push('目標達成日');
+
+            if (errors.length > 0) {
+                throw new Error(`以下の項目を入力してください: ${errors.join(', ')}`);
             }
 
             if (targetValue <= currentValue) {

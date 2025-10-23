@@ -168,7 +168,7 @@ class SettingsPage {
                         <div>
                             <label for="nickname" 
                                    class="block text-sm font-medium text-gray-700 mb-2">
-                                ニックネーム
+                                ニックネーム <span class="text-red-500">*</span>
                             </label>
                             <input type="text" 
                                    id="nickname" 
@@ -176,7 +176,9 @@ class SettingsPage {
                                    value="${userNickname}"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg 
                                           focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                   placeholder="ニックネームを入力">
+                                   placeholder="ニックネームを入力"
+                                   required>
+                            <div id="nickname-error" class="text-red-600 text-sm mt-1 hidden"></div>
                         </div>
 
 
@@ -184,7 +186,7 @@ class SettingsPage {
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label for="age" class="block text-sm font-medium text-gray-700 mb-2">
-                                    年齢
+                                    年齢 <span class="text-red-500">*</span>
                                 </label>
                                 <input type="number" 
                                        id="age" 
@@ -193,11 +195,13 @@ class SettingsPage {
                                        min="10" max="100"
                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg 
                                               focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                       placeholder="25">
+                                       placeholder="25"
+                                       required>
+                                <div id="age-error" class="text-red-600 text-sm mt-1 hidden"></div>
                             </div>
                             <div>
                                 <label for="weight" class="block text-sm font-medium text-gray-700 mb-2">
-                                    体重 (${profile.weight_unit})
+                                    体重 (${profile.weight_unit}) <span class="text-red-500">*</span>
                                 </label>
                                 <input type="number" 
                                        id="weight" 
@@ -206,11 +210,13 @@ class SettingsPage {
                                        step="0.1" min="30" max="200"
                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg 
                                               focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                       placeholder="70.0">
+                                       placeholder="70.0"
+                                       required>
+                                <div id="weight-error" class="text-red-600 text-sm mt-1 hidden"></div>
                             </div>
                             <div>
                                 <label for="height" class="block text-sm font-medium text-gray-700 mb-2">
-                                    身長 (cm)
+                                    身長 (cm) <span class="text-red-500">*</span>
                                 </label>
                                 <input type="number" 
                                        id="height" 
@@ -219,7 +225,9 @@ class SettingsPage {
                                        step="0.1" min="100" max="250"
                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg 
                                               focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                       placeholder="170.0">
+                                       placeholder="170.0"
+                                       required>
+                                <div id="height-error" class="text-red-600 text-sm mt-1 hidden"></div>
                             </div>
                         </div>
 
@@ -732,7 +740,10 @@ class SettingsPage {
         const formData = new FormData(e.target);
         const profileData = {
             display_name: formData.get('display_name'),
-            nickname: formData.get('nickname')
+            nickname: formData.get('nickname'),
+            age: formData.get('age'),
+            weight: formData.get('weight'),
+            height: formData.get('height')
         };
 
         console.log('Profile data to save:', profileData);
@@ -742,8 +753,7 @@ class SettingsPage {
 
         if (!globalFormValidator.isValid()) {
             const errors = globalFormValidator.getAllErrors();
-            const firstError = Object.values(errors).flat()[0];
-            showNotification(firstError, 'error');
+            this.displayFieldErrors(errors);
             this.isLoading = false;
             return;
         }
@@ -1088,6 +1098,63 @@ class SettingsPage {
                 }
             });
         });
+    }
+
+    /**
+     * フィールドエラーを表示
+     * @param {Object} errors - エラーオブジェクト
+     */
+    displayFieldErrors(errors) {
+        // エラー表示用のマッピング
+        const fieldErrorMap = {
+            'display_name': 'nickname-error',
+            'nickname': 'nickname-error',
+            'age': 'age-error',
+            'weight': 'weight-error',
+            'height': 'height-error'
+        };
+
+        // 各フィールドのエラーを表示
+        for (const [fieldName, errorMessages] of Object.entries(errors)) {
+            const errorElementId = fieldErrorMap[fieldName];
+            if (errorElementId) {
+                const errorElement = safeGetElement(`#${errorElementId}`);
+                if (errorElement && errorMessages.length > 0) {
+                    // 具体的な項目名を含むエラーメッセージを作成
+                    const fieldDisplayName = this.getFieldDisplayName(fieldName);
+                    const errorMessage = `${fieldDisplayName}: ${errorMessages[0]}`;
+                    
+                    errorElement.textContent = errorMessage;
+                    errorElement.classList.remove('hidden');
+                    errorElement.classList.add('text-red-600', 'text-sm', 'mt-1');
+                }
+            }
+        }
+
+        // エラーがある場合の通知
+        const firstError = Object.values(errors).flat()[0];
+        if (firstError) {
+            const firstField = Object.keys(errors)[0];
+            const fieldDisplayName = this.getFieldDisplayName(firstField);
+            showNotification(`${fieldDisplayName}の入力に問題があります`, 'error');
+        }
+    }
+
+    /**
+     * フィールド名の表示名を取得
+     * @param {string} fieldName - フィールド名
+     * @returns {string} 表示名
+     */
+    getFieldDisplayName(fieldName) {
+        const displayNames = {
+            'display_name': 'ニックネーム',
+            'nickname': 'ニックネーム',
+            'age': '年齢',
+            'weight': '体重',
+            'height': '身長',
+            'email': 'メールアドレス'
+        };
+        return displayNames[fieldName] || fieldName;
     }
 
     /**

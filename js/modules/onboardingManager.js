@@ -688,8 +688,12 @@ class OnboardingManager {
 
         // バリデーション
         if (this.currentStep === 1) { // 基本情報
-            if (!stepData.display_name || !stepData.age) {
-                showNotification('必須項目を入力してください', 'error');
+            const errors = [];
+            if (!stepData.display_name) errors.push('ニックネーム');
+            if (!stepData.age) errors.push('年齢');
+            
+            if (errors.length > 0) {
+                showNotification(`以下の項目を入力してください: ${errors.join(', ')}`, 'error');
                 return false;
             }
         } else if (this.currentStep === 2) { // 体力レベル

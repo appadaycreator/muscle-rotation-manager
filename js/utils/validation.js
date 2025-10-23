@@ -430,8 +430,11 @@ export class FormValidator {
         this.clearErrors();
 
         const sanitizedData = {
+            display_name: this.validateField('display_name', formData.display_name, Validator.nickname),
             nickname: this.validateField('nickname', formData.nickname, Validator.nickname),
-            email: this.validateField('email', formData.email, Validator.email)
+            age: this.validateField('age', formData.age, (value) => Validator.numberRange(value, 10, 100, '歳')),
+            weight: this.validateField('weight', formData.weight, Validator.weight),
+            height: this.validateField('height', formData.height, (value) => Validator.numberRange(value, 100, 250, 'cm'))
         };
 
         return sanitizedData;
