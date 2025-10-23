@@ -121,7 +121,9 @@ class DashboardPage {
                     <div class="mb-3">
                         <div class="flex justify-between text-sm mb-1">
                             <span data-i18n="dashboard.recovery">回復度</span>
-                            <span class="font-semibold ${muscle.recoveryColor}">${muscle.recovery}%</span>
+                            <span class="font-semibold ${muscle.recoveryColor}">
+                                ${muscle.recovery}%
+                            </span>
                         </div>
                         <div class="recovery-bar ${muscle.recoveryClass} rounded-full"
                              style="width: ${muscle.recovery}%;"></div>
@@ -162,16 +164,18 @@ class DashboardPage {
             }
 
             container.innerHTML = workouts.map(workout => `
-                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg 
+                     hover:bg-gray-100 transition-colors">
                     <div class="flex items-center space-x-3 flex-1">
                         <div class="workout-dot ${workout.color}"></div>
                         <div class="flex-1">
                             <div class="font-medium text-gray-800">${workout.name}</div>
                             <div class="text-sm text-gray-500 mb-1">${workout.exercises}</div>
-                            <div class="flex items-center space-x-4 text-xs
-                                      text-gray-400">
+                            <div class="flex items-center space-x-4 text-xs text-gray-400">
                                 <span><i class="fas fa-clock mr-1"></i>${workout.duration}</span>
-                                <span><i class="fas fa-dumbbell mr-1"></i>${workout.totalSets}セット</span>
+                                <span>
+                                    <i class="fas fa-dumbbell mr-1"></i>${workout.totalSets}セット
+                                </span>
                                 <span>
                                     <i class="fas fa-weight-hanging mr-1"></i>
                                     最大${workout.maxWeight}

@@ -3,10 +3,7 @@
  * テスト駆動開発用のサンプルテストケース
  */
 
-// テストランナーの読み込み（ブラウザ環境では不要）
-if (typeof require !== 'undefined') {
-    const { test, describe, expect, beforeEach } = require('./test-runner.js');
-}
+// テストランナーの読み込み（Node.js環境では自動的にグローバルに設定済み）
 
 describe('筋肉部位管理機能', () => {
     let muscleGroups;

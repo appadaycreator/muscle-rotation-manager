@@ -99,6 +99,13 @@ self.addEventListener('fetch', event => {
 // Cache First Strategy (for static files)
 async function cacheFirst(request) {
     try {
+        // chrome-extension スキームはサポートされていないため、スキップ
+        const url = new URL(request.url);
+        if (url.protocol === 'chrome-extension:') {
+            console.log('[SW] Skipping chrome-extension request:', request.url);
+            return fetch(request);
+        }
+
         const cachedResponse = await caches.match(request);
         if (cachedResponse) {
             console.log('[SW] Serving from cache:', request.url);
@@ -106,15 +113,23 @@ async function cacheFirst(request) {
         }
 
         const networkResponse = await fetch(request);
-        if (networkResponse.ok) {
+        if (networkResponse && networkResponse.ok && networkResponse.status === 200) {
             const cache = await caches.open(STATIC_CACHE);
-            cache.put(request, networkResponse.clone());
-            console.log('[SW] Cached new static file:', request.url);
+            // レスポンスが有効かチェック
+            if (networkResponse.headers.get('content-type')) {
+                await cache.put(request, networkResponse.clone());
+                console.log('[SW] Cached new static file:', request.url);
+            }
         }
         return networkResponse;
     } catch (error) {
         console.error('[SW] Cache First failed:', error);
-        return new Response('Offline - File not available', { status: 503 });
+        // 適切な Response オブジェクトを返す
+        return new Response('Offline - File not available', { 
+            status: 503,
+            statusText: 'Service Unavailable',
+            headers: { 'Content-Type': 'text/plain' }
+        });
     }
 }
 
@@ -155,17 +170,36 @@ async function navigationHandler(request) {
 
 // Stale While Revalidate Strategy
 async function staleWhileRevalidate(request) {
-    const cache = await caches.open(DYNAMIC_CACHE);
-    const cachedResponse = await cache.match(request);
-
-    const fetchPromise = fetch(request).then(networkResponse => {
-        if (networkResponse.ok) {
-            cache.put(request, networkResponse.clone());
+    try {
+        // chrome-extension スキームはサポートされていないため、スキップ
+        const url = new URL(request.url);
+        if (url.protocol === 'chrome-extension:') {
+            console.log('[SW] Skipping chrome-extension request:', request.url);
+            return fetch(request);
         }
-        return networkResponse;
-    }).catch(() => cachedResponse);
 
-    return cachedResponse || fetchPromise;
+        const cache = await caches.open(DYNAMIC_CACHE);
+        const cachedResponse = await cache.match(request);
+
+        const fetchPromise = fetch(request).then(networkResponse => {
+            if (networkResponse && networkResponse.ok && networkResponse.status === 200) {
+                // レスポンスが有効かチェック
+                if (networkResponse.headers.get('content-type')) {
+                    cache.put(request, networkResponse.clone());
+                }
+            }
+            return networkResponse;
+        }).catch(() => cachedResponse);
+
+        return cachedResponse || fetchPromise;
+    } catch (error) {
+        console.error('[SW] Stale While Revalidate failed:', error);
+        return new Response('Service temporarily unavailable', { 
+            status: 503,
+            statusText: 'Service Unavailable',
+            headers: { 'Content-Type': 'text/plain' }
+        });
+    }
 }
 
 // Helper functions

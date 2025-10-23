@@ -117,6 +117,42 @@ class TestRunner {
                 if (!(actual instanceof expected)) {
                     throw new Error(`期待値: ${expected.name}のインスタンス, 実際の値: ${actual.constructor.name}`);
                 }
+            },
+            toHaveBeenCalled: () => {
+                if (!actual.calls || actual.callCount === 0) {
+                    throw new Error('期待値: 関数が呼び出される, 実際の値: 呼び出されていない');
+                }
+            },
+            toHaveBeenCalledWith: (...expectedArgs) => {
+                if (!actual.calls) {
+                    throw new Error('期待値: モック関数, 実際の値: 通常の関数');
+                }
+                const found = actual.calls.some(call => 
+                    JSON.stringify(call) === JSON.stringify(expectedArgs)
+                );
+                if (!found) {
+                    throw new Error(`期待値: ${JSON.stringify(expectedArgs)}で呼び出される, 実際の値: ${JSON.stringify(actual.calls)}`);
+                }
+            },
+            toBeGreaterThan: (expected) => {
+                if (actual <= expected) {
+                    throw new Error(`期待値: ${expected}より大きい, 実際の値: ${actual}`);
+                }
+            },
+            toBeLessThan: (expected) => {
+                if (actual >= expected) {
+                    throw new Error(`期待値: ${expected}より小さい, 実際の値: ${actual}`);
+                }
+            },
+            toBeGreaterThanOrEqual: (expected) => {
+                if (actual < expected) {
+                    throw new Error(`期待値: ${expected}以上, 実際の値: ${actual}`);
+                }
+            },
+            toBeLessThanOrEqual: (expected) => {
+                if (actual > expected) {
+                    throw new Error(`期待値: ${expected}以下, 実際の値: ${actual}`);
+                }
             }
         };
     }
@@ -283,6 +319,18 @@ if (typeof window !== 'undefined') {
     window.testRunner = testRunner;
 } else if (typeof module !== 'undefined') {
     // Node.js環境
+    // グローバルスコープに関数を設定
+    global.test = testRunner.test.bind(testRunner);
+    global.describe = testRunner.describe.bind(testRunner);
+    global.expect = testRunner.expect.bind(testRunner);
+    global.beforeEach = testRunner.beforeEach.bind(testRunner);
+    global.afterEach = testRunner.afterEach.bind(testRunner);
+    global.beforeAll = testRunner.beforeAll.bind(testRunner);
+    global.afterAll = testRunner.afterAll.bind(testRunner);
+    global.mock = testRunner.mock.bind(testRunner);
+    global.runTests = testRunner.run.bind(testRunner);
+    global.testRunner = testRunner;
+    
     module.exports = {
         test: testRunner.test.bind(testRunner),
         describe: testRunner.describe.bind(testRunner),
@@ -295,4 +343,18 @@ if (typeof window !== 'undefined') {
         runTests: testRunner.run.bind(testRunner),
         testRunner
     };
+}
+
+// Node.js環境で直接実行された場合のテスト実行
+if (typeof module !== 'undefined' && require.main === module) {
+    // ユニットテストを読み込んで実行
+    try {
+        require('./muscle-groups.test.js');
+        testRunner.run().then(() => {
+            process.exit(testRunner.results.failed > 0 ? 1 : 0);
+        });
+    } catch (error) {
+        console.error('テストファイルの読み込みに失敗しました:', error.message);
+        process.exit(1);
+    }
 }

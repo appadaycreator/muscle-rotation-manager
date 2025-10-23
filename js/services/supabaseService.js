@@ -279,23 +279,64 @@ class SupabaseService {
             throw new Error('認証情報がありません');
         }
 
-        const fileExt = file.name.split('.').pop();
+        // ファイル形式とサイズのバリデーション
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            throw new Error('サポートされていないファイル形式です。JPEG、PNG、WebPのみ対応しています。');
+        }
+
+        if (file.size > 5 * 1024 * 1024) { // 5MB制限
+            throw new Error('ファイルサイズは5MB以下にしてください');
+        }
+
+        const fileExt = file.name.split('.').pop().toLowerCase();
         const fileName = `${this.currentUser.id}_${Date.now()}.${fileExt}`;
 
-        const { error } = await this.client.storage
-            .from('avatars')
-            .upload(fileName, file, {
-                upsert: true,
-                contentType: file.type
-            });
+        try {
+            // 既存のアバターを削除（オプション）
+            const existingAvatars = await this.client.storage
+                .from('avatars')
+                .list('', {
+                    search: this.currentUser.id
+                });
 
-        if (error) {throw error;}
+            if (existingAvatars.data && existingAvatars.data.length > 0) {
+                const filesToDelete = existingAvatars.data.map(file => file.name);
+                await this.client.storage
+                    .from('avatars')
+                    .remove(filesToDelete);
+            }
 
-        const { data: publicUrlData } = this.client.storage
-            .from('avatars')
-            .getPublicUrl(fileName);
+            // 新しいアバターをアップロード
+            const { error } = await this.client.storage
+                .from('avatars')
+                .upload(fileName, file, {
+                    cacheControl: '3600',
+                    upsert: true,
+                    contentType: file.type
+                });
 
-        return publicUrlData.publicUrl;
+            if (error) {
+                console.error('Avatar upload error:', error);
+                throw new Error(`アップロードに失敗しました: ${error.message}`);
+            }
+
+            // 公開URLを取得
+            const { data: publicUrlData } = this.client.storage
+                .from('avatars')
+                .getPublicUrl(fileName);
+
+            if (!publicUrlData?.publicUrl) {
+                throw new Error('公開URLの取得に失敗しました');
+            }
+
+            console.log('Avatar uploaded successfully:', publicUrlData.publicUrl);
+            return publicUrlData.publicUrl;
+
+        } catch (error) {
+            console.error('Avatar upload failed:', error);
+            throw error;
+        }
     }
 
     /**
