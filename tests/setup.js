@@ -16,14 +16,7 @@ global.window = {
       this.type = type;
       this.detail = options.detail;
     }
-  },
-  innerWidth: 1024,
-  innerHeight: 768,
-  screen: {
-    width: 1920,
-    height: 1080
-  },
-  devicePixelRatio: 1
+  }
 };
 
 global.document = {
@@ -41,47 +34,16 @@ global.document = {
       toggle: jest.fn()
     },
     style: {},
-    textContent: '',
+    setAttribute: jest.fn(),
+    getAttribute: jest.fn(),
+    appendChild: jest.fn(),
+    removeChild: jest.fn(),
     innerHTML: '',
-    insertAdjacentHTML: jest.fn(),
-    appendChild: jest.fn(),
-    removeChild: jest.fn()
+    textContent: ''
   })),
+  createTextNode: jest.fn(),
   addEventListener: jest.fn(),
-  removeEventListener: jest.fn(),
-  body: {
-    insertAdjacentHTML: jest.fn(),
-    appendChild: jest.fn(),
-    removeChild: jest.fn()
-  }
-};
-
-global.navigator = {
-  userAgent: 'test',
-  onLine: true,
-  language: 'ja'
-};
-
-global.localStorage = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn()
-};
-
-global.sessionStorage = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn()
-};
-
-global.fetch = jest.fn();
-global.console = {
-  log: jest.fn(),
-  error: jest.fn(),
-  warn: jest.fn(),
-  info: jest.fn()
+  removeEventListener: jest.fn()
 };
 
 // グローバル変数の設定
@@ -95,50 +57,29 @@ global.hideNotification = jest.fn();
 global.showAuthModal = jest.fn();
 global.hideAuthModal = jest.fn();
 
-// タイマーの設定
-jest.useFakeTimers();
+// localStorage のモック
+global.localStorage = {
+  getItem: jest.fn(),
+  setItem: jest.fn(),
+  removeItem: jest.fn(),
+  clear: jest.fn()
+};
 
-// テスト後のクリーンアップ
-afterEach(() => {
-  jest.clearAllMocks();
-  jest.clearAllTimers();
-});
+// sessionStorage のモック
+global.sessionStorage = {
+  getItem: jest.fn(),
+  setItem: jest.fn(),
+  removeItem: jest.fn(),
+  clear: jest.fn()
+};
 
-// テスト前のセットアップ
-beforeEach(() => {
-  // グローバル変数のリセット
-  delete global.router;
-  delete global.app;
-  delete global.MuscleRotationApp;
-});
+// fetch のモック
+global.fetch = jest.fn();
 
-// 非同期テストのタイムアウト設定
-jest.setTimeout(10000);
-
-// モックの設定
-jest.mock('@supabase/supabase-js', () => ({
-  createClient: jest.fn(() => ({
-    auth: {
-      signUp: jest.fn(),
-      signIn: jest.fn(),
-      signOut: jest.fn(),
-      getSession: jest.fn(),
-      onAuthStateChange: jest.fn()
-    },
-    from: jest.fn(() => ({
-      select: jest.fn(() => ({
-        eq: jest.fn(() => ({
-          single: jest.fn(),
-          order: jest.fn(() => ({
-            limit: jest.fn()
-          }))
-        }))
-      })),
-      insert: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn()
-    }))
-  }))
-}));
-
-console.log('🧪 Jest setup completed');
+// コンソールのモック
+global.console = {
+  log: jest.fn(),
+  error: jest.fn(),
+  warn: jest.fn(),
+  info: jest.fn()
+};
