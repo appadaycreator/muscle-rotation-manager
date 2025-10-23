@@ -6,7 +6,8 @@ export const SUPABASE_CONFIG = {
     key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13d2xxcG9rZmdkdXh5amJxb2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1MTU3MTIsImV4cCI6MjA2ODA5MTcxMn0.0vyxxQ7zBfRKrH-JhpHMor_UvuBbQu3wE9HStGjsfGQ'
 };
 
-// 筋肉部位の定義（科学的根拠に基づく回復期間を含む）
+// 筋肉部位の定義（非推奨：muscleGroupServiceを使用してください）
+// @deprecated Use muscleGroupService.getMuscleGroups() instead
 export const MUSCLE_GROUPS = [
     {
         id: 'chest',

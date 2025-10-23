@@ -195,7 +195,6 @@ class SettingsPage {
             weight: this.userProfile.weight || '',
             height: this.userProfile.height || '',
             age: this.userProfile.age || '',
-            experience_months: this.userProfile.experience_months || 0,
             theme_preference: this.userProfile.theme_preference || 'auto',
             weight_unit: this.userProfile.weight_unit || 'kg'
         };
@@ -371,21 +370,6 @@ class SettingsPage {
                             </select>
                         </div>
 
-                        <!-- トレーニング経験 -->
-                        <div>
-                            <label for="experience-months" 
-                                   class="block text-sm font-medium text-gray-700 mb-2">
-                                トレーニング経験（月数）
-                            </label>
-                            <input type="number" 
-                                   id="experience-months" 
-                                   name="experience_months"
-                                   value="${profile.experience_months}"
-                                   min="0" max="600"
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg 
-                                          focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                   placeholder="6">
-                        </div>
 
                         <!-- 保存ボタン -->
                         <button type="submit" 
@@ -844,15 +828,17 @@ class SettingsPage {
      */
     async handleFitnessSave(e) {
         e.preventDefault();
+        console.log('体力レベル保存フォームが送信されました');
 
         if (this.isLoading) {return;}
         this.isLoading = true;
 
         const formData = new FormData(e.target);
         const fitnessData = {
-            fitness_level: formData.get('fitness_level'),
-            experience_months: parseInt(formData.get('experience_months')) || 0
+            fitness_level: formData.get('fitness_level')
         };
+
+        console.log('体力レベルデータ:', fitnessData);
 
         const success = await safeAsync(
             async () => {
