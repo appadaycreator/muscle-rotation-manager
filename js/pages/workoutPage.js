@@ -196,10 +196,10 @@ export class WorkoutPage extends BasePage {
         };
 
         // ワークアウト終了ボタン
-        this.stopWorkoutClickHandler = (e) => {
+        this.stopWorkoutClickHandler = async (e) => {
             if (e.target.id === 'stop-workout') {
                 e.preventDefault();
-                this.stopWorkout();
+                await this.stopWorkout();
             }
         };
 
@@ -347,7 +347,7 @@ export class WorkoutPage extends BasePage {
     /**
    * ワークアウトを停止
    */
-    stopWorkout() {
+    async stopWorkout() {
         if (this.workoutTimer) {
             clearInterval(this.workoutTimer);
             this.workoutTimer = null;
@@ -360,7 +360,7 @@ export class WorkoutPage extends BasePage {
             showNotification(`ワークアウトを終了しました（${duration}分）`, 'success');
             
             // ワークアウト履歴に保存
-            this.saveWorkoutToHistory();
+            await this.saveWorkoutToHistory();
         }
 
         // 現在のワークアウトセクションを非表示にして、クイックスタートセクションを表示
@@ -414,7 +414,7 @@ export class WorkoutPage extends BasePage {
     /**
      * ワークアウト履歴に保存
      */
-    saveWorkoutToHistory() {
+    async saveWorkoutToHistory() {
         if (!this.currentWorkout) {
             console.log('No current workout to save');
             return;
@@ -426,25 +426,48 @@ export class WorkoutPage extends BasePage {
             return;
         }
 
+        const endTime = new Date();
+        const duration = Math.floor((endTime - this.currentWorkout.startTime) / 60000);
+
         const workoutData = {
-            ...this.currentWorkout,
-            endTime: new Date(),
-            duration: Math.floor((new Date() - this.currentWorkout.startTime) / 60000),
-            saved: true // 保存済みフラグを追加
+            session_name: this.currentWorkout.sessionName,
+            muscle_groups_trained: this.currentWorkout.muscleGroups,
+            workout_date: this.currentWorkout.startTime.toISOString(),
+            total_duration_minutes: duration,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
         };
 
-        console.log('Saving workout to history:', workoutData);
+        console.log('Saving workout to Supabase:', workoutData);
 
-        // ローカルストレージに保存
-        const history = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
-        history.push(workoutData);
-        localStorage.setItem('workoutHistory', JSON.stringify(history));
-
-        // 履歴を更新
-        this.updateWorkoutHistory(history);
-        
-        // 現在のワークアウトに保存済みフラグを設定
-        this.currentWorkout.saved = true;
+        try {
+            if (supabaseService.isAvailable()) {
+                // Supabaseに保存
+                await supabaseService.saveWorkout(workoutData);
+                console.log('Workout saved to Supabase successfully');
+                
+                // 履歴を再読み込み
+                await this.loadWorkoutHistory();
+            } else {
+                console.log('Supabase not available, saving to localStorage as fallback');
+                // フォールバック: ローカルストレージに保存
+                const history = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
+                history.push({
+                    ...workoutData,
+                    endTime: endTime,
+                    duration: duration
+                });
+                localStorage.setItem('workoutHistory', JSON.stringify(history));
+                this.updateWorkoutHistory(history);
+            }
+            
+            // 現在のワークアウトに保存済みフラグを設定
+            this.currentWorkout.saved = true;
+            
+        } catch (error) {
+            console.error('Failed to save workout:', error);
+            showNotification('ワークアウトの保存に失敗しました', 'error');
+        }
     }
 
     /**
