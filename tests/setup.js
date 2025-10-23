@@ -4,7 +4,12 @@ import '@testing-library/jest-dom';
 
 // 基本的なDOM環境のモック
 global.window = {
-  location: { href: 'http://localhost:8000', pathname: '/' },
+  location: { 
+    href: 'http://localhost:8000', 
+    pathname: '/',
+    search: '',
+    hash: ''
+  },
   addEventListener: jest.fn(),
   removeEventListener: jest.fn(),
   dispatchEvent: jest.fn(),
@@ -18,6 +23,8 @@ global.window = {
     }
   }
 };
+
+// window.location のモック設定（Jest環境では既に設定されている可能性があるため削除）
 
 global.document = {
   getElementById: jest.fn(),

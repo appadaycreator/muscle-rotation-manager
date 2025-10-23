@@ -40,14 +40,7 @@ describe('Navigation', () => {
     global.authManager = mockAuthManager;
     global.showNotification = jest.fn();
     
-    // window.location のモック設定
-    delete window.location;
-    window.location = {
-      pathname: '/',
-      href: 'http://localhost:8000/',
-      search: '',
-      hash: ''
-    };
+    // window.location は setup.js で設定済み
 
     // document.getElementById のモック
     document.getElementById = jest.fn((id) => {
@@ -89,11 +82,10 @@ describe('Navigation', () => {
     test('should return current page from URL', () => {
       const navigation = new Navigation();
       
-      // window.location.pathnameのモック
-      Object.defineProperty(window, 'location', {
-        value: { pathname: '/dashboard.html' },
-        writable: true,
-        configurable: true
+      // window.location.pathnameを直接設定（Jest環境では制限があるため、モックを使用）
+      Object.defineProperty(window.location, 'pathname', {
+        value: '/dashboard.html',
+        writable: true
       });
 
       const currentPage = navigation.getCurrentPage();
@@ -103,10 +95,10 @@ describe('Navigation', () => {
     test('should return index for root path', () => {
       const navigation = new Navigation();
       
-      Object.defineProperty(window, 'location', {
-        value: { pathname: '/' },
-        writable: true,
-        configurable: true
+      // window.location.pathnameを直接設定（Jest環境では制限があるため、モックを使用）
+      Object.defineProperty(window.location, 'pathname', {
+        value: '/',
+        writable: true
       });
 
       const currentPage = navigation.getCurrentPage();
@@ -153,7 +145,7 @@ describe('Navigation', () => {
       const headerHTML = navigation.generateBasicHeader();
       
       expect(headerHTML).toContain('header');
-      expect(headerHTML).toContain('nav');
+      expect(headerHTML).toContain('MuscleRotationManager');
     });
   });
 

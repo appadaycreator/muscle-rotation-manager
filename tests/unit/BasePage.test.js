@@ -18,6 +18,16 @@ describe('BasePage', () => {
 
   describe('initialize', () => {
     test('should initialize successfully', async () => {
+      // モックの設定
+      global.authManager = {
+        isAuthenticated: jest.fn().mockResolvedValue(true),
+        getCurrentUser: jest.fn().mockReturnValue({ email: 'test@example.com' })
+      };
+      global.supabaseService = {
+        getClient: jest.fn().mockReturnValue({})
+      };
+      global.showNotification = jest.fn();
+      
       await basePage.initialize();
       
       expect(basePage.isInitialized).toBe(true);
