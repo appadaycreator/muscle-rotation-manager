@@ -55,11 +55,220 @@
             <!-- Main Content -->
             <main class="flex-1 p-6">
                 <div id="main-content">
-                    <!-- Workout content will be loaded here -->
-                    <div class="min-h-screen flex items-center justify-center">
-                        <div class="text-center">
-                            <div class="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-                            <p class="mt-4 text-gray-600">ワークアウトページを読み込み中...</p>
+                    <!-- Workout Page Content -->
+                    <div id="workout-page" class="page-content">
+                        <div class="mb-6">
+                            <h2 class="text-3xl font-bold text-gray-800 mb-2">ワークアウト</h2>
+                            <p class="text-gray-600">今日のトレーニングを記録しましょう</p>
+                        </div>
+
+                        <!-- Workout Wizard -->
+                        <div id="workout-wizard" class="muscle-card rounded-lg p-6 mb-6">
+                            <!-- Step Indicator -->
+                            <div class="flex items-center justify-center mb-6">
+                                <div class="flex items-center space-x-4">
+                                    <div id="step-1" class="step-indicator active">
+                                        <div class="step-circle">1</div>
+                                        <span class="step-label">部位選択</span>
+                                    </div>
+                                    <div class="step-connector"></div>
+                                    <div id="step-2" class="step-indicator">
+                                        <div class="step-circle">2</div>
+                                        <span class="step-label">エクササイズ</span>
+                                    </div>
+                                    <div class="step-connector"></div>
+                                    <div id="step-3" class="step-indicator">
+                                        <div class="step-circle">3</div>
+                                        <span class="step-label">記録</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Step 1: Muscle Group Selection -->
+                            <div id="wizard-step-1" class="wizard-step active">
+                                <h3 class="text-xl font-semibold text-gray-800 mb-4 text-center">
+                                    <i class="fas fa-crosshairs text-blue-500 mr-2"></i>
+                                    今日鍛える部位を選択
+                                </h3>
+                                
+                                <!-- Quick Presets -->
+                                <div class="mb-6">
+                                    <h4 class="text-lg font-medium text-gray-700 mb-3">おすすめプリセット</h4>
+                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                        <button class="preset-btn" data-preset="upper">
+                                            <i class="fas fa-user text-blue-500 mb-2"></i>
+                                            <span>上半身</span>
+                                            <small class="text-gray-500">胸・背中・肩・腕</small>
+                                        </button>
+                                        <button class="preset-btn" data-preset="lower">
+                                            <i class="fas fa-running text-green-500 mb-2"></i>
+                                            <span>下半身</span>
+                                            <small class="text-gray-500">脚・お尻</small>
+                                        </button>
+                                        <button class="preset-btn" data-preset="push">
+                                            <i class="fas fa-hand-paper text-orange-500 mb-2"></i>
+                                            <span>プッシュ</span>
+                                            <small class="text-gray-500">胸・肩・三頭筋</small>
+                                        </button>
+                                        <button class="preset-btn" data-preset="pull">
+                                            <i class="fas fa-hand-rock text-purple-500 mb-2"></i>
+                                            <span>プル</span>
+                                            <small class="text-gray-500">背中・二頭筋</small>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Individual Muscle Groups -->
+                                <div class="mb-6">
+                                    <h4 class="text-lg font-medium text-gray-700 mb-3">個別選択</h4>
+                                    <div id="muscle-groups-grid" class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                        <!-- Muscle groups will be loaded dynamically -->
+                                    </div>
+                                </div>
+
+                                <div class="flex justify-between">
+                                    <div></div>
+                                    <button id="step1-next" class="btn-primary" disabled>
+                                        次へ <i class="fas fa-arrow-right ml-2"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Step 2: Exercise Selection -->
+                            <div id="wizard-step-2" class="wizard-step">
+                                <h3 class="text-xl font-semibold text-gray-800 mb-4 text-center">
+                                    <i class="fas fa-dumbbell text-green-500 mr-2"></i>
+                                    エクササイズを選択
+                                </h3>
+
+                                <!-- Exercise Quick Add -->
+                                <div class="mb-6">
+                                    <h4 class="text-lg font-medium text-gray-700 mb-3">人気エクササイズ</h4>
+                                    <div id="exercise-presets" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                        <!-- Exercise presets will be loaded based on selected muscle groups -->
+                                    </div>
+                                </div>
+
+                                <!-- Custom Exercise -->
+                                <div class="mb-6">
+                                    <h4 class="text-lg font-medium text-gray-700 mb-3">カスタムエクササイズ</h4>
+                                    <div class="flex space-x-2">
+                                        <input id="custom-exercise-input" type="text" placeholder="エクササイズ名を入力" 
+                                               class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none">
+                                        <button id="add-custom-exercise" class="btn-secondary">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Selected Exercises -->
+                                <div id="selected-exercises" class="mb-6">
+                                    <h4 class="text-lg font-medium text-gray-700 mb-3">選択されたエクササイズ</h4>
+                                    <div id="selected-exercises-list" class="space-y-2">
+                                        <div class="text-center text-gray-500 py-4">
+                                            <i class="fas fa-dumbbell text-2xl mb-2 opacity-50"></i>
+                                            <p>エクササイズを選択してください</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex justify-between">
+                                    <button id="step2-back" class="btn-secondary">
+                                        <i class="fas fa-arrow-left mr-2"></i> 戻る
+                                    </button>
+                                    <button id="step2-next" class="btn-primary" disabled>
+                                        次へ <i class="fas fa-arrow-right ml-2"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Step 3: Workout Recording -->
+                            <div id="wizard-step-3" class="wizard-step">
+                                <h3 class="text-xl font-semibold text-gray-800 mb-4 text-center">
+                                    <i class="fas fa-play-circle text-red-500 mr-2"></i>
+                                    ワークアウト開始
+                                </h3>
+
+                                <!-- Workout Summary -->
+                                <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                                    <h4 class="font-medium text-gray-700 mb-2">今回のワークアウト</h4>
+                                    <div id="workout-summary" class="space-y-1 text-sm text-gray-600">
+                                        <!-- Summary will be populated -->
+                                    </div>
+                                </div>
+
+                                <!-- Start Options -->
+                                <div class="space-y-4 mb-6">
+                                    <div class="flex items-center space-x-3">
+                                        <input id="auto-timer" type="checkbox" checked class="w-4 h-4 text-blue-600">
+                                        <label for="auto-timer" class="text-gray-700">自動タイマー機能を使用</label>
+                                    </div>
+                                    <div class="flex items-center space-x-3">
+                                        <input id="rest-reminders" type="checkbox" checked class="w-4 h-4 text-blue-600">
+                                        <label for="rest-reminders" class="text-gray-700">休憩時間のリマインダー</label>
+                                    </div>
+                                </div>
+
+                                <div class="flex justify-between">
+                                    <button id="step3-back" class="btn-secondary">
+                                        <i class="fas fa-arrow-left mr-2"></i> 戻る
+                                    </button>
+                                    <button id="start-workout" class="btn-success">
+                                        <i class="fas fa-play mr-2"></i> ワークアウト開始
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Current Workout (Active Session) -->
+                        <div id="current-workout" class="muscle-card rounded-lg p-6 mb-6 hidden">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-xl font-semibold text-gray-800">
+                                    <i class="fas fa-stopwatch text-green-500 mr-2"></i>
+                                    <span>ワークアウト中</span>
+                                </h3>
+                                <div class="flex items-center space-x-4">
+                                    <div class="text-lg font-mono bg-gray-100 px-3 py-2 rounded-lg">
+                                        <span id="workout-timer">00:00</span>
+                                    </div>
+                                    <button id="pause-workout" class="btn-warning">
+                                        <i class="fas fa-pause mr-1"></i>一時停止
+                                    </button>
+                                    <button id="stop-workout" class="btn-danger">
+                                        <i class="fas fa-stop mr-1"></i>終了
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Exercise Progress -->
+                            <div id="workout-exercises" class="space-y-4">
+                                <!-- Exercise items will be added here dynamically -->
+                            </div>
+
+                            <!-- Quick Actions -->
+                            <div class="flex space-x-2 mt-4">
+                                <button id="add-exercise-btn" class="btn-secondary flex-1">
+                                    <i class="fas fa-plus mr-2"></i>エクササイズ追加
+                                </button>
+                                <button id="rest-timer-btn" class="btn-secondary">
+                                    <i class="fas fa-clock mr-2"></i>休憩タイマー
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Workout History -->
+                        <div class="muscle-card rounded-lg p-6">
+                            <h3 class="text-xl font-semibold text-gray-800 mb-4">
+                                <i class="fas fa-history text-gray-500 mr-2"></i>
+                                <span>ワークアウト履歴</span>
+                            </h3>
+                            <div id="workout-history" class="space-y-3">
+                                <!-- Workout history will be loaded dynamically -->
+                                <div class="text-center text-gray-500 py-4">
+                                    <i class="fas fa-spinner fa-spin text-xl mb-2"></i>
+                                    <p>ワークアウト履歴を読み込み中...</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

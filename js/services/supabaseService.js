@@ -260,6 +260,31 @@ export class SupabaseService {
     }
 
     /**
+   * 筋肉部位一覧を取得
+   */
+    async getMuscleGroups() {
+        if (!this.isAvailable()) {
+            throw new Error('Supabase is not available');
+        }
+
+        try {
+            const { data, error } = await this.client
+                .from('muscle_groups')
+                .select('*')
+                .order('name');
+
+            if (error) {
+                throw new Error(error.message);
+            }
+
+            return data || [];
+        } catch (error) {
+            console.error('Failed to get muscle groups:', error);
+            throw error;
+        }
+    }
+
+    /**
    * 筋肉回復データを取得
    */
     async getMuscleRecoveryData() {

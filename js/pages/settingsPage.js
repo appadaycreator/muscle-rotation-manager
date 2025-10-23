@@ -132,17 +132,22 @@ class SettingsPage {
      * ユーザープロフィールを読み込み
      */
     async loadUserProfile() {
+        console.log('Loading user profile...');
+        
         if (!supabaseService.isAvailable() || !supabaseService.getCurrentUser()) {
             // ローカルストレージからプロフィールを読み込み
             this.userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+            console.log('Profile loaded from localStorage:', this.userProfile);
             return;
         }
 
         try {
             this.userProfile = await supabaseService.getUserProfile() || {};
+            console.log('Profile loaded from Supabase:', this.userProfile);
         } catch (error) {
             console.error('Error loading user profile:', error);
             this.userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+            console.log('Fallback to localStorage profile:', this.userProfile);
         }
     }
 
@@ -284,12 +289,14 @@ class SettingsPage {
                                             flex items-center justify-center overflow-hidden">
                                     ${this.userProfile.avatar_url ?
         `<img src="${this.userProfile.avatar_url}" 
-              alt="Avatar" class="w-full h-full object-cover">` :
+              alt="Avatar" class="w-full h-full object-cover"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` :
         `<img src="assets/default-avatar.png" 
               alt="Default Avatar" class="w-full h-full object-cover"
               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
          <i class="fas fa-user text-gray-400 text-xl" style="display:none;"></i>`
 }
+                                    <i class="fas fa-user text-gray-400 text-xl" style="display:none;"></i>
                                 </div>
                                 <input type="file" 
                                        id="avatar" 
@@ -992,11 +999,22 @@ class SettingsPage {
         localStorage.setItem('userProfile', JSON.stringify(this.userProfile));
         console.log('Profile saved to localStorage:', this.userProfile);
 
+        // 保存されたプロフィールを確認
+        const savedProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+        console.log('Verification - saved profile:', savedProfile);
+
         // Supabaseに保存（利用可能な場合）
-        if (supabaseService.isAvailable() && supabaseService.getCurrentUser()) {
+        if (supabaseService.isAvailable()) {
             try {
-                const result = await supabaseService.saveUserProfile(profileData);
-                console.log('Profile saved to Supabase:', result);
+                const currentUser = await supabaseService.getCurrentUser();
+                console.log('Current user for Supabase save:', currentUser);
+                
+                if (currentUser) {
+                    const result = await supabaseService.saveUserProfile(profileData);
+                    console.log('Profile saved to Supabase:', result);
+                } else {
+                    console.log('No authenticated user, skipping Supabase save');
+                }
             } catch (error) {
                 console.warn('Supabase profile save failed, using localStorage:', error);
             }
@@ -1011,7 +1029,16 @@ class SettingsPage {
      */
     async handleAvatarUpload(e) {
         const file = e.target.files[0];
-        if (!file) {return;}
+        if (!file) {
+            console.log('No file selected');
+            return;
+        }
+
+        console.log('Avatar upload started:', { 
+            fileName: file.name, 
+            fileSize: file.size, 
+            fileType: file.type 
+        });
 
         // ファイルサイズチェック（5MB制限）
         if (file.size > 5 * 1024 * 1024) {
@@ -1028,9 +1055,11 @@ class SettingsPage {
 
         try {
             // プレビュー表示とローカルURL取得
+            console.log('Reading file for preview...');
             const localUrl = await new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
+                    console.log('File read successfully, updating preview...');
                     const preview = safeGetElement('#avatar-preview');
                     if (preview) {
                         preview.innerHTML = `
@@ -1041,24 +1070,33 @@ class SettingsPage {
                     }
                     resolve(e.target.result);
                 };
-                reader.onerror = reject;
+                reader.onerror = (error) => {
+                    console.error('FileReader error:', error);
+                    reject(error);
+                };
                 reader.readAsDataURL(file);
             });
 
+            console.log('Local URL generated:', localUrl.substring(0, 50) + '...');
+
             // Supabaseにアップロード（利用可能な場合）
             if (supabaseService.isAvailable()) {
+                console.log('Supabase is available, attempting upload...');
                 try {
                     const avatarUrl = await supabaseService.uploadAvatar(file);
+                    console.log('Supabase upload successful:', avatarUrl);
                     await this.saveProfile({ avatar_url: avatarUrl });
                     showNotification('アバター画像をアップロードしました', 'success');
                 } catch (uploadError) {
                     console.error('Supabase upload failed:', uploadError);
                     // Supabaseアップロードに失敗した場合は、ローカルに保存
+                    console.log('Falling back to local storage...');
                     await this.saveProfile({ avatar_url: localUrl });
                     showNotification('アバター画像をローカルに保存しました', 'info');
                 }
             } else {
                 // Supabaseが利用できない場合は、ローカルに保存
+                console.log('Supabase not available, saving to local storage...');
                 await this.saveProfile({ avatar_url: localUrl });
                 showNotification('アバター画像をローカルに保存しました', 'info');
             }

@@ -49,9 +49,6 @@ export class WorkoutPage extends BasePage {
         // ナビゲーションを初期化
         await this.navigation.initialize();
 
-        // ワークアウトコンテンツを生成
-        await this.generateWorkoutContent();
-
         // エクササイズデータを読み込み
         await this.loadExerciseData();
 
@@ -102,58 +99,6 @@ export class WorkoutPage extends BasePage {
         }
     }
 
-    /**
-     * ワークアウトコンテンツを生成
-     */
-    async generateWorkoutContent() {
-        const mainContent = document.getElementById('main-content');
-        if (!mainContent) return;
-
-        try {
-            // partials/workout.htmlの内容を読み込み
-            const response = await fetch('partials/workout.html');
-            const htmlContent = await response.text();
-            
-            mainContent.innerHTML = htmlContent;
-            
-        } catch (error) {
-            console.error('Failed to load workout partial:', error);
-            this.generateFallbackContent();
-        }
-    }
-
-    /**
-     * フォールバックコンテンツを生成
-     */
-    generateFallbackContent() {
-        const mainContent = document.getElementById('main-content');
-        if (!mainContent) return;
-
-        mainContent.innerHTML = `
-            <div class="space-y-6">
-                <div class="bg-white rounded-lg shadow p-6">
-                    <h1 class="text-3xl font-bold text-gray-900 mb-2">ワークアウト</h1>
-                    <p class="text-gray-600">今日のトレーニングを記録しましょう</p>
-                </div>
-                <div class="bg-white rounded-lg shadow p-6">
-                    <h2 class="text-xl font-bold text-gray-900 mb-4">新しいワークアウト</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        ${this.muscleGroups.map(muscle => `
-                            <button 
-                                class="muscle-group-btn p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
-                                data-muscle="${muscle}"
-                            >
-                                <div class="text-center">
-                                    <div class="text-2xl mb-2">${this.getMuscleIcon(muscle)}</div>
-                                    <div class="font-medium text-gray-900">${muscle}</div>
-                                </div>
-                            </button>
-                        `).join('')}
-                    </div>
-                </div>
-            </div>
-        `;
-    }
 
     /**
      * 筋肉部位ボタンを動的に生成
