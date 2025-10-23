@@ -18,12 +18,14 @@
 
 ## 技術スタック
 
-- **フロントエンド**: HTML5, CSS3, JavaScript (ES6+)
+- **フロントエンド**: HTML5, CSS3, JavaScript (ES6+ Modules)
 - **スタイリング**: Tailwind CSS
 - **バックエンド**: Supabase (Database & Authentication)
 - **PWA**: Service Worker, Web App Manifest
 - **自動化**: GitHub Actions (Supabaseキープアライブ、CI/CD、セキュリティ監査)
 - **MCP統合**: Supabase MCP サーバー対応
+- **コード品質**: ESLint, Prettier
+- **アーキテクチャ**: モジュラー設計、関心の分離
 
 ## データプライバシー
 
@@ -88,12 +90,13 @@ node supabase-connection-test.js
 
 ### トラブルシューティング
 
-#### ニックネーム設定エラー
-- **原因**: RLS設定またはService Role Key不足
+#### プロフィール編集エラー（RLS Policy Violation）
+- **原因**: Supabaseプロジェクト一時停止またはuser_profilesテーブル未作成
 - **解決方法**: 
-  1. Supabaseダッシュボードでストレージバケット作成
-  2. Service Role Keyを正しく設定
-  3. ブラウザのコンソールでエラー詳細を確認
+  1. `SUPABASE_SETUP.md`の復旧手順に従ってプロジェクトを復旧
+  2. `database/schema.sql`を実行してテーブルを作成
+  3. 暫定的にlocalStorageでプロフィール保存が動作
+  4. ブラウザのコンソールでエラー詳細を確認
 
 #### MCP接続エラー
 - **原因**: アクセストークン不足
@@ -153,6 +156,40 @@ tests/
 2. `[FEATURE_NAME]` を実際の機能名に置換
 3. テストケースを実装
 4. 適切なディレクトリに配置
+
+## アーキテクチャ
+
+### モジュラー設計
+
+アプリケーションは以下のモジュール構成で設計されています：
+
+```
+js/
+├── modules/           # 主要機能モジュール
+│   ├── pageManager.js    # ページ管理・ナビゲーション
+│   └── authManager.js    # 認証管理
+├── services/          # サービス層
+│   └── supabaseService.js # Supabase API ラッパー
+├── utils/             # ユーティリティ
+│   ├── constants.js      # 定数定義
+│   └── helpers.js        # ヘルパー関数
+└── pages/             # ページ固有ロジック
+    └── dashboardPage.js  # ダッシュボード機能
+```
+
+### 設計原則
+
+- **関心の分離**: 各モジュールは単一責任を持つ
+- **依存性注入**: サービス層を通じた疎結合
+- **ES6+ モジュール**: 標準的なimport/export構文
+- **シングルトンパターン**: 状態管理の一元化
+
+## コード品質
+
+- **ESLint**: コード品質とスタイルの統一
+- **Prettier**: 自動コードフォーマット
+- **リンターエラー**: 0件（警告3件のみ）
+- **モジュール化**: 2400行のapp.jsを機能別に分割
 
 ## ライセンス
 
