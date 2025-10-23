@@ -1,6 +1,6 @@
 // jest.config.js - Jest設定ファイル
 
-export default {
+module.exports = {
     testEnvironment: 'jsdom',
     setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
     collectCoverageFrom: [
