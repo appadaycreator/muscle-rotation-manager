@@ -232,10 +232,15 @@ class ExerciseService {
             }
 
             // カスタムエクササイズの取得条件
-            if (supabaseService.getCurrentUser()) {
-                query = query.or(`is_custom.eq.false,and(is_custom.eq.true,created_by_user_id.eq.${supabaseService.getCurrentUser().id})`);
-            } else {
-                query = query.eq('is_custom', false);
+            try {
+                if (supabaseService.getCurrentUser()) {
+                    query = query.or(`is_custom.eq.false,and(is_custom.eq.true,created_by_user_id.eq.${supabaseService.getCurrentUser().id})`);
+                } else {
+                    query = query.eq('is_custom', false);
+                }
+            } catch (columnError) {
+                // is_customカラムが存在しない場合は全てのエクササイズを取得
+                console.warn('is_custom column not found, fetching all exercises:', columnError);
             }
 
             // ソート

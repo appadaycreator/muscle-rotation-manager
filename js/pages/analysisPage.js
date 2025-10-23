@@ -120,14 +120,62 @@ class AnalysisPage {
                 </div>
             </div>
 
+            <!-- 進歩統計 -->
+            <div class="bg-white shadow rounded-lg mb-8">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">進歩統計</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-green-600" id="strength-progress">-</div>
+                            <div class="text-sm text-gray-500">筋力向上率</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-blue-600" id="endurance-progress">-</div>
+                            <div class="text-sm text-gray-500">持久力向上率</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-purple-600" id="overall-score">-</div>
+                            <div class="text-sm text-gray-500">総合スコア</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- 進捗グラフ -->
             <div class="bg-white shadow rounded-lg mb-8">
                 <div class="px-4 py-5 sm:p-6">
                     <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">進捗グラフ</h3>
-                    <div id="progress-charts">
-                        <div class="text-center text-gray-500 py-4">
-                            <i class="fas fa-spinner fa-spin text-xl mb-2"></i>
-                            <p>グラフを読み込み中...</p>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- トレーニング頻度グラフ -->
+                        <div>
+                            <h4 class="text-md font-medium text-gray-700 mb-3">トレーニング頻度</h4>
+                            <div class="h-64">
+                                <canvas id="frequency-chart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- 部位別グラフ -->
+                        <div>
+                            <h4 class="text-md font-medium text-gray-700 mb-3">部位別分布</h4>
+                            <div class="h-64">
+                                <canvas id="muscle-group-chart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- 重量進歩グラフ -->
+                        <div>
+                            <h4 class="text-md font-medium text-gray-700 mb-3">重量進歩</h4>
+                            <div class="h-64">
+                                <canvas id="weight-progress-chart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- セット数進歩グラフ -->
+                        <div>
+                            <h4 class="text-md font-medium text-gray-700 mb-3">セット数進歩</h4>
+                            <div class="h-64">
+                                <canvas id="sets-progress-chart"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -141,6 +189,19 @@ class AnalysisPage {
                         <div class="text-center text-gray-500 py-4">
                             <i class="fas fa-spinner fa-spin text-xl mb-2"></i>
                             <p>詳細データを読み込み中...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 分析レポート -->
+            <div class="bg-white shadow rounded-lg mt-8">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">分析レポート</h3>
+                    <div id="analysis-report">
+                        <div class="text-center text-gray-500 py-4">
+                            <i class="fas fa-spinner fa-spin text-xl mb-2"></i>
+                            <p>レポートを生成中...</p>
                         </div>
                     </div>
                 </div>
@@ -263,9 +324,20 @@ class AnalysisPage {
         const strengthProgress = olderAvgWeight > 0 ?
             ((recentAvgWeight - olderAvgWeight) / olderAvgWeight * 100).toFixed(1) : 0;
 
-        safeGetElement('#strength-progress').textContent = `${strengthProgress}%`;
-        safeGetElement('#endurance-progress').textContent = '計算中...';
-        safeGetElement('#overall-score').textContent = this.calculateOverallScore();
+        // 要素の存在確認を追加
+        const strengthProgressEl = safeGetElement('#strength-progress');
+        const enduranceProgressEl = safeGetElement('#endurance-progress');
+        const overallScoreEl = safeGetElement('#overall-score');
+
+        if (strengthProgressEl) {
+            strengthProgressEl.textContent = `${strengthProgress}%`;
+        }
+        if (enduranceProgressEl) {
+            enduranceProgressEl.textContent = '計算中...';
+        }
+        if (overallScoreEl) {
+            overallScoreEl.textContent = this.calculateOverallScore();
+        }
     }
 
     /**
