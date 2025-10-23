@@ -20,8 +20,22 @@ global.window = {
 
 // window.locationのモック設定（JSDOMの制限を回避）
 // JSDOMではlocationの直接設定が制限されているため、テストファイル内で個別にモック
-
-// window.location のモック設定（Jest環境では既に設定されている可能性があるため削除）
+// locationが既に定義されている場合はスキップ
+try {
+  if (!window.location || !window.location.assign) {
+    // JSDOMの制限を回避するため、locationを完全に置き換え
+    delete window.location;
+    window.location = {
+      href: '',
+      assign: jest.fn(),
+      replace: jest.fn(),
+      reload: jest.fn()
+    };
+  }
+} catch (error) {
+  // locationが既に定義されている場合はスキップ
+  console.warn('window.location already defined, skipping mock setup');
+}
 
 global.document = {
   getElementById: jest.fn(),
