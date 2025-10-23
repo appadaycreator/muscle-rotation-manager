@@ -63,18 +63,25 @@ class ProgressPage {
                     </h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label for="muscle-group-select" class="block text-sm font-medium text-gray-700 mb-2">
+                            <label for="muscle-group-select" 
+                                   class="block text-sm font-medium text-gray-700 mb-2">
                                 筋肉部位
                             </label>
-                            <select id="muscle-group-select" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <select id="muscle-group-select" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md 
+                                           focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 <option value="">筋肉部位を選択</option>
                             </select>
                         </div>
                         <div>
-                            <label for="exercise-select" class="block text-sm font-medium text-gray-700 mb-2">
+                            <label for="exercise-select" 
+                                   class="block text-sm font-medium text-gray-700 mb-2">
                                 エクササイズ
                             </label>
-                            <select id="exercise-select" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" disabled>
+                            <select id="exercise-select" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md 
+                                           focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                    disabled>
                                 <option value="">エクササイズを選択</option>
                             </select>
                         </div>
@@ -83,7 +90,8 @@ class ProgressPage {
 
                 <!-- 統計サマリー -->
                 <div id="stats-summary" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6" style="display: none;">
-                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white">
+                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 
+                                rounded-lg p-6 text-white">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-blue-100 text-sm">現在の1RM</p>
@@ -92,7 +100,8 @@ class ProgressPage {
                             <i class="fas fa-trophy text-3xl text-blue-200"></i>
                         </div>
                     </div>
-                    <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-6 text-white">
+                    <div class="bg-gradient-to-r from-green-500 to-green-600 
+                                rounded-lg p-6 text-white">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-green-100 text-sm">最大重量</p>
@@ -101,7 +110,8 @@ class ProgressPage {
                             <i class="fas fa-weight-hanging text-3xl text-green-200"></i>
                         </div>
                     </div>
-                    <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-6 text-white">
+                    <div class="bg-gradient-to-r from-purple-500 to-purple-600 
+                                rounded-lg p-6 text-white">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-purple-100 text-sm">進歩率</p>
@@ -130,13 +140,19 @@ class ProgressPage {
                                 <div class="flex justify-between items-center mb-4">
                                     <h3 class="text-lg font-semibold text-gray-800">進捗グラフ</h3>
                                     <div class="flex space-x-2">
-                                        <button id="chart-1rm-btn" class="px-3 py-1 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors">
+                                        <button id="chart-1rm-btn" 
+                                                class="px-3 py-1 text-sm bg-blue-500 text-white 
+                                                       rounded-md hover:bg-blue-600 transition-colors">
                                             1RM
                                         </button>
-                                        <button id="chart-weight-btn" class="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors">
+                                        <button id="chart-weight-btn" 
+                                                class="px-3 py-1 text-sm bg-gray-200 text-gray-700 
+                                                       rounded-md hover:bg-gray-300 transition-colors">
                                             重量
                                         </button>
-                                        <button id="chart-volume-btn" class="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors">
+                                        <button id="chart-volume-btn" 
+                                                class="px-3 py-1 text-sm bg-gray-200 text-gray-700 
+                                                       rounded-md hover:bg-gray-300 transition-colors">
                                             ボリューム
                                         </button>
                                     </div>
@@ -216,7 +232,10 @@ class ProgressPage {
                                 <label for="goal-type" class="block text-sm font-medium text-gray-700 mb-2">
                                     目標タイプ
                                 </label>
-                                <select id="goal-type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                <select id="goal-type" 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md 
+                                               focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                        required>
                                     <option value="weight">最大重量</option>
                                     <option value="reps">最大回数</option>
                                     <option value="one_rm">1RM</option>
@@ -226,7 +245,10 @@ class ProgressPage {
                                 <label for="target-value" class="block text-sm font-medium text-gray-700 mb-2">
                                     目標値
                                 </label>
-                                <input type="number" id="target-value" step="0.1" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                <input type="number" id="target-value" step="0.1" min="0" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md 
+                                              focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                       required>
                             </div>
                             <div class="mb-4">
                                 <label for="target-date" class="block text-sm font-medium text-gray-700 mb-2">

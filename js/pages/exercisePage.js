@@ -380,19 +380,24 @@ class ExercisePage {
 
         const isCustom = exercise.is_custom;
         const customBadge = isCustom ?
-            '<span class="inline-block bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">カスタム</span>' : '';
+            '<span class="inline-block bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">' +
+            'カスタム</span>' : '';
 
         return `
-            <div class="exercise-card bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow duration-200" 
+            <div class="exercise-card bg-white rounded-lg shadow-md p-6 cursor-pointer 
+                        hover:shadow-lg transition-shadow duration-200" 
                  data-exercise-id="${exercise.id}">
                 <div class="flex justify-between items-start mb-4">
                     <div class="flex-1">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-2">${exercise.name_ja}</h3>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">
+                            ${exercise.name_ja}
+                        </h3>
                         <p class="text-sm text-gray-600 mb-2">${exercise.name_en}</p>
                         ${customBadge}
                     </div>
                     ${exercise.image_url ?
-        `<img src="${exercise.image_url}" alt="${exercise.name_ja}" class="w-16 h-16 rounded-lg object-cover ml-4">` :
+        `<img src="${exercise.image_url}" alt="${exercise.name_ja}" 
+              class="w-16 h-16 rounded-lg object-cover ml-4">` :
         `<div class="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center ml-4">
                             <i class="fas fa-dumbbell text-gray-400"></i>
                          </div>`

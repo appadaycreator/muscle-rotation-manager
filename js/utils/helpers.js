@@ -1,6 +1,7 @@
 // helpers.js - ユーティリティ関数
 
 import { NOTIFICATION_DURATION, NOTIFICATION_FADE_DURATION } from './constants.js';
+import { handleError } from './errorHandler.js';
 
 /**
  * 通知を表示する
@@ -286,29 +287,8 @@ export function createErrorHTML(message, icon = 'fas fa-exclamation-triangle') {
     `;
 }
 
-/**
- * 統一されたエラーハンドリング (非推奨 - errorHandler.jsを使用)
- * @deprecated Use errorHandler.js instead
- * @param {Error} error - エラーオブジェクト
- * @param {string} context - エラーが発生したコンテキスト
- * @param {boolean} showNotificationFlag - 通知を表示するか
- * @returns {string} エラーメッセージ
- */
-export function handleError(error, context = 'Unknown', showNotificationFlag = true) {
-    const errorMessage = error?.message || 'Unknown error occurred';
-    const fullMessage = `${context}: ${errorMessage}`;
-
-    console.error(fullMessage, error);
-
-    if (showNotificationFlag) {
-        showNotification(
-            `${context}でエラーが発生しました`,
-            'error'
-        );
-    }
-
-    return fullMessage;
-}
+// 非推奨のhandleError関数は削除されました。
+// 代わりにerrorHandler.jsのhandleError関数を使用してください。
 
 /**
  * 非同期関数を安全に実行
@@ -321,7 +301,7 @@ export async function safeAsync(asyncFn, context = 'Async operation', fallbackVa
     try {
         return await asyncFn();
     } catch (error) {
-        handleError(error, context);
+        handleError(error, { context });
         return fallbackValue;
     }
 }
@@ -600,12 +580,16 @@ export function createCalendarModalHTML(dateStr, workouts, plannedWorkouts = [])
                 <div class="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4">
                     <div class="flex justify-end space-x-3">
                         ${isFuture ? `
-                            <button class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors" onclick="addPlannedWorkout('${dateStr}')">
+                            <button class="px-4 py-2 bg-blue-500 text-white rounded-lg 
+                                           hover:bg-blue-600 transition-colors" 
+                                    onclick="addPlannedWorkout('${dateStr}')">
                                 <i class="fas fa-plus mr-2"></i>
                                 予定を追加
                             </button>
                         ` : ''}
-                        <button class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors" onclick="document.getElementById('calendar-modal').remove()">
+                        <button class="px-4 py-2 bg-gray-500 text-white rounded-lg 
+                                       hover:bg-gray-600 transition-colors" 
+                                onclick="document.getElementById('calendar-modal').remove()">
                             閉じる
                         </button>
                     </div>
