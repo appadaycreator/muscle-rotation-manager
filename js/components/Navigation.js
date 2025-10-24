@@ -50,7 +50,7 @@ export class Navigation {
             // イベントリスナーを設定
             this.setupEventListeners();
 
-            // ツールチップを設定
+            // ツールチップを設定（サイドバー読み込み後）
             this.setupTooltips();
 
             // 認証状態に応じてナビゲーションを更新
@@ -352,6 +352,16 @@ export class Navigation {
         console.log('💡 Adding tooltips to navigation items...');
 
         try {
+            // サイドバーが存在するか確認
+            const sidebar = document.getElementById('desktop-sidebar');
+            if (!sidebar) {
+                console.warn('⚠️ Desktop sidebar not found for navigation tooltips, retrying in 100ms...');
+                setTimeout(() => {
+                    this.addNavigationTooltips();
+                }, 100);
+                return;
+            }
+
             // ナビゲーションアイテムのツールチップ設定
             const navTooltips = [
                 { id: 'dashboard', text: 'ダッシュボード\nトレーニングの概要と進捗を確認' },
@@ -367,8 +377,12 @@ export class Navigation {
 
             // 各ナビゲーションアイテムにツールチップを追加
             navTooltips.forEach(item => {
-                const elements = document.querySelectorAll(`a[href*="${item.id}"]`);
+                // より具体的なセレクターを使用
+                const elements = document.querySelectorAll(`a[href="/${item.id}.html"]`);
+                console.log(`🔍 Looking for elements with href="/${item.id}.html":`, elements.length);
+                
                 elements.forEach(element => {
+                    console.log(`📌 Adding tooltip to element:`, element);
                     tooltipManager.addTooltip(element, item.text, {
                         position: 'right',
                         maxWidth: 200,
@@ -626,6 +640,25 @@ export class Navigation {
     setupTooltips() {
         try {
             console.log('Setting up tooltips for navigation');
+
+            // デバッグ: サイドバー要素の存在確認
+            const sidebar = document.getElementById('desktop-sidebar');
+            console.log('🔍 Desktop sidebar found:', !!sidebar);
+            
+            if (sidebar) {
+                const navLinks = sidebar.querySelectorAll('a[href]');
+                console.log('🔗 Navigation links found:', navLinks.length);
+                navLinks.forEach((link, index) => {
+                    console.log(`Link ${index + 1}:`, link.href, link.textContent.trim());
+                });
+            } else {
+                console.warn('⚠️ Desktop sidebar not found, retrying in 100ms...');
+                // サイドバーが読み込まれていない場合、少し待ってから再試行
+                setTimeout(() => {
+                    this.setupTooltips();
+                }, 100);
+                return;
+            }
 
             // デスクトップサイドバーのツールチップ
             tooltipManager.addDynamicTooltip('a[href="/dashboard.html"]', 'ダッシュボード：ワークアウトの統計情報と推奨事項を表示します。', {

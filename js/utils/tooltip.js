@@ -695,26 +695,39 @@ export class TooltipManager {
             return;
         }
 
-        console.log(`🔧 Adding tooltip to element:`, element);
+        // セレクター文字列の場合は要素を取得
+        let targetElement = element;
+        if (typeof element === 'string') {
+            targetElement = document.querySelector(element);
+            if (!targetElement) {
+                console.warn(`⚠️ Element not found for selector: ${element}`);
+                return;
+            }
+        }
+
+        console.log(`🔧 Adding tooltip to element:`, targetElement);
         console.log(`📝 Tooltip text: ${text}`);
         console.log(`⚙️ Config:`, config);
 
-        element.setAttribute('data-tooltip', text);
+        targetElement.setAttribute('data-tooltip', text);
+        
+        // デバッグ: 属性が正しく設定されたか確認
+        console.log(`✅ data-tooltip attribute set:`, targetElement.getAttribute('data-tooltip'));
 
         // 設定をデータ属性に追加
-        if (config.position) {element.setAttribute('data-tooltip-position', config.position);}
-        if (config.delay !== undefined) {element.setAttribute('data-tooltip-delay', config.delay);}
-        if (config.maxWidth) {element.setAttribute('data-tooltip-max-width', config.maxWidth);}
-        if (config.theme) {element.setAttribute('data-tooltip-theme', config.theme);}
-        if (config.animation !== undefined) {element.setAttribute('data-tooltip-animation', config.animation);}
+        if (config.position) {targetElement.setAttribute('data-tooltip-position', config.position);}
+        if (config.delay !== undefined) {targetElement.setAttribute('data-tooltip-delay', config.delay);}
+        if (config.maxWidth) {targetElement.setAttribute('data-tooltip-max-width', config.maxWidth);}
+        if (config.theme) {targetElement.setAttribute('data-tooltip-theme', config.theme);}
+        if (config.animation !== undefined) {targetElement.setAttribute('data-tooltip-animation', config.animation);}
         
         console.log(`✅ Tooltip attributes added to element:`, {
-            'data-tooltip': element.getAttribute('data-tooltip'),
-            'data-tooltip-position': element.getAttribute('data-tooltip-position'),
-            'data-tooltip-delay': element.getAttribute('data-tooltip-delay'),
-            'data-tooltip-max-width': element.getAttribute('data-tooltip-max-width'),
-            'data-tooltip-theme': element.getAttribute('data-tooltip-theme'),
-            'data-tooltip-animation': element.getAttribute('data-tooltip-animation')
+            'data-tooltip': targetElement.getAttribute('data-tooltip'),
+            'data-tooltip-position': targetElement.getAttribute('data-tooltip-position'),
+            'data-tooltip-delay': targetElement.getAttribute('data-tooltip-delay'),
+            'data-tooltip-max-width': targetElement.getAttribute('data-tooltip-max-width'),
+            'data-tooltip-theme': targetElement.getAttribute('data-tooltip-theme'),
+            'data-tooltip-animation': targetElement.getAttribute('data-tooltip-animation')
         });
     }
 

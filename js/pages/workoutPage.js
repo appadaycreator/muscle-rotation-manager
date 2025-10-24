@@ -748,8 +748,7 @@ export class WorkoutPage extends BasePage {
             console.log('Setting up tooltips for workout page');
 
             // 筋肉部位ボタンのツールチップ
-            tooltipManager.addTooltip('.muscle-group-btn[data-muscle="胸"]', {
-                content: '胸筋（大胸筋）を鍛えるエクササイズ。ベンチプレス、プッシュアップなど。',
+            tooltipManager.addTooltip('.muscle-group-btn[data-muscle="胸"]', '胸筋（大胸筋）を鍛えるエクササイズ。ベンチプレス、プッシュアップなど。', {
                 position: 'top',
                 theme: 'primary',
                 animation: 'bounce',
@@ -757,8 +756,7 @@ export class WorkoutPage extends BasePage {
                 delay: 200
             });
 
-            tooltipManager.addTooltip('.muscle-group-btn[data-muscle="背中"]', {
-                content: '背筋群を鍛えるエクササイズ。ラットプルダウン、ローイングなど。',
+            tooltipManager.addTooltip('.muscle-group-btn[data-muscle="背中"]', '背筋群を鍛えるエクササイズ。ラットプルダウン、ローイングなど。', {
                 position: 'top',
                 theme: 'success',
                 animation: 'slide',
@@ -766,8 +764,7 @@ export class WorkoutPage extends BasePage {
                 delay: 200
             });
 
-            tooltipManager.addTooltip('.muscle-group-btn[data-muscle="肩"]', {
-                content: '肩（三角筋）を鍛えるエクササイズ。ショルダープレス、サイドレイズなど。',
+            tooltipManager.addTooltip('.muscle-group-btn[data-muscle="肩"]', '肩（三角筋）を鍛えるエクササイズ。ショルダープレス、サイドレイズなど。', {
                 position: 'top',
                 theme: 'warning',
                 animation: 'scale',
@@ -775,8 +772,7 @@ export class WorkoutPage extends BasePage {
                 delay: 200
             });
 
-            tooltipManager.addTooltip('.muscle-group-btn[data-muscle="腕"]', {
-                content: '上腕二頭筋・三頭筋を鍛えるエクササイズ。アームカール、トライセップスなど。',
+            tooltipManager.addTooltip('.muscle-group-btn[data-muscle="腕"]', '上腕二頭筋・三頭筋を鍛えるエクササイズ。アームカール、トライセップスなど。', {
                 position: 'top',
                 theme: 'primary',
                 animation: 'fadeIn',
@@ -784,8 +780,7 @@ export class WorkoutPage extends BasePage {
                 delay: 200
             });
 
-            tooltipManager.addTooltip('.muscle-group-btn[data-muscle="脚"]', {
-                content: '脚部（大腿四頭筋・ハムストリング）を鍛えるエクササイズ。スクワット、レッグプレスなど。',
+            tooltipManager.addTooltip('.muscle-group-btn[data-muscle="脚"]', '脚部（大腿四頭筋・ハムストリング）を鍛えるエクササイズ。スクワット、レッグプレスなど。', {
                 position: 'top',
                 theme: 'success',
                 animation: 'bounce',
@@ -793,8 +788,7 @@ export class WorkoutPage extends BasePage {
                 delay: 200
             });
 
-            tooltipManager.addTooltip('.muscle-group-btn[data-muscle="腹筋"]', {
-                content: '腹筋群を鍛えるエクササイズ。クランチ、プランクなど。',
+            tooltipManager.addTooltip('.muscle-group-btn[data-muscle="腹筋"]', '腹筋群を鍛えるエクササイズ。クランチ、プランクなど。', {
                 position: 'top',
                 theme: 'warning',
                 animation: 'slide',
@@ -803,8 +797,7 @@ export class WorkoutPage extends BasePage {
             });
 
             // クイックスタートボタンのツールチップ
-            tooltipManager.addTooltip('#quick-start-btn', {
-                content: '推奨される筋肉部位のエクササイズを自動選択してワークアウトを開始します。',
+            tooltipManager.addTooltip('#quick-start-btn', '推奨される筋肉部位のエクササイズを自動選択してワークアウトを開始します。', {
                 position: 'top',
                 theme: 'primary',
                 animation: 'bounce',
@@ -813,8 +806,7 @@ export class WorkoutPage extends BasePage {
             });
 
             // ワークアウト開始ボタンのツールチップ
-            tooltipManager.addTooltip('#start-workout-btn', {
-                content: '選択したエクササイズでワークアウトを開始します。タイマーが自動で開始されます。',
+            tooltipManager.addTooltip('#start-workout-btn', '選択したエクササイズでワークアウトを開始します。タイマーが自動で開始されます。', {
                 position: 'top',
                 theme: 'success',
                 animation: 'scale',
@@ -823,8 +815,7 @@ export class WorkoutPage extends BasePage {
             });
 
             // ワークアウト終了ボタンのツールチップ
-            tooltipManager.addTooltip('#end-workout-btn', {
-                content: '現在のワークアウトを終了し、結果を保存します。',
+            tooltipManager.addTooltip('#end-workout-btn', '現在のワークアウトを終了し、結果を保存します。', {
                 position: 'top',
                 theme: 'error',
                 animation: 'fadeIn',
@@ -833,8 +824,7 @@ export class WorkoutPage extends BasePage {
             });
 
             // エクササイズ追加ボタンのツールチップ
-            tooltipManager.addTooltip('#add-exercise-btn', {
-                content: '新しいエクササイズをワークアウトに追加します。',
+            tooltipManager.addTooltip('#add-exercise-btn', '新しいエクササイズをワークアウトに追加します。', {
                 position: 'top',
                 theme: 'primary',
                 animation: 'slide',
@@ -843,8 +833,7 @@ export class WorkoutPage extends BasePage {
             });
 
             // セット追加ボタンのツールチップ
-            tooltipManager.addTooltip('.add-set-btn', {
-                content: 'このエクササイズに新しいセットを追加します。',
+            tooltipManager.addTooltip('.add-set-btn', 'このエクササイズに新しいセットを追加します。', {
                 position: 'top',
                 theme: 'success',
                 animation: 'scale',
@@ -853,8 +842,7 @@ export class WorkoutPage extends BasePage {
             });
 
             // セット削除ボタンのツールチップ
-            tooltipManager.addTooltip('.remove-set-btn', {
-                content: 'このセットを削除します。',
+            tooltipManager.addTooltip('.remove-set-btn', 'このセットを削除します。', {
                 position: 'top',
                 theme: 'error',
                 animation: 'fadeIn',
@@ -863,8 +851,7 @@ export class WorkoutPage extends BasePage {
             });
 
             // エクササイズ削除ボタンのツールチップ
-            tooltipManager.addTooltip('.remove-exercise-btn', {
-                content: 'このエクササイズをワークアウトから削除します。',
+            tooltipManager.addTooltip('.remove-exercise-btn', 'このエクササイズをワークアウトから削除します。', {
                 position: 'top',
                 theme: 'error',
                 animation: 'slide',

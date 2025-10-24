@@ -724,51 +724,42 @@ class DashboardPage {
             console.log('Setting up tooltips for dashboard page');
 
             // 統計カードのツールチップ
-            tooltipManager.addTooltip('#total-workouts', {
-                content: 'これまでに完了したワークアウトの総数です。',
+            tooltipManager.addTooltip('#total-workouts', 'これまでに完了したワークアウトの総数です。', {
                 position: 'top'
             });
 
-            tooltipManager.addTooltip('#total-exercises', {
-                content: 'これまでに実行したエクササイズの総数です。',
+            tooltipManager.addTooltip('#total-exercises', 'これまでに実行したエクササイズの総数です。', {
                 position: 'top'
             });
 
-            tooltipManager.addTooltip('#total-time', {
-                content: 'これまでのワークアウト時間の合計です。',
+            tooltipManager.addTooltip('#total-time', 'これまでのワークアウト時間の合計です。', {
                 position: 'top'
             });
 
-            tooltipManager.addTooltip('#current-streak', {
-                content: '連続してワークアウトを行っている日数です。',
+            tooltipManager.addTooltip('#current-streak', '連続してワークアウトを行っている日数です。', {
                 position: 'top'
             });
 
             // 筋肉回復状況のツールチップ
-            tooltipManager.addTooltip('.muscle-recovery-card', {
-                content: '各筋肉部位の回復状況を表示します。緑：完全回復、黄：回復中、赤：疲労状態',
+            tooltipManager.addTooltip('.muscle-recovery-card', '各筋肉部位の回復状況を表示します。緑：完全回復、黄：回復中、赤：疲労状態', {
                 position: 'top'
             });
 
             // 推奨ワークアウトのツールチップ
-            tooltipManager.addTooltip('.recommendation-card', {
-                content: 'AIが分析した推奨ワークアウトです。あなたのトレーニング履歴と回復状況に基づいています。',
+            tooltipManager.addTooltip('.recommendation-card', 'AIが分析した推奨ワークアウトです。あなたのトレーニング履歴と回復状況に基づいています。', {
                 position: 'top'
             });
 
             // クイックアクションボタンのツールチップ
-            tooltipManager.addTooltip('#quick-start-workout', {
-                content: '推奨される筋肉部位のエクササイズを自動選択してワークアウトを開始します。',
+            tooltipManager.addTooltip('#quick-start-workout', '推奨される筋肉部位のエクササイズを自動選択してワークアウトを開始します。', {
                 position: 'top'
             });
 
-            tooltipManager.addTooltip('#view-calendar', {
-                content: 'カレンダーで過去のワークアウト履歴を確認できます。',
+            tooltipManager.addTooltip('#view-calendar', 'カレンダーで過去のワークアウト履歴を確認できます。', {
                 position: 'top'
             });
 
-            tooltipManager.addTooltip('#view-progress', {
-                content: '詳細な進捗分析とグラフを表示します。',
+            tooltipManager.addTooltip('#view-progress', '詳細な進捗分析とグラフを表示します。', {
                 position: 'top'
             });
 

@@ -650,8 +650,7 @@ class SettingsPage {
             console.log('Setting up tooltips for settings page');
 
             // 基本プロフィールのツールチップ
-            tooltipManager.addTooltip('#display_name', {
-                content: '他のユーザーに表示される名前です。本名ではなく、ニックネームを入力してください。',
+            tooltipManager.addTooltip('#display_name', '他のユーザーに表示される名前です。本名ではなく、ニックネームを入力してください。', {
                 position: 'right',
                 theme: 'primary',
                 animation: 'fadeIn',
@@ -659,8 +658,7 @@ class SettingsPage {
                 delay: 300
             });
 
-            tooltipManager.addTooltip('#email', {
-                content: 'ログインに使用するメールアドレスです。変更する場合は、認証システムで更新してください。',
+            tooltipManager.addTooltip('#email', 'ログインに使用するメールアドレスです。変更する場合は、認証システムで更新してください。', {
                 position: 'right',
                 theme: 'warning',
                 animation: 'slide',
@@ -668,8 +666,7 @@ class SettingsPage {
                 delay: 300
             });
 
-            tooltipManager.addTooltip('#age', {
-                content: '年齢は適切なトレーニング強度を計算するために使用されます。',
+            tooltipManager.addTooltip('#age', '年齢は適切なトレーニング強度を計算するために使用されます。', {
                 position: 'right',
                 theme: 'success',
                 animation: 'scale',
@@ -677,8 +674,7 @@ class SettingsPage {
                 delay: 300
             });
 
-            tooltipManager.addTooltip('#weight', {
-                content: '現在の体重を入力してください。カロリー計算やトレーニング強度の調整に使用されます。',
+            tooltipManager.addTooltip('#weight', '現在の体重を入力してください。カロリー計算やトレーニング強度の調整に使用されます。', {
                 position: 'right',
                 theme: 'primary',
                 animation: 'bounce',
@@ -686,8 +682,7 @@ class SettingsPage {
                 delay: 300
             });
 
-            tooltipManager.addTooltip('#height', {
-                content: '身長を入力してください。BMI計算や適切なトレーニング強度の算出に使用されます。',
+            tooltipManager.addTooltip('#height', '身長を入力してください。BMI計算や適切なトレーニング強度の算出に使用されます。', {
                 position: 'right',
                 theme: 'success',
                 animation: 'fadeIn',

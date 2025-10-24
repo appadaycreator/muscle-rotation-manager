@@ -1563,84 +1563,70 @@ class ExercisePage {
             console.log('Setting up tooltips for exercise page');
 
             // 検索機能のツールチップ
-            tooltipManager.addTooltip('#exercise-search', {
-                content: 'エクササイズ名で検索できます。部分一致で検索されます。',
+            tooltipManager.addTooltip('#exercise-search', 'エクササイズ名で検索できます。部分一致で検索されます。', {
                 position: 'bottom'
             });
 
             // フィルター機能のツールチップ
-            tooltipManager.addTooltip('#muscle-group-filter', {
-                content: '筋肉部位でフィルタリングできます。複数選択可能です。',
+            tooltipManager.addTooltip('#muscle-group-filter', '筋肉部位でフィルタリングできます。複数選択可能です。', {
                 position: 'bottom'
             });
 
-            tooltipManager.addTooltip('#equipment-filter', {
-                content: '使用器具でフィルタリングできます。',
+            tooltipManager.addTooltip('#equipment-filter', '使用器具でフィルタリングできます。', {
                 position: 'bottom'
             });
 
-            tooltipManager.addTooltip('#difficulty-filter', {
-                content: '難易度でフィルタリングできます。',
+            tooltipManager.addTooltip('#difficulty-filter', '難易度でフィルタリングできます。', {
                 position: 'bottom'
             });
 
             // エクササイズカードのツールチップ
-            tooltipManager.addTooltip('.exercise-card', {
-                content: 'エクササイズの詳細情報を表示します。クリックで詳細を確認できます。',
+            tooltipManager.addTooltip('.exercise-card', 'エクササイズの詳細情報を表示します。クリックで詳細を確認できます。', {
                 position: 'top'
             });
 
             // エクササイズ追加ボタンのツールチップ
-            tooltipManager.addTooltip('#add-exercise-btn', {
-                content: '新しいエクササイズを追加します。',
+            tooltipManager.addTooltip('#add-exercise-btn', '新しいエクササイズを追加します。', {
                 position: 'top'
             });
 
             // エクササイズ編集ボタンのツールチップ
-            tooltipManager.addTooltip('.edit-exercise-btn', {
-                content: 'エクササイズの情報を編集します。',
+            tooltipManager.addTooltip('.edit-exercise-btn', 'エクササイズの情報を編集します。', {
                 position: 'top'
             });
 
             // エクササイズ削除ボタンのツールチップ
-            tooltipManager.addTooltip('.delete-exercise-btn', {
-                content: 'エクササイズを削除します。この操作は取り消せません。',
+            tooltipManager.addTooltip('.delete-exercise-btn', 'エクササイズを削除します。この操作は取り消せません。', {
                 position: 'top'
             });
 
             // 筋肉部位タグのツールチップ
-            tooltipManager.addTooltip('.muscle-group-tag', {
-                content: 'このエクササイズで鍛えられる筋肉部位です。',
+            tooltipManager.addTooltip('.muscle-group-tag', 'このエクササイズで鍛えられる筋肉部位です。', {
                 position: 'top'
             });
 
             // 難易度バッジのツールチップ
-            tooltipManager.addTooltip('.difficulty-badge', {
-                content: 'エクササイズの難易度レベルです。',
+            tooltipManager.addTooltip('.difficulty-badge', 'エクササイズの難易度レベルです。', {
                 position: 'top'
             });
 
             // 器具アイコンのツールチップ
-            tooltipManager.addTooltip('.equipment-icon', {
-                content: 'このエクササイズに必要な器具です。',
+            tooltipManager.addTooltip('.equipment-icon', 'このエクササイズに必要な器具です。', {
                 position: 'top'
             });
 
             // ページネーションのツールチップ
-            tooltipManager.addTooltip('.pagination-btn', {
-                content: '他のページのエクササイズを表示します。',
+            tooltipManager.addTooltip('.pagination-btn', '他のページのエクササイズを表示します。', {
                 position: 'top'
             });
 
             // ソート機能のツールチップ
-            tooltipManager.addTooltip('#sort-select', {
-                content: 'エクササイズの並び順を変更できます。',
+            tooltipManager.addTooltip('#sort-select', 'エクササイズの並び順を変更できます。', {
                 position: 'bottom'
             });
 
             // 表示件数のツールチップ
-            tooltipManager.addTooltip('#items-per-page', {
-                content: '1ページに表示するエクササイズの数を設定できます。',
+            tooltipManager.addTooltip('#items-per-page', '1ページに表示するエクササイズの数を設定できます。', {
                 position: 'bottom'
             });
 
