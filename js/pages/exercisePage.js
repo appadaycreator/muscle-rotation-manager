@@ -5,7 +5,7 @@ import { supabaseService } from '../services/supabaseService.js';
 import { muscleGroupService } from '../services/muscleGroupService.js';
 import { showNotification, debounce } from '../utils/helpers.js';
 import { handleError } from '../utils/errorHandler.js';
-import { tooltipManager } from '../utils/tooltip.js';
+import { tooltipManager } from '../utils/TooltipManager.js';
 
 /**
  * エクササイズ管理ページクラス

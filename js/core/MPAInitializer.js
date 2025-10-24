@@ -4,7 +4,7 @@ import { authManager } from '../modules/authManager.js';
 import { supabaseService } from '../services/supabaseService.js';
 import { showNotification } from '../utils/helpers.js';
 import { handleError } from '../utils/errorHandler.js';
-import { tooltipManager } from '../utils/tooltip.js';
+import { tooltipManager } from '../utils/TooltipManager.js';
 
 /**
  * MPA初期化クラス

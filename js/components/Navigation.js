@@ -2,7 +2,7 @@
 
 import { authManager } from '../modules/authManager.js';
 import { showNotification } from '../utils/helpers.js';
-import { tooltipManager } from '../utils/tooltip.js';
+import { tooltipManager } from '../utils/TooltipManager.js';
 
 /**
  * ナビゲーションコンポーネント

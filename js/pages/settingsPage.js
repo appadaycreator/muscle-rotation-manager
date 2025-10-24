@@ -8,7 +8,7 @@ import {
     safeGetElement
 } from '../utils/helpers.js';
 import { globalFormValidator } from '../utils/validation.js';
-import { tooltipManager } from '../utils/tooltip.js';
+import { tooltipManager } from '../utils/TooltipManager.js';
 
 class SettingsPage {
     constructor() {

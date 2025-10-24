@@ -5,7 +5,7 @@ import { Navigation } from '../components/Navigation.js';
 import { supabaseService } from '../services/supabaseService.js';
 import { authManager } from '../modules/authManager.js';
 import { showNotification } from '../utils/helpers.js';
-import { tooltipManager } from '../utils/tooltip.js';
+import { tooltipManager } from '../utils/TooltipManager.js';
 
 /**
  * ワークアウトページクラス（シンプル版）

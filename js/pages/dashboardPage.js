@@ -5,7 +5,7 @@ import recommendationService from '../services/recommendationService.js';
 import { showNotification, createErrorHTML, formatWorkoutDate, getDaysAgo, getWorkoutColor, parseExercises } from '../utils/helpers.js';
 import { MUSCLE_GROUPS } from '../utils/constants.js';
 import { authManager } from '../modules/authManager.js';
-import { tooltipManager } from '../utils/tooltip.js';
+import { tooltipManager } from '../utils/TooltipManager.js';
 
 class DashboardPage {
     constructor() {
