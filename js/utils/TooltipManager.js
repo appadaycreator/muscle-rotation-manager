@@ -193,7 +193,7 @@ export class TooltipManager {
      * マウスオーバー処理
      */
     handleMouseOver(event) {
-        const element = event.target.closest('[data-tooltip]');
+        const element = this.findClosestElement(event.target, '[data-tooltip]');
         if (!element) return;
 
         // 既存のタイムアウトをクリア
@@ -214,7 +214,7 @@ export class TooltipManager {
      * マウスアウト処理
      */
     handleMouseOut(event) {
-        const element = event.target.closest('[data-tooltip]');
+        const element = this.findClosestElement(event.target, '[data-tooltip]');
         if (!element) return;
 
         // タイムアウトをクリア
@@ -268,6 +268,24 @@ export class TooltipManager {
      */
     isElementHovered(element) {
         return element.matches(':hover');
+    }
+
+    /**
+     * クロスブラウザ対応のclosestメソッド
+     */
+    findClosestElement(element, selector) {
+        if (element.closest) {
+            return element.closest(selector);
+        }
+        
+        // フォールバック実装
+        while (element && element.nodeType === Node.ELEMENT_NODE) {
+            if (element.matches && element.matches(selector)) {
+                return element;
+            }
+            element = element.parentElement;
+        }
+        return null;
     }
 
     /**
@@ -458,6 +476,32 @@ export class TooltipManager {
             default:
                 x = event.clientX + 10;
                 y = event.clientY - tooltipRect.height - 10;
+        }
+
+        // 初期位置を設定（getBoundingClientRectが正しく動作するように）
+        tooltip.style.left = `${x}px`;
+        tooltip.style.top = `${y}px`;
+        
+        // 実際のサイズを取得して再計算
+        const actualRect = tooltip.getBoundingClientRect();
+        
+        switch (config.position) {
+            case 'top':
+                x = rect.left + (rect.width / 2) - (actualRect.width / 2);
+                y = rect.top - actualRect.height - config.offset;
+                break;
+            case 'bottom':
+                x = rect.left + (rect.width / 2) - (actualRect.width / 2);
+                y = rect.bottom + config.offset;
+                break;
+            case 'left':
+                x = rect.left - actualRect.width - config.offset;
+                y = rect.top + (rect.height / 2) - (actualRect.height / 2);
+                break;
+            case 'right':
+                x = rect.right + config.offset;
+                y = rect.top + (rect.height / 2) - (actualRect.height / 2);
+                break;
         }
 
         // ビューポート内に収める

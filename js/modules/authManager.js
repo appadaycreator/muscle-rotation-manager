@@ -66,9 +66,9 @@ class AuthManager {
                 this.handleLogout();
             }
 
-            // アバター画像のクリック
-            if (e.target.matches('#user-avatar')) {
-                console.log('User avatar clicked');
+            // アバター画像またはユーザープロフィールコンテナのクリック
+            if (e.target.matches('#user-avatar') || e.target.closest('#user-profile-container')) {
+                console.log('User profile container clicked');
                 e.preventDefault();
                 e.stopPropagation();
                 this.toggleUserDropdown();
@@ -158,11 +158,13 @@ class AuthManager {
         const userAvatar = document.getElementById('user-avatar');
         const userName = document.getElementById('user-name');
         const userEmail = document.getElementById('user-email');
+        const userDisplayName = document.getElementById('user-display-name');
 
         console.log('updateAuthUI called, elements found:', { 
             loginBtn: !!loginBtn, 
             userProfile: !!userProfile, 
-            userAvatar: !!userAvatar 
+            userAvatar: !!userAvatar,
+            userDisplayName: !!userDisplayName
         });
 
         try {
@@ -238,6 +240,24 @@ class AuthManager {
                     }
                     
                     userName.textContent = displayName;
+                }
+                
+                // ヘッダー表示用のユーザー名を設定
+                if (userDisplayName) {
+                    let headerDisplayName = 'ユーザー';
+                    
+                    if (userProfileData?.display_name) {
+                        headerDisplayName = userProfileData.display_name;
+                    } else if (currentUser.user_metadata?.display_name) {
+                        headerDisplayName = currentUser.user_metadata.display_name;
+                    } else if (currentUser.user_metadata?.full_name) {
+                        headerDisplayName = currentUser.user_metadata.full_name;
+                    } else if (currentUser.email) {
+                        headerDisplayName = currentUser.email.split('@')[0];
+                    }
+                    
+                    userDisplayName.textContent = headerDisplayName;
+                    console.log('Header display name set:', headerDisplayName);
                 }
                 
                 if (userEmail) {
