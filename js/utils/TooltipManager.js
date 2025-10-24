@@ -10,7 +10,8 @@ export class TooltipManager {
         this.config = {
             delay: 300,
             hideDelay: 100,
-            maxWidth: 300,
+            maxWidth: 400,
+            minWidth: 200,
             zIndex: 10000,
             animation: 'fadeIn',
             theme: 'light',
@@ -41,11 +42,13 @@ export class TooltipManager {
             color: '#1f2937',
             border: '1px solid #e5e7eb',
             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-            borderRadius: '6px',
-            fontSize: '14px',
-            lineHeight: '1.4',
-            padding: '8px 12px',
-            fontFamily: "'Noto Sans JP', 'Inter', sans-serif"
+            borderRadius: '8px',
+            fontSize: '15px',
+            lineHeight: '1.6',
+            padding: '12px 16px',
+            fontFamily: "'Noto Sans JP', 'Inter', sans-serif",
+            fontWeight: '400',
+            letterSpacing: '0.025em'
         });
 
         this.themes.set('dark', {
@@ -53,11 +56,13 @@ export class TooltipManager {
             color: '#f9fafb',
             border: '1px solid #374151',
             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.1)',
-            borderRadius: '6px',
-            fontSize: '14px',
-            lineHeight: '1.4',
-            padding: '8px 12px',
-            fontFamily: "'Noto Sans JP', 'Inter', sans-serif"
+            borderRadius: '8px',
+            fontSize: '15px',
+            lineHeight: '1.6',
+            padding: '12px 16px',
+            fontFamily: "'Noto Sans JP', 'Inter', sans-serif",
+            fontWeight: '400',
+            letterSpacing: '0.025em'
         });
     }
 
@@ -365,8 +370,12 @@ export class TooltipManager {
         Object.assign(tooltip.style, {
             position: 'absolute',
             maxWidth: `${config.maxWidth}px`,
+            minWidth: `${config.minWidth}px`,
+            width: 'auto',
             zIndex: this.config.zIndex + 1,
             pointerEvents: 'none',
+            whiteSpace: 'pre-wrap',
+            wordWrap: 'break-word',
             ...theme
         });
 
@@ -534,12 +543,14 @@ export class TooltipManager {
         const position = element.getAttribute('data-tooltip-position');
         const delay = element.getAttribute('data-tooltip-delay');
         const maxWidth = element.getAttribute('data-tooltip-max-width');
+        const minWidth = element.getAttribute('data-tooltip-min-width');
         const theme = element.getAttribute('data-tooltip-theme');
         const animation = element.getAttribute('data-tooltip-animation');
 
         if (position) config.position = position;
         if (delay) config.delay = parseInt(delay);
         if (maxWidth) config.maxWidth = parseInt(maxWidth);
+        if (minWidth) config.minWidth = parseInt(minWidth);
         if (theme) config.theme = theme;
         if (animation) config.animation = animation;
 

@@ -258,6 +258,9 @@ class AuthManager {
                     
                     userDisplayName.textContent = headerDisplayName;
                     console.log('Header display name set:', headerDisplayName);
+                    console.log('UserDisplayName element:', userDisplayName);
+                } else {
+                    console.warn('userDisplayName element not found!');
                 }
                 
                 if (userEmail) {
@@ -653,8 +656,17 @@ class AuthManager {
      */
     handleProfileSettings() {
         console.log('Opening profile settings');
-        // 設定ページに遷移
-        window.location.href = '/settings.html';
+        try {
+            // ドロップダウンを閉じる
+            this.closeUserDropdown();
+            
+            // 設定ページに遷移
+            console.log('Navigating to settings page...');
+            window.location.href = '/settings.html';
+        } catch (error) {
+            console.error('Failed to navigate to settings:', error);
+            showNotification('設定ページへの遷移に失敗しました', 'error');
+        }
     }
 }
 
