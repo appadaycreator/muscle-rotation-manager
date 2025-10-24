@@ -440,16 +440,31 @@ export class TooltipManager {
      * @param {Object} config - 設定
      */
     showTooltipWithAnimation(tooltip, config) {
+        // ツールチップコンテナを表示
+        const container = document.getElementById('tooltip-container');
+        if (container) {
+            container.style.opacity = '1';
+        }
+        
         if (!config.animation) {
             tooltip.style.opacity = '1';
+            tooltip.style.transform = 'translateY(0)';
             return;
         }
 
-        const animation = this.getAnimation(config.animation);
+        const animationName = config.animationName || 'fadeIn';
+        const animation = this.getAnimation(animationName);
         
         // アニメーションで表示
         requestAnimationFrame(() => {
-            Object.assign(tooltip.style, animation.visible);
+            // アニメーションのvisible状態を適用
+            if (animation.visible) {
+                Object.assign(tooltip.style, animation.visible);
+            } else {
+                // フォールバック: 基本的な表示状態
+                tooltip.style.opacity = '1';
+                tooltip.style.transform = 'translateY(0)';
+            }
         });
     }
 
@@ -635,7 +650,12 @@ export class TooltipManager {
         if (delay) {config.delay = parseInt(delay);}
         if (maxWidth) {config.maxWidth = parseInt(maxWidth);}
         if (theme) {config.theme = theme;}
-        if (animation !== null) {config.animation = animation === 'true';}
+        if (animation !== null) {config.animation = animation === 'true' || animation === true;}
+        
+        // デフォルトのアニメーション名を設定
+        if (config.animation && !config.animationName) {
+            config.animationName = 'fadeIn';
+        }
 
         return config;
     }
@@ -698,11 +718,14 @@ export class TooltipManager {
         // セレクター文字列の場合は要素を取得
         let targetElement = element;
         if (typeof element === 'string') {
-            targetElement = document.querySelector(element);
-            if (!targetElement) {
-                console.warn(`⚠️ Element not found for selector: ${element}`);
+            const elements = document.querySelectorAll(element);
+            if (elements.length === 0) {
+                console.warn(`⚠️ No elements found for selector: ${element}`);
                 return;
             }
+            // 最初の要素を使用
+            targetElement = elements[0];
+            console.log(`🎯 Using first element from selector: ${element} (${elements.length} total)`);
         }
 
         console.log(`🔧 Adding tooltip to element:`, targetElement);
@@ -844,6 +867,7 @@ export class TooltipManager {
             
             elements.forEach((element, index) => {
                 console.log(`📌 Adding tooltip to element ${index + 1}:`, element);
+                // 直接要素オブジェクトを渡す
                 this.addTooltip(element, text, config);
             });
 

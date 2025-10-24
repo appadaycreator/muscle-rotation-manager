@@ -56,8 +56,8 @@ export class Navigation {
             // 認証状態に応じてナビゲーションを更新
             await this.updateNavigationForAuth();
 
-            // ナビゲーションアイテムにツールチップを追加
-            this.addNavigationTooltips();
+            // ナビゲーションアイテムにツールチップを追加（setupTooltipsで既に設定済みのためスキップ）
+            // this.addNavigationTooltips();
 
             // フォーカス管理機能を設定
             this.setupFocusManagement();
@@ -661,6 +661,13 @@ export class Navigation {
             }
 
             // デスクトップサイドバーのツールチップ
+            console.log('🔄 Setting up dashboard tooltip...');
+            const dashboardElements = document.querySelectorAll('a[href="/dashboard.html"]');
+            console.log(`🔍 Found ${dashboardElements.length} dashboard elements`);
+            dashboardElements.forEach((el, index) => {
+                console.log(`Dashboard element ${index + 1}:`, el);
+            });
+            
             tooltipManager.addDynamicTooltip('a[href="/dashboard.html"]', 'ダッシュボード：ワークアウトの統計情報と推奨事項を表示します。', {
                 position: 'right'
             });

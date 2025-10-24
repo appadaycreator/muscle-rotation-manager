@@ -1,107 +1,164 @@
-/**
- * ChartService テストスイート
- */
+// tests/unit/ChartService.test.js - ChartServiceのテスト
 
-import { chartService } from '../../js/services/chartService.js';
+import { ChartService } from '../../js/services/chartService.js';
 
 // Chart.jsのモック
-global.Chart = jest.fn();
+const mockChart = {
+    destroy: jest.fn(),
+    resize: jest.fn(),
+    update: jest.fn(),
+    data: {},
+    options: {}
+};
 
-// モックの設定
-jest.mock('../../js/services/chartService.js', () => ({
-    chartService: {
-        createChart: jest.fn(),
-        updateChart: jest.fn(),
-        destroyChart: jest.fn(),
-        getChartInstance: jest.fn()
-    }
+global.Chart = jest.fn(() => mockChart);
+
+// モック設定
+jest.mock('../../js/utils/errorHandler.js', () => ({
+    handleError: jest.fn()
 }));
 
 describe('ChartService', () => {
+    let service;
+    let mockCanvas;
+
     beforeEach(() => {
+        // モックキャンバス要素
+        mockCanvas = {
+            getContext: jest.fn(() => ({
+                fillRect: jest.fn(),
+                clearRect: jest.fn()
+            }))
+        };
+
+        // document.getElementByIdのモック
+        global.document = {
+            getElementById: jest.fn(() => mockCanvas)
+        };
+
+        service = new ChartService();
+    });
+
+    afterEach(() => {
         jest.clearAllMocks();
     });
 
     describe('constructor', () => {
         it('should initialize with default values', () => {
-            expect(chartService.createChart).toBeDefined();
-            expect(chartService.updateChart).toBeDefined();
-            expect(chartService.destroyChart).toBeDefined();
-            expect(chartService.getChartInstance).toBeDefined();
-        });
-    });
-
-    describe('createChart', () => {
-        it('should create chart successfully', () => {
-            const mockChart = { id: 'test-chart' };
-            chartService.createChart.mockReturnValue(mockChart);
-            
-            const result = chartService.createChart('canvas-id', { type: 'line' });
-            
-            expect(result).toEqual(mockChart);
-            expect(chartService.createChart).toHaveBeenCalledWith('canvas-id', { type: 'line' });
-        });
-    });
-
-    describe('updateChart', () => {
-        it('should update chart successfully', () => {
-            const mockChart = { id: 'test-chart' };
-            chartService.updateChart.mockReturnValue(mockChart);
-            
-            const result = chartService.updateChart('test-chart', { data: [1, 2, 3] });
-            
-            expect(result).toEqual(mockChart);
-            expect(chartService.updateChart).toHaveBeenCalledWith('test-chart', { data: [1, 2, 3] });
+            expect(service.charts).toBeInstanceOf(Map);
+            expect(service.defaultColors).toEqual({
+                primary: '#3B82F6',
+                secondary: '#10B981',
+                accent: '#F59E0B',
+                danger: '#EF4444',
+                success: '#22C55E',
+                warning: '#F97316'
+            });
         });
     });
 
     describe('destroyChart', () => {
-        it('should destroy chart successfully', () => {
-            chartService.destroyChart.mockReturnValue(true);
-            
-            const result = chartService.destroyChart('test-chart');
-            
-            expect(result).toBe(true);
-            expect(chartService.destroyChart).toHaveBeenCalledWith('test-chart');
+        it('should destroy existing chart', () => {
+            const chartId = 'test-chart';
+            service.charts.set(chartId, mockChart);
+
+            service.destroyChart(chartId);
+
+            expect(mockChart.destroy).toHaveBeenCalled();
+            expect(service.charts.has(chartId)).toBe(false);
+        });
+
+        it('should handle non-existent chart', () => {
+            service.destroyChart('non-existent');
+
+            expect(mockChart.destroy).not.toHaveBeenCalled();
         });
     });
 
-    describe('getChartInstance', () => {
-        it('should return chart instance', () => {
-            const mockChart = { id: 'test-chart' };
-            chartService.getChartInstance.mockReturnValue(mockChart);
-            
-            const result = chartService.getChartInstance('test-chart');
-            
-            expect(result).toEqual(mockChart);
-            expect(chartService.getChartInstance).toHaveBeenCalledWith('test-chart');
+    describe('createOneRMChart', () => {
+        it('should create 1RM chart successfully', () => {
+            const canvasId = 'one-rm-chart';
+            const data = [
+                { workout_date: '2024-01-01', one_rm: 100 },
+                { workout_date: '2024-01-02', one_rm: 105 }
+            ];
+
+            const result = service.createOneRMChart(canvasId, data);
+
+            expect(global.document.getElementById).toHaveBeenCalledWith(canvasId);
+            expect(global.Chart).toHaveBeenCalled();
+            expect(service.charts.has(canvasId)).toBe(true);
+            expect(result).toBe(mockChart);
+        });
+
+        it('should handle missing canvas element', () => {
+            global.document.getElementById.mockReturnValue(null);
+
+            const result = service.createOneRMChart('missing-canvas', []);
+
+            expect(result).toBeNull();
         });
     });
 
-    describe('integration', () => {
-        it('should handle complete chart lifecycle', () => {
-            const mockChart = { id: 'test-chart' };
-            
-            chartService.createChart.mockReturnValue(mockChart);
-            chartService.updateChart.mockReturnValue(mockChart);
-            chartService.destroyChart.mockReturnValue(true);
-            chartService.getChartInstance.mockReturnValue(mockChart);
-            
-            // チャートを作成
-            const createdChart = chartService.createChart('canvas-id', { type: 'line' });
-            expect(createdChart).toEqual(mockChart);
-            
-            // チャートを更新
-            const updatedChart = chartService.updateChart('test-chart', { data: [1, 2, 3] });
-            expect(updatedChart).toEqual(mockChart);
-            
-            // チャートインスタンスを取得
-            const instance = chartService.getChartInstance('test-chart');
-            expect(instance).toEqual(mockChart);
-            
-            // チャートを破棄
-            const destroyed = chartService.destroyChart('test-chart');
-            expect(destroyed).toBe(true);
+    describe('createProgressChart', () => {
+        it('should create progress chart successfully', () => {
+            const canvasId = 'progress-chart';
+            const data = [
+                { date: '2024-01-01', value: 100 },
+                { date: '2024-01-02', value: 105 }
+            ];
+
+            const result = service.createProgressChart(canvasId, data);
+
+            expect(global.document.getElementById).toHaveBeenCalledWith(canvasId);
+            expect(global.Chart).toHaveBeenCalled();
+            expect(service.charts.has(canvasId)).toBe(true);
+            expect(result).toBe(mockChart);
+        });
+    });
+
+    describe('destroyAllCharts', () => {
+        it('should destroy all charts', () => {
+            const chart1 = { destroy: jest.fn() };
+            const chart2 = { destroy: jest.fn() };
+            service.charts.set('chart1', chart1);
+            service.charts.set('chart2', chart2);
+
+            service.destroyAllCharts();
+
+            expect(chart1.destroy).toHaveBeenCalled();
+            expect(chart2.destroy).toHaveBeenCalled();
+            expect(service.charts.size).toBe(0);
+        });
+    });
+
+    describe('updateChart', () => {
+        it('should update existing chart', () => {
+            const chartId = 'test-chart';
+            const newData = { labels: ['A', 'B'], datasets: [] };
+            service.charts.set(chartId, mockChart);
+
+            service.updateChart(chartId, newData);
+
+            expect(mockChart.data).toBe(newData);
+            expect(mockChart.update).toHaveBeenCalled();
+        });
+    });
+
+    describe('getChart', () => {
+        it('should return existing chart', () => {
+            const chartId = 'test-chart';
+            service.charts.set(chartId, mockChart);
+
+            const result = service.getChart(chartId);
+
+            expect(result).toBe(mockChart);
+        });
+
+        it('should return null for non-existent chart', () => {
+            const result = service.getChart('non-existent');
+
+            expect(result).toBeNull();
         });
     });
 });
