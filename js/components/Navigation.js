@@ -669,39 +669,57 @@ export class Navigation {
             });
             
             tooltipManager.addDynamicTooltip('a[href="/dashboard.html"]', 'ダッシュボード：ワークアウトの統計情報と推奨事項を表示します。', {
-                position: 'right'
+                position: 'right',
+                maxWidth: 350,
+                minWidth: 250
             });
 
             tooltipManager.addDynamicTooltip('a[href="/workout.html"]', 'ワークアウト：筋力トレーニングの記録と管理を行います。', {
-                position: 'right'
+                position: 'right',
+                maxWidth: 350,
+                minWidth: 250
             });
 
             tooltipManager.addDynamicTooltip('a[href="/calendar.html"]', 'カレンダー：過去のワークアウト履歴と予定を確認できます。', {
-                position: 'right'
+                position: 'right',
+                maxWidth: 350,
+                minWidth: 250
             });
 
             tooltipManager.addDynamicTooltip('a[href="/analysis.html"]', '分析：トレーニングデータの詳細な分析とグラフを表示します。', {
-                position: 'right'
+                position: 'right',
+                maxWidth: 350,
+                minWidth: 250
             });
 
             tooltipManager.addDynamicTooltip('a[href="/progress.html"]', 'プログレッシブ・オーバーロード：筋力向上の進捗を科学的に追跡します。', {
-                position: 'right'
+                position: 'right',
+                maxWidth: 350,
+                minWidth: 250
             });
 
             tooltipManager.addDynamicTooltip('a[href="/exercises.html"]', 'エクササイズデータベース：豊富なエクササイズ情報を検索できます。', {
-                position: 'right'
+                position: 'right',
+                maxWidth: 350,
+                minWidth: 250
             });
 
             tooltipManager.addDynamicTooltip('a[href="/settings.html"]', '設定：アカウント情報やアプリケーションの設定を変更できます。', {
-                position: 'right'
+                position: 'right',
+                maxWidth: 350,
+                minWidth: 250
             });
 
             tooltipManager.addDynamicTooltip('a[href="/help.html"]', '使い方：アプリケーションの使用方法とヘルプ情報を表示します。', {
-                position: 'right'
+                position: 'right',
+                maxWidth: 350,
+                minWidth: 250
             });
 
             tooltipManager.addDynamicTooltip('a[href="/privacy.html"]', 'プライバシーポリシー：個人情報の取り扱いについて説明します。', {
-                position: 'right'
+                position: 'right',
+                maxWidth: 350,
+                minWidth: 250
             });
 
             // ヘッダー要素のツールチップ
