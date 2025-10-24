@@ -2,7 +2,7 @@
  * AnalysisPage テストスイート
  */
 
-import { analysisPage } from '../../js/pages/analysisPage.js';
+import analysisPage from '../../js/pages/analysisPage.js';
 import { supabaseService } from '../../js/services/supabaseService.js';
 import { muscleGroupService } from '../../js/services/muscleGroupService.js';
 import { authManager } from '../../js/modules/authManager.js';
@@ -13,7 +13,9 @@ import { handleError } from '../../js/utils/errorHandler.js';
 jest.mock('../../js/services/supabaseService.js', () => ({
     supabaseService: {
         getCurrentUser: jest.fn(),
-        loadData: jest.fn()
+        loadData: jest.fn(),
+        isAvailable: jest.fn(),
+        getWorkouts: jest.fn()
     }
 }));
 
@@ -78,7 +80,24 @@ describe('AnalysisPage', () => {
         });
 
         it('should handle initialization errors', async () => {
-            authManager.isAuthenticated.mockRejectedValue(new Error('Auth check failed'));
+            // 認証チェックは成功するが、その後の処理でエラーが発生する場合
+            authManager.isAuthenticated.mockResolvedValue(true);
+            safeAsync.mockImplementation(async (fn, context, errorHandler) => {
+                try {
+                    await fn();
+                } catch (error) {
+                    errorHandler(error);
+                }
+            });
+            
+            // Chart.jsをモック
+            global.Chart = jest.fn();
+            
+            // エラーを発生させるために、renderAnalysisPageでエラーを投げる
+            const originalRenderAnalysisPage = analysisPage.renderAnalysisPage;
+            analysisPage.renderAnalysisPage = jest.fn().mockImplementation(() => {
+                throw new Error('Render error');
+            });
             
             await analysisPage.initialize();
             
@@ -89,6 +108,9 @@ describe('AnalysisPage', () => {
                     showNotification: true
                 })
             );
+            
+            // 元のメソッドを復元
+            analysisPage.renderAnalysisPage = originalRenderAnalysisPage;
         });
     });
 
@@ -137,21 +159,28 @@ describe('AnalysisPage', () => {
                 { id: 1, date: '2024-01-01', exercises: [] },
                 { id: 2, date: '2024-01-02', exercises: [] }
             ];
-            supabaseService.loadData.mockResolvedValue(mockWorkoutData);
+            
+            supabaseService.isAvailable.mockReturnValue(true);
+            supabaseService.getCurrentUser.mockReturnValue({ id: 'user123' });
+            supabaseService.getWorkouts.mockResolvedValue(mockWorkoutData);
             
             await analysisPage.loadWorkoutData();
             
-            expect(supabaseService.loadData).toHaveBeenCalledWith('workouts');
+            expect(supabaseService.getWorkouts).toHaveBeenCalledWith(1000);
         });
 
         it('should handle workout data loading errors', async () => {
-            supabaseService.loadData.mockRejectedValue(new Error('Failed to load workout data'));
+            supabaseService.isAvailable.mockReturnValue(true);
+            supabaseService.getCurrentUser.mockReturnValue({ id: 'user123' });
+            supabaseService.getWorkouts.mockRejectedValue(new Error('Failed to load workout data'));
             
             await analysisPage.loadWorkoutData();
             
-            expect(handleError).toHaveBeenCalledWith(
-                expect.any(Error), 
-                'AnalysisPage.loadWorkoutData'
+            // エラーが発生した場合、ローカルストレージから読み込む
+            expect(analysisPage.workoutData).toEqual([]);
+            expect(showNotification).toHaveBeenCalledWith(
+                'ワークアウトデータの読み込みに失敗しました', 
+                'error'
             );
         });
     });

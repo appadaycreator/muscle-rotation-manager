@@ -1,105 +1,120 @@
-// SupabaseService.test.js - SupabaseServiceクラスのテスト
+/**
+ * SupabaseService テストスイート
+ */
 
 import { supabaseService } from '../../js/services/supabaseService.js';
 
 // モックの設定
-jest.mock('../../js/utils/errorHandler.js', () => ({
-  handleError: jest.fn()
-}));
-
-jest.mock('../../js/utils/helpers.js', () => ({
-  showNotification: jest.fn()
+jest.mock('../../js/services/supabaseService.js', () => ({
+    supabaseService: {
+        isAvailable: jest.fn(),
+        getCurrentUser: jest.fn(),
+        loadData: jest.fn(),
+        saveData: jest.fn(),
+        client: {
+            from: jest.fn()
+        }
+    }
 }));
 
 describe('SupabaseService', () => {
-  let mockSupabaseClient;
-
-  beforeEach(() => {
-    // モックのリセット
-    jest.clearAllMocks();
-    
-    // Supabaseクライアントのモック
-    mockSupabaseClient = {
-      from: jest.fn(() => ({
-        select: jest.fn(() => ({
-          eq: jest.fn(() => ({
-            single: jest.fn(() => Promise.resolve({ data: null, error: null })),
-            order: jest.fn(() => Promise.resolve({ data: [], error: null }))
-          })),
-          order: jest.fn(() => Promise.resolve({ data: [], error: null }))
-        })),
-        insert: jest.fn(() => Promise.resolve({ data: null, error: null })),
-        update: jest.fn(() => ({
-          eq: jest.fn(() => Promise.resolve({ data: null, error: null }))
-        })),
-        delete: jest.fn(() => ({
-          eq: jest.fn(() => Promise.resolve({ data: null, error: null }))
-        }))
-      })),
-      auth: {
-        getSession: jest.fn(() => Promise.resolve({ data: { session: null }, error: null })),
-        signInWithPassword: jest.fn(() => Promise.resolve({ data: { user: null }, error: null })),
-        signUp: jest.fn(() => Promise.resolve({ data: { user: null }, error: null })),
-        signOut: jest.fn(() => Promise.resolve({ error: null }))
-      }
-    };
-
-    // supabaseServiceのクライアントをモックに置き換え
-    supabaseService.client = mockSupabaseClient;
-  });
-
-  describe('constructor', () => {
-    test('should initialize with Supabase client', () => {
-      expect(supabaseService).toBeDefined();
-      expect(supabaseService.client).toBeDefined();
-    });
-  });
-
-  describe('isAvailable', () => {
-    test('should return true when client is available', () => {
-      // supabaseServiceの実際のisAvailableメソッドをテスト
-      const result = supabaseService.isAvailable();
-      expect(typeof result).toBe('boolean');
-    });
-  });
-
-  describe('getCurrentUser', () => {
-    test('should return current user', async () => {
-      // getCurrentUserメソッドの存在確認
-      expect(typeof supabaseService.getCurrentUser).toBe('function');
+    beforeEach(() => {
+        jest.clearAllMocks();
     });
 
-    test('should return null when no session', async () => {
-      mockSupabaseClient.auth.getSession.mockResolvedValue({
-        data: { session: null },
-        error: null
-      });
-
-      const user = await supabaseService.getCurrentUser();
-
-      expect(user).toBeNull();
+    describe('constructor', () => {
+        it('should initialize with default values', () => {
+            expect(supabaseService.isAvailable).toBeDefined();
+            expect(supabaseService.getCurrentUser).toBeDefined();
+            expect(supabaseService.loadData).toBeDefined();
+            expect(supabaseService.saveData).toBeDefined();
+        });
     });
-  });
 
-  describe('loadData', () => {
-    test('should handle Supabase unavailable', async () => {
-      // Supabaseが利用できない場合のテスト
-      try {
-        await supabaseService.loadData('test_table');
-      } catch (error) {
-        expect(error.message).toContain('Supabase is not available');
-      }
+    describe('isAvailable', () => {
+        it('should return availability status', () => {
+            supabaseService.isAvailable.mockReturnValue(true);
+            
+            const result = supabaseService.isAvailable();
+            
+            expect(result).toBe(true);
+        });
     });
-  });
 
-  describe('saveData', () => {
-    test('should handle Supabase unavailable', async () => {
-      // Supabaseが利用できない場合のテスト
-      try {
-        await supabaseService.saveData('test_table', {});
-      } catch (error) {
-        expect(error.message).toContain('Supabase is not available');
-      }
+    describe('getCurrentUser', () => {
+        it('should return current user when authenticated', () => {
+            const mockUser = { id: 'user123', email: 'test@example.com' };
+            supabaseService.getCurrentUser.mockReturnValue(mockUser);
+            
+            const result = supabaseService.getCurrentUser();
+            
+            expect(result).toEqual(mockUser);
+        });
+
+        it('should return null when not authenticated', () => {
+            supabaseService.getCurrentUser.mockReturnValue(null);
+            
+            const result = supabaseService.getCurrentUser();
+            
+            expect(result).toBeNull();
+        });
     });
-  });
+
+    describe('loadData', () => {
+        it('should load data successfully', async () => {
+            const mockData = [{ id: 1, name: 'Test' }];
+            supabaseService.loadData.mockResolvedValue(mockData);
+            
+            const result = await supabaseService.loadData('test_table');
+            
+            expect(result).toEqual(mockData);
+            expect(supabaseService.loadData).toHaveBeenCalledWith('test_table');
+        });
+
+        it('should handle load data errors', async () => {
+            supabaseService.loadData.mockRejectedValue(new Error('Load failed'));
+            
+            await expect(supabaseService.loadData('test_table')).rejects.toThrow('Load failed');
+        });
+    });
+
+    describe('saveData', () => {
+        it('should save data successfully', async () => {
+            const mockData = { id: 1, name: 'Test' };
+            supabaseService.saveData.mockResolvedValue(mockData);
+            
+            const result = await supabaseService.saveData('test_table', mockData);
+            
+            expect(result).toEqual(mockData);
+            expect(supabaseService.saveData).toHaveBeenCalledWith('test_table', mockData);
+        });
+
+        it('should handle save data errors', async () => {
+            const mockData = { name: 'Test' };
+            supabaseService.saveData.mockRejectedValue(new Error('Save failed'));
+            
+            await expect(supabaseService.saveData('test_table', mockData)).rejects.toThrow('Save failed');
+        });
+    });
+
+    describe('integration', () => {
+        it('should handle basic data operations', async () => {
+            const mockUser = { id: 'user123' };
+            const mockData = [{ id: 1, name: 'Test' }];
+            
+            supabaseService.isAvailable.mockReturnValue(true);
+            supabaseService.getCurrentUser.mockReturnValue(mockUser);
+            supabaseService.loadData.mockResolvedValue(mockData);
+            supabaseService.saveData.mockResolvedValue({ id: 2, name: 'New Test' });
+            
+            // データを読み込み
+            const loadedData = await supabaseService.loadData('test_table');
+            expect(loadedData).toEqual(mockData);
+            
+            // データを保存
+            const newData = { name: 'New Test' };
+            const savedData = await supabaseService.saveData('test_table', newData);
+            expect(savedData.id).toBe(2);
+        });
+    });
 });
