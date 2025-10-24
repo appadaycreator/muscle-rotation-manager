@@ -714,6 +714,175 @@ class ChartService {
             handleError(error, { context: 'ChartService.resizeChart' });
         }
     }
+
+    /**
+     * 進捗チャートを作成
+     * @param {string} canvasId - キャンバス要素のID
+     * @param {Array} data - 進捗データ
+     * @param {Object} options - オプション設定
+     * @returns {Object} チャートインスタンス
+     */
+    createProgressChart(canvasId, data, options = {}) {
+        try {
+            this.destroyChart(canvasId);
+
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) {
+                throw new Error(`Canvas element with id '${canvasId}' not found`);
+            }
+
+            const chart = new Chart(canvas, {
+                type: 'line',
+                data: {
+                    labels: data.map(item => item.date),
+                    datasets: [{
+                        label: '進捗',
+                        data: data.map(item => item.value),
+                        borderColor: this.defaultColors.primary,
+                        backgroundColor: this.defaultColors.primary + '20',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    ...options
+                }
+            });
+
+            this.charts.set(canvasId, chart);
+            return chart;
+        } catch (error) {
+            handleError(error, { context: 'ChartService.createProgressChart' });
+            return null;
+        }
+    }
+
+    /**
+     * 筋肉部位チャートを作成
+     * @param {string} canvasId - キャンバス要素のID
+     * @param {Array} data - 筋肉部位データ
+     * @param {Object} options - オプション設定
+     * @returns {Object} チャートインスタンス
+     */
+    createMuscleGroupChart(canvasId, data, options = {}) {
+        try {
+            this.destroyChart(canvasId);
+
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) {
+                throw new Error(`Canvas element with id '${canvasId}' not found`);
+            }
+
+            const chart = new Chart(canvas, {
+                type: 'doughnut',
+                data: {
+                    labels: data.map(item => item.name),
+                    datasets: [{
+                        data: data.map(item => item.value),
+                        backgroundColor: [
+                            this.defaultColors.primary,
+                            this.defaultColors.secondary,
+                            this.defaultColors.accent,
+                            this.defaultColors.danger,
+                            this.defaultColors.success,
+                            this.defaultColors.warning
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    ...options
+                }
+            });
+
+            this.charts.set(canvasId, chart);
+            return chart;
+        } catch (error) {
+            handleError(error, { context: 'ChartService.createMuscleGroupChart' });
+            return null;
+        }
+    }
+
+    /**
+     * 頻度チャートを作成
+     * @param {string} canvasId - キャンバス要素のID
+     * @param {Array} data - 頻度データ
+     * @param {Object} options - オプション設定
+     * @returns {Object} チャートインスタンス
+     */
+    createFrequencyChart(canvasId, data, options = {}) {
+        try {
+            this.destroyChart(canvasId);
+
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) {
+                throw new Error(`Canvas element with id '${canvasId}' not found`);
+            }
+
+            const chart = new Chart(canvas, {
+                type: 'bar',
+                data: {
+                    labels: data.map(item => item.name),
+                    datasets: [{
+                        label: '頻度',
+                        data: data.map(item => item.value),
+                        backgroundColor: this.defaultColors.primary,
+                        borderColor: this.defaultColors.primary,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    ...options
+                }
+            });
+
+            this.charts.set(canvasId, chart);
+            return chart;
+        } catch (error) {
+            handleError(error, { context: 'ChartService.createFrequencyChart' });
+            return null;
+        }
+    }
+
+    /**
+     * チャートを更新
+     * @param {string} chartId - チャートID
+     * @param {Object} newData - 新しいデータ
+     */
+    updateChart(chartId, newData) {
+        try {
+            if (this.charts.has(chartId)) {
+                const chart = this.charts.get(chartId);
+                chart.data = newData;
+                chart.update();
+            }
+        } catch (error) {
+            handleError(error, { context: 'ChartService.updateChart' });
+        }
+    }
+
+    /**
+     * チャートを取得
+     * @param {string} chartId - チャートID
+     * @returns {Object|null} チャートインスタンス
+     */
+    getChart(chartId) {
+        try {
+            return this.charts.get(chartId) || null;
+        } catch (error) {
+            handleError(error, { context: 'ChartService.getChart' });
+            return null;
+        }
+    }
 }
 
 // シングルトンインスタンスをエクスポート

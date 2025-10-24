@@ -594,6 +594,66 @@ class MuscleGroupService {
         this.cache.clear();
         this.muscleGroups = null;
     }
+
+    /**
+     * 筋肉部位を追加
+     * @param {Object} muscleGroupData - 筋肉部位データ
+     * @returns {Promise<Object>} 追加された筋肉部位
+     */
+    async addMuscleGroup(muscleGroupData) {
+        try {
+            if (!supabaseService.isAvailable()) {
+                throw new Error('Supabase not available');
+            }
+
+            const result = await supabaseService.saveData('muscle_groups', muscleGroupData);
+            this.clearCache(); // キャッシュをクリア
+            return result;
+        } catch (error) {
+            console.error('Error adding muscle group:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 筋肉部位を更新
+     * @param {string} id - 筋肉部位ID
+     * @param {Object} muscleGroupData - 更新データ
+     * @returns {Promise<Object>} 更新された筋肉部位
+     */
+    async updateMuscleGroup(id, muscleGroupData) {
+        try {
+            if (!supabaseService.isAvailable()) {
+                throw new Error('Supabase not available');
+            }
+
+            const result = await supabaseService.saveData('muscle_groups', { ...muscleGroupData, id });
+            this.clearCache(); // キャッシュをクリア
+            return result;
+        } catch (error) {
+            console.error('Error updating muscle group:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 筋肉部位を削除
+     * @param {string} id - 筋肉部位ID
+     * @returns {Promise<void>}
+     */
+    async deleteMuscleGroup(id) {
+        try {
+            if (!supabaseService.isAvailable()) {
+                throw new Error('Supabase not available');
+            }
+
+            await supabaseService.saveData('muscle_groups', { id, deleted: true });
+            this.clearCache(); // キャッシュをクリア
+        } catch (error) {
+            console.error('Error deleting muscle group:', error);
+            throw error;
+        }
+    }
 }
 
 // シングルトンインスタンスをエクスポート

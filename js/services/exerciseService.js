@@ -907,6 +907,66 @@ class ExerciseService {
             video.src = URL.createObjectURL(file);
         });
     }
+
+    /**
+     * エクササイズを追加
+     * @param {Object} exerciseData - エクササイズデータ
+     * @returns {Promise<Object>} 追加されたエクササイズ
+     */
+    async addExercise(exerciseData) {
+        try {
+            if (!supabaseService.isAvailable()) {
+                throw new Error('Supabase not available');
+            }
+
+            const result = await supabaseService.saveData('exercises', exerciseData);
+            this.clearCache(); // キャッシュをクリア
+            return result;
+        } catch (error) {
+            handleError(error, 'ExerciseService.addExercise');
+            throw error;
+        }
+    }
+
+    /**
+     * エクササイズを更新
+     * @param {number} id - エクササイズID
+     * @param {Object} exerciseData - 更新データ
+     * @returns {Promise<Object>} 更新されたエクササイズ
+     */
+    async updateExercise(id, exerciseData) {
+        try {
+            if (!supabaseService.isAvailable()) {
+                throw new Error('Supabase not available');
+            }
+
+            const result = await supabaseService.saveData('exercises', { ...exerciseData, id });
+            this.clearCache(); // キャッシュをクリア
+            return result;
+        } catch (error) {
+            handleError(error, 'ExerciseService.updateExercise');
+            throw error;
+        }
+    }
+
+    /**
+     * エクササイズを削除
+     * @param {number} id - エクササイズID
+     * @returns {Promise<void>}
+     */
+    async deleteExercise(id) {
+        try {
+            if (!supabaseService.isAvailable()) {
+                throw new Error('Supabase not available');
+            }
+
+            await supabaseService.saveData('exercises', { id, deleted: true });
+            this.clearCache(); // キャッシュをクリア
+        } catch (error) {
+            handleError(error, 'ExerciseService.deleteExercise');
+            throw error;
+        }
+    }
 }
 
 // シングルトンインスタンスをエクスポート

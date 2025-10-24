@@ -521,6 +521,171 @@ class ReportService {
             throw error;
         }
     }
+
+    /**
+     * ワークアウトレポートをPDF形式で生成
+     * @param {Object} workoutData - ワークアウトデータ
+     * @returns {Promise<Blob>} PDFファイル
+     */
+    async generateWorkoutReportPDF(workoutData) {
+        try {
+            await this.loadLibraries();
+
+            if (!this.jsPDF) {
+                throw new Error('jsPDFライブラリが利用できません');
+            }
+
+            const pdf = new this.jsPDF('p', 'mm', 'a4');
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            let yPosition = 20;
+
+            // フォント設定
+            pdf.setFont('helvetica');
+
+            // タイトル
+            pdf.setFontSize(20);
+            pdf.setTextColor(60, 60, 60);
+            pdf.text('ワークアウトレポート', pageWidth / 2, yPosition, { align: 'center' });
+            yPosition += 15;
+
+            // 日付
+            if (workoutData.date) {
+                pdf.setFontSize(12);
+                pdf.setTextColor(100, 100, 100);
+                pdf.text(`日付: ${workoutData.date}`, 20, yPosition);
+                yPosition += 15;
+            }
+
+            // エクササイズ一覧
+            if (workoutData.exercises && workoutData.exercises.length > 0) {
+                pdf.setFontSize(14);
+                pdf.setTextColor(50, 50, 50);
+                pdf.text('エクササイズ', 20, yPosition);
+                yPosition += 10;
+
+                pdf.setFontSize(10);
+                pdf.setTextColor(80, 80, 80);
+
+                workoutData.exercises.forEach(exercise => {
+                    pdf.text(`• ${exercise.name}`, 25, yPosition);
+                    yPosition += 6;
+                    if (exercise.sets && exercise.reps && exercise.weight) {
+                        pdf.text(`  セット: ${exercise.sets}, 回数: ${exercise.reps}, 重量: ${exercise.weight}kg`, 30, yPosition);
+                        yPosition += 6;
+                    }
+                    yPosition += 5;
+                });
+            }
+
+            // フッター
+            pdf.setFontSize(8);
+            pdf.setTextColor(150, 150, 150);
+            pdf.text(`生成日時: ${new Date().toLocaleString('ja-JP')}`, 20, pageHeight - 10);
+            pdf.text('Muscle Rotation Manager', pageWidth - 20, pageHeight - 10, { align: 'right' });
+
+            return pdf.output('blob');
+        } catch (error) {
+            handleError(error, 'ReportService.generateWorkoutReportPDF');
+            throw error;
+        }
+    }
+
+    /**
+     * 統計レポートをPDF形式で生成
+     * @param {Object} statisticsData - 統計データ
+     * @returns {Promise<Blob>} PDFファイル
+     */
+    async generateStatisticsReportPDF(statisticsData) {
+        try {
+            await this.loadLibraries();
+
+            if (!this.jsPDF) {
+                throw new Error('jsPDFライブラリが利用できません');
+            }
+
+            const pdf = new this.jsPDF('p', 'mm', 'a4');
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            let yPosition = 20;
+
+            // フォント設定
+            pdf.setFont('helvetica');
+
+            // タイトル
+            pdf.setFontSize(20);
+            pdf.setTextColor(60, 60, 60);
+            pdf.text('統計レポート', pageWidth / 2, yPosition, { align: 'center' });
+            yPosition += 15;
+
+            // 統計データ
+            if (statisticsData) {
+                pdf.setFontSize(14);
+                pdf.setTextColor(50, 50, 50);
+                pdf.text('統計サマリー', 20, yPosition);
+                yPosition += 10;
+
+                pdf.setFontSize(10);
+                pdf.setTextColor(80, 80, 80);
+
+                const stats = [
+                    `総ワークアウト数: ${statisticsData.totalWorkouts || 'N/A'}`,
+                    `平均重量: ${statisticsData.averageWeight || 'N/A'} kg`,
+                    `対象筋群: ${statisticsData.muscleGroups ? statisticsData.muscleGroups.join(', ') : 'N/A'}`
+                ];
+
+                stats.forEach(stat => {
+                    pdf.text(stat, 25, yPosition);
+                    yPosition += 6;
+                });
+            }
+
+            // フッター
+            pdf.setFontSize(8);
+            pdf.setTextColor(150, 150, 150);
+            pdf.text(`生成日時: ${new Date().toLocaleString('ja-JP')}`, 20, pageHeight - 10);
+            pdf.text('Muscle Rotation Manager', pageWidth - 20, pageHeight - 10, { align: 'right' });
+
+            return pdf.output('blob');
+        } catch (error) {
+            handleError(error, 'ReportService.generateStatisticsReportPDF');
+            throw error;
+        }
+    }
+
+    /**
+     * 要素をPDFとしてエクスポート
+     * @param {HTMLElement} element - エクスポートする要素
+     * @param {string} filename - ファイル名
+     * @returns {Promise<void>}
+     */
+    async exportToPDF(element, filename) {
+        try {
+            await this.loadLibraries();
+
+            if (!this.html2canvas || !this.jsPDF) {
+                throw new Error('必要なライブラリが利用できません');
+            }
+
+            // 要素をキャンバスに変換
+            const canvas = await this.html2canvas(element, {
+                backgroundColor: '#ffffff',
+                scale: 2
+            });
+
+            // PDFを作成
+            const pdf = new this.jsPDF('p', 'mm', 'a4');
+            const imgData = canvas.toDataURL('image/png');
+            const imgWidth = 210; // A4幅
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+            pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+            pdf.save(filename);
+        } catch (error) {
+            handleError(error, 'ReportService.exportToPDF');
+            throw error;
+        }
+    }
 }
 
 // シングルトンインスタンスをエクスポート

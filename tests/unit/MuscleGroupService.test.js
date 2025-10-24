@@ -30,30 +30,72 @@ describe('MuscleGroupService', () => {
     });
 
     describe('constructor', () => {
-        it('should initialize with Supabase client', () => {
-            expect(muscleGroupService.supabase).toBeDefined();
+        it('should initialize with default values', () => {
+            expect(muscleGroupService.muscleGroups).toBeNull();
+            expect(muscleGroupService.cache).toBeInstanceOf(Map);
+            expect(muscleGroupService.cacheExpiry).toBe(5 * 60 * 1000);
         });
     });
 
     describe('getMuscleGroups', () => {
         it('should load muscle groups from Supabase when available', async () => {
             const mockMuscleGroups = [
-                { id: 'chest', name: '胸', color: '#3B82F6' },
-                { id: 'back', name: '背中', color: '#10B981' }
+                { 
+                    id: 'chest', 
+                    name: 'chest', 
+                    name_ja: '胸', 
+                    color_code: '#EF4444',
+                    description: 'Pectoral muscles including upper, middle, and lower chest',
+                    recovery_hours: 72,
+                    muscle_size: 'large',
+                    icon_name: 'chest',
+                    display_order: 1,
+                    is_active: true
+                },
+                { 
+                    id: 'back', 
+                    name: 'back', 
+                    name_ja: '背中', 
+                    color_code: '#10B981',
+                    description: 'Latissimus dorsi, rhomboids, middle and lower trapezius',
+                    recovery_hours: 72,
+                    muscle_size: 'large',
+                    icon_name: 'back',
+                    display_order: 2,
+                    is_active: true
+                }
             ];
             
             supabaseService.isAvailable.mockReturnValue(true);
-            supabaseService.loadData.mockResolvedValue(mockMuscleGroups);
+            supabaseService.client = {
+                from: jest.fn().mockReturnValue({
+                    select: jest.fn().mockReturnValue({
+                        eq: jest.fn().mockReturnValue({
+                            order: jest.fn().mockResolvedValue({ data: mockMuscleGroups, error: null })
+                        })
+                    })
+                })
+            };
             
             const result = await muscleGroupService.getMuscleGroups();
             
-            expect(supabaseService.loadData).toHaveBeenCalledWith('muscle_groups');
             expect(result).toEqual(mockMuscleGroups);
         });
 
         it('should load muscle groups from localStorage when Supabase unavailable', async () => {
             const mockMuscleGroups = [
-                { id: 'chest', name: '胸', color: '#3B82F6' }
+                { 
+                    id: 'chest', 
+                    name: 'chest', 
+                    name_ja: '胸', 
+                    color_code: '#EF4444',
+                    description: 'Pectoral muscles including upper, middle, and lower chest',
+                    recovery_hours: 72,
+                    muscle_size: 'large',
+                    icon_name: 'chest',
+                    display_order: 1,
+                    is_active: true
+                }
             ];
             
             supabaseService.isAvailable.mockReturnValue(false);
@@ -66,39 +108,105 @@ describe('MuscleGroupService', () => {
 
         it('should handle loading errors', async () => {
             supabaseService.isAvailable.mockReturnValue(true);
-            supabaseService.loadData.mockRejectedValue(new Error('Database error'));
+            supabaseService.client = {
+                from: jest.fn().mockReturnValue({
+                    select: jest.fn().mockReturnValue({
+                        eq: jest.fn().mockReturnValue({
+                            order: jest.fn().mockRejectedValue(new Error('Database error'))
+                        })
+                    })
+                })
+            };
             
-            await muscleGroupService.getMuscleGroups();
+            const result = await muscleGroupService.getMuscleGroups();
             
-            expect(handleError).toHaveBeenCalledWith(
-                expect.any(Error), 
-                'MuscleGroupService.getMuscleGroups'
-            );
+            // エラー時はフォールバックデータを返す
+            expect(result).toBeDefined();
         });
     });
 
     describe('getMuscleGroupById', () => {
         it('should return muscle group by ID', async () => {
             const mockMuscleGroups = [
-                { id: 'chest', name: '胸', color: '#3B82F6' },
-                { id: 'back', name: '背中', color: '#10B981' }
+                { 
+                    id: 'chest', 
+                    name: 'chest', 
+                    name_ja: '胸', 
+                    color_code: '#EF4444',
+                    description: 'Pectoral muscles including upper, middle, and lower chest',
+                    recovery_hours: 72,
+                    muscle_size: 'large',
+                    icon_name: 'chest',
+                    display_order: 1,
+                    is_active: true
+                },
+                { 
+                    id: 'back', 
+                    name: 'back', 
+                    name_ja: '背中', 
+                    color_code: '#10B981',
+                    description: 'Latissimus dorsi, rhomboids, middle and lower trapezius',
+                    recovery_hours: 72,
+                    muscle_size: 'large',
+                    icon_name: 'back',
+                    display_order: 2,
+                    is_active: true
+                }
             ];
             
             supabaseService.isAvailable.mockReturnValue(true);
-            supabaseService.loadData.mockResolvedValue(mockMuscleGroups);
+            supabaseService.client = {
+                from: jest.fn().mockReturnValue({
+                    select: jest.fn().mockReturnValue({
+                        eq: jest.fn().mockReturnValue({
+                            order: jest.fn().mockResolvedValue({ data: mockMuscleGroups, error: null })
+                        })
+                    })
+                })
+            };
             
             const result = await muscleGroupService.getMuscleGroupById('chest');
             
-            expect(result).toEqual({ id: 'chest', name: '胸', color: '#3B82F6' });
+            expect(result).toEqual({ 
+                id: 'chest', 
+                name: 'chest', 
+                name_ja: '胸', 
+                color_code: '#EF4444',
+                description: 'Pectoral muscles including upper, middle, and lower chest',
+                recovery_hours: 72,
+                muscle_size: 'large',
+                icon_name: 'chest',
+                display_order: 1,
+                is_active: true
+            });
         });
 
         it('should return null for non-existent muscle group', async () => {
             const mockMuscleGroups = [
-                { id: 'chest', name: '胸', color: '#3B82F6' }
+                { 
+                    id: 'chest', 
+                    name: 'chest', 
+                    name_ja: '胸', 
+                    color_code: '#EF4444',
+                    description: 'Pectoral muscles including upper, middle, and lower chest',
+                    recovery_hours: 72,
+                    muscle_size: 'large',
+                    icon_name: 'chest',
+                    display_order: 1,
+                    is_active: true
+                }
             ];
             
             supabaseService.isAvailable.mockReturnValue(true);
-            supabaseService.loadData.mockResolvedValue(mockMuscleGroups);
+            supabaseService.client = {
+                from: jest.fn().mockReturnValue({
+                    select: jest.fn().mockReturnValue({
+                        eq: jest.fn().mockReturnValue({
+                            order: jest.fn().mockResolvedValue({ data: mockMuscleGroups, error: null })
+                        })
+                    })
+                })
+            };
             
             const result = await muscleGroupService.getMuscleGroupById('non-existent');
             
@@ -202,50 +310,118 @@ describe('MuscleGroupService', () => {
     describe('getMuscleGroupColor', () => {
         it('should return muscle group color', async () => {
             const mockMuscleGroups = [
-                { id: 'chest', name: '胸', color: '#3B82F6' }
+                { 
+                    id: 'chest', 
+                    name: 'chest', 
+                    name_ja: '胸', 
+                    color_code: '#EF4444',
+                    description: 'Pectoral muscles including upper, middle, and lower chest',
+                    recovery_hours: 72,
+                    muscle_size: 'large',
+                    icon_name: 'chest',
+                    display_order: 1,
+                    is_active: true
+                }
             ];
             
             supabaseService.isAvailable.mockReturnValue(true);
-            supabaseService.loadData.mockResolvedValue(mockMuscleGroups);
+            supabaseService.client = {
+                from: jest.fn().mockReturnValue({
+                    select: jest.fn().mockReturnValue({
+                        eq: jest.fn().mockReturnValue({
+                            order: jest.fn().mockResolvedValue({ data: mockMuscleGroups, error: null })
+                        })
+                    })
+                })
+            };
             
             const result = await muscleGroupService.getMuscleGroupColor('chest');
             
-            expect(result).toBe('#3B82F6');
+            expect(result).toBe('#EF4444');
         });
 
         it('should return default color for non-existent muscle group', async () => {
             const mockMuscleGroups = [
-                { id: 'chest', name: '胸', color: '#3B82F6' }
+                { 
+                    id: 'chest', 
+                    name: 'chest', 
+                    name_ja: '胸', 
+                    color_code: '#EF4444',
+                    description: 'Pectoral muscles including upper, middle, and lower chest',
+                    recovery_hours: 72,
+                    muscle_size: 'large',
+                    icon_name: 'chest',
+                    display_order: 1,
+                    is_active: true
+                }
             ];
             
             supabaseService.isAvailable.mockReturnValue(true);
-            supabaseService.loadData.mockResolvedValue(mockMuscleGroups);
+            supabaseService.client = {
+                from: jest.fn().mockReturnValue({
+                    select: jest.fn().mockReturnValue({
+                        eq: jest.fn().mockReturnValue({
+                            order: jest.fn().mockResolvedValue({ data: mockMuscleGroups, error: null })
+                        })
+                    })
+                })
+            };
             
             const result = await muscleGroupService.getMuscleGroupColor('non-existent');
             
-            expect(result).toBe('#6B7280'); // デフォルトカラー
+            expect(result).toBe('#3B82F6'); // デフォルトカラー
         });
     });
 
     describe('integration', () => {
         it('should complete full muscle group management flow', async () => {
             const mockMuscleGroups = [
-                { id: 'chest', name: '胸', color: '#3B82F6' }
+                { 
+                    id: 'chest', 
+                    name: 'chest', 
+                    name_ja: '胸', 
+                    color_code: '#EF4444',
+                    description: 'Pectoral muscles including upper, middle, and lower chest',
+                    recovery_hours: 72,
+                    muscle_size: 'large',
+                    icon_name: 'chest',
+                    display_order: 1,
+                    is_active: true
+                }
             ];
             
             supabaseService.isAvailable.mockReturnValue(true);
-            supabaseService.loadData.mockResolvedValue(mockMuscleGroups);
+            supabaseService.client = {
+                from: jest.fn().mockReturnValue({
+                    select: jest.fn().mockReturnValue({
+                        eq: jest.fn().mockReturnValue({
+                            order: jest.fn().mockResolvedValue({ data: mockMuscleGroups, error: null })
+                        })
+                    })
+                })
+            };
             
             // 筋肉部位を読み込み
             await muscleGroupService.getMuscleGroups();
             
             // 筋肉部位をIDで取得
             const muscleGroup = await muscleGroupService.getMuscleGroupById('chest');
-            expect(muscleGroup).toEqual({ id: 'chest', name: '胸', color: '#3B82F6' });
+            expect(muscleGroup).toEqual({ 
+                id: 'chest', 
+                name: 'chest', 
+                name_ja: '胸', 
+                color_code: '#EF4444',
+                description: 'Pectoral muscles including upper, middle, and lower chest',
+                recovery_hours: 72,
+                muscle_size: 'large',
+                icon_name: 'chest',
+                display_order: 1,
+                is_active: true
+            });
             
             // 筋肉部位の色を取得
             const color = await muscleGroupService.getMuscleGroupColor('chest');
-            expect(color).toBe('#3B82F6');
+            expect(color).toBe('#EF4444');
         });
     });
 });

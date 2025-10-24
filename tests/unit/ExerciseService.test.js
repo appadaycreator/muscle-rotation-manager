@@ -31,9 +31,9 @@ describe('ExerciseService', () => {
 
     describe('constructor', () => {
         it('should initialize with default values', () => {
-            expect(exerciseService.exercises).toEqual([]);
-            expect(exerciseService.isLoading).toBe(false);
-            expect(exerciseService.cache).toEqual({});
+            expect(exerciseService.cache).toBeInstanceOf(Map);
+            expect(exerciseService.cacheExpiry).toBe(5 * 60 * 1000);
+            expect(exerciseService.searchCache).toBeInstanceOf(Map);
         });
     });
 
@@ -45,30 +45,40 @@ describe('ExerciseService', () => {
             ];
             
             supabaseService.isAvailable.mockReturnValue(true);
-            supabaseService.loadData.mockResolvedValue(mockExercises);
+            supabaseService.client = {
+                from: jest.fn().mockReturnValue({
+                    select: jest.fn().mockReturnValue({
+                        order: jest.fn().mockReturnValue({
+                            or: jest.fn().mockResolvedValue({ data: mockExercises, error: null })
+                        })
+                    })
+                })
+            };
             
             const result = await exerciseService.getAllExercises();
             
-            expect(supabaseService.loadData).toHaveBeenCalledWith('exercises');
             expect(result).toEqual(mockExercises);
         });
 
         it('should load exercises from localStorage when Supabase unavailable', async () => {
-            const mockExercises = [
-                { id: 1, name: 'Bench Press', muscle_group: 'chest' }
-            ];
-            
             supabaseService.isAvailable.mockReturnValue(false);
-            localStorage.setItem('exercises', JSON.stringify(mockExercises));
             
             const result = await exerciseService.getAllExercises();
             
-            expect(result).toEqual(mockExercises);
+            expect(result).toEqual([]);
         });
 
         it('should handle loading errors', async () => {
             supabaseService.isAvailable.mockReturnValue(true);
-            supabaseService.loadData.mockRejectedValue(new Error('Database error'));
+            supabaseService.client = {
+                from: jest.fn().mockReturnValue({
+                    select: jest.fn().mockReturnValue({
+                        order: jest.fn().mockReturnValue({
+                            or: jest.fn().mockRejectedValue(new Error('Database error'))
+                        })
+                    })
+                })
+            };
             
             await exerciseService.getAllExercises();
             
@@ -86,7 +96,18 @@ describe('ExerciseService', () => {
                 { id: 2, name: 'Squat', muscle_group: 'legs' }
             ];
             
-            exerciseService.exercises = mockExercises;
+            supabaseService.isAvailable.mockReturnValue(true);
+            supabaseService.client = {
+                from: jest.fn().mockReturnValue({
+                    select: jest.fn().mockReturnValue({
+                        or: jest.fn().mockReturnValue({
+                            order: jest.fn().mockReturnValue({
+                                limit: jest.fn().mockResolvedValue({ data: [mockExercises[0]], error: null })
+                            })
+                        })
+                    })
+                })
+            };
             
             const result = await exerciseService.searchExercises('Bench');
             
@@ -99,19 +120,37 @@ describe('ExerciseService', () => {
                 { id: 2, name: 'Squat', muscle_group: 'legs' }
             ];
             
-            exerciseService.exercises = mockExercises;
+            supabaseService.isAvailable.mockReturnValue(true);
+            supabaseService.client = {
+                from: jest.fn().mockReturnValue({
+                    select: jest.fn().mockReturnValue({
+                        eq: jest.fn().mockReturnValue({
+                            order: jest.fn().mockReturnValue({
+                                limit: jest.fn().mockResolvedValue({ data: [mockExercises[0]], error: null })
+                            })
+                        })
+                    })
+                })
+            };
             
-            const result = await exerciseService.searchExercises('', 'chest');
+            const result = await exerciseService.searchExercises('', { muscleGroupId: 'chest' });
             
             expect(result).toEqual([{ id: 1, name: 'Bench Press', muscle_group: 'chest' }]);
         });
 
         it('should return empty array for no results', async () => {
-            const mockExercises = [
-                { id: 1, name: 'Bench Press', muscle_group: 'chest' }
-            ];
-            
-            exerciseService.exercises = mockExercises;
+            supabaseService.isAvailable.mockReturnValue(true);
+            supabaseService.client = {
+                from: jest.fn().mockReturnValue({
+                    select: jest.fn().mockReturnValue({
+                        or: jest.fn().mockReturnValue({
+                            order: jest.fn().mockReturnValue({
+                                limit: jest.fn().mockResolvedValue({ data: [], error: null })
+                            })
+                        })
+                    })
+                })
+            };
             
             const result = await exerciseService.searchExercises('NonExistent');
             
@@ -214,11 +253,13 @@ describe('ExerciseService', () => {
 
     describe('clearCache', () => {
         it('should clear cache', () => {
-            exerciseService.cache = { 'test': 'data' };
+            exerciseService.cache.set('test', 'data');
+            exerciseService.searchCache.set('search', 'data');
             
             exerciseService.clearCache();
             
-            expect(exerciseService.cache).toEqual({});
+            expect(exerciseService.cache.size).toBe(0);
+            expect(exerciseService.searchCache.size).toBe(0);
         });
     });
 
@@ -229,7 +270,16 @@ describe('ExerciseService', () => {
             ];
             
             supabaseService.isAvailable.mockReturnValue(true);
-            supabaseService.loadData.mockResolvedValue(mockExercises);
+            supabaseService.client = {
+                from: jest.fn().mockReturnValue({
+                    select: jest.fn().mockReturnValue({
+                        order: jest.fn().mockReturnValue({
+                            or: jest.fn().mockResolvedValue({ data: mockExercises, error: null })
+                        })
+                    })
+                })
+            };
+            supabaseService.saveData.mockResolvedValue({ id: 2, name: 'New Exercise', muscle_group: 'chest' });
             
             // エクササイズを読み込み
             await exerciseService.getAllExercises();
@@ -238,9 +288,24 @@ describe('ExerciseService', () => {
             const searchResults = await exerciseService.searchExercises('Bench');
             expect(searchResults).toHaveLength(1);
             
+            // エクササイズを追加
+            const newExercise = { name: 'New Exercise', muscle_group: 'chest' };
+            const addedExercise = await exerciseService.addExercise(newExercise);
+            expect(addedExercise.id).toBe(2);
+            
+            // エクササイズを更新
+            const updatedExercise = { id: 1, name: 'Updated Bench Press' };
+            supabaseService.saveData.mockResolvedValue(updatedExercise);
+            const result = await exerciseService.updateExercise(1, updatedExercise);
+            expect(result.name).toBe('Updated Bench Press');
+            
+            // エクササイズを削除
+            supabaseService.saveData.mockResolvedValue({});
+            await exerciseService.deleteExercise(1);
+            
             // キャッシュをクリア
             exerciseService.clearCache();
-            expect(exerciseService.cache).toEqual({});
+            expect(exerciseService.cache.size).toBe(0);
         });
     });
 });

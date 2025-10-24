@@ -46,7 +46,8 @@ jest.mock('../../js/modules/authManager.js', () => ({
 jest.mock('../../js/utils/helpers.js', () => ({
     showNotification: jest.fn(),
     safeGetElement: jest.fn(),
-    safeAsync: jest.fn()
+    safeAsync: jest.fn(),
+    debounce: jest.fn((fn) => fn)
 }));
 
 jest.mock('../../js/utils/errorHandler.js', () => ({
