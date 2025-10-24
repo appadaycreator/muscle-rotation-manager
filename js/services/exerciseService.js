@@ -215,7 +215,15 @@ class ExerciseService {
             } else {
                 query = supabaseService.client
                     .from('exercises')
-                    .select('*');
+                    .select(`
+                        *,
+                        muscle_groups (
+                            id,
+                            name,
+                            name_ja,
+                            color_code
+                        )
+                    `);
             }
 
             // テキスト検索
@@ -288,36 +296,6 @@ class ExerciseService {
             }
 
             let result = data || [];
-
-            // 筋肉部位の情報を別途取得して結合
-            if (result.length > 0) {
-                try {
-                    const muscleGroupIds = [...new Set(result.map(exercise => exercise.muscle_group_id).filter(id => id))];
-
-                    if (muscleGroupIds.length > 0) {
-                        const { data: muscleGroupsData, error: muscleGroupsError } = await supabaseService.client
-                            .from('muscle_groups')
-                            .select('id, name, name_ja, color_code')
-                            .in('id', muscleGroupIds);
-
-                        if (!muscleGroupsError && muscleGroupsData) {
-                            const muscleGroupsMap = {};
-                            muscleGroupsData.forEach(group => {
-                                muscleGroupsMap[group.id] = group;
-                            });
-
-                            // エクササイズデータに筋肉部位情報を結合
-                            result = result.map(exercise => ({
-                                ...exercise,
-                                muscle_groups: muscleGroupsMap[exercise.muscle_group_id] || null
-                            }));
-                        }
-                    }
-                } catch (muscleGroupsError) {
-                    console.warn('Failed to load muscle groups:', muscleGroupsError);
-                    // 筋肉部位情報なしでもエクササイズデータは返す
-                }
-            }
 
             // 検索キャッシュに保存
             this.searchCache.set(cacheKey, {

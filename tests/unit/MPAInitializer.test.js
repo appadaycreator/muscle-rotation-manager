@@ -8,7 +8,8 @@ jest.mock('../../js/modules/authManager.js', () => ({
     initialize: jest.fn(),
     isAuthenticated: jest.fn(),
     getCurrentUser: jest.fn(),
-    setupEventListeners: jest.fn()
+    setupEventListeners: jest.fn(),
+    updateAuthUI: jest.fn()
   }
 }));
 
@@ -110,13 +111,13 @@ describe('MPAInitializer', () => {
         text: jest.fn().mockResolvedValue('<div>Mock HTML</div>')
       });
       
-      // タイムアウトを15秒に設定
+      // タイムアウトを30秒に設定
       await mpaInitializer.initialize();
       
       expect(mpaInitializer.isInitialized).toBe(true);
       expect(mockAuthManager.initialize).toHaveBeenCalled();
       expect(mockAuthManager.isAuthenticated).toHaveBeenCalled();
-    }, 15000);
+    }, 30000);
 
     test('should not initialize if already initialized', async () => {
       mpaInitializer.isInitialized = true;

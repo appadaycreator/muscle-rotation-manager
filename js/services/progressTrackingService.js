@@ -563,4 +563,5 @@ class ProgressTrackingService {
 }
 
 // シングルトンインスタンスをエクスポート
+export { ProgressTrackingService };
 export const progressTrackingService = new ProgressTrackingService();

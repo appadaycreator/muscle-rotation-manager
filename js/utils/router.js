@@ -590,4 +590,5 @@ window.debugRouter = () => {
     console.log('Page cache keys:', Array.from(router.pageCache.keys()));
 };
 
+export { Router };
 export default router;

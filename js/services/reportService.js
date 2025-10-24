@@ -688,5 +688,6 @@ class ReportService {
     }
 }
 
-// シングルトンインスタンスをエクスポート
+// クラスとシングルトンインスタンスをエクスポート
+export { ReportService };
 export const reportService = new ReportService();

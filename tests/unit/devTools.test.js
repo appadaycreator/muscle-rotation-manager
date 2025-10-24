@@ -1,6 +1,6 @@
 // tests/unit/DevTools.test.js - DevToolsのテスト
 
-import { DevTools } from '../../js/utils/DevTools.js';
+import { DevTools } from '../../js/utils/devTools.js';
 
 describe('DevTools', () => {
     let devTools;
