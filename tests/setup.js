@@ -1,6 +1,7 @@
 // tests/setup.js - Jest セットアップファイル
 
 import '@testing-library/jest-dom';
+import { setupJSDOMNavigationFix } from './utils/jsdom-navigation-fix.js';
 
 // 基本的なDOM環境のモック
 global.window = {
@@ -18,25 +19,6 @@ global.window = {
   }
 };
 
-// window.locationのモック設定（JSDOMの制限を回避）
-// JSDOMではlocationの直接設定が制限されているため、テストファイル内で個別にモック
-// locationが既に定義されている場合はスキップ
-try {
-  if (!window.location || !window.location.assign) {
-    // JSDOMの制限を回避するため、locationを完全に置き換え
-    delete window.location;
-    window.location = {
-      href: '',
-      assign: jest.fn(),
-      replace: jest.fn(),
-      reload: jest.fn()
-    };
-  }
-} catch (error) {
-  // locationが既に定義されている場合はスキップ
-  console.warn('window.location already defined, skipping mock setup');
-}
-
 // JSDOMのナビゲーション制限を回避するための設定
 // テスト環境でのナビゲーションエラーを抑制
 const originalConsoleError = console.error;
@@ -47,6 +29,10 @@ console.error = (...args) => {
   }
   originalConsoleError.apply(console, args);
 };
+
+// JSDOMのナビゲーション制限を回避
+// 専用ユーティリティを使用してセットアップ
+setupJSDOMNavigationFix();
 
 global.document = {
   getElementById: jest.fn(),

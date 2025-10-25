@@ -1,6 +1,7 @@
 // tests/unit/Navigation.test.js - Navigation コンポーネントのテスト
 
 import { Navigation } from '../../js/components/Navigation.js';
+import { setupJSDOMNavigationFix } from '../utils/jsdom-navigation-fix.js';
 
 // モックの設定
 let mockAuthManager;
@@ -31,6 +32,9 @@ jest.mock('../../js/utils/TooltipManager.js', () => ({
 
 describe('Navigation', () => {
   beforeEach(() => {
+    // JSDOMナビゲーション修正を適用
+    setupJSDOMNavigationFix();
+    
     // DOM要素のモック設定
     mockElement = {
       addEventListener: jest.fn(),
@@ -275,12 +279,23 @@ describe('Navigation', () => {
       
       // window.location.hrefをモック（JSDOMエラーを回避）
       const originalLocation = window.location;
-      delete window.location;
-      window.location = { 
-        href: '',
-        assign: jest.fn(),
-        replace: jest.fn()
-      };
+      
+      // JSDOMの制限を回避するため、安全なモック方法を使用
+      if (window.location) {
+        // hrefは設定可能
+        window.location.href = '';
+        
+        // メソッドが既に存在する場合はスキップ
+        if (typeof window.location.assign !== 'function') {
+          window.location.assign = jest.fn();
+        }
+        if (typeof window.location.replace !== 'function') {
+          window.location.replace = jest.fn();
+        }
+        if (typeof window.location.reload !== 'function') {
+          window.location.reload = jest.fn();
+        }
+      }
       
       // console.warnをモックしてJSDOMエラーを抑制
       const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
@@ -305,12 +320,23 @@ describe('Navigation', () => {
       
       // window.location.hrefをモック（JSDOMエラーを回避）
       const originalLocation = window.location;
-      delete window.location;
-      window.location = { 
-        href: '',
-        assign: jest.fn(),
-        replace: jest.fn()
-      };
+      
+      // JSDOMの制限を回避するため、安全なモック方法を使用
+      if (window.location) {
+        // hrefは設定可能
+        window.location.href = '';
+        
+        // メソッドが既に存在する場合はスキップ
+        if (typeof window.location.assign !== 'function') {
+          window.location.assign = jest.fn();
+        }
+        if (typeof window.location.replace !== 'function') {
+          window.location.replace = jest.fn();
+        }
+        if (typeof window.location.reload !== 'function') {
+          window.location.reload = jest.fn();
+        }
+      }
       
       const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
       const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
