@@ -9,7 +9,7 @@ import { supabaseService } from '../../js/services/supabaseService.js';
 import { reportService } from '../../js/services/reportService.js';
 import { handleError } from '../../js/utils/errorHandler.js';
 import { safeGetElement, safeGetElements } from '../../js/utils/helpers.js';
-import { tooltipManager } from '../../js/utils/tooltip.js';
+import { tooltipManager } from '../../js/utils/TooltipManager.js';
 
 // モックの設定
 jest.mock('../../js/services/progressTrackingService.js', () => ({
@@ -65,7 +65,7 @@ jest.mock('../../js/utils/helpers.js', () => ({
     safeGetElements: jest.fn()
 }));
 
-jest.mock('../../js/utils/tooltip.js', () => ({
+jest.mock('../../js/utils/TooltipManager.js', () => ({
     tooltipManager: {
         initialize: jest.fn(),
         addTooltip: jest.fn()

@@ -7,7 +7,7 @@ import { supabaseService } from '../../js/services/supabaseService.js';
 import { authManager } from '../../js/modules/authManager.js';
 import { safeAsync, safeGetElement } from '../../js/utils/helpers.js';
 import { globalFormValidator } from '../../js/utils/validation.js';
-import { tooltipManager } from '../../js/utils/tooltip.js';
+import { tooltipManager } from '../../js/utils/TooltipManager.js';
 
 // モックの設定
 jest.mock('../../js/services/supabaseService.js', () => ({
@@ -38,7 +38,7 @@ jest.mock('../../js/utils/validation.js', () => ({
     }
 }));
 
-jest.mock('../../js/utils/tooltip.js', () => ({
+jest.mock('../../js/utils/TooltipManager.js', () => ({
     tooltipManager: {
         initialize: jest.fn(),
         addTooltip: jest.fn()

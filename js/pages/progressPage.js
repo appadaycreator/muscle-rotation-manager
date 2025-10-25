@@ -9,7 +9,7 @@ import { supabaseService } from '../services/supabaseService.js';
 import { reportService } from '../services/reportService.js';
 import { handleError } from '../utils/errorHandler.js';
 import { safeGetElement, safeGetElements } from '../utils/helpers.js';
-import { tooltipManager } from '../utils/tooltip.js';
+import { tooltipManager } from '../utils/TooltipManager.js';
 
 class ProgressPage {
     constructor() {

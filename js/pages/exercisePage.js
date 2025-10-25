@@ -309,7 +309,13 @@ class ExercisePage {
             const searchTerm = document.getElementById('exercise-search')?.value || '';
             const filters = this.getCurrentFilters();
 
-            this.currentExercises = await exerciseService.searchExercises(searchTerm, filters);
+            // 検索語が空でフィルターが適用されていない場合は全エクササイズを表示
+            if (!searchTerm && !this.hasActiveFilters()) {
+                this.currentExercises = await exerciseService.getAllExercises();
+            } else {
+                this.currentExercises = await exerciseService.searchExercises(searchTerm, filters);
+            }
+            
             this.renderExercises();
 
             // updateExerciseCountメソッドが存在することを確認してから呼び出し

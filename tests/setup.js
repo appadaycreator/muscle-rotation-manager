@@ -101,3 +101,17 @@ global.console = {
   warn: jest.fn(),
   info: jest.fn()
 };
+
+// URL のモック（ReportService用）
+global.URL = {
+  createObjectURL: jest.fn(() => 'mock-url'),
+  revokeObjectURL: jest.fn()
+};
+
+// Blob のモック
+global.Blob = class Blob {
+  constructor(parts, options) {
+    this.parts = parts;
+    this.type = options?.type || '';
+  }
+};

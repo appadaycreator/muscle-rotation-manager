@@ -21,7 +21,7 @@ jest.mock('../../js/utils/helpers.js', () => ({
 }));
 
 // tooltipManagerをモック
-jest.mock('../../js/utils/tooltip.js', () => ({
+jest.mock('../../js/utils/TooltipManager.js', () => ({
   tooltipManager: {
     initialize: jest.fn(),
     addTooltip: jest.fn(),
@@ -368,7 +368,7 @@ describe('Navigation', () => {
   describe('setupTooltips', () => {
     test('should setup tooltips for navigation elements', () => {
       const navigation = new Navigation();
-      const { tooltipManager } = require('../../js/utils/tooltip.js');
+      const { tooltipManager } = require('../../js/utils/TooltipManager.js');
       
       // デスクトップサイドバーのモックを設定
       const mockSidebar = {

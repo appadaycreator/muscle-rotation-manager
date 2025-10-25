@@ -1,6 +1,6 @@
 // helpPage.js - ヘルプページ
 
-import { tooltipManager } from '../utils/tooltip.js';
+import { tooltipManager } from '../utils/TooltipManager.js';
 import { safeGetElement } from '../utils/helpers.js';
 
 /**

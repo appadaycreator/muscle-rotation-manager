@@ -7,7 +7,7 @@ import { supabaseService } from '../../js/services/supabaseService.js';
 import { authManager } from '../../js/modules/authManager.js';
 import { showNotification, safeGetElement, safeAsync } from '../../js/utils/helpers.js';
 import { handleError } from '../../js/utils/errorHandler.js';
-import { tooltipManager } from '../../js/utils/tooltip.js';
+import { tooltipManager } from '../../js/utils/TooltipManager.js';
 
 // モックの設定
 jest.mock('../../js/services/supabaseService.js', () => ({
@@ -35,7 +35,7 @@ jest.mock('../../js/utils/errorHandler.js', () => ({
     handleError: jest.fn()
 }));
 
-jest.mock('../../js/utils/tooltip.js', () => ({
+jest.mock('../../js/utils/TooltipManager.js', () => ({
     tooltipManager: {
         initialize: jest.fn(),
         addTooltip: jest.fn()

@@ -108,12 +108,15 @@ describe('SupabaseService', () => {
         });
 
         it('should return user from localStorage', () => {
-            service.isConnected = true;
+            service.isConnected = true; // isAvailable()がtrueを返すように設定
+            service.client = {}; // clientも設定
             const mockUser = { id: '123', email: 'test@example.com' };
             const mockAuthData = { user: mockUser };
             
             // localStorageのモックを設定
-            const mockGetItem = jest.fn().mockReturnValue(JSON.stringify(mockAuthData));
+            const mockGetItem = jest.fn()
+                .mockReturnValueOnce(JSON.stringify(mockAuthData)); // 最初のキーでデータを返す
+            
             Object.defineProperty(window, 'localStorage', {
                 value: {
                     getItem: mockGetItem
@@ -123,7 +126,7 @@ describe('SupabaseService', () => {
 
             const result = service.getCurrentUser();
 
-            expect(mockGetItem).toHaveBeenCalledWith('supabase.auth.token');
+            expect(mockGetItem).toHaveBeenCalledWith('sb-mwwlqpokfgduxyjbqoff-auth-token');
             expect(result).toEqual(mockUser);
         });
     });
