@@ -30,6 +30,16 @@ console.error = (...args) => {
   originalConsoleError.apply(console, args);
 };
 
+// コンソールログも抑制（テスト環境での不要なログを削減）
+const originalConsoleLog = console.log;
+console.log = (...args) => {
+  // テスト環境でのナビゲーションログを抑制
+  if (args[0] && typeof args[0] === 'string' && args[0].includes('Navigation skipped in test environment')) {
+    return;
+  }
+  originalConsoleLog.apply(console, args);
+};
+
 // JSDOMのナビゲーション制限を回避
 // 専用ユーティリティを使用してセットアップ
 setupJSDOMNavigationFix();

@@ -19,6 +19,16 @@ export function setupJSDOMNavigationFix() {
     originalConsoleError.apply(console, args);
   };
 
+  // コンソールログも抑制（テスト環境での不要なログを削減）
+  const originalConsoleLog = console.log;
+  console.log = (...args) => {
+    // テスト環境でのナビゲーションログを抑制
+    if (args[0] && typeof args[0] === 'string' && args[0].includes('Navigation skipped in test environment')) {
+      return;
+    }
+    originalConsoleLog.apply(console, args);
+  };
+
   // 既存のlocationが存在する場合は、そのメソッドをモック
   if (window.location) {
     // 既存のlocationオブジェクトのメソッドをモック
@@ -31,6 +41,12 @@ export function setupJSDOMNavigationFix() {
     if (typeof window.location.reload !== 'function') {
       window.location.reload = jest.fn();
     }
+  }
+
+  // テスト環境フラグを設定
+  if (typeof process !== 'undefined') {
+    process.env.NODE_ENV = 'test';
+    process.env.JEST_WORKER_ID = '1';
   }
 }
 

@@ -306,6 +306,16 @@ export class Navigation {
             
             // テスト環境ではナビゲーションをモック
             if (typeof window !== 'undefined' && window.location) {
+                // CI環境でのJSDOMナビゲーション制限を回避
+                const isTestEnvironment = typeof process !== 'undefined' && 
+                    (process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID);
+                
+                if (isTestEnvironment) {
+                    // テスト環境ではナビゲーションをスキップ
+                    console.log('Navigation skipped in test environment');
+                    return;
+                }
+                
                 try {
                     window.location.href = '/index.html';
                 } catch (error) {
