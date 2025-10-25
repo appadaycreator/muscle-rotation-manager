@@ -1,6 +1,6 @@
 // tests/unit/Router.test.js - Routerのテスト
 
-import { Router } from '../../js/utils/Router.js';
+import { Router } from '../../js/utils/router.js';
 
 describe('Router', () => {
     let router;
