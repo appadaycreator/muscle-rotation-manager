@@ -1,12 +1,12 @@
 // tests/unit/Router.test.js - Routerのテスト
 
-import { Router } from '../../js/utils/router.js';
+import { Router, router } from '../../js/utils/router.js';
 
 describe('Router', () => {
-    let router;
+    let testRouter;
 
     beforeEach(() => {
-        router = new Router();
+        testRouter = new Router();
     });
 
     afterEach(() => {
@@ -15,9 +15,9 @@ describe('Router', () => {
 
     describe('constructor', () => {
         it('should initialize with default values', () => {
-            expect(router.routes).toBeDefined();
-            expect(router.currentRoute).toBeNull();
-            expect(router.pageCache).toBeDefined();
+            expect(testRouter.routes).toBeDefined();
+            expect(testRouter.currentRoute).toBeNull();
+            expect(testRouter.pageCache).toBeDefined();
         });
     });
 
@@ -25,7 +25,7 @@ describe('Router', () => {
         it('should return current path', () => {
             // getCurrentPathはwindow.location.pathnameを返すだけなので、
             // 現在のパスをテストする
-            const path = router.getCurrentPath();
+            const path = testRouter.getCurrentPath();
             expect(typeof path).toBe('string');
             expect(path).toBeDefined();
         });
@@ -39,7 +39,7 @@ describe('Router', () => {
                 writable: true
             });
 
-            router.navigateTo('/test');
+            testRouter.navigateTo('/test');
             expect(mockPushState).toHaveBeenCalled();
         });
     });
@@ -52,7 +52,7 @@ describe('Router', () => {
                 writable: true
             });
 
-            router.goBack();
+            testRouter.goBack();
             expect(mockBack).toHaveBeenCalled();
         });
     });
@@ -65,18 +65,18 @@ describe('Router', () => {
                 writable: true
             });
 
-            router.goForward();
+            testRouter.goForward();
             expect(mockForward).toHaveBeenCalled();
         });
     });
 
     describe('clearCache', () => {
         it('should clear page cache', () => {
-            router.pageCache.set('test', 'content');
-            expect(router.pageCache.size).toBe(1);
+            testRouter.pageCache.set('test', 'content');
+            expect(testRouter.pageCache.size).toBe(1);
 
-            router.clearCache();
-            expect(router.pageCache.size).toBe(0);
+            testRouter.clearCache();
+            expect(testRouter.pageCache.size).toBe(0);
         });
     });
 });

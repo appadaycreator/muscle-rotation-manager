@@ -574,8 +574,11 @@ const router = new Router();
 // グローバルに公開
 window.router = router;
 
-// Routerクラスをエクスポート
-export { Router };
+// Routerクラスとrouterインスタンスをエクスポート
+export { Router, router };
+
+// デフォルトエクスポートとしてrouterインスタンスを提供
+export default router;
 
 // グローバルキャッシュクリア機能を追加
 window.clearAllCache = () => {
@@ -592,5 +595,3 @@ window.debugRouter = () => {
     console.log('Page cache size:', router.pageCache.size);
     console.log('Page cache keys:', Array.from(router.pageCache.keys()));
 };
-
-export default router;
