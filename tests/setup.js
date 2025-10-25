@@ -37,6 +37,17 @@ try {
   console.warn('window.location already defined, skipping mock setup');
 }
 
+// JSDOMのナビゲーション制限を回避するための設定
+// テスト環境でのナビゲーションエラーを抑制
+const originalConsoleError = console.error;
+console.error = (...args) => {
+  // JSDOMのナビゲーションエラーを抑制
+  if (args[0] && args[0].includes && args[0].includes('Not implemented: navigation')) {
+    return;
+  }
+  originalConsoleError.apply(console, args);
+};
+
 global.document = {
   getElementById: jest.fn(),
   querySelector: jest.fn(),

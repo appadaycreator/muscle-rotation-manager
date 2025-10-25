@@ -120,7 +120,20 @@ export class BasePage {
                     redirectUrl: '/index.html'
                 });
 
-                window.location.href = '/index.html';
+                // テスト環境ではナビゲーションをモック
+                if (typeof window !== 'undefined' && window.location) {
+                    try {
+                        window.location.href = '/index.html';
+                    } catch (error) {
+                        // JSDOM環境ではlocation.hrefの直接設定が失敗する可能性がある
+                        // その場合はassignメソッドを使用
+                        if (window.location.assign) {
+                            window.location.assign('/index.html');
+                        } else {
+                            console.warn('Navigation not available in test environment');
+                        }
+                    }
+                }
                 return false;
             }
 

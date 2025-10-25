@@ -303,7 +303,21 @@ export class Navigation {
         try {
             await authManager.logout();
             showNotification('ログアウトしました', 'success');
-            window.location.href = '/index.html';
+            
+            // テスト環境ではナビゲーションをモック
+            if (typeof window !== 'undefined' && window.location) {
+                try {
+                    window.location.href = '/index.html';
+                } catch (error) {
+                    // JSDOM環境ではlocation.hrefの直接設定が失敗する可能性がある
+                    // その場合はassignメソッドを使用
+                    if (window.location.assign) {
+                        window.location.assign('/index.html');
+                    } else {
+                        console.warn('Navigation not available in test environment');
+                    }
+                }
+            }
         } catch (error) {
             console.error('Logout failed:', error);
             showNotification('ログアウトに失敗しました', 'error');
