@@ -9,14 +9,14 @@ global.window = {
   removeEventListener: jest.fn(),
   dispatchEvent: jest.fn(),
   performance: {
-    now: jest.fn(() => Date.now())
+    now: jest.fn(() => Date.now()),
   },
   CustomEvent: class CustomEvent {
     constructor(type, options = {}) {
       this.type = type;
       this.detail = options.detail;
     }
-  }
+  },
 };
 
 // JSDOMのナビゲーション制限を回避するための設定
@@ -24,7 +24,11 @@ global.window = {
 const originalConsoleError = console.error;
 console.error = (...args) => {
   // JSDOMのナビゲーションエラーを抑制
-  if (args[0] && args[0].includes && args[0].includes('Not implemented: navigation')) {
+  if (
+    args[0] &&
+    args[0].includes &&
+    args[0].includes('Not implemented: navigation')
+  ) {
     return;
   }
   originalConsoleError.apply(console, args);
@@ -34,7 +38,11 @@ console.error = (...args) => {
 const originalConsoleLog = console.log;
 console.log = (...args) => {
   // テスト環境でのナビゲーションログを抑制
-  if (args[0] && typeof args[0] === 'string' && args[0].includes('Navigation skipped in test environment')) {
+  if (
+    args[0] &&
+    typeof args[0] === 'string' &&
+    args[0].includes('Navigation skipped in test environment')
+  ) {
     return;
   }
   originalConsoleLog.apply(console, args);
@@ -56,7 +64,7 @@ global.document = {
       add: jest.fn(),
       remove: jest.fn(),
       contains: jest.fn(),
-      toggle: jest.fn()
+      toggle: jest.fn(),
     },
     style: {},
     setAttribute: jest.fn(),
@@ -64,11 +72,11 @@ global.document = {
     appendChild: jest.fn(),
     removeChild: jest.fn(),
     innerHTML: '',
-    textContent: ''
+    textContent: '',
   })),
   createTextNode: jest.fn(),
   addEventListener: jest.fn(),
-  removeEventListener: jest.fn()
+  removeEventListener: jest.fn(),
 };
 
 // グローバル変数の設定
@@ -87,7 +95,7 @@ global.localStorage = {
   getItem: jest.fn(),
   setItem: jest.fn(),
   removeItem: jest.fn(),
-  clear: jest.fn()
+  clear: jest.fn(),
 };
 
 // sessionStorage のモック
@@ -95,7 +103,7 @@ global.sessionStorage = {
   getItem: jest.fn(),
   setItem: jest.fn(),
   removeItem: jest.fn(),
-  clear: jest.fn()
+  clear: jest.fn(),
 };
 
 // fetch のモック
@@ -106,13 +114,13 @@ global.console = {
   log: jest.fn(),
   error: jest.fn(),
   warn: jest.fn(),
-  info: jest.fn()
+  info: jest.fn(),
 };
 
 // URL のモック（ReportService用）
 global.URL = {
   createObjectURL: jest.fn(() => 'mock-url'),
-  revokeObjectURL: jest.fn()
+  revokeObjectURL: jest.fn(),
 };
 
 // Blob のモック

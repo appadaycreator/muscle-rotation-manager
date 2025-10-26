@@ -23,6 +23,7 @@
 ## ページ構成
 
 ### メインページ
+
 - **`index.html`**: ランディングページ
 - **`dashboard.html`**: ダッシュボードページ
 - **`workout.html`**: ワークアウト記録ページ
@@ -35,6 +36,7 @@
 - **`privacy.html`**: プライバシーポリシーページ
 
 ### 共通コンポーネント
+
 - **`partials/header.html`**: ヘッダーコンポーネント
 - **`partials/sidebar.html`**: サイドバーコンポーネント
 - **`partials/footer.html`**: フッターコンポーネント
@@ -42,6 +44,7 @@
 ## セットアップ
 
 ### 前提条件
+
 - Node.js 18以上
 - Python 3.8以上
 - Supabaseアカウント
@@ -49,17 +52,20 @@
 ### インストール
 
 1. リポジトリをクローン
+
 ```bash
 git clone <repository-url>
 cd muscle-rotation-manager
 ```
 
 2. 依存関係をインストール
+
 ```bash
 npm install
 ```
 
 3. Supabaseの設定
+
 ```bash
 # Supabaseプロジェクトの設定
 cp mcp-config.env.example mcp-config.env
@@ -107,6 +113,7 @@ npm run format
 ### デプロイ
 
 #### 高速デプロイ（推奨）
+
 ```bash
 # 高速デプロイ（テストスキップ）
 ./deploy.sh fast
@@ -116,6 +123,7 @@ npm run deploy:fast
 ```
 
 #### フルデプロイ
+
 ```bash
 # フルビルド（テスト含む）
 ./deploy.sh full
@@ -171,18 +179,21 @@ js/
 ## 機能
 
 ### 認証機能
+
 - 統一認証システム
 - JWTトークンによる認証状態管理
 - 認証ガード機能
 - 自動リダイレクト
 
 ### データ管理
+
 - Supabase統合
 - オフライン対応
 - リアルタイム更新
 - データ永続化
 
 ### パフォーマンス
+
 - ページ読み込み最適化
 - リソース共有
 - キャッシュ戦略

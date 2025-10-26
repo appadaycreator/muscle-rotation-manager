@@ -1,6 +1,11 @@
 // validation.test.js - validationのテスト
 
-import { Validator, FormValidator, RealtimeValidator, ERROR_MESSAGES } from '../../js/utils/validation.js';
+import {
+  Validator,
+  FormValidator,
+  RealtimeValidator,
+  ERROR_MESSAGES,
+} from '../../js/utils/validation.js';
 import { MUSCLE_GROUPS } from '../../js/utils/constants.js';
 
 describe('Validation', () => {
@@ -112,14 +117,22 @@ describe('Validation', () => {
     });
 
     test('should validate field successfully', () => {
-      const result = formValidator.validateField('test', 'value', Validator.required);
+      const result = formValidator.validateField(
+        'test',
+        'value',
+        Validator.required
+      );
       expect(result).toBeDefined();
       // 実際の実装に応じて調整
       expect(result).toBeDefined();
     });
 
     test('should validate field with errors', () => {
-      const result = formValidator.validateField('test', '', Validator.required);
+      const result = formValidator.validateField(
+        'test',
+        '',
+        Validator.required
+      );
       expect(result).toBeDefined();
       // 実際の実装に応じて調整
       expect(result).toBeDefined();
@@ -138,7 +151,7 @@ describe('Validation', () => {
         sets: 3,
         reps: 10,
         weight: 0,
-        notes: 'Good workout'
+        notes: 'Good workout',
       };
 
       const result = formValidator.validateWorkoutForm(formData);
@@ -152,7 +165,7 @@ describe('Validation', () => {
         display_name: 'Test User',
         email: 'test@example.com',
         age: 25,
-        fitness_level: 'beginner'
+        fitness_level: 'beginner',
       };
 
       const result = formValidator.validateProfileForm(formData);
@@ -174,23 +187,27 @@ describe('Validation', () => {
 
     test('should setup field validation', () => {
       const mockElement = {
-        addEventListener: jest.fn()
+        addEventListener: jest.fn(),
       };
-      
-      realtimeValidator.setupFieldValidation(mockElement, 'test', Validator.required);
-      
+
+      realtimeValidator.setupFieldValidation(
+        mockElement,
+        'test',
+        Validator.required
+      );
+
       expect(mockElement.addEventListener).toHaveBeenCalled();
     });
 
     test('should setup auth form validation', () => {
       const mockForm = {
         querySelector: jest.fn().mockReturnValue({
-          addEventListener: jest.fn()
-        })
+          addEventListener: jest.fn(),
+        }),
       };
-      
+
       realtimeValidator.setupAuthFormValidation(mockForm);
-      
+
       expect(mockForm.querySelector).toHaveBeenCalled();
     });
   });

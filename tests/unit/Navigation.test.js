@@ -12,13 +12,13 @@ jest.mock('../../js/modules/authManager.js', () => ({
   authManager: {
     isAuthenticated: jest.fn(),
     getCurrentUser: jest.fn(),
-    logout: jest.fn()
-  }
+    logout: jest.fn(),
+  },
 }));
 
 // showNotificationをモック
 jest.mock('../../js/utils/helpers.js', () => ({
-  showNotification: jest.fn()
+  showNotification: jest.fn(),
 }));
 
 // tooltipManagerをモック
@@ -26,15 +26,15 @@ jest.mock('../../js/utils/TooltipManager.js', () => ({
   tooltipManager: {
     initialize: jest.fn(),
     addTooltip: jest.fn(),
-    addDynamicTooltip: jest.fn()
-  }
+    addDynamicTooltip: jest.fn(),
+  },
 }));
 
 describe('Navigation', () => {
   beforeEach(() => {
     // JSDOMナビゲーション修正を適用
     setupJSDOMNavigationFix();
-    
+
     // DOM要素のモック設定
     mockElement = {
       addEventListener: jest.fn(),
@@ -44,7 +44,7 @@ describe('Navigation', () => {
         add: jest.fn(),
         remove: jest.fn(),
         contains: jest.fn(),
-        toggle: jest.fn()
+        toggle: jest.fn(),
       },
       style: {},
       textContent: '',
@@ -53,14 +53,14 @@ describe('Navigation', () => {
       appendChild: jest.fn(),
       removeChild: jest.fn(),
       setAttribute: jest.fn(),
-      getAttribute: jest.fn()
+      getAttribute: jest.fn(),
     };
 
     // モックの設定
     mockAuthManager = {
       isAuthenticated: jest.fn().mockResolvedValue(true),
       getCurrentUser: jest.fn().mockReturnValue({ email: 'test@example.com' }),
-      logout: jest.fn().mockResolvedValue()
+      logout: jest.fn().mockResolvedValue(),
     };
 
     // モックされたauthManagerを設定
@@ -68,11 +68,11 @@ describe('Navigation', () => {
     authManager.isAuthenticated = mockAuthManager.isAuthenticated;
     authManager.getCurrentUser = mockAuthManager.getCurrentUser;
     authManager.logout = mockAuthManager.logout;
-    
+
     // showNotificationのモックを設定
     const { showNotification } = require('../../js/utils/helpers.js');
     global.showNotification = showNotification;
-    
+
     // window.location は setup.js で設定済み
 
     // document.getElementById のモック
@@ -85,8 +85,8 @@ describe('Navigation', () => {
             contains: jest.fn().mockReturnValue(false),
             add: jest.fn(),
             remove: jest.fn(),
-            toggle: jest.fn()
-          }
+            toggle: jest.fn(),
+          },
         };
       }
       if (id === 'user-info') {
@@ -114,25 +114,31 @@ describe('Navigation', () => {
   describe('getCurrentPage', () => {
     test('should return current page from URL', () => {
       const navigation = new Navigation();
-      
+
       // getCurrentPageメソッドを直接テストするために、内部実装を確認
       // 実際のwindow.location.pathnameを使用してテスト
       const currentPage = navigation.getCurrentPage();
-      
+
       // 現在のパスに基づいて期待値を設定
-      const expectedPage = window.location.pathname.split('/').pop().replace('.html', '') || 'index';
+      const expectedPage =
+        window.location.pathname.split('/').pop().replace('.html', '') ||
+        'index';
       expect(currentPage).toBe(expectedPage);
     });
 
     test('should return index for root path', () => {
       const navigation = new Navigation();
-      
+
       // 現在のパスに基づいてテスト
       const currentPage = navigation.getCurrentPage();
-      
+
       // 現在のパスがルートまたはindex.htmlの場合
-      const expectedPage = window.location.pathname === '/' || window.location.pathname === '/index.html' ? 'index' : 
-                          window.location.pathname.split('/').pop().replace('.html', '') || 'index';
+      const expectedPage =
+        window.location.pathname === '/' ||
+        window.location.pathname === '/index.html'
+          ? 'index'
+          : window.location.pathname.split('/').pop().replace('.html', '') ||
+            'index';
       expect(currentPage).toBe(expectedPage);
     });
   });
@@ -151,29 +157,33 @@ describe('Navigation', () => {
 
     test('should not initialize if already initialized', async () => {
       const navigation = new Navigation();
-      
+
       // 1回目の初期化
       const consoleSpy1 = jest.spyOn(console, 'log').mockImplementation();
       await navigation.initialize();
       expect(consoleSpy1).toHaveBeenCalledWith('🔄 Initializing navigation...');
       consoleSpy1.mockRestore();
-      
+
       // 2回目の初期化ではログが出力されないことを確認
       const consoleSpy2 = jest.spyOn(console, 'log').mockImplementation();
       await navigation.initialize();
-      
+
       // 初期化ログが2回目に出力されないことを確認
-      expect(consoleSpy2).not.toHaveBeenCalledWith('🔄 Initializing navigation...');
+      expect(consoleSpy2).not.toHaveBeenCalledWith(
+        '🔄 Initializing navigation...'
+      );
       consoleSpy2.mockRestore();
     });
 
     test('should handle initialization errors', async () => {
       const navigation = new Navigation();
-      
+
       // authManagerを無効にしてエラーを発生させる
       const { authManager } = require('../../js/modules/authManager.js');
-      authManager.isAuthenticated = jest.fn().mockRejectedValue(new Error('Auth error'));
-      
+      authManager.isAuthenticated = jest
+        .fn()
+        .mockRejectedValue(new Error('Auth error'));
+
       await expect(navigation.initialize()).rejects.toThrow();
     });
   });
@@ -182,7 +192,7 @@ describe('Navigation', () => {
     test('should generate header HTML', () => {
       const navigation = new Navigation();
       const headerHTML = navigation.generateBasicHeader();
-      
+
       expect(headerHTML).toContain('header');
       expect(headerHTML).toContain('MuscleRotationManager');
     });
@@ -192,7 +202,7 @@ describe('Navigation', () => {
     test('should generate sidebar HTML', () => {
       const navigation = new Navigation();
       const sidebarHTML = navigation.generateBasicSidebar();
-      
+
       expect(sidebarHTML).toContain('sidebar');
       expect(sidebarHTML).toContain('nav');
     });
@@ -201,18 +211,18 @@ describe('Navigation', () => {
   describe('toggleMobileSidebar', () => {
     test('should toggle mobile sidebar visibility', () => {
       const navigation = new Navigation();
-      
+
       // モバイルサイドバーのモックを設定
       const mockMobileSidebar = {
         classList: {
-          toggle: jest.fn()
-        }
+          toggle: jest.fn(),
+        },
       };
-      
+
       document.getElementById = jest.fn().mockReturnValue(mockMobileSidebar);
-      
+
       navigation.toggleMobileSidebar();
-      
+
       expect(mockMobileSidebar.classList.toggle).toHaveBeenCalledWith('hidden');
     });
   });
@@ -220,18 +230,18 @@ describe('Navigation', () => {
   describe('closeMobileSidebar', () => {
     test('should close mobile sidebar', () => {
       const navigation = new Navigation();
-      
+
       // モバイルサイドバーのモックを設定
       const mockMobileSidebar = {
         classList: {
-          add: jest.fn()
-        }
+          add: jest.fn(),
+        },
       };
-      
+
       document.getElementById = jest.fn().mockReturnValue(mockMobileSidebar);
-      
+
       navigation.closeMobileSidebar();
-      
+
       expect(mockMobileSidebar.classList.add).toHaveBeenCalledWith('hidden');
     });
   });
@@ -241,12 +251,12 @@ describe('Navigation', () => {
       const navigation = new Navigation();
       const navLink = {
         getAttribute: jest.fn().mockReturnValue('/dashboard.html'),
-        preventDefault: jest.fn()
+        preventDefault: jest.fn(),
       };
       const event = { preventDefault: jest.fn() };
-      
+
       await navigation.handleNavigationClick(navLink, event);
-      
+
       expect(event.preventDefault).not.toHaveBeenCalled();
     });
 
@@ -254,37 +264,40 @@ describe('Navigation', () => {
       const navigation = new Navigation();
       const navLink = {
         getAttribute: jest.fn().mockReturnValue('/dashboard.html'),
-        preventDefault: jest.fn()
-      };
-      const event = { 
         preventDefault: jest.fn(),
-        stopPropagation: jest.fn()
       };
-      
+      const event = {
+        preventDefault: jest.fn(),
+        stopPropagation: jest.fn(),
+      };
+
       // 認証されていない状態をモック
       const { authManager } = require('../../js/modules/authManager.js');
       authManager.isAuthenticated = jest.fn().mockResolvedValue(false);
-      
+
       await navigation.handleNavigationClick(navLink, event);
-      
+
       expect(event.preventDefault).toHaveBeenCalled();
       expect(event.stopPropagation).toHaveBeenCalled();
-      expect(global.showNotification).toHaveBeenCalledWith('ログインが必要です', 'warning');
+      expect(global.showNotification).toHaveBeenCalledWith(
+        'ログインが必要です',
+        'warning'
+      );
     });
   });
 
   describe('handleLogout', () => {
     test('should handle logout successfully', async () => {
       const navigation = new Navigation();
-      
+
       // window.location.hrefをモック（JSDOMエラーを回避）
       const originalLocation = window.location;
-      
+
       // JSDOMの制限を回避するため、安全なモック方法を使用
       if (window.location) {
         // hrefは設定可能
         window.location.href = '';
-        
+
         // メソッドが既に存在する場合はスキップ
         if (typeof window.location.assign !== 'function') {
           window.location.assign = jest.fn();
@@ -296,18 +309,21 @@ describe('Navigation', () => {
           window.location.reload = jest.fn();
         }
       }
-      
+
       // console.warnをモックしてJSDOMエラーを抑制
       const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
-      
+
       await navigation.handleLogout();
-      
+
       const { authManager } = require('../../js/modules/authManager.js');
       expect(authManager.logout).toHaveBeenCalled();
-      expect(global.showNotification).toHaveBeenCalledWith('ログアウトしました', 'success');
-      
+      expect(global.showNotification).toHaveBeenCalledWith(
+        'ログアウトしました',
+        'success'
+      );
+
       consoleWarnSpy.mockRestore();
-      
+
       // 元のlocationを復元
       window.location = originalLocation;
     });
@@ -317,15 +333,15 @@ describe('Navigation', () => {
       const error = new Error('Logout failed');
       const { authManager } = require('../../js/modules/authManager.js');
       authManager.logout = jest.fn().mockRejectedValue(error);
-      
+
       // window.location.hrefをモック（JSDOMエラーを回避）
       const originalLocation = window.location;
-      
+
       // JSDOMの制限を回避するため、安全なモック方法を使用
       if (window.location) {
         // hrefは設定可能
         window.location.href = '';
-        
+
         // メソッドが既に存在する場合はスキップ
         if (typeof window.location.assign !== 'function') {
           window.location.assign = jest.fn();
@@ -337,18 +353,21 @@ describe('Navigation', () => {
           window.location.reload = jest.fn();
         }
       }
-      
+
       const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
       const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
-      
+
       await navigation.handleLogout();
-      
+
       expect(consoleErrorSpy).toHaveBeenCalledWith('Logout failed:', error);
-      expect(global.showNotification).toHaveBeenCalledWith('ログアウトに失敗しました', 'error');
-      
+      expect(global.showNotification).toHaveBeenCalledWith(
+        'ログアウトに失敗しました',
+        'error'
+      );
+
       consoleErrorSpy.mockRestore();
       consoleWarnSpy.mockRestore();
-      
+
       // 元のlocationを復元
       window.location = originalLocation;
     });
@@ -357,9 +376,9 @@ describe('Navigation', () => {
   describe('updateNavigationForAuth', () => {
     test('should update navigation for authenticated user', async () => {
       const navigation = new Navigation();
-      
+
       await navigation.updateNavigationForAuth();
-      
+
       const { authManager } = require('../../js/modules/authManager.js');
       expect(authManager.isAuthenticated).toHaveBeenCalled();
     });
@@ -368,9 +387,9 @@ describe('Navigation', () => {
       const navigation = new Navigation();
       const { authManager } = require('../../js/modules/authManager.js');
       authManager.isAuthenticated = jest.fn().mockResolvedValue(false);
-      
+
       await navigation.updateNavigationForAuth();
-      
+
       expect(authManager.isAuthenticated).toHaveBeenCalled();
     });
   });
@@ -381,18 +400,18 @@ describe('Navigation', () => {
       const element = mockElement;
       const event = 'click';
       const handler = jest.fn();
-      
+
       navigation.addEventListener(element, event, handler);
-      
+
       expect(element.addEventListener).toHaveBeenCalledWith(event, handler);
     });
 
     test('should not add listener if element is null', () => {
       const navigation = new Navigation();
       const handler = jest.fn();
-      
+
       navigation.addEventListener(null, 'click', handler);
-      
+
       // エラーが発生しないことを確認
       expect(true).toBe(true);
     });
@@ -402,15 +421,15 @@ describe('Navigation', () => {
     test('should setup tooltips for navigation elements', () => {
       const navigation = new Navigation();
       const { tooltipManager } = require('../../js/utils/TooltipManager.js');
-      
+
       // デスクトップサイドバーのモックを設定
       const mockSidebar = {
-        querySelectorAll: jest.fn(() => [])
+        querySelectorAll: jest.fn(() => []),
       };
       document.getElementById = jest.fn().mockReturnValue(mockSidebar);
-      
+
       navigation.setupTooltips();
-      
+
       expect(tooltipManager.addDynamicTooltip).toHaveBeenCalled();
     });
   });
@@ -419,9 +438,9 @@ describe('Navigation', () => {
     test('should destroy navigation', () => {
       const navigation = new Navigation();
       navigation.isInitialized = true;
-      
+
       navigation.destroy();
-      
+
       expect(navigation.isInitialized).toBe(false);
     });
   });

@@ -5,55 +5,57 @@
 import { authManager } from '../modules/authManager.js';
 // import { chartService } from '../services/chartService.js';
 import {
-    showNotification,
-    safeAsync,
-    safeGetElement
-    // safeGetElements
+  showNotification,
+  safeAsync,
+  safeGetElement,
+  // safeGetElements
 } from '../utils/helpers.js';
 import { handleError } from '../utils/errorHandler.js';
 
 class AnalysisPage {
-    constructor() {
-        this.workoutData = [];
-        this.charts = {};
-        this.isLoading = false;
+  constructor() {
+    this.workoutData = [];
+    this.charts = {};
+    this.isLoading = false;
+  }
+
+  /**
+   * 分析ページを初期化
+   */
+  async initialize() {
+    console.log('Analysis page initialized');
+
+    // 認証チェックをスキップして分析ページを表示
+    await safeAsync(
+      async () => {
+        // 分析ページのコンテンツを表示
+        this.renderAnalysisPage();
+
+        await this.loadWorkoutData();
+        this.renderStatistics();
+        this.renderCharts();
+        this.generateAnalysisReport();
+      },
+      '分析ページの初期化',
+      (error) => {
+        handleError(error, {
+          context: '分析ページ初期化',
+          showNotification: true,
+        });
+      }
+    );
+  }
+
+  /**
+   * ログインプロンプトを表示
+   */
+  showLoginPrompt() {
+    const mainContent = safeGetElement('#main-content');
+    if (!mainContent) {
+      return;
     }
 
-    /**
-     * 分析ページを初期化
-     */
-    async initialize() {
-        console.log('Analysis page initialized');
-
-        // 認証チェックをスキップして分析ページを表示
-        await safeAsync(
-            async () => {
-                // 分析ページのコンテンツを表示
-                this.renderAnalysisPage();
-
-                await this.loadWorkoutData();
-                this.renderStatistics();
-                this.renderCharts();
-                this.generateAnalysisReport();
-            },
-            '分析ページの初期化',
-            (error) => {
-                handleError(error, {
-                    context: '分析ページ初期化',
-                    showNotification: true
-                });
-            }
-        );
-    }
-
-    /**
-     * ログインプロンプトを表示
-     */
-    showLoginPrompt() {
-        const mainContent = safeGetElement('#main-content');
-        if (!mainContent) {return;}
-
-        mainContent.innerHTML = `
+    mainContent.innerHTML = `
             <div class="min-h-screen flex items-center justify-center bg-gray-50">
                 <div class="max-w-md w-full bg-white rounded-lg shadow-md p-6 text-center">
                     <div class="mb-6">
@@ -77,23 +79,25 @@ class AnalysisPage {
             </div>
         `;
 
-        // ログインボタンのイベントリスナーを設定
-        const loginBtn = document.getElementById('login-btn');
-        if (loginBtn) {
-            loginBtn.addEventListener('click', () => {
-                authManager.showAuthModal('login');
-            });
-        }
+    // ログインボタンのイベントリスナーを設定
+    const loginBtn = document.getElementById('login-btn');
+    if (loginBtn) {
+      loginBtn.addEventListener('click', () => {
+        authManager.showAuthModal('login');
+      });
+    }
+  }
+
+  /**
+   * 分析ページのコンテンツを表示
+   */
+  renderAnalysisPage() {
+    const mainContent = safeGetElement('#main-content');
+    if (!mainContent) {
+      return;
     }
 
-    /**
-     * 分析ページのコンテンツを表示
-     */
-    renderAnalysisPage() {
-        const mainContent = safeGetElement('#main-content');
-        if (!mainContent) {return;}
-
-        mainContent.innerHTML = `
+    mainContent.innerHTML = `
             <div class="mb-8">
                 <h1 class="text-3xl font-bold text-gray-900">分析</h1>
                 <p class="mt-2 text-gray-600">トレーニングデータを分析し、進捗を可視化しましょう</p>
@@ -250,553 +254,601 @@ class AnalysisPage {
                 </div>
             </div>
         `;
+  }
+
+  /**
+   * ワークアウトデータを読み込み
+   */
+  async loadWorkoutData() {
+    try {
+      this.isLoading = true;
+
+      // ローカルストレージから読み込み（認証なしでも動作）
+      this.workoutData = JSON.parse(
+        localStorage.getItem('workoutHistory') || '[]'
+      );
+
+      // サンプルデータを追加（デモ用）
+      if (this.workoutData.length === 0) {
+        this.workoutData = this.generateSampleWorkoutData();
+      }
+
+      console.log(`Loaded ${this.workoutData.length} workouts for analysis`);
+    } catch (error) {
+      console.error('Error loading workout data:', error);
+      this.workoutData = this.generateSampleWorkoutData();
+      showNotification('ワークアウトデータの読み込みに失敗しました', 'error');
+    } finally {
+      this.isLoading = false;
     }
+  }
 
-    /**
-     * ワークアウトデータを読み込み
-     */
-    async loadWorkoutData() {
-        try {
-            this.isLoading = true;
+  /**
+   * サンプルワークアウトデータを生成
+   * @returns {Array} サンプルワークアウトデータ配列
+   */
+  generateSampleWorkoutData() {
+    const today = new Date();
+    const sampleData = [];
 
-            // ローカルストレージから読み込み（認証なしでも動作）
-            this.workoutData = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
+    // 過去90日分のサンプルデータを生成
+    for (let i = 0; i < 90; i++) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
 
-            // サンプルデータを追加（デモ用）
-            if (this.workoutData.length === 0) {
-                this.workoutData = this.generateSampleWorkoutData();
-            }
+      // 2-3日に1回の頻度でワークアウトを生成
+      if (i % 2 === 0 || i % 3 === 0) {
+        const muscleGroups = ['胸', '背中', '肩', '腕', '脚', '腹筋'];
+        const randomMuscles = muscleGroups
+          .sort(() => 0.5 - Math.random())
+          .slice(0, 2);
 
-            console.log(`Loaded ${this.workoutData.length} workouts for analysis`);
-        } catch (error) {
-            console.error('Error loading workout data:', error);
-            this.workoutData = this.generateSampleWorkoutData();
-            showNotification('ワークアウトデータの読み込みに失敗しました', 'error');
-        } finally {
-            this.isLoading = false;
-        }
-    }
+        // 重量の進歩をシミュレート
+        const baseWeight = 80;
+        const progressFactor = Math.max(0, (90 - i) / 90); // 時間とともに重量が増加
+        const weight = Math.floor(baseWeight + progressFactor * 20);
 
-    /**
-     * サンプルワークアウトデータを生成
-     * @returns {Array} サンプルワークアウトデータ配列
-     */
-    generateSampleWorkoutData() {
-        const today = new Date();
-        const sampleData = [];
-
-        // 過去90日分のサンプルデータを生成
-        for (let i = 0; i < 90; i++) {
-            const date = new Date(today);
-            date.setDate(date.getDate() - i);
-
-            // 2-3日に1回の頻度でワークアウトを生成
-            if (i % 2 === 0 || i % 3 === 0) {
-                const muscleGroups = ['胸', '背中', '肩', '腕', '脚', '腹筋'];
-                const randomMuscles = muscleGroups.sort(() => 0.5 - Math.random()).slice(0, 2);
-
-                // 重量の進歩をシミュレート
-                const baseWeight = 80;
-                const progressFactor = Math.max(0, (90 - i) / 90); // 時間とともに重量が増加
-                const weight = Math.floor(baseWeight + (progressFactor * 20));
-
-                sampleData.push({
-                    id: `sample-${i}`,
-                    date: date.toISOString().split('T')[0],
-                    muscle_groups: randomMuscles,
-                    exercises: [
-                        { name: 'ベンチプレス', sets: 3, reps: 10, weight },
-                        { name: 'プッシュアップ', sets: 3, reps: 15, weight: 0 }
-                    ],
-                    duration: 45 + Math.floor(Math.random() * 30), // 45-75分
-                    notes: 'サンプルワークアウト'
-                });
-            }
-        }
-
-        return sampleData;
-    }
-
-    /**
-     * 統計情報をレンダリング
-     */
-    renderStatistics() {
-        this.renderOverallStats();
-        this.renderMuscleGroupStats();
-        this.renderProgressStats();
-    }
-
-    /**
-     * 総合統計をレンダリング
-     */
-    renderOverallStats() {
-        const totalWorkouts = this.workoutData.length;
-        const totalHours = this.workoutData.reduce((sum, workout) =>
-            sum + (workout.duration || 0), 0) / 3600;
-        const avgSessionTime = totalWorkouts > 0 ? totalHours / totalWorkouts : 0;
-
-        // 要素の存在確認を追加
-        const totalWorkoutsEl = safeGetElement('#total-workouts');
-        const totalHoursEl = safeGetElement('#total-hours');
-        const avgSessionTimeEl = safeGetElement('#avg-session-time');
-
-        if (totalWorkoutsEl) {
-            totalWorkoutsEl.textContent = totalWorkouts;
-        }
-        if (totalHoursEl) {
-            totalHoursEl.textContent = `${totalHours.toFixed(1)}時間`;
-        }
-        if (avgSessionTimeEl) {
-            avgSessionTimeEl.textContent = `${avgSessionTime.toFixed(1)}時間`;
-        }
-    }
-
-    /**
-     * 部位別統計をレンダリング
-     */
-    renderMuscleGroupStats() {
-        const muscleGroupCounts = {};
-
-        this.workoutData.forEach(workout => {
-            const muscleGroups = workout.muscle_groups || workout.muscleGroups || [];
-            muscleGroups.forEach(muscle => {
-                muscleGroupCounts[muscle] = (muscleGroupCounts[muscle] || 0) + 1;
-            });
+        sampleData.push({
+          id: `sample-${i}`,
+          date: date.toISOString().split('T')[0],
+          muscle_groups: randomMuscles,
+          exercises: [
+            { name: 'ベンチプレス', sets: 3, reps: 10, weight },
+            { name: 'プッシュアップ', sets: 3, reps: 15, weight: 0 },
+          ],
+          duration: 45 + Math.floor(Math.random() * 30), // 45-75分
+          notes: 'サンプルワークアウト',
         });
+      }
+    }
 
-        const container = safeGetElement('#muscle-group-stats');
-        if (!container) {return;}
+    return sampleData;
+  }
 
-        container.innerHTML = Object.entries(muscleGroupCounts)
-            .sort(([,a], [,b]) => b - a)
-            .slice(0, 5)
-            .map(([muscle, count]) => `
+  /**
+   * 統計情報をレンダリング
+   */
+  renderStatistics() {
+    this.renderOverallStats();
+    this.renderMuscleGroupStats();
+    this.renderProgressStats();
+  }
+
+  /**
+   * 総合統計をレンダリング
+   */
+  renderOverallStats() {
+    const totalWorkouts = this.workoutData.length;
+    const totalHours =
+      this.workoutData.reduce(
+        (sum, workout) => sum + (workout.duration || 0),
+        0
+      ) / 3600;
+    const avgSessionTime = totalWorkouts > 0 ? totalHours / totalWorkouts : 0;
+
+    // 要素の存在確認を追加
+    const totalWorkoutsEl = safeGetElement('#total-workouts');
+    const totalHoursEl = safeGetElement('#total-hours');
+    const avgSessionTimeEl = safeGetElement('#avg-session-time');
+
+    if (totalWorkoutsEl) {
+      totalWorkoutsEl.textContent = totalWorkouts;
+    }
+    if (totalHoursEl) {
+      totalHoursEl.textContent = `${totalHours.toFixed(1)}時間`;
+    }
+    if (avgSessionTimeEl) {
+      avgSessionTimeEl.textContent = `${avgSessionTime.toFixed(1)}時間`;
+    }
+  }
+
+  /**
+   * 部位別統計をレンダリング
+   */
+  renderMuscleGroupStats() {
+    const muscleGroupCounts = {};
+
+    this.workoutData.forEach((workout) => {
+      const muscleGroups = workout.muscle_groups || workout.muscleGroups || [];
+      muscleGroups.forEach((muscle) => {
+        muscleGroupCounts[muscle] = (muscleGroupCounts[muscle] || 0) + 1;
+      });
+    });
+
+    const container = safeGetElement('#muscle-group-stats');
+    if (!container) {
+      return;
+    }
+
+    container.innerHTML = Object.entries(muscleGroupCounts)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5)
+      .map(
+        ([muscle, count]) => `
                 <div class="flex justify-between">
                     <span class="text-gray-600">${this.getMuscleGroupName(muscle)}</span>
                     <span class="font-bold text-blue-600">${count}回</span>
                 </div>
-            `).join('');
+            `
+      )
+      .join('');
+  }
+
+  /**
+   * 筋肉部位名を取得
+   */
+  getMuscleGroupName(muscleId) {
+    // 筋肉部位名のマッピング
+    const muscleGroupNames = {
+      chest: '胸',
+      back: '背中',
+      shoulders: '肩',
+      arms: '腕',
+      legs: '脚',
+      core: '腹筋',
+      胸: '胸',
+      背中: '背中',
+      肩: '肩',
+      腕: '腕',
+      脚: '脚',
+      腹筋: '腹筋',
+    };
+
+    return muscleGroupNames[muscleId] || muscleId;
+  }
+
+  /**
+   * 進歩統計をレンダリング
+   */
+  renderProgressStats() {
+    // 簡易的な進歩率計算
+    const recentWorkouts = this.workoutData.slice(-10);
+    const olderWorkouts = this.workoutData.slice(-20, -10);
+
+    const recentAvgWeight = this.calculateAverageWeight(recentWorkouts);
+    const olderAvgWeight = this.calculateAverageWeight(olderWorkouts);
+
+    const strengthProgress =
+      olderAvgWeight > 0
+        ? (((recentAvgWeight - olderAvgWeight) / olderAvgWeight) * 100).toFixed(
+            1
+          )
+        : 0;
+
+    // 要素の存在確認を追加
+    const strengthProgressEl = safeGetElement('#strength-progress');
+    const enduranceProgressEl = safeGetElement('#endurance-progress');
+    const overallScoreEl = safeGetElement('#overall-score');
+
+    if (strengthProgressEl) {
+      strengthProgressEl.textContent = `${strengthProgress}%`;
+    }
+    if (enduranceProgressEl) {
+      enduranceProgressEl.textContent = '計算中...';
+    }
+    if (overallScoreEl) {
+      overallScoreEl.textContent = this.calculateOverallScore();
+    }
+  }
+
+  /**
+   * 平均重量を計算
+   */
+  calculateAverageWeight(workouts) {
+    if (workouts.length === 0) {
+      return 0;
     }
 
-    /**
-     * 筋肉部位名を取得
-     */
-    getMuscleGroupName(muscleId) {
-        // 筋肉部位名のマッピング
-        const muscleGroupNames = {
-            chest: '胸',
-            back: '背中',
-            shoulders: '肩',
-            arms: '腕',
-            legs: '脚',
-            core: '腹筋',
-            胸: '胸',
-            背中: '背中',
-            肩: '肩',
-            腕: '腕',
-            脚: '脚',
-            腹筋: '腹筋'
-        };
+    let totalWeight = 0;
+    let count = 0;
 
-        return muscleGroupNames[muscleId] || muscleId;
-    }
-
-    /**
-     * 進歩統計をレンダリング
-     */
-    renderProgressStats() {
-        // 簡易的な進歩率計算
-        const recentWorkouts = this.workoutData.slice(-10);
-        const olderWorkouts = this.workoutData.slice(-20, -10);
-
-        const recentAvgWeight = this.calculateAverageWeight(recentWorkouts);
-        const olderAvgWeight = this.calculateAverageWeight(olderWorkouts);
-
-        const strengthProgress = olderAvgWeight > 0 ?
-            ((recentAvgWeight - olderAvgWeight) / olderAvgWeight * 100).toFixed(1) : 0;
-
-        // 要素の存在確認を追加
-        const strengthProgressEl = safeGetElement('#strength-progress');
-        const enduranceProgressEl = safeGetElement('#endurance-progress');
-        const overallScoreEl = safeGetElement('#overall-score');
-
-        if (strengthProgressEl) {
-            strengthProgressEl.textContent = `${strengthProgress}%`;
-        }
-        if (enduranceProgressEl) {
-            enduranceProgressEl.textContent = '計算中...';
-        }
-        if (overallScoreEl) {
-            overallScoreEl.textContent = this.calculateOverallScore();
-        }
-    }
-
-    /**
-     * 平均重量を計算
-     */
-    calculateAverageWeight(workouts) {
-        if (workouts.length === 0) {return 0;}
-
-        let totalWeight = 0;
-        let count = 0;
-
-        workouts.forEach(workout => {
-            if (workout.exercises || workout.training_logs) {
-                const exercises = workout.exercises || workout.training_logs || [];
-                exercises.forEach(exercise => {
-                    if (exercise.weights && Array.isArray(exercise.weights)) {
-                        exercise.weights.forEach(weight => {
-                            if (weight > 0) {
-                                totalWeight += weight;
-                                count++;
-                            }
-                        });
-                    }
-                });
-            }
+    workouts.forEach((workout) => {
+      if (workout.exercises || workout.training_logs) {
+        const exercises = workout.exercises || workout.training_logs || [];
+        exercises.forEach((exercise) => {
+          if (exercise.weights && Array.isArray(exercise.weights)) {
+            exercise.weights.forEach((weight) => {
+              if (weight > 0) {
+                totalWeight += weight;
+                count++;
+              }
+            });
+          }
         });
+      }
+    });
 
-        return count > 0 ? totalWeight / count : 0;
+    return count > 0 ? totalWeight / count : 0;
+  }
+
+  /**
+   * 総合スコアを計算
+   */
+  calculateOverallScore() {
+    const totalWorkouts = this.workoutData.length;
+    const consistency = Math.min(totalWorkouts / 30, 1) * 100; // 30日で正規化
+    const frequency = Math.min(totalWorkouts / 10, 1) * 100; // 10回で正規化
+
+    return Math.round((consistency + frequency) / 2);
+  }
+
+  /**
+   * チャートをレンダリング
+   */
+  async renderCharts() {
+    try {
+      // Chart.jsが読み込まれているかチェック
+      if (typeof Chart === 'undefined') {
+        console.error('Chart.js is not loaded');
+        showNotification('グラフライブラリの読み込みに失敗しました', 'error');
+        return;
+      }
+
+      // チャートの描画を順次実行
+      await this.renderFrequencyChart();
+      await this.renderMuscleGroupChart();
+      await this.renderWeightProgressChart();
+      await this.renderSetsProgressChart();
+
+      console.log('All charts rendered successfully');
+    } catch (error) {
+      console.error('Error rendering charts:', error);
+      handleError(error, {
+        context: 'チャート描画',
+        showNotification: true,
+      });
+    }
+  }
+
+  /**
+   * トレーニング頻度チャートをレンダリング
+   */
+  async renderFrequencyChart() {
+    try {
+      const canvas = safeGetElement('#frequency-chart');
+      if (!canvas) {
+        console.warn('Frequency chart canvas not found');
+        return;
+      }
+
+      const frequencyData = this.calculateFrequencyData();
+
+      this.charts.frequency = new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels: frequencyData.labels,
+          datasets: [
+            {
+              label: 'トレーニング回数',
+              data: frequencyData.data,
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              tension: 0.4,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false,
+            },
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                stepSize: 1,
+              },
+            },
+          },
+        },
+      });
+      console.log('Frequency chart rendered successfully');
+    } catch (error) {
+      console.error('Error rendering frequency chart:', error);
+    }
+  }
+
+  /**
+   * 部位別チャートをレンダリング
+   */
+  async renderMuscleGroupChart() {
+    try {
+      const canvas = safeGetElement('#muscle-group-chart');
+      if (!canvas) {
+        console.warn('Muscle group chart canvas not found');
+        return;
+      }
+
+      const muscleGroupData = this.calculateMuscleGroupData();
+
+      this.charts.muscleGroup = new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+          labels: muscleGroupData.labels,
+          datasets: [
+            {
+              data: muscleGroupData.data,
+              backgroundColor: [
+                '#ef4444',
+                '#3b82f6',
+                '#10b981',
+                '#f59e0b',
+                '#8b5cf6',
+                '#ec4899',
+              ],
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+            },
+          },
+        },
+      });
+      console.log('Muscle group chart rendered successfully');
+    } catch (error) {
+      console.error('Error rendering muscle group chart:', error);
+    }
+  }
+
+  /**
+   * 重量推移チャートをレンダリング
+   */
+  async renderWeightProgressChart() {
+    try {
+      const canvas = safeGetElement('#weight-progress-chart');
+      if (!canvas) {
+        console.warn('Weight progress chart canvas not found');
+        return;
+      }
+
+      const weightData = this.calculateWeightProgressData();
+
+      this.charts.weightProgress = new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels: weightData.labels,
+          datasets: [
+            {
+              label: '平均重量 (kg)',
+              data: weightData.data,
+              borderColor: '#f59e0b',
+              backgroundColor: 'rgba(245, 158, 11, 0.1)',
+              tension: 0.4,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false,
+            },
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+            },
+          },
+        },
+      });
+      console.log('Weight progress chart rendered successfully');
+    } catch (error) {
+      console.error('Error rendering weight progress chart:', error);
+    }
+  }
+
+  /**
+   * セット数推移チャートをレンダリング
+   */
+  async renderSetsProgressChart() {
+    try {
+      const canvas = safeGetElement('#sets-progress-chart');
+      if (!canvas) {
+        console.warn('Sets progress chart canvas not found');
+        return;
+      }
+
+      const setsData = this.calculateSetsProgressData();
+
+      this.charts.setsProgress = new Chart(canvas, {
+        type: 'bar',
+        data: {
+          labels: setsData.labels,
+          datasets: [
+            {
+              label: 'セット数',
+              data: setsData.data,
+              backgroundColor: '#8b5cf6',
+              borderColor: '#7c3aed',
+              borderWidth: 1,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false,
+            },
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                stepSize: 1,
+              },
+            },
+          },
+        },
+      });
+      console.log('Sets progress chart rendered successfully');
+    } catch (error) {
+      console.error('Error rendering sets progress chart:', error);
+    }
+  }
+
+  /**
+   * 頻度データを計算
+   */
+  calculateFrequencyData() {
+    const last30Days = [];
+    const today = new Date();
+
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      last30Days.push(date.toISOString().split('T')[0]);
     }
 
-    /**
-     * 総合スコアを計算
-     */
-    calculateOverallScore() {
-        const totalWorkouts = this.workoutData.length;
-        const consistency = Math.min(totalWorkouts / 30, 1) * 100; // 30日で正規化
-        const frequency = Math.min(totalWorkouts / 10, 1) * 100; // 10回で正規化
+    const frequencyMap = {};
+    last30Days.forEach((date) => {
+      frequencyMap[date] = 0;
+    });
 
-        return Math.round((consistency + frequency) / 2);
+    this.workoutData.forEach((workout) => {
+      const workoutDate = new Date(workout.date || workout.startTime)
+        .toISOString()
+        .split('T')[0];
+      if (Object.prototype.hasOwnProperty.call(frequencyMap, workoutDate)) {
+        frequencyMap[workoutDate]++;
+      }
+    });
+
+    return {
+      labels: last30Days.map((date) =>
+        new Date(date).toLocaleDateString('ja-JP', {
+          month: 'short',
+          day: 'numeric',
+        })
+      ),
+      data: Object.values(frequencyMap),
+    };
+  }
+
+  /**
+   * 部位別データを計算
+   */
+  calculateMuscleGroupData() {
+    const muscleGroupCounts = {};
+
+    this.workoutData.forEach((workout) => {
+      const muscleGroups = workout.muscle_groups || workout.muscleGroups || [];
+      muscleGroups.forEach((muscle) => {
+        muscleGroupCounts[muscle] = (muscleGroupCounts[muscle] || 0) + 1;
+      });
+    });
+
+    const sorted = Object.entries(muscleGroupCounts)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 6);
+
+    return {
+      labels: sorted.map(([muscle]) => this.getMuscleGroupName(muscle)),
+      data: sorted.map(([, count]) => count),
+    };
+  }
+
+  /**
+   * 重量進歩データを計算
+   */
+  calculateWeightProgressData() {
+    // 簡易的な重量進歩データ
+    const last10Workouts = this.workoutData.slice(-10);
+    const labels = last10Workouts.map((_, index) => `セッション${index + 1}`);
+    const data = last10Workouts.map((workout) =>
+      this.calculateAverageWeight([workout])
+    );
+
+    return { labels, data };
+  }
+
+  /**
+   * セット数進歩データを計算
+   */
+  calculateSetsProgressData() {
+    const last10Workouts = this.workoutData.slice(-10);
+    const labels = last10Workouts.map((_, index) => `セッション${index + 1}`);
+    const data = last10Workouts.map((workout) => {
+      if (workout.exercises || workout.training_logs) {
+        const exercises = workout.exercises || workout.training_logs || [];
+        return exercises.reduce(
+          (sum, exercise) => sum + (exercise.sets || 0),
+          0
+        );
+      }
+      return 0;
+    });
+
+    return { labels, data };
+  }
+
+  /**
+   * 分析レポートを生成
+   */
+  generateAnalysisReport() {
+    const container = safeGetElement('#analysis-report');
+    if (!container) {
+      return;
     }
 
-    /**
-     * チャートをレンダリング
-     */
-    async renderCharts() {
-        try {
-            // Chart.jsが読み込まれているかチェック
-            if (typeof Chart === 'undefined') {
-                console.error('Chart.js is not loaded');
-                showNotification('グラフライブラリの読み込みに失敗しました', 'error');
-                return;
-            }
+    const report = this.generateReport();
+    container.innerHTML = report;
+  }
 
-            // チャートの描画を順次実行
-            await this.renderFrequencyChart();
-            await this.renderMuscleGroupChart();
-            await this.renderWeightProgressChart();
-            await this.renderSetsProgressChart();
+  /**
+   * レポートを生成
+   */
+  generateReport() {
+    const totalWorkouts = this.workoutData.length;
+    const totalHours =
+      this.workoutData.reduce(
+        (sum, workout) => sum + (workout.duration || 0),
+        0
+      ) / 3600;
 
-            console.log('All charts rendered successfully');
-        } catch (error) {
-            console.error('Error rendering charts:', error);
-            handleError(error, {
-                context: 'チャート描画',
-                showNotification: true
-            });
-        }
-    }
+    const muscleGroupCounts = {};
+    this.workoutData.forEach((workout) => {
+      const muscleGroups = workout.muscle_groups || workout.muscleGroups || [];
+      muscleGroups.forEach((muscle) => {
+        muscleGroupCounts[muscle] = (muscleGroupCounts[muscle] || 0) + 1;
+      });
+    });
 
-    /**
-     * トレーニング頻度チャートをレンダリング
-     */
-    async renderFrequencyChart() {
-        try {
-            const canvas = safeGetElement('#frequency-chart');
-            if (!canvas) {
-                console.warn('Frequency chart canvas not found');
-                return;
-            }
+    const mostTrainedMuscle = Object.entries(muscleGroupCounts).sort(
+      ([, a], [, b]) => b - a
+    )[0];
 
-            const frequencyData = this.calculateFrequencyData();
-
-            this.charts.frequency = new Chart(canvas, {
-                type: 'line',
-                data: {
-                    labels: frequencyData.labels,
-                    datasets: [{
-                        label: 'トレーニング回数',
-                        data: frequencyData.data,
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1
-                            }
-                        }
-                    }
-                }
-            });
-            console.log('Frequency chart rendered successfully');
-        } catch (error) {
-            console.error('Error rendering frequency chart:', error);
-        }
-    }
-
-    /**
-     * 部位別チャートをレンダリング
-     */
-    async renderMuscleGroupChart() {
-        try {
-            const canvas = safeGetElement('#muscle-group-chart');
-            if (!canvas) {
-                console.warn('Muscle group chart canvas not found');
-                return;
-            }
-
-            const muscleGroupData = this.calculateMuscleGroupData();
-
-            this.charts.muscleGroup = new Chart(canvas, {
-                type: 'doughnut',
-                data: {
-                    labels: muscleGroupData.labels,
-                    datasets: [{
-                        data: muscleGroupData.data,
-                        backgroundColor: [
-                            '#ef4444', '#3b82f6', '#10b981',
-                            '#f59e0b', '#8b5cf6', '#ec4899'
-                        ]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
-                }
-            });
-            console.log('Muscle group chart rendered successfully');
-        } catch (error) {
-            console.error('Error rendering muscle group chart:', error);
-        }
-    }
-
-    /**
-     * 重量推移チャートをレンダリング
-     */
-    async renderWeightProgressChart() {
-        try {
-            const canvas = safeGetElement('#weight-progress-chart');
-            if (!canvas) {
-                console.warn('Weight progress chart canvas not found');
-                return;
-            }
-
-            const weightData = this.calculateWeightProgressData();
-
-            this.charts.weightProgress = new Chart(canvas, {
-                type: 'line',
-                data: {
-                    labels: weightData.labels,
-                    datasets: [{
-                        label: '平均重量 (kg)',
-                        data: weightData.data,
-                        borderColor: '#f59e0b',
-                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-            console.log('Weight progress chart rendered successfully');
-        } catch (error) {
-            console.error('Error rendering weight progress chart:', error);
-        }
-    }
-
-    /**
-     * セット数推移チャートをレンダリング
-     */
-    async renderSetsProgressChart() {
-        try {
-            const canvas = safeGetElement('#sets-progress-chart');
-            if (!canvas) {
-                console.warn('Sets progress chart canvas not found');
-                return;
-            }
-
-            const setsData = this.calculateSetsProgressData();
-
-            this.charts.setsProgress = new Chart(canvas, {
-                type: 'bar',
-                data: {
-                    labels: setsData.labels,
-                    datasets: [{
-                        label: 'セット数',
-                        data: setsData.data,
-                        backgroundColor: '#8b5cf6',
-                        borderColor: '#7c3aed',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1
-                            }
-                        }
-                    }
-                }
-            });
-            console.log('Sets progress chart rendered successfully');
-        } catch (error) {
-            console.error('Error rendering sets progress chart:', error);
-        }
-    }
-
-    /**
-     * 頻度データを計算
-     */
-    calculateFrequencyData() {
-        const last30Days = [];
-        const today = new Date();
-
-        for (let i = 29; i >= 0; i--) {
-            const date = new Date(today);
-            date.setDate(date.getDate() - i);
-            last30Days.push(date.toISOString().split('T')[0]);
-        }
-
-        const frequencyMap = {};
-        last30Days.forEach(date => {
-            frequencyMap[date] = 0;
-        });
-
-        this.workoutData.forEach(workout => {
-            const workoutDate = new Date(workout.date || workout.startTime).toISOString().split('T')[0];
-            if (Object.prototype.hasOwnProperty.call(frequencyMap, workoutDate)) {
-                frequencyMap[workoutDate]++;
-            }
-        });
-
-        return {
-            labels: last30Days.map(date => new Date(date).toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' })),
-            data: Object.values(frequencyMap)
-        };
-    }
-
-    /**
-     * 部位別データを計算
-     */
-    calculateMuscleGroupData() {
-        const muscleGroupCounts = {};
-
-        this.workoutData.forEach(workout => {
-            const muscleGroups = workout.muscle_groups || workout.muscleGroups || [];
-            muscleGroups.forEach(muscle => {
-                muscleGroupCounts[muscle] = (muscleGroupCounts[muscle] || 0) + 1;
-            });
-        });
-
-        const sorted = Object.entries(muscleGroupCounts)
-            .sort(([,a], [,b]) => b - a)
-            .slice(0, 6);
-
-        return {
-            labels: sorted.map(([muscle]) => this.getMuscleGroupName(muscle)),
-            data: sorted.map(([,count]) => count)
-        };
-    }
-
-    /**
-     * 重量進歩データを計算
-     */
-    calculateWeightProgressData() {
-        // 簡易的な重量進歩データ
-        const last10Workouts = this.workoutData.slice(-10);
-        const labels = last10Workouts.map((_, index) => `セッション${index + 1}`);
-        const data = last10Workouts.map(workout => this.calculateAverageWeight([workout]));
-
-        return { labels, data };
-    }
-
-    /**
-     * セット数進歩データを計算
-     */
-    calculateSetsProgressData() {
-        const last10Workouts = this.workoutData.slice(-10);
-        const labels = last10Workouts.map((_, index) => `セッション${index + 1}`);
-        const data = last10Workouts.map(workout => {
-            if (workout.exercises || workout.training_logs) {
-                const exercises = workout.exercises || workout.training_logs || [];
-                return exercises.reduce((sum, exercise) => sum + (exercise.sets || 0), 0);
-            }
-            return 0;
-        });
-
-        return { labels, data };
-    }
-
-    /**
-     * 分析レポートを生成
-     */
-    generateAnalysisReport() {
-        const container = safeGetElement('#analysis-report');
-        if (!container) {return;}
-
-        const report = this.generateReport();
-        container.innerHTML = report;
-    }
-
-    /**
-     * レポートを生成
-     */
-    generateReport() {
-        const totalWorkouts = this.workoutData.length;
-        const totalHours = this.workoutData.reduce((sum, workout) =>
-            sum + (workout.duration || 0), 0) / 3600;
-
-        const muscleGroupCounts = {};
-        this.workoutData.forEach(workout => {
-            const muscleGroups = workout.muscle_groups || workout.muscleGroups || [];
-            muscleGroups.forEach(muscle => {
-                muscleGroupCounts[muscle] = (muscleGroupCounts[muscle] || 0) + 1;
-            });
-        });
-
-        const mostTrainedMuscle = Object.entries(muscleGroupCounts)
-            .sort(([,a], [,b]) => b - a)[0];
-
-        return `
+    return `
             <div class="space-y-4">
                 <div class="p-4 bg-blue-50 rounded-lg">
                     <h4 class="font-semibold text-blue-800 mb-2">総合評価</h4>
@@ -809,10 +861,11 @@ class AnalysisPage {
                 <div class="p-4 bg-green-50 rounded-lg">
                     <h4 class="font-semibold text-green-800 mb-2">最も鍛えている部位</h4>
                     <p class="text-green-700">
-                        ${mostTrainedMuscle ?
-        `${this.getMuscleGroupName(mostTrainedMuscle[0])}（${mostTrainedMuscle[1]}回）` :
-        'データが不足しています'
-}
+                        ${
+                          mostTrainedMuscle
+                            ? `${this.getMuscleGroupName(mostTrainedMuscle[0])}（${mostTrainedMuscle[1]}回）`
+                            : 'データが不足しています'
+                        }
                     </p>
                 </div>
                 
@@ -825,19 +878,19 @@ class AnalysisPage {
                 </div>
             </div>
         `;
-    }
+  }
 
-    /**
-     * チャートを破棄
-     */
-    destroy() {
-        Object.values(this.charts).forEach(chart => {
-            if (chart && typeof chart.destroy === 'function') {
-                chart.destroy();
-            }
-        });
-        this.charts = {};
-    }
+  /**
+   * チャートを破棄
+   */
+  destroy() {
+    Object.values(this.charts).forEach((chart) => {
+      if (chart && typeof chart.destroy === 'function') {
+        chart.destroy();
+      }
+    });
+    this.charts = {};
+  }
 }
 
 // デフォルトエクスポート

@@ -13,7 +13,11 @@ export function setupJSDOMNavigationFix() {
   const originalConsoleError = console.error;
   console.error = (...args) => {
     // JSDOMのナビゲーションエラーを抑制
-    if (args[0] && typeof args[0] === 'string' && args[0].includes('Not implemented: navigation')) {
+    if (
+      args[0] &&
+      typeof args[0] === 'string' &&
+      args[0].includes('Not implemented: navigation')
+    ) {
       return;
     }
     originalConsoleError.apply(console, args);
@@ -23,7 +27,11 @@ export function setupJSDOMNavigationFix() {
   const originalConsoleLog = console.log;
   console.log = (...args) => {
     // テスト環境でのナビゲーションログを抑制
-    if (args[0] && typeof args[0] === 'string' && args[0].includes('Navigation skipped in test environment')) {
+    if (
+      args[0] &&
+      typeof args[0] === 'string' &&
+      args[0].includes('Navigation skipped in test environment')
+    ) {
       return;
     }
     originalConsoleLog.apply(console, args);

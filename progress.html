@@ -1,175 +1,252 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>プログレス - MuscleRotationManager</title>
-    
+
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="48x48" href="favicon-48x48.png">
-    <link rel="icon" type="image/png" sizes="64x64" href="favicon-64x64.png">
-    <link rel="icon" type="image/png" sizes="128x128" href="favicon-128x128.png">
-    <link rel="icon" type="image/png" sizes="256x256" href="favicon-256x256.png">
-    
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="48x48" href="favicon-48x48.png" />
+    <link rel="icon" type="image/png" sizes="64x64" href="favicon-64x64.png" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="128x128"
+      href="favicon-128x128.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="256x256"
+      href="favicon-256x256.png"
+    />
+
     <!-- Apple Touch Icon -->
-    <link rel="apple-touch-icon" href="apple-touch-icon.png">
-    
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+
     <!-- Android Chrome Icons -->
-    <link rel="icon" type="image/png" sizes="192x192" href="android-chrome-192x192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="android-chrome-512x512.png">
-    
-    <meta name="description" content="プログレッシブ・オーバーロード追跡。効率的な筋トレ部位ローテーションを科学的に管理">
-    <meta name="keywords" content="筋トレ,プログレス,オーバーロード,進捗,追跡,トレーニング">
-    
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href="android-chrome-192x192.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="512x512"
+      href="android-chrome-512x512.png"
+    />
+
+    <meta
+      name="description"
+      content="プログレッシブ・オーバーロード追跡。効率的な筋トレ部位ローテーションを科学的に管理"
+    />
+    <meta
+      name="keywords"
+      content="筋トレ,プログレス,オーバーロード,進捗,追跡,トレーニング"
+    />
+
     <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#1f2937">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="MuscleRotationManager">
-    
+    <meta name="theme-color" content="#1f2937" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="MuscleRotationManager" />
+
     <!-- CDN Links -->
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-    
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+
     <!-- FontAwesome JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/js/all.min.js"></script>
-    
+
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
-    
+
     <!-- Supabase CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-</head>
-<body class="bg-gray-50">
+  </head>
+  <body class="bg-gray-50">
     <div id="app" class="min-h-screen">
-        <!-- Header Container -->
-        <div id="header-container"></div>
+      <!-- Header Container -->
+      <div id="header-container"></div>
 
-        <div class="flex">
-            <!-- Sidebar -->
-            <div id="sidebar-container"></div>
+      <div class="flex">
+        <!-- Sidebar -->
+        <div id="sidebar-container"></div>
 
-            <!-- Main Content -->
-            <main class="flex-1 p-6">
-                <div id="main-content">
-                <div class="mb-8">
-                    <h1 class="text-3xl font-bold text-gray-900">プログレッシブ・オーバーロード</h1>
-                    <p class="mt-2 text-gray-600">筋力とボリュームの進捗を追跡し、継続的な成長を実現しましょう</p>
+        <!-- Main Content -->
+        <main class="flex-1 p-6">
+          <div id="main-content">
+            <div class="mb-8">
+              <h1 class="text-3xl font-bold text-gray-900">
+                プログレッシブ・オーバーロード
+              </h1>
+              <p class="mt-2 text-gray-600">
+                筋力とボリュームの進捗を追跡し、継続的な成長を実現しましょう
+              </p>
+            </div>
+
+            <!-- Progress Overview -->
+            <div
+              class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+            >
+              <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                  <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                      <i class="fas fa-chart-line text-2xl text-green-600"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt class="text-sm font-medium text-gray-500 truncate">
+                          総ボリューム
+                        </dt>
+                        <dd
+                          class="text-lg font-medium text-gray-900"
+                          id="total-volume"
+                        >
+                          0 kg
+                        </dd>
+                      </dl>
+                    </div>
+                  </div>
                 </div>
+              </div>
 
-                <!-- Progress Overview -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <div class="bg-white overflow-hidden shadow rounded-lg">
-                        <div class="p-5">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0">
-                                    <i class="fas fa-chart-line text-2xl text-green-600"></i>
-                                </div>
-                                <div class="ml-5 w-0 flex-1">
-                                    <dl>
-                                        <dt class="text-sm font-medium text-gray-500 truncate">総ボリューム</dt>
-                                        <dd class="text-lg font-medium text-gray-900" id="total-volume">0 kg</dd>
-                                    </dl>
-                                </div>
-                            </div>
-                        </div>
+              <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                  <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                      <i class="fas fa-weight text-2xl text-blue-600"></i>
                     </div>
-
-                    <div class="bg-white overflow-hidden shadow rounded-lg">
-                        <div class="p-5">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0">
-                                    <i class="fas fa-weight text-2xl text-blue-600"></i>
-                                </div>
-                                <div class="ml-5 w-0 flex-1">
-                                    <dl>
-                                        <dt class="text-sm font-medium text-gray-500 truncate">最大重量</dt>
-                                        <dd class="text-lg font-medium text-gray-900" id="max-weight">0 kg</dd>
-                                    </dl>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt class="text-sm font-medium text-gray-500 truncate">
+                          最大重量
+                        </dt>
+                        <dd
+                          class="text-lg font-medium text-gray-900"
+                          id="max-weight"
+                        >
+                          0 kg
+                        </dd>
+                      </dl>
                     </div>
-
-                    <div class="bg-white overflow-hidden shadow rounded-lg">
-                        <div class="p-5">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0">
-                                    <i class="fas fa-trophy text-2xl text-yellow-600"></i>
-                                </div>
-                                <div class="ml-5 w-0 flex-1">
-                                    <dl>
-                                        <dt class="text-sm font-medium text-gray-500 truncate">PR達成</dt>
-                                        <dd class="text-lg font-medium text-gray-900" id="pr-achieved">0回</dd>
-                                    </dl>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-white overflow-hidden shadow rounded-lg">
-                        <div class="p-5">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0">
-                                    <i class="fas fa-fire text-2xl text-red-600"></i>
-                                </div>
-                                <div class="ml-5 w-0 flex-1">
-                                    <dl>
-                                        <dt class="text-sm font-medium text-gray-500 truncate">継続日数</dt>
-                                        <dd class="text-lg font-medium text-gray-900" id="streak-days">0日</dd>
-                                    </dl>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                  </div>
                 </div>
+              </div>
 
-                <!-- Exercise Progress -->
-                <div class="bg-white shadow rounded-lg mb-8">
-                    <div class="px-4 py-5 sm:p-6">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">エクササイズ別進捗</h3>
-                        <div id="exercise-progress">
-                            <!-- Exercise progress will be loaded here -->
-                        </div>
+              <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                  <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                      <i class="fas fa-trophy text-2xl text-yellow-600"></i>
                     </div>
+                    <div class="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt class="text-sm font-medium text-gray-500 truncate">
+                          PR達成
+                        </dt>
+                        <dd
+                          class="text-lg font-medium text-gray-900"
+                          id="pr-achieved"
+                        >
+                          0回
+                        </dd>
+                      </dl>
+                    </div>
+                  </div>
                 </div>
+              </div>
 
-                <!-- Progress Charts -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                    <!-- Volume Progression Chart -->
-                    <div class="bg-white shadow rounded-lg">
-                        <div class="px-4 py-5 sm:p-6">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">ボリューム進捗</h3>
-                            <canvas id="volume-chart" width="400" height="200"></canvas>
-                        </div>
+              <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                  <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                      <i class="fas fa-fire text-2xl text-red-600"></i>
                     </div>
+                    <div class="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt class="text-sm font-medium text-gray-500 truncate">
+                          継続日数
+                        </dt>
+                        <dd
+                          class="text-lg font-medium text-gray-900"
+                          id="streak-days"
+                        >
+                          0日
+                        </dd>
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-                    <!-- Strength Progression Chart -->
-                    <div class="bg-white shadow rounded-lg">
-                        <div class="px-4 py-5 sm:p-6">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">筋力進捗</h3>
-                            <canvas id="strength-chart" width="400" height="200"></canvas>
-                        </div>
-                    </div>
+            <!-- Exercise Progress -->
+            <div class="bg-white shadow rounded-lg mb-8">
+              <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                  エクササイズ別進捗
+                </h3>
+                <div id="exercise-progress">
+                  <!-- Exercise progress will be loaded here -->
                 </div>
+              </div>
+            </div>
 
-                <!-- Personal Records -->
-                <div class="bg-white shadow rounded-lg">
-                    <div class="px-4 py-5 sm:p-6">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">パーソナルレコード</h3>
-                        <div id="personal-records">
-                            <!-- Personal records will be loaded here -->
-                        </div>
-                    </div>
+            <!-- Progress Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+              <!-- Volume Progression Chart -->
+              <div class="bg-white shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                  <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                    ボリューム進捗
+                  </h3>
+                  <canvas id="volume-chart" width="400" height="200"></canvas>
                 </div>
+              </div>
+
+              <!-- Strength Progression Chart -->
+              <div class="bg-white shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                  <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                    筋力進捗
+                  </h3>
+                  <canvas id="strength-chart" width="400" height="200"></canvas>
                 </div>
-            </main>
-        </div>
+              </div>
+            </div>
+
+            <!-- Personal Records -->
+            <div class="bg-white shadow rounded-lg">
+              <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                  パーソナルレコード
+                </h3>
+                <div id="personal-records">
+                  <!-- Personal records will be loaded here -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
 
     <!-- Notification Container -->
@@ -184,5 +261,5 @@
     <script type="module" src="js/core/MPAInitializer.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module" src="js/pages/progressPage.js"></script>
-</body>
+  </body>
 </html>

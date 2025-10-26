@@ -22,7 +22,7 @@ export class TestRunner {
         add: jest.fn(),
         remove: jest.fn(),
         contains: jest.fn(),
-        toggle: jest.fn()
+        toggle: jest.fn(),
       },
       style: {},
       textContent: '',
@@ -34,7 +34,7 @@ export class TestRunner {
       blur: jest.fn(),
       getAttribute: jest.fn(),
       setAttribute: jest.fn(),
-      removeAttribute: jest.fn()
+      removeAttribute: jest.fn(),
     };
     return element;
   }
@@ -46,21 +46,21 @@ export class TestRunner {
         signIn: jest.fn(),
         signOut: jest.fn(),
         getSession: jest.fn(),
-        onAuthStateChange: jest.fn()
+        onAuthStateChange: jest.fn(),
       },
       from: jest.fn(() => ({
         select: jest.fn(() => ({
           eq: jest.fn(() => ({
             single: jest.fn(),
             order: jest.fn(() => ({
-              limit: jest.fn()
-            }))
-          }))
+              limit: jest.fn(),
+            })),
+          })),
         })),
         insert: jest.fn(),
         update: jest.fn(),
-        delete: jest.fn()
-      }))
+        delete: jest.fn(),
+      })),
     };
   }
 
@@ -68,8 +68,10 @@ export class TestRunner {
     return {
       isAuthenticated: jest.fn().mockResolvedValue(true),
       getCurrentUser: jest.fn().mockReturnValue({ email: 'test@example.com' }),
-      signIn: jest.fn().mockResolvedValue({ user: { email: 'test@example.com' } }),
-      signOut: jest.fn().mockResolvedValue()
+      signIn: jest
+        .fn()
+        .mockResolvedValue({ user: { email: 'test@example.com' } }),
+      signOut: jest.fn().mockResolvedValue(),
     };
   }
 
@@ -79,7 +81,7 @@ export class TestRunner {
       getClient: jest.fn().mockReturnValue(this.createMockSupabaseClient()),
       saveWorkout: jest.fn().mockResolvedValue({ id: 1 }),
       getWorkouts: jest.fn().mockResolvedValue([]),
-      saveTrainingLogs: jest.fn().mockResolvedValue([])
+      saveTrainingLogs: jest.fn().mockResolvedValue([]),
     };
   }
 
@@ -123,12 +125,10 @@ export class TestRunner {
         {
           name: 'Bench Press',
           muscle_group: 'chest',
-          sets: [
-            { reps: 10, weight: 80, rest_seconds: 60 }
-          ]
-        }
+          sets: [{ reps: 10, weight: 80, rest_seconds: 60 }],
+        },
       ],
-      notes: 'Test workout notes'
+      notes: 'Test workout notes',
     };
   }
 
@@ -139,7 +139,7 @@ export class TestRunner {
       if (await condition()) {
         return true;
       }
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
     }
     throw new Error('Condition not met within timeout');
   }

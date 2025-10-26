@@ -1,387 +1,618 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>エクササイズ - MuscleRotationManager</title>
-    
+
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="48x48" href="favicon-48x48.png">
-    <link rel="icon" type="image/png" sizes="64x64" href="favicon-64x64.png">
-    <link rel="icon" type="image/png" sizes="128x128" href="favicon-128x128.png">
-    <link rel="icon" type="image/png" sizes="256x256" href="favicon-256x256.png">
-    
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="48x48" href="favicon-48x48.png" />
+    <link rel="icon" type="image/png" sizes="64x64" href="favicon-64x64.png" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="128x128"
+      href="favicon-128x128.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="256x256"
+      href="favicon-256x256.png"
+    />
+
     <!-- Apple Touch Icon -->
-    <link rel="apple-touch-icon" href="apple-touch-icon.png">
-    
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+
     <!-- Android Chrome Icons -->
-    <link rel="icon" type="image/png" sizes="192x192" href="android-chrome-192x192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="android-chrome-512x512.png">
-    
-    <meta name="description" content="エクササイズデータベース。効率的な筋トレ部位ローテーションを科学的に管理">
-    <meta name="keywords" content="筋トレ,エクササイズ,データベース,トレーニング,運動">
-    
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href="android-chrome-192x192.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="512x512"
+      href="android-chrome-512x512.png"
+    />
+
+    <meta
+      name="description"
+      content="エクササイズデータベース。効率的な筋トレ部位ローテーションを科学的に管理"
+    />
+    <meta
+      name="keywords"
+      content="筋トレ,エクササイズ,データベース,トレーニング,運動"
+    />
+
     <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#1f2937">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="MuscleRotationManager">
-    
+    <meta name="theme-color" content="#1f2937" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="MuscleRotationManager" />
+
     <!-- CDN Links -->
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-    
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+
     <!-- FontAwesome JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/js/all.min.js"></script>
-    
+
     <!-- Supabase CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-</head>
-<body class="bg-gray-50">
+  </head>
+  <body class="bg-gray-50">
     <div id="app" class="min-h-screen">
-        <!-- Header Container -->
-        <div id="header-container"></div>
+      <!-- Header Container -->
+      <div id="header-container"></div>
 
-        <div class="flex">
-            <!-- Sidebar -->
-            <div id="sidebar-container"></div>
+      <div class="flex">
+        <!-- Sidebar -->
+        <div id="sidebar-container"></div>
 
-            <!-- Main Content -->
-            <main class="flex-1 p-6">
-                <div id="main-content">
-                <div class="mb-8">
-                    <h1 class="text-3xl font-bold text-gray-900">エクササイズデータベース</h1>
-                    <p class="mt-2 text-gray-600">豊富なエクササイズライブラリから最適なトレーニングを選択しましょう</p>
+        <!-- Main Content -->
+        <main class="flex-1 p-6">
+          <div id="main-content">
+            <div class="mb-8">
+              <h1 class="text-3xl font-bold text-gray-900">
+                エクササイズデータベース
+              </h1>
+              <p class="mt-2 text-gray-600">
+                豊富なエクササイズライブラリから最適なトレーニングを選択しましょう
+              </p>
+            </div>
+
+            <!-- Search and Filters -->
+            <div class="bg-white shadow rounded-lg mb-8">
+              <div class="px-4 py-5 sm:p-6">
+                <div class="flex flex-col md:flex-row gap-4">
+                  <div class="flex-1">
+                    <input
+                      type="text"
+                      id="exercise-search"
+                      placeholder="エクササイズを検索..."
+                      class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div class="flex flex-wrap gap-2">
+                    <select
+                      id="muscle-group-filter"
+                      class="px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">すべての部位</option>
+                      <option value="chest">胸</option>
+                      <option value="back">背中</option>
+                      <option value="legs">脚</option>
+                      <option value="shoulders">肩</option>
+                      <option value="arms">腕</option>
+                      <option value="core">体幹</option>
+                    </select>
+                    <select
+                      id="equipment-filter"
+                      class="px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">すべての器具</option>
+                      <option value="bodyweight">自重</option>
+                      <option value="dumbbell">ダンベル</option>
+                      <option value="barbell">バーベル</option>
+                      <option value="machine">マシン</option>
+                      <option value="cable machine">ケーブルマシン</option>
+                    </select>
+                    <select
+                      id="difficulty-filter"
+                      class="px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">すべての難易度</option>
+                      <option value="1">★☆☆☆☆ (初心者)</option>
+                      <option value="2">★★☆☆☆ (初級)</option>
+                      <option value="3">★★★☆☆ (中級)</option>
+                      <option value="4">★★★★☆ (上級)</option>
+                      <option value="5">★★★★★ (エキスパート)</option>
+                    </select>
+                    <select
+                      id="exercise-type-filter"
+                      class="px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">すべてのタイプ</option>
+                      <option value="strength">筋力</option>
+                      <option value="cardio">有酸素</option>
+                      <option value="flexibility">柔軟性</option>
+                      <option value="balance">バランス</option>
+                    </select>
+                  </div>
+                  <div class="flex flex-wrap gap-4 mt-2">
+                    <label class="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="bodyweight-filter"
+                        class="mr-2"
+                      />
+                      <span class="text-sm text-gray-700">自重のみ</span>
+                    </label>
+                    <label class="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="compound-filter"
+                        class="mr-2"
+                      />
+                      <span class="text-sm text-gray-700">複合種目のみ</span>
+                    </label>
+                    <label class="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="beginner-filter"
+                        class="mr-2"
+                      />
+                      <span class="text-sm text-gray-700">初心者向けのみ</span>
+                    </label>
+                    <button
+                      id="reset-filters-btn"
+                      class="text-sm text-blue-600 hover:text-blue-800 underline"
+                    >
+                      フィルターをリセット
+                    </button>
+                  </div>
                 </div>
+              </div>
+            </div>
 
-                <!-- Search and Filters -->
-                <div class="bg-white shadow rounded-lg mb-8">
-                    <div class="px-4 py-5 sm:p-6">
-                        <div class="flex flex-col md:flex-row gap-4">
-                            <div class="flex-1">
-                                <input type="text" id="exercise-search" placeholder="エクササイズを検索..." 
-                                       class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
-                            </div>
-                            <div class="flex flex-wrap gap-2">
-                                <select id="muscle-group-filter" class="px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
-                                    <option value="">すべての部位</option>
-                                    <option value="chest">胸</option>
-                                    <option value="back">背中</option>
-                                    <option value="legs">脚</option>
-                                    <option value="shoulders">肩</option>
-                                    <option value="arms">腕</option>
-                                    <option value="core">体幹</option>
-                                </select>
-                                <select id="equipment-filter" class="px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
-                                    <option value="">すべての器具</option>
-                                    <option value="bodyweight">自重</option>
-                                    <option value="dumbbell">ダンベル</option>
-                                    <option value="barbell">バーベル</option>
-                                    <option value="machine">マシン</option>
-                                    <option value="cable machine">ケーブルマシン</option>
-                                </select>
-                                <select id="difficulty-filter" class="px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
-                                    <option value="">すべての難易度</option>
-                                    <option value="1">★☆☆☆☆ (初心者)</option>
-                                    <option value="2">★★☆☆☆ (初級)</option>
-                                    <option value="3">★★★☆☆ (中級)</option>
-                                    <option value="4">★★★★☆ (上級)</option>
-                                    <option value="5">★★★★★ (エキスパート)</option>
-                                </select>
-                                <select id="exercise-type-filter" class="px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
-                                    <option value="">すべてのタイプ</option>
-                                    <option value="strength">筋力</option>
-                                    <option value="cardio">有酸素</option>
-                                    <option value="flexibility">柔軟性</option>
-                                    <option value="balance">バランス</option>
-                                </select>
-                            </div>
-                            <div class="flex flex-wrap gap-4 mt-2">
-                                <label class="flex items-center">
-                                    <input type="checkbox" id="bodyweight-filter" class="mr-2">
-                                    <span class="text-sm text-gray-700">自重のみ</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" id="compound-filter" class="mr-2">
-                                    <span class="text-sm text-gray-700">複合種目のみ</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" id="beginner-filter" class="mr-2">
-                                    <span class="text-sm text-gray-700">初心者向けのみ</span>
-                                </label>
-                                <button id="reset-filters-btn" class="text-sm text-blue-600 hover:text-blue-800 underline">
-                                    フィルターをリセット
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+            <!-- Exercise Categories -->
+            <div
+              class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8"
+            >
+              <div class="bg-white shadow rounded-lg p-6">
+                <div class="flex items-center mb-4">
+                  <i class="fas fa-heart text-2xl text-red-500 mr-3"></i>
+                  <h3 class="text-lg font-medium text-gray-900">胸</h3>
                 </div>
-
-                <!-- Exercise Categories -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                    <div class="bg-white shadow rounded-lg p-6">
-                        <div class="flex items-center mb-4">
-                            <i class="fas fa-heart text-2xl text-red-500 mr-3"></i>
-                            <h3 class="text-lg font-medium text-gray-900">胸</h3>
-                        </div>
-                        <p class="text-gray-600 text-sm mb-4">胸筋を鍛えるエクササイズ</p>
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-500">15種類</span>
-                            <button class="category-detail-btn text-blue-600 hover:text-blue-800 text-sm font-medium" data-muscle="chest">詳細を見る</button>
-                        </div>
-                    </div>
-
-                    <div class="bg-white shadow rounded-lg p-6">
-                        <div class="flex items-center mb-4">
-                            <i class="fas fa-user text-2xl text-green-500 mr-3"></i>
-                            <h3 class="text-lg font-medium text-gray-900">背中</h3>
-                        </div>
-                        <p class="text-gray-600 text-sm mb-4">背筋を鍛えるエクササイズ</p>
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-500">18種類</span>
-                            <button class="category-detail-btn text-blue-600 hover:text-blue-800 text-sm font-medium" data-muscle="back">詳細を見る</button>
-                        </div>
-                    </div>
-
-                    <div class="bg-white shadow rounded-lg p-6">
-                        <div class="flex items-center mb-4">
-                            <i class="fas fa-running text-2xl text-purple-500 mr-3"></i>
-                            <h3 class="text-lg font-medium text-gray-900">脚</h3>
-                        </div>
-                        <p class="text-gray-600 text-sm mb-4">脚筋を鍛えるエクササイズ</p>
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-500">22種類</span>
-                            <button class="category-detail-btn text-blue-600 hover:text-blue-800 text-sm font-medium" data-muscle="legs">詳細を見る</button>
-                        </div>
-                    </div>
-
-                    <div class="bg-white shadow rounded-lg p-6">
-                        <div class="flex items-center mb-4">
-                            <i class="fas fa-dumbbell text-2xl text-blue-500 mr-3"></i>
-                            <h3 class="text-lg font-medium text-gray-900">肩</h3>
-                        </div>
-                        <p class="text-gray-600 text-sm mb-4">肩筋を鍛えるエクササイズ</p>
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-500">12種類</span>
-                            <button class="category-detail-btn text-blue-600 hover:text-blue-800 text-sm font-medium" data-muscle="shoulders">詳細を見る</button>
-                        </div>
-                    </div>
-
-                    <div class="bg-white shadow rounded-lg p-6">
-                        <div class="flex items-center mb-4">
-                            <i class="fas fa-fist-raised text-2xl text-orange-500 mr-3"></i>
-                            <h3 class="text-lg font-medium text-gray-900">腕</h3>
-                        </div>
-                        <p class="text-gray-600 text-sm mb-4">腕筋を鍛えるエクササイズ</p>
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-500">16種類</span>
-                            <button class="category-detail-btn text-blue-600 hover:text-blue-800 text-sm font-medium" data-muscle="arms">詳細を見る</button>
-                        </div>
-                    </div>
-
-                    <div class="bg-white shadow rounded-lg p-6">
-                        <div class="flex items-center mb-4">
-                            <i class="fas fa-circle text-2xl text-yellow-500 mr-3"></i>
-                            <h3 class="text-lg font-medium text-gray-900">体幹</h3>
-                        </div>
-                        <p class="text-gray-600 text-sm mb-4">体幹を鍛えるエクササイズ</p>
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-500">20種類</span>
-                            <button class="category-detail-btn text-blue-600 hover:text-blue-800 text-sm font-medium" data-muscle="core">詳細を見る</button>
-                        </div>
-                    </div>
+                <p class="text-gray-600 text-sm mb-4">
+                  胸筋を鍛えるエクササイズ
+                </p>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-gray-500">15種類</span>
+                  <button
+                    class="category-detail-btn text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    data-muscle="chest"
+                  >
+                    詳細を見る
+                  </button>
                 </div>
+              </div>
 
-                <!-- Exercise List -->
-                <div class="bg-white shadow rounded-lg">
-                    <div class="px-4 py-5 sm:p-6">
-                        <div class="flex justify-between items-center mb-4">
-                            <div>
-                                <h3 class="text-lg leading-6 font-medium text-gray-900">エクササイズ一覧</h3>
-                                <p id="exercise-count" class="text-sm text-gray-500 mt-1">
-                                    <span id="current-count">0</span>件中 <span id="total-count">0</span>件を表示
-                                </p>
-                            </div>
-                            <button id="add-custom-exercise-btn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                                <i class="fas fa-plus mr-2"></i>カスタムエクササイズ追加
-                            </button>
-                        </div>
-                        <div id="exercises-list">
-                            <!-- Exercise list will be loaded here -->
-                        </div>
-                        <div id="exercises-loader" class="hidden text-center py-8">
-                            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                            <p class="mt-2 text-gray-600">読み込み中...</p>
-                        </div>
-                    </div>
+              <div class="bg-white shadow rounded-lg p-6">
+                <div class="flex items-center mb-4">
+                  <i class="fas fa-user text-2xl text-green-500 mr-3"></i>
+                  <h3 class="text-lg font-medium text-gray-900">背中</h3>
                 </div>
+                <p class="text-gray-600 text-sm mb-4">
+                  背筋を鍛えるエクササイズ
+                </p>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-gray-500">18種類</span>
+                  <button
+                    class="category-detail-btn text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    data-muscle="back"
+                  >
+                    詳細を見る
+                  </button>
                 </div>
-            </main>
-        </div>
+              </div>
+
+              <div class="bg-white shadow rounded-lg p-6">
+                <div class="flex items-center mb-4">
+                  <i class="fas fa-running text-2xl text-purple-500 mr-3"></i>
+                  <h3 class="text-lg font-medium text-gray-900">脚</h3>
+                </div>
+                <p class="text-gray-600 text-sm mb-4">
+                  脚筋を鍛えるエクササイズ
+                </p>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-gray-500">22種類</span>
+                  <button
+                    class="category-detail-btn text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    data-muscle="legs"
+                  >
+                    詳細を見る
+                  </button>
+                </div>
+              </div>
+
+              <div class="bg-white shadow rounded-lg p-6">
+                <div class="flex items-center mb-4">
+                  <i class="fas fa-dumbbell text-2xl text-blue-500 mr-3"></i>
+                  <h3 class="text-lg font-medium text-gray-900">肩</h3>
+                </div>
+                <p class="text-gray-600 text-sm mb-4">
+                  肩筋を鍛えるエクササイズ
+                </p>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-gray-500">12種類</span>
+                  <button
+                    class="category-detail-btn text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    data-muscle="shoulders"
+                  >
+                    詳細を見る
+                  </button>
+                </div>
+              </div>
+
+              <div class="bg-white shadow rounded-lg p-6">
+                <div class="flex items-center mb-4">
+                  <i
+                    class="fas fa-fist-raised text-2xl text-orange-500 mr-3"
+                  ></i>
+                  <h3 class="text-lg font-medium text-gray-900">腕</h3>
+                </div>
+                <p class="text-gray-600 text-sm mb-4">
+                  腕筋を鍛えるエクササイズ
+                </p>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-gray-500">16種類</span>
+                  <button
+                    class="category-detail-btn text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    data-muscle="arms"
+                  >
+                    詳細を見る
+                  </button>
+                </div>
+              </div>
+
+              <div class="bg-white shadow rounded-lg p-6">
+                <div class="flex items-center mb-4">
+                  <i class="fas fa-circle text-2xl text-yellow-500 mr-3"></i>
+                  <h3 class="text-lg font-medium text-gray-900">体幹</h3>
+                </div>
+                <p class="text-gray-600 text-sm mb-4">
+                  体幹を鍛えるエクササイズ
+                </p>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-gray-500">20種類</span>
+                  <button
+                    class="category-detail-btn text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    data-muscle="core"
+                  >
+                    詳細を見る
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Exercise List -->
+            <div class="bg-white shadow rounded-lg">
+              <div class="px-4 py-5 sm:p-6">
+                <div class="flex justify-between items-center mb-4">
+                  <div>
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">
+                      エクササイズ一覧
+                    </h3>
+                    <p id="exercise-count" class="text-sm text-gray-500 mt-1">
+                      <span id="current-count">0</span>件中
+                      <span id="total-count">0</span>件を表示
+                    </p>
+                  </div>
+                  <button
+                    id="add-custom-exercise-btn"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    <i class="fas fa-plus mr-2"></i>カスタムエクササイズ追加
+                  </button>
+                </div>
+                <div id="exercises-list">
+                  <!-- Exercise list will be loaded here -->
+                </div>
+                <div id="exercises-loader" class="hidden text-center py-8">
+                  <div
+                    class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"
+                  ></div>
+                  <p class="mt-2 text-gray-600">読み込み中...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
 
     <!-- Exercise Detail Modal -->
-    <div id="exercise-detail-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-lg max-w-4xl w-full mx-4 max-h-[90vh] flex flex-col">
-            <div class="modal-content flex-1 overflow-hidden">
-                <!-- Modal content will be dynamically generated -->
-            </div>
+    <div
+      id="exercise-detail-modal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden"
+    >
+      <div
+        class="bg-white rounded-lg max-w-4xl w-full mx-4 max-h-[90vh] flex flex-col"
+      >
+        <div class="modal-content flex-1 overflow-hidden">
+          <!-- Modal content will be dynamically generated -->
         </div>
+      </div>
     </div>
 
     <!-- Custom Exercise Modal -->
-    <div id="custom-exercise-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] flex flex-col">
-            <div class="modal-content flex-1 overflow-hidden">
-                <div class="modal-header flex justify-between items-center p-6 border-b">
-                    <h2 class="text-2xl font-bold text-gray-900">カスタムエクササイズ</h2>
-                    <button class="modal-close text-gray-400 hover:text-gray-600">
-                        <i class="fas fa-times text-xl"></i>
-                    </button>
+    <div
+      id="custom-exercise-modal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden"
+    >
+      <div
+        class="bg-white rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] flex flex-col"
+      >
+        <div class="modal-content flex-1 overflow-hidden">
+          <div
+            class="modal-header flex justify-between items-center p-6 border-b"
+          >
+            <h2 class="text-2xl font-bold text-gray-900">
+              カスタムエクササイズ
+            </h2>
+            <button class="modal-close text-gray-400 hover:text-gray-600">
+              <i class="fas fa-times text-xl"></i>
+            </button>
+          </div>
+
+          <div class="modal-body p-6 overflow-y-auto">
+            <form class="space-y-6">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2"
+                    >日本語名</label
+                  >
+                  <input
+                    type="text"
+                    id="custom-name-ja"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
                 </div>
-                
-                <div class="modal-body p-6 overflow-y-auto">
-                    <form class="space-y-6">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">日本語名</label>
-                                <input type="text" id="custom-name-ja" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" required>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">英語名</label>
-                                <input type="text" id="custom-name-en" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">対象部位</label>
-                                <select id="custom-muscle-group" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" required>
-                                    <option value="">選択してください</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">器具</label>
-                                <select id="custom-equipment" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
-                                    <option value="bodyweight">自重</option>
-                                    <option value="dumbbell">ダンベル</option>
-                                    <option value="barbell">バーベル</option>
-                                    <option value="machine">マシン</option>
-                                    <option value="cable machine">ケーブルマシン</option>
-                                    <option value="pull-up bar">懸垂バー</option>
-                                    <option value="resistance band">レジスタンスバンド</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">難易度</label>
-                                <select id="custom-difficulty" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
-                                    <option value="1">★☆☆☆☆ (初心者)</option>
-                                    <option value="2">★★☆☆☆ (初級)</option>
-                                    <option value="3">★★★☆☆ (中級)</option>
-                                    <option value="4">★★★★☆ (上級)</option>
-                                    <option value="5">★★★★★ (エキスパート)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">種目タイプ</label>
-                                <select id="custom-exercise-type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
-                                    <option value="strength">筋力</option>
-                                    <option value="cardio">有酸素</option>
-                                    <option value="flexibility">柔軟性</option>
-                                    <option value="balance">バランス</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">説明</label>
-                            <textarea id="custom-description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="エクササイズの簡単な説明"></textarea>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">実行方法</label>
-                            <textarea id="custom-instructions" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="ステップバイステップの実行方法"></textarea>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">コツ・ポイント</label>
-                            <textarea id="custom-tips" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="効果的な実行のためのコツ"></textarea>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">よくある間違い</label>
-                            <textarea id="custom-mistakes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="避けるべき間違いや注意点"></textarea>
-                        </div>
-
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <label class="flex items-center">
-                                <input type="checkbox" id="custom-bodyweight" class="mr-2">
-                                <span class="text-sm text-gray-700">自重</span>
-                            </label>
-                            <label class="flex items-center">
-                                <input type="checkbox" id="custom-compound" class="mr-2">
-                                <span class="text-sm text-gray-700">複合種目</span>
-                            </label>
-                            <label class="flex items-center">
-                                <input type="checkbox" id="custom-beginner" class="mr-2">
-                                <span class="text-sm text-gray-700">初心者向け</span>
-                            </label>
-                            <label class="flex items-center">
-                                <input type="checkbox" id="custom-public" class="mr-2">
-                                <span class="text-sm text-gray-700">公開</span>
-                            </label>
-                        </div>
-
-                        <!-- メディアアップロード -->
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">画像</label>
-                                <div class="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                                    <div id="image-placeholder" class="text-center">
-                                        <i class="fas fa-image text-4xl text-gray-400 mb-2"></i>
-                                        <p class="text-gray-500 mb-2">画像をアップロード</p>
-                                        <input type="file" id="custom-image-upload" accept="image/*" class="hidden">
-                                        <button type="button" onclick="document.getElementById('custom-image-upload').click()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                                            ファイルを選択
-                                        </button>
-                                    </div>
-                                    <div id="image-preview" class="hidden">
-                                        <img id="image-preview-img" class="w-full h-48 object-cover rounded-lg mb-2">
-                                        <button type="button" id="remove-image-btn" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
-                                            削除
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">動画URL</label>
-                                <input type="url" id="custom-video-url" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="YouTube URLなど">
-                            </div>
-                        </div>
-                    </form>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2"
+                    >英語名</label
+                  >
+                  <input
+                    type="text"
+                    id="custom-name-en"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  />
                 </div>
-                
-                <div class="modal-footer p-6 border-t bg-gray-50">
-                    <div class="flex justify-end space-x-3">
-                        <button class="cancel-btn px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
-                            キャンセル
-                        </button>
-                        <button class="save-btn px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                            保存
-                        </button>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2"
+                    >対象部位</label
+                  >
+                  <select
+                    id="custom-muscle-group"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  >
+                    <option value="">選択してください</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2"
+                    >器具</label
+                  >
+                  <select
+                    id="custom-equipment"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="bodyweight">自重</option>
+                    <option value="dumbbell">ダンベル</option>
+                    <option value="barbell">バーベル</option>
+                    <option value="machine">マシン</option>
+                    <option value="cable machine">ケーブルマシン</option>
+                    <option value="pull-up bar">懸垂バー</option>
+                    <option value="resistance band">レジスタンスバンド</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2"
+                    >難易度</label
+                  >
+                  <select
+                    id="custom-difficulty"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="1">★☆☆☆☆ (初心者)</option>
+                    <option value="2">★★☆☆☆ (初級)</option>
+                    <option value="3">★★★☆☆ (中級)</option>
+                    <option value="4">★★★★☆ (上級)</option>
+                    <option value="5">★★★★★ (エキスパート)</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2"
+                    >種目タイプ</label
+                  >
+                  <select
+                    id="custom-exercise-type"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="strength">筋力</option>
+                    <option value="cardio">有酸素</option>
+                    <option value="flexibility">柔軟性</option>
+                    <option value="balance">バランス</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2"
+                  >説明</label
+                >
+                <textarea
+                  id="custom-description"
+                  rows="3"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="エクササイズの簡単な説明"
+                ></textarea>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2"
+                  >実行方法</label
+                >
+                <textarea
+                  id="custom-instructions"
+                  rows="4"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="ステップバイステップの実行方法"
+                ></textarea>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2"
+                  >コツ・ポイント</label
+                >
+                <textarea
+                  id="custom-tips"
+                  rows="3"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="効果的な実行のためのコツ"
+                ></textarea>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2"
+                  >よくある間違い</label
+                >
+                <textarea
+                  id="custom-mistakes"
+                  rows="3"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="避けるべき間違いや注意点"
+                ></textarea>
+              </div>
+
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <label class="flex items-center">
+                  <input type="checkbox" id="custom-bodyweight" class="mr-2" />
+                  <span class="text-sm text-gray-700">自重</span>
+                </label>
+                <label class="flex items-center">
+                  <input type="checkbox" id="custom-compound" class="mr-2" />
+                  <span class="text-sm text-gray-700">複合種目</span>
+                </label>
+                <label class="flex items-center">
+                  <input type="checkbox" id="custom-beginner" class="mr-2" />
+                  <span class="text-sm text-gray-700">初心者向け</span>
+                </label>
+                <label class="flex items-center">
+                  <input type="checkbox" id="custom-public" class="mr-2" />
+                  <span class="text-sm text-gray-700">公開</span>
+                </label>
+              </div>
+
+              <!-- メディアアップロード -->
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2"
+                    >画像</label
+                  >
+                  <div
+                    class="border-2 border-dashed border-gray-300 rounded-lg p-4"
+                  >
+                    <div id="image-placeholder" class="text-center">
+                      <i class="fas fa-image text-4xl text-gray-400 mb-2"></i>
+                      <p class="text-gray-500 mb-2">画像をアップロード</p>
+                      <input
+                        type="file"
+                        id="custom-image-upload"
+                        accept="image/*"
+                        class="hidden"
+                      />
+                      <button
+                        type="button"
+                        onclick="document.getElementById('custom-image-upload').click()"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                      >
+                        ファイルを選択
+                      </button>
                     </div>
+                    <div id="image-preview" class="hidden">
+                      <img
+                        id="image-preview-img"
+                        class="w-full h-48 object-cover rounded-lg mb-2"
+                      />
+                      <button
+                        type="button"
+                        id="remove-image-btn"
+                        class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                      >
+                        削除
+                      </button>
+                    </div>
+                  </div>
                 </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2"
+                    >動画URL</label
+                  >
+                  <input
+                    type="url"
+                    id="custom-video-url"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="YouTube URLなど"
+                  />
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <div class="modal-footer p-6 border-t bg-gray-50">
+            <div class="flex justify-end space-x-3">
+              <button
+                class="cancel-btn px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+              >
+                キャンセル
+              </button>
+              <button
+                class="save-btn px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                保存
+              </button>
             </div>
+          </div>
         </div>
+      </div>
     </div>
 
     <!-- Notification Container -->
@@ -396,5 +627,5 @@
     <script type="module" src="js/core/MPAInitializer.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module" src="js/pages/exercisePage.js"></script>
-</body>
+  </body>
 </html>

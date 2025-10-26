@@ -1,218 +1,393 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>筋トレ部位ローテーション管理システム - 機能テストスイート</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css"
+    />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .test-pass { @apply bg-green-100 border-green-500 text-green-800; }
-        .test-fail { @apply bg-red-100 border-red-500 text-red-800; }
-        .test-pending { @apply bg-yellow-100 border-yellow-500 text-yellow-800; }
-        .test-running { @apply bg-blue-100 border-blue-500 text-blue-800; }
-        .chart-container { height: 400px; }
-        .test-item { transition: all 0.3s ease; }
-        .test-item:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+      .test-pass {
+        @apply bg-green-100 border-green-500 text-green-800;
+      }
+      .test-fail {
+        @apply bg-red-100 border-red-500 text-red-800;
+      }
+      .test-pending {
+        @apply bg-yellow-100 border-yellow-500 text-yellow-800;
+      }
+      .test-running {
+        @apply bg-blue-100 border-blue-500 text-blue-800;
+      }
+      .chart-container {
+        height: 400px;
+      }
+      .test-item {
+        transition: all 0.3s ease;
+      }
+      .test-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
     </style>
-</head>
-<body class="bg-gray-50 min-h-screen">
+  </head>
+  <body class="bg-gray-50 min-h-screen">
     <!-- ヘッダー -->
     <header class="bg-white shadow-sm border-b">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center py-4">
-                <div class="flex items-center space-x-3">
-                    <i class="fas fa-dumbbell text-3xl text-blue-600"></i>
-                    <div>
-                        <h1 class="text-2xl font-bold text-gray-900">筋トレ部位ローテーション管理システム</h1>
-                        <p class="text-sm text-gray-600">機能テストスイート v1.0</p>
-                    </div>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <button id="runAllTests" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                        <i class="fas fa-play mr-2"></i>全テスト実行
-                    </button>
-                    <button id="resetTests" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors">
-                        <i class="fas fa-refresh mr-2"></i>リセット
-                    </button>
-                </div>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center py-4">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-dumbbell text-3xl text-blue-600"></i>
+            <div>
+              <h1 class="text-2xl font-bold text-gray-900">
+                筋トレ部位ローテーション管理システム
+              </h1>
+              <p class="text-sm text-gray-600">機能テストスイート v1.0</p>
             </div>
+          </div>
+          <div class="flex items-center space-x-4">
+            <button
+              id="runAllTests"
+              class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <i class="fas fa-play mr-2"></i>全テスト実行
+            </button>
+            <button
+              id="resetTests"
+              class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              <i class="fas fa-refresh mr-2"></i>リセット
+            </button>
+          </div>
         </div>
+      </div>
     </header>
 
     <!-- メインコンテンツ -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- テスト概要 -->
-        <div class="bg-white rounded-lg shadow-sm mb-8 p-6">
-            <h2 class="text-xl font-bold text-gray-900 mb-4">
-                <i class="fas fa-chart-line mr-2"></i>テスト概要
-            </h2>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <div class="bg-blue-50 p-4 rounded-lg">
-                    <div class="flex items-center">
-                        <i class="fas fa-list-check text-blue-600 text-xl mr-3"></i>
-                        <div>
-                            <p class="text-sm text-gray-600">総テスト数</p>
-                            <p class="text-2xl font-bold text-blue-600" id="totalTests">0</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-green-50 p-4 rounded-lg">
-                    <div class="flex items-center">
-                        <i class="fas fa-check-circle text-green-600 text-xl mr-3"></i>
-                        <div>
-                            <p class="text-sm text-gray-600">成功</p>
-                            <p class="text-2xl font-bold text-green-600" id="passedTests">0</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-red-50 p-4 rounded-lg">
-                    <div class="flex items-center">
-                        <i class="fas fa-times-circle text-red-600 text-xl mr-3"></i>
-                        <div>
-                            <p class="text-sm text-gray-600">失敗</p>
-                            <p class="text-2xl font-bold text-red-600" id="failedTests">0</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-yellow-50 p-4 rounded-lg">
-                    <div class="flex items-center">
-                        <i class="fas fa-clock text-yellow-600 text-xl mr-3"></i>
-                        <div>
-                            <p class="text-sm text-gray-600">保留</p>
-                            <p class="text-2xl font-bold text-yellow-600" id="pendingTests">0</p>
-                        </div>
-                    </div>
-                </div>
+      <!-- テスト概要 -->
+      <div class="bg-white rounded-lg shadow-sm mb-8 p-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-4">
+          <i class="fas fa-chart-line mr-2"></i>テスト概要
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div class="bg-blue-50 p-4 rounded-lg">
+            <div class="flex items-center">
+              <i class="fas fa-list-check text-blue-600 text-xl mr-3"></i>
+              <div>
+                <p class="text-sm text-gray-600">総テスト数</p>
+                <p class="text-2xl font-bold text-blue-600" id="totalTests">
+                  0
+                </p>
+              </div>
             </div>
-            <div class="chart-container">
-                <canvas id="testResultChart"></canvas>
+          </div>
+          <div class="bg-green-50 p-4 rounded-lg">
+            <div class="flex items-center">
+              <i class="fas fa-check-circle text-green-600 text-xl mr-3"></i>
+              <div>
+                <p class="text-sm text-gray-600">成功</p>
+                <p class="text-2xl font-bold text-green-600" id="passedTests">
+                  0
+                </p>
+              </div>
             </div>
+          </div>
+          <div class="bg-red-50 p-4 rounded-lg">
+            <div class="flex items-center">
+              <i class="fas fa-times-circle text-red-600 text-xl mr-3"></i>
+              <div>
+                <p class="text-sm text-gray-600">失敗</p>
+                <p class="text-2xl font-bold text-red-600" id="failedTests">
+                  0
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="bg-yellow-50 p-4 rounded-lg">
+            <div class="flex items-center">
+              <i class="fas fa-clock text-yellow-600 text-xl mr-3"></i>
+              <div>
+                <p class="text-sm text-gray-600">保留</p>
+                <p class="text-2xl font-bold text-yellow-600" id="pendingTests">
+                  0
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="testResultChart"></canvas>
+        </div>
+      </div>
+
+      <!-- テストカテゴリ -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- 機能テスト -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+          <h3 class="text-lg font-bold text-gray-900 mb-4">
+            <i class="fas fa-cogs mr-2"></i>機能テスト
+          </h3>
+          <div class="space-y-3" id="functionalTests">
+            <!-- 機能テストアイテムがJavaScriptで動的に追加されます -->
+          </div>
         </div>
 
-        <!-- テストカテゴリ -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- 機能テスト -->
-            <div class="bg-white rounded-lg shadow-sm p-6">
-                <h3 class="text-lg font-bold text-gray-900 mb-4">
-                    <i class="fas fa-cogs mr-2"></i>機能テスト
-                </h3>
-                <div class="space-y-3" id="functionalTests">
-                    <!-- 機能テストアイテムがJavaScriptで動的に追加されます -->
-                </div>
-            </div>
-
-            <!-- パフォーマンステスト -->
-            <div class="bg-white rounded-lg shadow-sm p-6">
-                <h3 class="text-lg font-bold text-gray-900 mb-4">
-                    <i class="fas fa-tachometer-alt mr-2"></i>パフォーマンステスト
-                </h3>
-                <div class="space-y-3" id="performanceTests">
-                    <!-- パフォーマンステストアイテムがJavaScriptで動的に追加されます -->
-                </div>
-            </div>
-
-            <!-- ユーザビリティテスト -->
-            <div class="bg-white rounded-lg shadow-sm p-6">
-                <h3 class="text-lg font-bold text-gray-900 mb-4">
-                    <i class="fas fa-user-check mr-2"></i>ユーザビリティテスト
-                </h3>
-                <div class="space-y-3" id="usabilityTests">
-                    <!-- ユーザビリティテストアイテムがJavaScriptで動的に追加されます -->
-                </div>
-            </div>
-
-            <!-- セキュリティテスト -->
-            <div class="bg-white rounded-lg shadow-sm p-6">
-                <h3 class="text-lg font-bold text-gray-900 mb-4">
-                    <i class="fas fa-shield-alt mr-2"></i>セキュリティテスト
-                </h3>
-                <div class="space-y-3" id="securityTests">
-                    <!-- セキュリティテストアイテムがJavaScriptで動的に追加されます -->
-                </div>
-            </div>
+        <!-- パフォーマンステスト -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+          <h3 class="text-lg font-bold text-gray-900 mb-4">
+            <i class="fas fa-tachometer-alt mr-2"></i>パフォーマンステスト
+          </h3>
+          <div class="space-y-3" id="performanceTests">
+            <!-- パフォーマンステストアイテムがJavaScriptで動的に追加されます -->
+          </div>
         </div>
 
-        <!-- 詳細ログ -->
-        <div class="bg-white rounded-lg shadow-sm mt-8 p-6">
-            <h3 class="text-lg font-bold text-gray-900 mb-4">
-                <i class="fas fa-file-alt mr-2"></i>テスト詳細ログ
-            </h3>
-            <div class="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm max-h-96 overflow-y-auto" id="testLog">
-                <div class="text-gray-500"># テストログがここに表示されます...</div>
-            </div>
+        <!-- ユーザビリティテスト -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+          <h3 class="text-lg font-bold text-gray-900 mb-4">
+            <i class="fas fa-user-check mr-2"></i>ユーザビリティテスト
+          </h3>
+          <div class="space-y-3" id="usabilityTests">
+            <!-- ユーザビリティテストアイテムがJavaScriptで動的に追加されます -->
+          </div>
         </div>
+
+        <!-- セキュリティテスト -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+          <h3 class="text-lg font-bold text-gray-900 mb-4">
+            <i class="fas fa-shield-alt mr-2"></i>セキュリティテスト
+          </h3>
+          <div class="space-y-3" id="securityTests">
+            <!-- セキュリティテストアイテムがJavaScriptで動的に追加されます -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 詳細ログ -->
+      <div class="bg-white rounded-lg shadow-sm mt-8 p-6">
+        <h3 class="text-lg font-bold text-gray-900 mb-4">
+          <i class="fas fa-file-alt mr-2"></i>テスト詳細ログ
+        </h3>
+        <div
+          class="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm max-h-96 overflow-y-auto"
+          id="testLog"
+        >
+          <div class="text-gray-500"># テストログがここに表示されます...</div>
+        </div>
+      </div>
     </main>
 
     <script>
-        // テスト定義
-        const testSuites = {
-            functional: [
-                { name: "部位選択機能", description: "6つの筋肉部位（胸・背中・肩・腕・脚・腹）の選択", test: () => testMuscleGroupSelection() },
-                { name: "トレーニング記録", description: "種目・セット・重量・回数の記録機能", test: () => testTrainingRecord() },
-                { name: "回復期間計算", description: "部位別回復期間の自動計算（大筋群72時間、小筋群48時間）", test: () => testRecoveryCalculation() },
-                { name: "ローテーション提案", description: "2分割・3分割・4分割の提案機能", test: () => testRotationSuggestion() },
-                { name: "カレンダー表示", description: "月次・週次カレンダーでのトレーニング表示", test: () => testCalendarDisplay() },
-                { name: "種目データベース", description: "100種類以上のエクササイズデータベース", test: () => testExerciseDatabase() },
-                { name: "お気に入り機能", description: "種目・ルーティンのお気に入り登録", test: () => testFavoriteFunction() },
-                { name: "進捗管理", description: "部位別ボリューム・筋力向上グラフ", test: () => testProgressTracking() },
-                { name: "データエクスポート", description: "CSV・JSON形式でのデータエクスポート", test: () => testDataExport() },
-                { name: "SNSシェア機能", description: "Twitter・Instagram・LINE共有", test: () => testSNSShare() }
-            ],
-            performance: [
-                { name: "初期ロード時間", description: "3秒以内での初期ロード", test: () => testInitialLoadTime() },
-                { name: "データ検索速度", description: "1000件以上のデータから1秒以内での検索", test: () => testSearchPerformance() },
-                { name: "PWAオフライン機能", description: "オフライン時の基本機能動作", test: () => testPWAOffline() },
-                { name: "メモリ使用量", description: "50MB以下のメモリ使用量", test: () => testMemoryUsage() },
-                { name: "バッテリー消費", description: "長時間使用でのバッテリー効率", test: () => testBatteryUsage() },
-                { name: "データベース応答", description: "Supabase接続の応答時間", test: () => testDatabaseResponse() },
-                { name: "画像読み込み", description: "アイコン・画像の最適化ロード", test: () => testImageLoading() },
-                { name: "キャッシュ効率", description: "LocalStorageとIndexedDBの効率", test: () => testCacheEfficiency() }
-            ],
-            usability: [
-                { name: "レスポンシブデザイン", description: "スマホ・タブレット・PCでの表示", test: () => testResponsiveDesign() },
-                { name: "文字サイズ変更", description: "5段階の文字サイズ調整", test: () => testFontSizeChange() },
-                { name: "多言語対応", description: "日本語・英語の切り替え", test: () => testMultiLanguage() },
-                { name: "ナビゲーション", description: "直感的なメニュー・ナビゲーション", test: () => testNavigation() },
-                { name: "フォーム入力", description: "入力フォームの使いやすさ", test: () => testFormUsability() },
-                { name: "エラー処理", description: "わかりやすいエラーメッセージ", test: () => testErrorHandling() },
-                { name: "アクセシビリティ", description: "キーボード操作・スクリーンリーダー対応", test: () => testAccessibility() },
-                { name: "ヘルプ機能", description: "使い方・FAQ・問い合わせ", test: () => testHelpFunction() }
-            ],
-            security: [
-                { name: "認証機能", description: "Supabase認証の動作確認", test: () => testAuthentication() },
-                { name: "データ暗号化", description: "個人データの暗号化", test: () => testDataEncryption() },
-                { name: "セッション管理", description: "自動ログアウト・セッション維持", test: () => testSessionManagement() },
-                { name: "XSS対策", description: "クロスサイトスクリプティング対策", test: () => testXSSPrevention() },
-                { name: "CSRF対策", description: "クロスサイトリクエストフォージェリ対策", test: () => testCSRFPrevention() },
-                { name: "データバリデーション", description: "入力データの検証", test: () => testDataValidation() }
-            ]
-        };
+      // テスト定義
+      const testSuites = {
+        functional: [
+          {
+            name: '部位選択機能',
+            description: '6つの筋肉部位（胸・背中・肩・腕・脚・腹）の選択',
+            test: () => testMuscleGroupSelection(),
+          },
+          {
+            name: 'トレーニング記録',
+            description: '種目・セット・重量・回数の記録機能',
+            test: () => testTrainingRecord(),
+          },
+          {
+            name: '回復期間計算',
+            description:
+              '部位別回復期間の自動計算（大筋群72時間、小筋群48時間）',
+            test: () => testRecoveryCalculation(),
+          },
+          {
+            name: 'ローテーション提案',
+            description: '2分割・3分割・4分割の提案機能',
+            test: () => testRotationSuggestion(),
+          },
+          {
+            name: 'カレンダー表示',
+            description: '月次・週次カレンダーでのトレーニング表示',
+            test: () => testCalendarDisplay(),
+          },
+          {
+            name: '種目データベース',
+            description: '100種類以上のエクササイズデータベース',
+            test: () => testExerciseDatabase(),
+          },
+          {
+            name: 'お気に入り機能',
+            description: '種目・ルーティンのお気に入り登録',
+            test: () => testFavoriteFunction(),
+          },
+          {
+            name: '進捗管理',
+            description: '部位別ボリューム・筋力向上グラフ',
+            test: () => testProgressTracking(),
+          },
+          {
+            name: 'データエクスポート',
+            description: 'CSV・JSON形式でのデータエクスポート',
+            test: () => testDataExport(),
+          },
+          {
+            name: 'SNSシェア機能',
+            description: 'Twitter・Instagram・LINE共有',
+            test: () => testSNSShare(),
+          },
+        ],
+        performance: [
+          {
+            name: '初期ロード時間',
+            description: '3秒以内での初期ロード',
+            test: () => testInitialLoadTime(),
+          },
+          {
+            name: 'データ検索速度',
+            description: '1000件以上のデータから1秒以内での検索',
+            test: () => testSearchPerformance(),
+          },
+          {
+            name: 'PWAオフライン機能',
+            description: 'オフライン時の基本機能動作',
+            test: () => testPWAOffline(),
+          },
+          {
+            name: 'メモリ使用量',
+            description: '50MB以下のメモリ使用量',
+            test: () => testMemoryUsage(),
+          },
+          {
+            name: 'バッテリー消費',
+            description: '長時間使用でのバッテリー効率',
+            test: () => testBatteryUsage(),
+          },
+          {
+            name: 'データベース応答',
+            description: 'Supabase接続の応答時間',
+            test: () => testDatabaseResponse(),
+          },
+          {
+            name: '画像読み込み',
+            description: 'アイコン・画像の最適化ロード',
+            test: () => testImageLoading(),
+          },
+          {
+            name: 'キャッシュ効率',
+            description: 'LocalStorageとIndexedDBの効率',
+            test: () => testCacheEfficiency(),
+          },
+        ],
+        usability: [
+          {
+            name: 'レスポンシブデザイン',
+            description: 'スマホ・タブレット・PCでの表示',
+            test: () => testResponsiveDesign(),
+          },
+          {
+            name: '文字サイズ変更',
+            description: '5段階の文字サイズ調整',
+            test: () => testFontSizeChange(),
+          },
+          {
+            name: '多言語対応',
+            description: '日本語・英語の切り替え',
+            test: () => testMultiLanguage(),
+          },
+          {
+            name: 'ナビゲーション',
+            description: '直感的なメニュー・ナビゲーション',
+            test: () => testNavigation(),
+          },
+          {
+            name: 'フォーム入力',
+            description: '入力フォームの使いやすさ',
+            test: () => testFormUsability(),
+          },
+          {
+            name: 'エラー処理',
+            description: 'わかりやすいエラーメッセージ',
+            test: () => testErrorHandling(),
+          },
+          {
+            name: 'アクセシビリティ',
+            description: 'キーボード操作・スクリーンリーダー対応',
+            test: () => testAccessibility(),
+          },
+          {
+            name: 'ヘルプ機能',
+            description: '使い方・FAQ・問い合わせ',
+            test: () => testHelpFunction(),
+          },
+        ],
+        security: [
+          {
+            name: '認証機能',
+            description: 'Supabase認証の動作確認',
+            test: () => testAuthentication(),
+          },
+          {
+            name: 'データ暗号化',
+            description: '個人データの暗号化',
+            test: () => testDataEncryption(),
+          },
+          {
+            name: 'セッション管理',
+            description: '自動ログアウト・セッション維持',
+            test: () => testSessionManagement(),
+          },
+          {
+            name: 'XSS対策',
+            description: 'クロスサイトスクリプティング対策',
+            test: () => testXSSPrevention(),
+          },
+          {
+            name: 'CSRF対策',
+            description: 'クロスサイトリクエストフォージェリ対策',
+            test: () => testCSRFPrevention(),
+          },
+          {
+            name: 'データバリデーション',
+            description: '入力データの検証',
+            test: () => testDataValidation(),
+          },
+        ],
+      };
 
-        // テスト結果を格納する配列
-        let testResults = [];
-        let testChart;
+      // テスト結果を格納する配列
+      let testResults = [];
+      let testChart;
 
-        // テストアイテムを生成
-        function generateTestItems() {
-            Object.keys(testSuites).forEach(category => {
-                const container = document.getElementById(category + 'Tests');
-                testSuites[category].forEach((test, index) => {
-                    const testItem = createTestItem(test, category, index);
-                    container.appendChild(testItem);
-                    testResults.push({ category, test, status: 'pending', duration: 0 });
-                });
+      // テストアイテムを生成
+      function generateTestItems() {
+        Object.keys(testSuites).forEach((category) => {
+          const container = document.getElementById(category + 'Tests');
+          testSuites[category].forEach((test, index) => {
+            const testItem = createTestItem(test, category, index);
+            container.appendChild(testItem);
+            testResults.push({
+              category,
+              test,
+              status: 'pending',
+              duration: 0,
             });
-            updateTestStats();
-        }
+          });
+        });
+        updateTestStats();
+      }
 
-        // テストアイテムを作成
-        function createTestItem(test, category, index) {
-            const div = document.createElement('div');
-            div.className = 'test-item border-l-4 border-gray-300 p-4 bg-gray-50 rounded-lg';
-            div.id = `test-${category}-${index}`;
-            div.innerHTML = `
+      // テストアイテムを作成
+      function createTestItem(test, category, index) {
+        const div = document.createElement('div');
+        div.className =
+          'test-item border-l-4 border-gray-300 p-4 bg-gray-50 rounded-lg';
+        div.id = `test-${category}-${index}`;
+        div.innerHTML = `
                 <div class="flex items-center justify-between">
                     <div class="flex-1">
                         <h4 class="font-semibold text-gray-900">${test.name}</h4>
@@ -233,368 +408,468 @@
                 </div>
             `;
 
-            // テスト実行ボタンのイベント
-            div.querySelector('.run-test').addEventListener('click', () => {
-                runSingleTest(category, index);
-            });
-
-            return div;
-        }
-
-        // 単一テストの実行
-        async function runSingleTest(category, index) {
-            const testItem = document.getElementById(`test-${category}-${index}`);
-            const test = testSuites[category][index];
-            const resultIndex = testResults.findIndex(r => r.category === category && r.test === test);
-
-            // テスト実行中の表示
-            updateTestItem(testItem, 'running', '実行中...', 0);
-            testResults[resultIndex].status = 'running';
-            updateTestStats();
-
-            const startTime = Date.now();
-            
-            try {
-                // テスト実行
-                const result = await test.test();
-                const duration = Date.now() - startTime;
-                
-                if (result.success) {
-                    updateTestItem(testItem, 'pass', `成功: ${result.message}`, duration);
-                    testResults[resultIndex].status = 'pass';
-                } else {
-                    updateTestItem(testItem, 'fail', `失敗: ${result.message}`, duration);
-                    testResults[resultIndex].status = 'fail';
-                }
-                testResults[resultIndex].duration = duration;
-                
-                logTest(test.name, result.success ? 'PASS' : 'FAIL', result.message, duration);
-            } catch (error) {
-                const duration = Date.now() - startTime;
-                updateTestItem(testItem, 'fail', `エラー: ${error.message}`, duration);
-                testResults[resultIndex].status = 'fail';
-                testResults[resultIndex].duration = duration;
-                logTest(test.name, 'ERROR', error.message, duration);
-            }
-
-            updateTestStats();
-            updateChart();
-        }
-
-        // テストアイテムの表示を更新
-        function updateTestItem(testItem, status, message, duration) {
-            const statusClasses = {
-                'pending': 'test-pending',
-                'running': 'test-running',
-                'pass': 'test-pass',
-                'fail': 'test-fail'
-            };
-
-            const statusTexts = {
-                'pending': '待機中',
-                'running': '実行中',
-                'pass': '成功',
-                'fail': '失敗'
-            };
-
-            const statusIcons = {
-                'pending': 'fas fa-clock',
-                'running': 'fas fa-spinner fa-spin',
-                'pass': 'fas fa-check',
-                'fail': 'fas fa-times'
-            };
-
-            testItem.className = `test-item border-l-4 p-4 rounded-lg ${statusClasses[status]}`;
-            testItem.querySelector('.status-badge').textContent = statusTexts[status];
-            testItem.querySelector('.status-badge').className = `status-badge px-2 py-1 text-xs rounded-full ${statusClasses[status]}`;
-            
-            const details = testItem.querySelector('.test-details');
-            details.classList.remove('hidden');
-            details.querySelector('.duration').textContent = `実行時間: ${duration}ms`;
-            details.querySelector('.result-message').textContent = message;
-        }
-
-        // テスト統計を更新
-        function updateTestStats() {
-            const stats = {
-                total: testResults.length,
-                passed: testResults.filter(r => r.status === 'pass').length,
-                failed: testResults.filter(r => r.status === 'fail').length,
-                pending: testResults.filter(r => r.status === 'pending').length
-            };
-
-            document.getElementById('totalTests').textContent = stats.total;
-            document.getElementById('passedTests').textContent = stats.passed;
-            document.getElementById('failedTests').textContent = stats.failed;
-            document.getElementById('pendingTests').textContent = stats.pending;
-        }
-
-        // チャート更新
-        function updateChart() {
-            const stats = {
-                passed: testResults.filter(r => r.status === 'pass').length,
-                failed: testResults.filter(r => r.status === 'fail').length,
-                pending: testResults.filter(r => r.status === 'pending').length
-            };
-
-            testChart.data.datasets[0].data = [stats.passed, stats.failed, stats.pending];
-            testChart.update();
-        }
-
-        // ログ出力
-        function logTest(testName, status, message, duration) {
-            const log = document.getElementById('testLog');
-            const timestamp = new Date().toLocaleTimeString();
-            const logEntry = document.createElement('div');
-            logEntry.innerHTML = `<span class="text-gray-500">[${timestamp}]</span> <span class="text-yellow-400">${testName}</span> - <span class="${status === 'PASS' ? 'text-green-400' : 'text-red-400'}">${status}</span> (${duration}ms): ${message}`;
-            log.appendChild(logEntry);
-            log.scrollTop = log.scrollHeight;
-        }
-
-        // 全テスト実行
-        async function runAllTests() {
-            logTest('TEST SUITE', 'START', '全テストを開始します', 0);
-            
-            for (const category of Object.keys(testSuites)) {
-                for (let i = 0; i < testSuites[category].length; i++) {
-                    await runSingleTest(category, i);
-                    // 各テスト間に少し遅延を入れる
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                }
-            }
-            
-            logTest('TEST SUITE', 'COMPLETE', '全テストが完了しました', 0);
-        }
-
-        // テストリセット
-        function resetTests() {
-            testResults.forEach((result, index) => {
-                result.status = 'pending';
-                result.duration = 0;
-                
-                const testItem = document.querySelector(`#test-${result.category}-${testSuites[result.category].indexOf(result.test)}`);
-                if (testItem) {
-                    updateTestItem(testItem, 'pending', '', 0);
-                    testItem.querySelector('.test-details').classList.add('hidden');
-                }
-            });
-            
-            updateTestStats();
-            updateChart();
-            document.getElementById('testLog').innerHTML = '<div class="text-gray-500"># テストログがここに表示されます...</div>';
-        }
-
-        // テスト実装 (モック)
-        async function testMuscleGroupSelection() {
-            await new Promise(resolve => setTimeout(resolve, 500));
-            return { success: true, message: "6つの筋肉部位選択機能が正常に動作しています" };
-        }
-
-        async function testTrainingRecord() {
-            await new Promise(resolve => setTimeout(resolve, 800));
-            return { success: true, message: "トレーニング記録機能が正常に動作しています" };
-        }
-
-        async function testRecoveryCalculation() {
-            await new Promise(resolve => setTimeout(resolve, 600));
-            return { success: true, message: "回復期間計算が正確に動作しています" };
-        }
-
-        async function testRotationSuggestion() {
-            await new Promise(resolve => setTimeout(resolve, 700));
-            return { success: true, message: "ローテーション提案機能が正常に動作しています" };
-        }
-
-        async function testCalendarDisplay() {
-            await new Promise(resolve => setTimeout(resolve, 500));
-            return { success: true, message: "カレンダー表示機能が正常に動作しています" };
-        }
-
-        async function testExerciseDatabase() {
-            await new Promise(resolve => setTimeout(resolve, 900));
-            return { success: true, message: "100種類以上のエクササイズデータベースが正常に動作しています" };
-        }
-
-        async function testFavoriteFunction() {
-            await new Promise(resolve => setTimeout(resolve, 400));
-            return { success: true, message: "お気に入り機能が正常に動作しています" };
-        }
-
-        async function testProgressTracking() {
-            await new Promise(resolve => setTimeout(resolve, 600));
-            return { success: true, message: "進捗管理機能が正常に動作しています" };
-        }
-
-        async function testDataExport() {
-            await new Promise(resolve => setTimeout(resolve, 700));
-            return { success: true, message: "データエクスポート機能が正常に動作しています" };
-        }
-
-        async function testSNSShare() {
-            await new Promise(resolve => setTimeout(resolve, 500));
-            return { success: true, message: "SNSシェア機能が正常に動作しています" };
-        }
-
-        async function testInitialLoadTime() {
-            await new Promise(resolve => setTimeout(resolve, 300));
-            const loadTime = Math.random() * 2000 + 1000;
-            return { success: loadTime < 3000, message: `初期ロード時間: ${loadTime.toFixed(0)}ms` };
-        }
-
-        async function testSearchPerformance() {
-            await new Promise(resolve => setTimeout(resolve, 800));
-            const searchTime = Math.random() * 500 + 200;
-            return { success: searchTime < 1000, message: `検索実行時間: ${searchTime.toFixed(0)}ms` };
-        }
-
-        async function testPWAOffline() {
-            await new Promise(resolve => setTimeout(resolve, 600));
-            return { success: true, message: "PWAオフライン機能が正常に動作しています" };
-        }
-
-        async function testMemoryUsage() {
-            await new Promise(resolve => setTimeout(resolve, 400));
-            const memoryUsage = Math.random() * 30 + 20;
-            return { success: memoryUsage < 50, message: `メモリ使用量: ${memoryUsage.toFixed(1)}MB` };
-        }
-
-        async function testBatteryUsage() {
-            await new Promise(resolve => setTimeout(resolve, 500));
-            return { success: true, message: "バッテリー効率が良好です" };
-        }
-
-        async function testDatabaseResponse() {
-            await new Promise(resolve => setTimeout(resolve, 600));
-            const responseTime = Math.random() * 300 + 100;
-            return { success: responseTime < 500, message: `DB応答時間: ${responseTime.toFixed(0)}ms` };
-        }
-
-        async function testImageLoading() {
-            await new Promise(resolve => setTimeout(resolve, 400));
-            return { success: true, message: "画像読み込み最適化が正常に動作しています" };
-        }
-
-        async function testCacheEfficiency() {
-            await new Promise(resolve => setTimeout(resolve, 500));
-            return { success: true, message: "キャッシュ効率が良好です" };
-        }
-
-        async function testResponsiveDesign() {
-            await new Promise(resolve => setTimeout(resolve, 600));
-            return { success: true, message: "レスポンシブデザインが正常に動作しています" };
-        }
-
-        async function testFontSizeChange() {
-            await new Promise(resolve => setTimeout(resolve, 300));
-            return { success: true, message: "5段階文字サイズ変更が正常に動作しています" };
-        }
-
-        async function testMultiLanguage() {
-            await new Promise(resolve => setTimeout(resolve, 400));
-            return { success: true, message: "多言語対応が正常に動作しています" };
-        }
-
-        async function testNavigation() {
-            await new Promise(resolve => setTimeout(resolve, 500));
-            return { success: true, message: "ナビゲーションが直感的に動作しています" };
-        }
-
-        async function testFormUsability() {
-            await new Promise(resolve => setTimeout(resolve, 600));
-            return { success: true, message: "フォーム入力の使いやすさが良好です" };
-        }
-
-        async function testErrorHandling() {
-            await new Promise(resolve => setTimeout(resolve, 400));
-            return { success: true, message: "エラー処理が適切に動作しています" };
-        }
-
-        async function testAccessibility() {
-            await new Promise(resolve => setTimeout(resolve, 700));
-            return { success: true, message: "アクセシビリティ対応が良好です" };
-        }
-
-        async function testHelpFunction() {
-            await new Promise(resolve => setTimeout(resolve, 300));
-            return { success: true, message: "ヘルプ機能が正常に動作しています" };
-        }
-
-        async function testAuthentication() {
-            await new Promise(resolve => setTimeout(resolve, 800));
-            return { success: true, message: "Supabase認証が正常に動作しています" };
-        }
-
-        async function testDataEncryption() {
-            await new Promise(resolve => setTimeout(resolve, 600));
-            return { success: true, message: "データ暗号化が正常に動作しています" };
-        }
-
-        async function testSessionManagement() {
-            await new Promise(resolve => setTimeout(resolve, 500));
-            return { success: true, message: "セッション管理が正常に動作しています" };
-        }
-
-        async function testXSSPrevention() {
-            await new Promise(resolve => setTimeout(resolve, 400));
-            return { success: true, message: "XSS対策が正常に動作しています" };
-        }
-
-        async function testCSRFPrevention() {
-            await new Promise(resolve => setTimeout(resolve, 500));
-            return { success: true, message: "CSRF対策が正常に動作しています" };
-        }
-
-        async function testDataValidation() {
-            await new Promise(resolve => setTimeout(resolve, 600));
-            return { success: true, message: "データバリデーションが正常に動作しています" };
-        }
-
-        // 初期化
-        document.addEventListener('DOMContentLoaded', function() {
-            // テストアイテム生成
-            generateTestItems();
-
-            // チャート初期化
-            const ctx = document.getElementById('testResultChart').getContext('2d');
-            testChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['成功', '失敗', '保留'],
-                    datasets: [{
-                        data: [0, 0, testResults.length],
-                        backgroundColor: [
-                            '#10B981', // green
-                            '#EF4444', // red
-                            '#F59E0B'  // yellow
-                        ],
-                        borderWidth: 2,
-                        borderColor: '#fff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
-                }
-            });
-
-            // イベントリスナー
-            document.getElementById('runAllTests').addEventListener('click', runAllTests);
-            document.getElementById('resetTests').addEventListener('click', resetTests);
+        // テスト実行ボタンのイベント
+        div.querySelector('.run-test').addEventListener('click', () => {
+          runSingleTest(category, index);
         });
+
+        return div;
+      }
+
+      // 単一テストの実行
+      async function runSingleTest(category, index) {
+        const testItem = document.getElementById(`test-${category}-${index}`);
+        const test = testSuites[category][index];
+        const resultIndex = testResults.findIndex(
+          (r) => r.category === category && r.test === test
+        );
+
+        // テスト実行中の表示
+        updateTestItem(testItem, 'running', '実行中...', 0);
+        testResults[resultIndex].status = 'running';
+        updateTestStats();
+
+        const startTime = Date.now();
+
+        try {
+          // テスト実行
+          const result = await test.test();
+          const duration = Date.now() - startTime;
+
+          if (result.success) {
+            updateTestItem(
+              testItem,
+              'pass',
+              `成功: ${result.message}`,
+              duration
+            );
+            testResults[resultIndex].status = 'pass';
+          } else {
+            updateTestItem(
+              testItem,
+              'fail',
+              `失敗: ${result.message}`,
+              duration
+            );
+            testResults[resultIndex].status = 'fail';
+          }
+          testResults[resultIndex].duration = duration;
+
+          logTest(
+            test.name,
+            result.success ? 'PASS' : 'FAIL',
+            result.message,
+            duration
+          );
+        } catch (error) {
+          const duration = Date.now() - startTime;
+          updateTestItem(
+            testItem,
+            'fail',
+            `エラー: ${error.message}`,
+            duration
+          );
+          testResults[resultIndex].status = 'fail';
+          testResults[resultIndex].duration = duration;
+          logTest(test.name, 'ERROR', error.message, duration);
+        }
+
+        updateTestStats();
+        updateChart();
+      }
+
+      // テストアイテムの表示を更新
+      function updateTestItem(testItem, status, message, duration) {
+        const statusClasses = {
+          pending: 'test-pending',
+          running: 'test-running',
+          pass: 'test-pass',
+          fail: 'test-fail',
+        };
+
+        const statusTexts = {
+          pending: '待機中',
+          running: '実行中',
+          pass: '成功',
+          fail: '失敗',
+        };
+
+        const statusIcons = {
+          pending: 'fas fa-clock',
+          running: 'fas fa-spinner fa-spin',
+          pass: 'fas fa-check',
+          fail: 'fas fa-times',
+        };
+
+        testItem.className = `test-item border-l-4 p-4 rounded-lg ${statusClasses[status]}`;
+        testItem.querySelector('.status-badge').textContent =
+          statusTexts[status];
+        testItem.querySelector('.status-badge').className =
+          `status-badge px-2 py-1 text-xs rounded-full ${statusClasses[status]}`;
+
+        const details = testItem.querySelector('.test-details');
+        details.classList.remove('hidden');
+        details.querySelector('.duration').textContent =
+          `実行時間: ${duration}ms`;
+        details.querySelector('.result-message').textContent = message;
+      }
+
+      // テスト統計を更新
+      function updateTestStats() {
+        const stats = {
+          total: testResults.length,
+          passed: testResults.filter((r) => r.status === 'pass').length,
+          failed: testResults.filter((r) => r.status === 'fail').length,
+          pending: testResults.filter((r) => r.status === 'pending').length,
+        };
+
+        document.getElementById('totalTests').textContent = stats.total;
+        document.getElementById('passedTests').textContent = stats.passed;
+        document.getElementById('failedTests').textContent = stats.failed;
+        document.getElementById('pendingTests').textContent = stats.pending;
+      }
+
+      // チャート更新
+      function updateChart() {
+        const stats = {
+          passed: testResults.filter((r) => r.status === 'pass').length,
+          failed: testResults.filter((r) => r.status === 'fail').length,
+          pending: testResults.filter((r) => r.status === 'pending').length,
+        };
+
+        testChart.data.datasets[0].data = [
+          stats.passed,
+          stats.failed,
+          stats.pending,
+        ];
+        testChart.update();
+      }
+
+      // ログ出力
+      function logTest(testName, status, message, duration) {
+        const log = document.getElementById('testLog');
+        const timestamp = new Date().toLocaleTimeString();
+        const logEntry = document.createElement('div');
+        logEntry.innerHTML = `<span class="text-gray-500">[${timestamp}]</span> <span class="text-yellow-400">${testName}</span> - <span class="${status === 'PASS' ? 'text-green-400' : 'text-red-400'}">${status}</span> (${duration}ms): ${message}`;
+        log.appendChild(logEntry);
+        log.scrollTop = log.scrollHeight;
+      }
+
+      // 全テスト実行
+      async function runAllTests() {
+        logTest('TEST SUITE', 'START', '全テストを開始します', 0);
+
+        for (const category of Object.keys(testSuites)) {
+          for (let i = 0; i < testSuites[category].length; i++) {
+            await runSingleTest(category, i);
+            // 各テスト間に少し遅延を入れる
+            await new Promise((resolve) => setTimeout(resolve, 100));
+          }
+        }
+
+        logTest('TEST SUITE', 'COMPLETE', '全テストが完了しました', 0);
+      }
+
+      // テストリセット
+      function resetTests() {
+        testResults.forEach((result, index) => {
+          result.status = 'pending';
+          result.duration = 0;
+
+          const testItem = document.querySelector(
+            `#test-${result.category}-${testSuites[result.category].indexOf(result.test)}`
+          );
+          if (testItem) {
+            updateTestItem(testItem, 'pending', '', 0);
+            testItem.querySelector('.test-details').classList.add('hidden');
+          }
+        });
+
+        updateTestStats();
+        updateChart();
+        document.getElementById('testLog').innerHTML =
+          '<div class="text-gray-500"># テストログがここに表示されます...</div>';
+      }
+
+      // テスト実装 (モック)
+      async function testMuscleGroupSelection() {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        return {
+          success: true,
+          message: '6つの筋肉部位選択機能が正常に動作しています',
+        };
+      }
+
+      async function testTrainingRecord() {
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        return {
+          success: true,
+          message: 'トレーニング記録機能が正常に動作しています',
+        };
+      }
+
+      async function testRecoveryCalculation() {
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        return { success: true, message: '回復期間計算が正確に動作しています' };
+      }
+
+      async function testRotationSuggestion() {
+        await new Promise((resolve) => setTimeout(resolve, 700));
+        return {
+          success: true,
+          message: 'ローテーション提案機能が正常に動作しています',
+        };
+      }
+
+      async function testCalendarDisplay() {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        return {
+          success: true,
+          message: 'カレンダー表示機能が正常に動作しています',
+        };
+      }
+
+      async function testExerciseDatabase() {
+        await new Promise((resolve) => setTimeout(resolve, 900));
+        return {
+          success: true,
+          message:
+            '100種類以上のエクササイズデータベースが正常に動作しています',
+        };
+      }
+
+      async function testFavoriteFunction() {
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        return {
+          success: true,
+          message: 'お気に入り機能が正常に動作しています',
+        };
+      }
+
+      async function testProgressTracking() {
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        return { success: true, message: '進捗管理機能が正常に動作しています' };
+      }
+
+      async function testDataExport() {
+        await new Promise((resolve) => setTimeout(resolve, 700));
+        return {
+          success: true,
+          message: 'データエクスポート機能が正常に動作しています',
+        };
+      }
+
+      async function testSNSShare() {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        return {
+          success: true,
+          message: 'SNSシェア機能が正常に動作しています',
+        };
+      }
+
+      async function testInitialLoadTime() {
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        const loadTime = Math.random() * 2000 + 1000;
+        return {
+          success: loadTime < 3000,
+          message: `初期ロード時間: ${loadTime.toFixed(0)}ms`,
+        };
+      }
+
+      async function testSearchPerformance() {
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        const searchTime = Math.random() * 500 + 200;
+        return {
+          success: searchTime < 1000,
+          message: `検索実行時間: ${searchTime.toFixed(0)}ms`,
+        };
+      }
+
+      async function testPWAOffline() {
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        return {
+          success: true,
+          message: 'PWAオフライン機能が正常に動作しています',
+        };
+      }
+
+      async function testMemoryUsage() {
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        const memoryUsage = Math.random() * 30 + 20;
+        return {
+          success: memoryUsage < 50,
+          message: `メモリ使用量: ${memoryUsage.toFixed(1)}MB`,
+        };
+      }
+
+      async function testBatteryUsage() {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        return { success: true, message: 'バッテリー効率が良好です' };
+      }
+
+      async function testDatabaseResponse() {
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        const responseTime = Math.random() * 300 + 100;
+        return {
+          success: responseTime < 500,
+          message: `DB応答時間: ${responseTime.toFixed(0)}ms`,
+        };
+      }
+
+      async function testImageLoading() {
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        return {
+          success: true,
+          message: '画像読み込み最適化が正常に動作しています',
+        };
+      }
+
+      async function testCacheEfficiency() {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        return { success: true, message: 'キャッシュ効率が良好です' };
+      }
+
+      async function testResponsiveDesign() {
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        return {
+          success: true,
+          message: 'レスポンシブデザインが正常に動作しています',
+        };
+      }
+
+      async function testFontSizeChange() {
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        return {
+          success: true,
+          message: '5段階文字サイズ変更が正常に動作しています',
+        };
+      }
+
+      async function testMultiLanguage() {
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        return { success: true, message: '多言語対応が正常に動作しています' };
+      }
+
+      async function testNavigation() {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        return {
+          success: true,
+          message: 'ナビゲーションが直感的に動作しています',
+        };
+      }
+
+      async function testFormUsability() {
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        return { success: true, message: 'フォーム入力の使いやすさが良好です' };
+      }
+
+      async function testErrorHandling() {
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        return { success: true, message: 'エラー処理が適切に動作しています' };
+      }
+
+      async function testAccessibility() {
+        await new Promise((resolve) => setTimeout(resolve, 700));
+        return { success: true, message: 'アクセシビリティ対応が良好です' };
+      }
+
+      async function testHelpFunction() {
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        return { success: true, message: 'ヘルプ機能が正常に動作しています' };
+      }
+
+      async function testAuthentication() {
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        return { success: true, message: 'Supabase認証が正常に動作しています' };
+      }
+
+      async function testDataEncryption() {
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        return { success: true, message: 'データ暗号化が正常に動作しています' };
+      }
+
+      async function testSessionManagement() {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        return {
+          success: true,
+          message: 'セッション管理が正常に動作しています',
+        };
+      }
+
+      async function testXSSPrevention() {
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        return { success: true, message: 'XSS対策が正常に動作しています' };
+      }
+
+      async function testCSRFPrevention() {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        return { success: true, message: 'CSRF対策が正常に動作しています' };
+      }
+
+      async function testDataValidation() {
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        return {
+          success: true,
+          message: 'データバリデーションが正常に動作しています',
+        };
+      }
+
+      // 初期化
+      document.addEventListener('DOMContentLoaded', function () {
+        // テストアイテム生成
+        generateTestItems();
+
+        // チャート初期化
+        const ctx = document.getElementById('testResultChart').getContext('2d');
+        testChart = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: ['成功', '失敗', '保留'],
+            datasets: [
+              {
+                data: [0, 0, testResults.length],
+                backgroundColor: [
+                  '#10B981', // green
+                  '#EF4444', // red
+                  '#F59E0B', // yellow
+                ],
+                borderWidth: 2,
+                borderColor: '#fff',
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom',
+              },
+            },
+          },
+        });
+
+        // イベントリスナー
+        document
+          .getElementById('runAllTests')
+          .addEventListener('click', runAllTests);
+        document
+          .getElementById('resetTests')
+          .addEventListener('click', resetTests);
+      });
     </script>
-</body>
+  </body>
 </html>
-    <script id="html_badge_script1">
-        window.__genspark_remove_badge_link = "https://www.genspark.ai/api/html_badge/" +
-            "remove_badge?token=To%2FBnjzloZ3UfQdcSaYfDvmI9wHXKRsiKQ27hNCnMc7NOu%2Ftt82f3jKspPLmjBNIjf7lCeU9fRLRnGZoylfCqcOvpt2AgbONk3mrA7ZeCPgx4zRQhOanBc2RfAl0Vkz%2Be6GOp6J5YPh%2BhQCF5ESBImZI8hsNniyGtwKh8pQUnt8t8ZOCudxlJuhzdb%2Bbely2poTbBBXt0rVBErZh4sif%2BdAlnpvX41fK%2Baw03ka2Hw34UsrWtnywMOppLCssxvgHopcitAVz7%2BLY3HulDKsnCSDVTBf6qpt9ER%2Bce7qCl5nEshn7WX1AneyFICverkeDdnIt5DyWrEw8dOLIM8NrO20HjitVeGVNMQWsOaTF5NJ4pNr2aSk5uKQS%2Bm29RE9VQ5qMQY%2FDzCnY4V3KQym9I34IKHBujnnZaFeN7g%2FeDs%2B773l53itO57igZa%2BrP8mJjGhSePoiUlGBA4hXySICAXMKQfyrhxBfkQx3YWBy0ZfcYOkFaJmC0%2F57%2BX6sCIqgZhgw1l9gh1dov0OfGTcIN42%2FKP7MiAiOt2ZRF0bR5eJdlEdGMwniQDGyJFiIkEa1LZ29jn6IQ1BXgEYE0sZoCg%3D%3D";
-        window.__genspark_locale = "ja-JP";
-        window.__genspark_token = "To/BnjzloZ3UfQdcSaYfDvmI9wHXKRsiKQ27hNCnMc7NOu/tt82f3jKspPLmjBNIjf7lCeU9fRLRnGZoylfCqcOvpt2AgbONk3mrA7ZeCPgx4zRQhOanBc2RfAl0Vkz+e6GOp6J5YPh+hQCF5ESBImZI8hsNniyGtwKh8pQUnt8t8ZOCudxlJuhzdb+bely2poTbBBXt0rVBErZh4sif+dAlnpvX41fK+aw03ka2Hw34UsrWtnywMOppLCssxvgHopcitAVz7+LY3HulDKsnCSDVTBf6qpt9ER+ce7qCl5nEshn7WX1AneyFICverkeDdnIt5DyWrEw8dOLIM8NrO20HjitVeGVNMQWsOaTF5NJ4pNr2aSk5uKQS+m29RE9VQ5qMQY/DzCnY4V3KQym9I34IKHBujnnZaFeN7g/eDs+773l53itO57igZa+rP8mJjGhSePoiUlGBA4hXySICAXMKQfyrhxBfkQx3YWBy0ZfcYOkFaJmC0/57+X6sCIqgZhgw1l9gh1dov0OfGTcIN42/KP7MiAiOt2ZRF0bR5eJdlEdGMwniQDGyJFiIkEa1LZ29jn6IQ1BXgEYE0sZoCg==";
-    </script>
-    
-    <script id="html_notice_dialog_script" src="https://www.genspark.ai/notice_dialog.js"></script>
-    
+<script id="html_badge_script1">
+  window.__genspark_remove_badge_link =
+    'https://www.genspark.ai/api/html_badge/' +
+    'remove_badge?token=To%2FBnjzloZ3UfQdcSaYfDvmI9wHXKRsiKQ27hNCnMc7NOu%2Ftt82f3jKspPLmjBNIjf7lCeU9fRLRnGZoylfCqcOvpt2AgbONk3mrA7ZeCPgx4zRQhOanBc2RfAl0Vkz%2Be6GOp6J5YPh%2BhQCF5ESBImZI8hsNniyGtwKh8pQUnt8t8ZOCudxlJuhzdb%2Bbely2poTbBBXt0rVBErZh4sif%2BdAlnpvX41fK%2Baw03ka2Hw34UsrWtnywMOppLCssxvgHopcitAVz7%2BLY3HulDKsnCSDVTBf6qpt9ER%2Bce7qCl5nEshn7WX1AneyFICverkeDdnIt5DyWrEw8dOLIM8NrO20HjitVeGVNMQWsOaTF5NJ4pNr2aSk5uKQS%2Bm29RE9VQ5qMQY%2FDzCnY4V3KQym9I34IKHBujnnZaFeN7g%2FeDs%2B773l53itO57igZa%2BrP8mJjGhSePoiUlGBA4hXySICAXMKQfyrhxBfkQx3YWBy0ZfcYOkFaJmC0%2F57%2BX6sCIqgZhgw1l9gh1dov0OfGTcIN42%2FKP7MiAiOt2ZRF0bR5eJdlEdGMwniQDGyJFiIkEa1LZ29jn6IQ1BXgEYE0sZoCg%3D%3D';
+  window.__genspark_locale = 'ja-JP';
+  window.__genspark_token =
+    'To/BnjzloZ3UfQdcSaYfDvmI9wHXKRsiKQ27hNCnMc7NOu/tt82f3jKspPLmjBNIjf7lCeU9fRLRnGZoylfCqcOvpt2AgbONk3mrA7ZeCPgx4zRQhOanBc2RfAl0Vkz+e6GOp6J5YPh+hQCF5ESBImZI8hsNniyGtwKh8pQUnt8t8ZOCudxlJuhzdb+bely2poTbBBXt0rVBErZh4sif+dAlnpvX41fK+aw03ka2Hw34UsrWtnywMOppLCssxvgHopcitAVz7+LY3HulDKsnCSDVTBf6qpt9ER+ce7qCl5nEshn7WX1AneyFICverkeDdnIt5DyWrEw8dOLIM8NrO20HjitVeGVNMQWsOaTF5NJ4pNr2aSk5uKQS+m29RE9VQ5qMQY/DzCnY4V3KQym9I34IKHBujnnZaFeN7g/eDs+773l53itO57igZa+rP8mJjGhSePoiUlGBA4hXySICAXMKQfyrhxBfkQx3YWBy0ZfcYOkFaJmC0/57+X6sCIqgZhgw1l9gh1dov0OfGTcIN42/KP7MiAiOt2ZRF0bR5eJdlEdGMwniQDGyJFiIkEa1LZ29jn6IQ1BXgEYE0sZoCg==';
+</script>
+
+<script
+  id="html_notice_dialog_script"
+  src="https://www.genspark.ai/notice_dialog.js"
+></script>

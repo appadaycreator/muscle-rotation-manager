@@ -1,189 +1,222 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>データ分析機能テストランナー</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css"
+    />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .test-pass { @apply bg-green-100 border-green-500 text-green-800; }
-        .test-fail { @apply bg-red-100 border-red-500 text-red-800; }
-        .console-output {
-            background: #1a1a1a;
-            color: #00ff00;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            line-height: 1.4;
-            max-height: 400px;
-            overflow-y: auto;
-            padding: 16px;
-            border-radius: 8px;
-        }
+      .test-pass {
+        @apply bg-green-100 border-green-500 text-green-800;
+      }
+      .test-fail {
+        @apply bg-red-100 border-red-500 text-red-800;
+      }
+      .console-output {
+        background: #1a1a1a;
+        color: #00ff00;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        line-height: 1.4;
+        max-height: 400px;
+        overflow-y: auto;
+        padding: 16px;
+        border-radius: 8px;
+      }
     </style>
-</head>
-<body class="bg-gray-50 min-h-screen">
+  </head>
+  <body class="bg-gray-50 min-h-screen">
     <!-- ヘッダー -->
     <header class="bg-white shadow-sm border-b">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center py-4">
-                <div class="flex items-center space-x-3">
-                    <i class="fas fa-chart-line text-3xl text-blue-600"></i>
-                    <div>
-                        <h1 class="text-2xl font-bold text-gray-900">データ分析機能テストランナー</h1>
-                        <p class="text-sm text-gray-600">プログレッシブ・オーバーロード追跡機能の包括的テスト</p>
-                    </div>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <button id="runUnitTests" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                        <i class="fas fa-play mr-2"></i>ユニットテスト実行
-                    </button>
-                    <button id="runIntegrationTests" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
-                        <i class="fas fa-cogs mr-2"></i>統合テスト実行
-                    </button>
-                    <button id="clearOutput" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors">
-                        <i class="fas fa-trash mr-2"></i>クリア
-                    </button>
-                </div>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center py-4">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-chart-line text-3xl text-blue-600"></i>
+            <div>
+              <h1 class="text-2xl font-bold text-gray-900">
+                データ分析機能テストランナー
+              </h1>
+              <p class="text-sm text-gray-600">
+                プログレッシブ・オーバーロード追跡機能の包括的テスト
+              </p>
             </div>
+          </div>
+          <div class="flex items-center space-x-4">
+            <button
+              id="runUnitTests"
+              class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <i class="fas fa-play mr-2"></i>ユニットテスト実行
+            </button>
+            <button
+              id="runIntegrationTests"
+              class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+            >
+              <i class="fas fa-cogs mr-2"></i>統合テスト実行
+            </button>
+            <button
+              id="clearOutput"
+              class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              <i class="fas fa-trash mr-2"></i>クリア
+            </button>
+          </div>
         </div>
+      </div>
     </header>
 
     <!-- メインコンテンツ -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- テスト結果サマリー -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white rounded-lg shadow-sm p-6">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-check-circle text-2xl text-green-500"></i>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500">成功</p>
-                        <p id="passedCount" class="text-2xl font-bold text-gray-900">0</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-lg shadow-sm p-6">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-times-circle text-2xl text-red-500"></i>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500">失敗</p>
-                        <p id="failedCount" class="text-2xl font-bold text-gray-900">0</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-lg shadow-sm p-6">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-percentage text-2xl text-blue-500"></i>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500">成功率</p>
-                        <p id="successRate" class="text-2xl font-bold text-gray-900">0%</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-lg shadow-sm p-6">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-clock text-2xl text-purple-500"></i>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500">実行時間</p>
-                        <p id="executionTime" class="text-2xl font-bold text-gray-900">0ms</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- テスト出力 -->
+      <!-- テスト結果サマリー -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div class="bg-white rounded-lg shadow-sm p-6">
-            <h2 class="text-xl font-bold text-gray-900 mb-4">
-                <i class="fas fa-terminal mr-2"></i>テスト出力
-            </h2>
-            <div id="testOutput" class="console-output">
-                テストを実行するには上のボタンをクリックしてください...
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <i class="fas fa-check-circle text-2xl text-green-500"></i>
             </div>
+            <div class="ml-4">
+              <p class="text-sm font-medium text-gray-500">成功</p>
+              <p id="passedCount" class="text-2xl font-bold text-gray-900">0</p>
+            </div>
+          </div>
         </div>
+
+        <div class="bg-white rounded-lg shadow-sm p-6">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <i class="fas fa-times-circle text-2xl text-red-500"></i>
+            </div>
+            <div class="ml-4">
+              <p class="text-sm font-medium text-gray-500">失敗</p>
+              <p id="failedCount" class="text-2xl font-bold text-gray-900">0</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm p-6">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <i class="fas fa-percentage text-2xl text-blue-500"></i>
+            </div>
+            <div class="ml-4">
+              <p class="text-sm font-medium text-gray-500">成功率</p>
+              <p id="successRate" class="text-2xl font-bold text-gray-900">
+                0%
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm p-6">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <i class="fas fa-clock text-2xl text-purple-500"></i>
+            </div>
+            <div class="ml-4">
+              <p class="text-sm font-medium text-gray-500">実行時間</p>
+              <p id="executionTime" class="text-2xl font-bold text-gray-900">
+                0ms
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- テスト出力 -->
+      <div class="bg-white rounded-lg shadow-sm p-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-4">
+          <i class="fas fa-terminal mr-2"></i>テスト出力
+        </h2>
+        <div id="testOutput" class="console-output">
+          テストを実行するには上のボタンをクリックしてください...
+        </div>
+      </div>
     </main>
 
     <!-- テストスクリプト -->
     <script type="module">
-        import { runAllDataAnalysisTests } from './unit/data-analysis.test.js';
-        import { runAllDataAnalysisIntegrationTests } from './integration/data-analysis-integration.test.js';
+      import { runAllDataAnalysisTests } from './unit/data-analysis.test.js';
+      import { runAllDataAnalysisIntegrationTests } from './integration/data-analysis-integration.test.js';
 
-        let testOutput = document.getElementById('testOutput');
-        let passedCount = document.getElementById('passedCount');
-        let failedCount = document.getElementById('failedCount');
-        let successRate = document.getElementById('successRate');
-        let executionTime = document.getElementById('executionTime');
+      let testOutput = document.getElementById('testOutput');
+      let passedCount = document.getElementById('passedCount');
+      let failedCount = document.getElementById('failedCount');
+      let successRate = document.getElementById('successRate');
+      let executionTime = document.getElementById('executionTime');
 
-        // コンソール出力をキャプチャ
-        function captureConsoleOutput() {
-            const originalLog = console.log;
-            const originalError = console.error;
-            
-            console.log = function(...args) {
-                testOutput.innerHTML += args.join(' ') + '\n';
-                testOutput.scrollTop = testOutput.scrollHeight;
-                originalLog.apply(console, args);
-            };
+      // コンソール出力をキャプチャ
+      function captureConsoleOutput() {
+        const originalLog = console.log;
+        const originalError = console.error;
 
-            console.error = function(...args) {
-                testOutput.innerHTML += '<span style="color: #ff6b6b;">' + args.join(' ') + '</span>\n';
-                testOutput.scrollTop = testOutput.scrollHeight;
-                originalError.apply(console, args);
-            };
-        }
+        console.log = function (...args) {
+          testOutput.innerHTML += args.join(' ') + '\n';
+          testOutput.scrollTop = testOutput.scrollHeight;
+          originalLog.apply(console, args);
+        };
 
-        // 結果を更新
-        function updateResults(results) {
-            passedCount.textContent = results.passed;
-            failedCount.textContent = results.failed;
-            successRate.textContent = results.successRate + '%';
-        }
+        console.error = function (...args) {
+          testOutput.innerHTML +=
+            '<span style="color: #ff6b6b;">' + args.join(' ') + '</span>\n';
+          testOutput.scrollTop = testOutput.scrollHeight;
+          originalError.apply(console, args);
+        };
+      }
 
-        // ユニットテスト実行
-        document.getElementById('runUnitTests').addEventListener('click', async () => {
-            testOutput.innerHTML = '';
-            captureConsoleOutput();
-            
-            const startTime = performance.now();
-            const results = runAllDataAnalysisTests();
-            const endTime = performance.now();
-            
-            executionTime.textContent = Math.round(endTime - startTime) + 'ms';
-            updateResults(results);
+      // 結果を更新
+      function updateResults(results) {
+        passedCount.textContent = results.passed;
+        failedCount.textContent = results.failed;
+        successRate.textContent = results.successRate + '%';
+      }
+
+      // ユニットテスト実行
+      document
+        .getElementById('runUnitTests')
+        .addEventListener('click', async () => {
+          testOutput.innerHTML = '';
+          captureConsoleOutput();
+
+          const startTime = performance.now();
+          const results = runAllDataAnalysisTests();
+          const endTime = performance.now();
+
+          executionTime.textContent = Math.round(endTime - startTime) + 'ms';
+          updateResults(results);
         });
 
-        // 統合テスト実行
-        document.getElementById('runIntegrationTests').addEventListener('click', async () => {
-            testOutput.innerHTML = '';
-            captureConsoleOutput();
-            
-            const startTime = performance.now();
-            const results = await runAllDataAnalysisIntegrationTests();
-            const endTime = performance.now();
-            
-            executionTime.textContent = Math.round(endTime - startTime) + 'ms';
-            updateResults(results);
+      // 統合テスト実行
+      document
+        .getElementById('runIntegrationTests')
+        .addEventListener('click', async () => {
+          testOutput.innerHTML = '';
+          captureConsoleOutput();
+
+          const startTime = performance.now();
+          const results = await runAllDataAnalysisIntegrationTests();
+          const endTime = performance.now();
+
+          executionTime.textContent = Math.round(endTime - startTime) + 'ms';
+          updateResults(results);
         });
 
-        // 出力クリア
-        document.getElementById('clearOutput').addEventListener('click', () => {
-            testOutput.innerHTML = 'テストを実行するには上のボタンをクリックしてください...';
-            passedCount.textContent = '0';
-            failedCount.textContent = '0';
-            successRate.textContent = '0%';
-            executionTime.textContent = '0ms';
-        });
+      // 出力クリア
+      document.getElementById('clearOutput').addEventListener('click', () => {
+        testOutput.innerHTML =
+          'テストを実行するには上のボタンをクリックしてください...';
+        passedCount.textContent = '0';
+        failedCount.textContent = '0';
+        successRate.textContent = '0%';
+        executionTime.textContent = '0ms';
+      });
     </script>
-</body>
+  </body>
 </html>

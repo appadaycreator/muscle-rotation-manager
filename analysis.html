@@ -1,233 +1,343 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>分析 - MuscleRotationManager</title>
-    
+
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="48x48" href="favicon-48x48.png">
-    <link rel="icon" type="image/png" sizes="64x64" href="favicon-64x64.png">
-    <link rel="icon" type="image/png" sizes="128x128" href="favicon-128x128.png">
-    <link rel="icon" type="image/png" sizes="256x256" href="favicon-256x256.png">
-    
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="48x48" href="favicon-48x48.png" />
+    <link rel="icon" type="image/png" sizes="64x64" href="favicon-64x64.png" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="128x128"
+      href="favicon-128x128.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="256x256"
+      href="favicon-256x256.png"
+    />
+
     <!-- Apple Touch Icon -->
-    <link rel="apple-touch-icon" href="apple-touch-icon.png">
-    
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+
     <!-- Android Chrome Icons -->
-    <link rel="icon" type="image/png" sizes="192x192" href="android-chrome-192x192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="android-chrome-512x512.png">
-    
-    <meta name="description" content="トレーニング分析と進捗追跡。効率的な筋トレ部位ローテーションを科学的に管理">
-    <meta name="keywords" content="筋トレ,分析,進捗,グラフ,統計,トレーニング">
-    
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href="android-chrome-192x192.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="512x512"
+      href="android-chrome-512x512.png"
+    />
+
+    <meta
+      name="description"
+      content="トレーニング分析と進捗追跡。効率的な筋トレ部位ローテーションを科学的に管理"
+    />
+    <meta name="keywords" content="筋トレ,分析,進捗,グラフ,統計,トレーニング" />
+
     <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#1f2937">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="MuscleRotationManager">
-    
+    <meta name="theme-color" content="#1f2937" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="MuscleRotationManager" />
+
     <!-- CDN Links -->
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-    
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+
     <!-- FontAwesome JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/js/all.min.js"></script>
-    
+
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
-    
+
     <!-- Supabase CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-</head>
-<body class="bg-gray-50">
+  </head>
+  <body class="bg-gray-50">
     <div id="app" class="min-h-screen">
-        <!-- Header Container -->
-        <div id="header-container"></div>
+      <!-- Header Container -->
+      <div id="header-container"></div>
 
-        <div class="flex">
-            <!-- Sidebar -->
-            <div id="sidebar-container"></div>
+      <div class="flex">
+        <!-- Sidebar -->
+        <div id="sidebar-container"></div>
 
-            <!-- Main Content -->
-            <main class="flex-1 p-6">
-                <div id="main-content">
-                <div class="mb-8">
-                    <h1 class="text-3xl font-bold text-gray-900">分析</h1>
-                    <p class="mt-2 text-gray-600">トレーニングデータを分析し、進捗を可視化しましょう</p>
+        <!-- Main Content -->
+        <main class="flex-1 p-6">
+          <div id="main-content">
+            <div class="mb-8">
+              <h1 class="text-3xl font-bold text-gray-900">分析</h1>
+              <p class="mt-2 text-gray-600">
+                トレーニングデータを分析し、進捗を可視化しましょう
+              </p>
+            </div>
+
+            <!-- Analysis Filters -->
+            <div class="bg-white shadow rounded-lg mb-8">
+              <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                  分析期間
+                </h3>
+                <div class="flex flex-wrap gap-4">
+                  <button
+                    class="filter-btn bg-blue-600 text-white px-4 py-2 rounded-md"
+                    data-period="week"
+                  >
+                    1週間
+                  </button>
+                  <button
+                    class="filter-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-md"
+                    data-period="month"
+                  >
+                    1ヶ月
+                  </button>
+                  <button
+                    class="filter-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-md"
+                    data-period="3months"
+                  >
+                    3ヶ月
+                  </button>
+                  <button
+                    class="filter-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-md"
+                    data-period="year"
+                  >
+                    1年
+                  </button>
                 </div>
+              </div>
+            </div>
 
-                <!-- Analysis Filters -->
-                <div class="bg-white shadow rounded-lg mb-8">
-                    <div class="px-4 py-5 sm:p-6">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">分析期間</h3>
-                        <div class="flex flex-wrap gap-4">
-                            <button class="filter-btn bg-blue-600 text-white px-4 py-2 rounded-md" data-period="week">1週間</button>
-                            <button class="filter-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-md" data-period="month">1ヶ月</button>
-                            <button class="filter-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-md" data-period="3months">3ヶ月</button>
-                            <button class="filter-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-md" data-period="year">1年</button>
-                        </div>
+            <!-- 総合統計 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                  <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                      <i class="fas fa-dumbbell text-2xl text-blue-600"></i>
                     </div>
+                    <div class="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt class="text-sm font-medium text-gray-500 truncate">
+                          総ワークアウト数
+                        </dt>
+                        <dd
+                          class="text-lg font-medium text-gray-900"
+                          id="total-workouts"
+                        >
+                          0
+                        </dd>
+                      </dl>
+                    </div>
+                  </div>
                 </div>
+              </div>
 
-                <!-- 総合統計 -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div class="bg-white overflow-hidden shadow rounded-lg">
-                        <div class="p-5">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0">
-                                    <i class="fas fa-dumbbell text-2xl text-blue-600"></i>
-                                </div>
-                                <div class="ml-5 w-0 flex-1">
-                                    <dl>
-                                        <dt class="text-sm font-medium text-gray-500 truncate">総ワークアウト数</dt>
-                                        <dd class="text-lg font-medium text-gray-900" id="total-workouts">0</dd>
-                                    </dl>
-                                </div>
-                            </div>
-                        </div>
+              <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                  <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                      <i class="fas fa-clock text-2xl text-green-600"></i>
                     </div>
-
-                    <div class="bg-white overflow-hidden shadow rounded-lg">
-                        <div class="p-5">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0">
-                                    <i class="fas fa-clock text-2xl text-green-600"></i>
-                                </div>
-                                <div class="ml-5 w-0 flex-1">
-                                    <dl>
-                                        <dt class="text-sm font-medium text-gray-500 truncate">総トレーニング時間</dt>
-                                        <dd class="text-lg font-medium text-gray-900" id="total-hours">0時間</dd>
-                                    </dl>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt class="text-sm font-medium text-gray-500 truncate">
+                          総トレーニング時間
+                        </dt>
+                        <dd
+                          class="text-lg font-medium text-gray-900"
+                          id="total-hours"
+                        >
+                          0時間
+                        </dd>
+                      </dl>
                     </div>
-
-                    <div class="bg-white overflow-hidden shadow rounded-lg">
-                        <div class="p-5">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0">
-                                    <i class="fas fa-chart-line text-2xl text-purple-600"></i>
-                                </div>
-                                <div class="ml-5 w-0 flex-1">
-                                    <dl>
-                                        <dt class="text-sm font-medium text-gray-500 truncate">平均セッション時間</dt>
-                                        <dd class="text-lg font-medium text-gray-900" id="avg-session-time">0時間</dd>
-                                    </dl>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                  </div>
                 </div>
+              </div>
 
-                <!-- 筋肉部位別統計 -->
-                <div class="bg-white shadow rounded-lg mb-8">
-                    <div class="px-4 py-5 sm:p-6">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">筋肉部位別統計</h3>
-                        <div id="muscle-group-stats">
-                            <div class="text-center text-gray-500 py-4">
-                                <i class="fas fa-spinner fa-spin text-xl mb-2"></i>
-                                <p>統計データを読み込み中...</p>
-                            </div>
-                        </div>
+              <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                  <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                      <i class="fas fa-chart-line text-2xl text-purple-600"></i>
                     </div>
+                    <div class="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt class="text-sm font-medium text-gray-500 truncate">
+                          平均セッション時間
+                        </dt>
+                        <dd
+                          class="text-lg font-medium text-gray-900"
+                          id="avg-session-time"
+                        >
+                          0時間
+                        </dd>
+                      </dl>
+                    </div>
+                  </div>
                 </div>
+              </div>
+            </div>
 
-                <!-- 進歩統計 -->
-                <div class="bg-white shadow rounded-lg mb-8">
-                    <div class="px-4 py-5 sm:p-6">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">進歩統計</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div class="text-center">
-                                <div class="text-2xl font-bold text-green-600" id="strength-progress">-</div>
-                                <div class="text-sm text-gray-500">筋力向上率</div>
-                            </div>
-                            <div class="text-center">
-                                <div class="text-2xl font-bold text-blue-600" id="endurance-progress">-</div>
-                                <div class="text-sm text-gray-500">持久力向上率</div>
-                            </div>
-                            <div class="text-center">
-                                <div class="text-2xl font-bold text-purple-600" id="overall-score">-</div>
-                                <div class="text-sm text-gray-500">総合スコア</div>
-                            </div>
-                        </div>
-                    </div>
+            <!-- 筋肉部位別統計 -->
+            <div class="bg-white shadow rounded-lg mb-8">
+              <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                  筋肉部位別統計
+                </h3>
+                <div id="muscle-group-stats">
+                  <div class="text-center text-gray-500 py-4">
+                    <i class="fas fa-spinner fa-spin text-xl mb-2"></i>
+                    <p>統計データを読み込み中...</p>
+                  </div>
                 </div>
+              </div>
+            </div>
 
-                <!-- 進捗グラフ -->
-                <div class="bg-white shadow rounded-lg mb-8">
-                    <div class="px-4 py-5 sm:p-6">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">進捗グラフ</h3>
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <!-- トレーニング頻度グラフ -->
-                            <div>
-                                <h4 class="text-md font-medium text-gray-700 mb-3">トレーニング頻度</h4>
-                                <div class="h-64">
-                                    <canvas id="frequency-chart"></canvas>
-                                </div>
-                            </div>
-                            
-                            <!-- 部位別グラフ -->
-                            <div>
-                                <h4 class="text-md font-medium text-gray-700 mb-3">部位別分布</h4>
-                                <div class="h-64">
-                                    <canvas id="muscle-group-chart"></canvas>
-                                </div>
-                            </div>
-                            
-                            <!-- 重量進歩グラフ -->
-                            <div>
-                                <h4 class="text-md font-medium text-gray-700 mb-3">重量進歩</h4>
-                                <div class="h-64">
-                                    <canvas id="weight-progress-chart"></canvas>
-                                </div>
-                            </div>
-                            
-                            <!-- セット数進歩グラフ -->
-                            <div>
-                                <h4 class="text-md font-medium text-gray-700 mb-3">セット数進歩</h4>
-                                <div class="h-64">
-                                    <canvas id="sets-progress-chart"></canvas>
-                                </div>
-                            </div>
-                        </div>
+            <!-- 進歩統計 -->
+            <div class="bg-white shadow rounded-lg mb-8">
+              <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                  進歩統計
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div class="text-center">
+                    <div
+                      class="text-2xl font-bold text-green-600"
+                      id="strength-progress"
+                    >
+                      -
                     </div>
+                    <div class="text-sm text-gray-500">筋力向上率</div>
+                  </div>
+                  <div class="text-center">
+                    <div
+                      class="text-2xl font-bold text-blue-600"
+                      id="endurance-progress"
+                    >
+                      -
+                    </div>
+                    <div class="text-sm text-gray-500">持久力向上率</div>
+                  </div>
+                  <div class="text-center">
+                    <div
+                      class="text-2xl font-bold text-purple-600"
+                      id="overall-score"
+                    >
+                      -
+                    </div>
+                    <div class="text-sm text-gray-500">総合スコア</div>
+                  </div>
                 </div>
+              </div>
+            </div>
 
-                <!-- 詳細統計 -->
-                <div class="bg-white shadow rounded-lg">
-                    <div class="px-4 py-5 sm:p-6">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">詳細統計</h3>
-                        <div id="detailed-stats">
-                            <div class="text-center text-gray-500 py-4">
-                                <i class="fas fa-spinner fa-spin text-xl mb-2"></i>
-                                <p>詳細データを読み込み中...</p>
-                            </div>
-                        </div>
+            <!-- 進捗グラフ -->
+            <div class="bg-white shadow rounded-lg mb-8">
+              <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                  進捗グラフ
+                </h3>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <!-- トレーニング頻度グラフ -->
+                  <div>
+                    <h4 class="text-md font-medium text-gray-700 mb-3">
+                      トレーニング頻度
+                    </h4>
+                    <div class="h-64">
+                      <canvas id="frequency-chart"></canvas>
                     </div>
-                </div>
+                  </div>
 
-                <!-- 分析レポート -->
-                <div class="bg-white shadow rounded-lg mt-8">
-                    <div class="px-4 py-5 sm:p-6">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">分析レポート</h3>
-                        <div id="analysis-report">
-                            <div class="text-center text-gray-500 py-4">
-                                <i class="fas fa-spinner fa-spin text-xl mb-2"></i>
-                                <p>レポートを生成中...</p>
-                            </div>
-                        </div>
+                  <!-- 部位別グラフ -->
+                  <div>
+                    <h4 class="text-md font-medium text-gray-700 mb-3">
+                      部位別分布
+                    </h4>
+                    <div class="h-64">
+                      <canvas id="muscle-group-chart"></canvas>
                     </div>
+                  </div>
+
+                  <!-- 重量進歩グラフ -->
+                  <div>
+                    <h4 class="text-md font-medium text-gray-700 mb-3">
+                      重量進歩
+                    </h4>
+                    <div class="h-64">
+                      <canvas id="weight-progress-chart"></canvas>
+                    </div>
+                  </div>
+
+                  <!-- セット数進歩グラフ -->
+                  <div>
+                    <h4 class="text-md font-medium text-gray-700 mb-3">
+                      セット数進歩
+                    </h4>
+                    <div class="h-64">
+                      <canvas id="sets-progress-chart"></canvas>
+                    </div>
+                  </div>
                 </div>
+              </div>
+            </div>
+
+            <!-- 詳細統計 -->
+            <div class="bg-white shadow rounded-lg">
+              <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                  詳細統計
+                </h3>
+                <div id="detailed-stats">
+                  <div class="text-center text-gray-500 py-4">
+                    <i class="fas fa-spinner fa-spin text-xl mb-2"></i>
+                    <p>詳細データを読み込み中...</p>
+                  </div>
                 </div>
-            </main>
-        </div>
+              </div>
+            </div>
+
+            <!-- 分析レポート -->
+            <div class="bg-white shadow rounded-lg mt-8">
+              <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                  分析レポート
+                </h3>
+                <div id="analysis-report">
+                  <div class="text-center text-gray-500 py-4">
+                    <i class="fas fa-spinner fa-spin text-xl mb-2"></i>
+                    <p>レポートを生成中...</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
 
     <!-- Notification Container -->
@@ -239,5 +349,5 @@
     <!-- Scripts -->
     <script type="module" src="js/core/MPAInitializer.js"></script>
     <script type="module" src="js/pages/analysisPage.js"></script>
-</body>
+  </body>
 </html>

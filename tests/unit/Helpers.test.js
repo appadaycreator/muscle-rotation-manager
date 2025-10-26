@@ -1,14 +1,14 @@
 // Helpers.test.js - helpersユーティリティのテスト
 
-import { 
-  showNotification, 
-  safeGetElement, 
+import {
+  showNotification,
+  safeGetElement,
   safeAsync,
   getMuscleColor,
   isFutureDate,
   isPastDate,
   createCalendarModalHTML,
-  showInputDialog
+  showInputDialog,
 } from '../../js/utils/helpers.js';
 
 describe('Helpers', () => {
@@ -35,7 +35,9 @@ describe('Helpers', () => {
       const notification = document.querySelector('.notification');
       expect(notification).toBeDefined();
       if (notification) {
-        expect(notification.classList.contains('notification-error')).toBe(true);
+        expect(notification.classList.contains('notification-error')).toBe(
+          true
+        );
       }
     });
   });
@@ -58,18 +60,18 @@ describe('Helpers', () => {
   describe('safeAsync', () => {
     test('should execute async function', async () => {
       const mockFn = jest.fn().mockResolvedValue('success');
-      
+
       const result = await safeAsync(mockFn);
-      
+
       expect(result).toBe('success');
       expect(mockFn).toHaveBeenCalled();
     });
 
     test('should handle async function errors', async () => {
       const mockFn = jest.fn().mockRejectedValue(new Error('Test error'));
-      
+
       const result = await safeAsync(mockFn);
-      
+
       expect(result).toBeNull();
     });
   });
@@ -137,7 +139,7 @@ describe('Helpers', () => {
       showNotification('Warning message', 'warning');
       showNotification('Success message', 'success');
       showNotification('Error message', 'error');
-      
+
       const notifications = document.querySelectorAll('.notification');
       expect(notifications.length).toBeGreaterThanOrEqual(0);
     });
@@ -148,10 +150,12 @@ describe('Helpers', () => {
     });
 
     test('should handle safeAsync with error', async () => {
-      const errorFunction = jest.fn().mockRejectedValue(new Error('Test error'));
-      
+      const errorFunction = jest
+        .fn()
+        .mockRejectedValue(new Error('Test error'));
+
       const result = await safeAsync(errorFunction);
-      
+
       expect(result).toBeNull();
       expect(errorFunction).toHaveBeenCalled();
     });
@@ -161,7 +165,7 @@ describe('Helpers', () => {
       const backColor = getMuscleColor('背中');
       const legsColor = getMuscleColor('脚');
       const unknownColor = getMuscleColor('unknown');
-      
+
       expect(chestColor).toBeDefined();
       expect(backColor).toBeDefined();
       expect(legsColor).toBeDefined();
@@ -171,12 +175,12 @@ describe('Helpers', () => {
     test('should handle date comparisons', () => {
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 1);
-      
+
       const pastDate = new Date();
       pastDate.setDate(pastDate.getDate() - 1);
-      
+
       const today = new Date();
-      
+
       expect(isFutureDate(futureDate)).toBe(true);
       expect(isFutureDate(pastDate)).toBe(false);
       expect(isPastDate(pastDate)).toBe(true);
@@ -186,12 +190,16 @@ describe('Helpers', () => {
     test('should create calendar modal HTML', () => {
       const workouts = [
         { name: 'Push-ups', time: '10:00' },
-        { name: 'Squats', time: '11:00' }
+        { name: 'Squats', time: '11:00' },
       ];
-      
+
       try {
-        const modalHTML = createCalendarModalHTML('Test Title', 'Test Content', workouts);
-        
+        const modalHTML = createCalendarModalHTML(
+          'Test Title',
+          'Test Content',
+          workouts
+        );
+
         expect(modalHTML).toContain('Test Title');
         expect(modalHTML).toContain('Test Content');
         expect(modalHTML).toContain('modal');

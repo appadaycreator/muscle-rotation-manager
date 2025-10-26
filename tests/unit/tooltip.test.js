@@ -11,49 +11,49 @@ const mockElement = {
     width: 100,
     height: 50,
     right: 100,
-    bottom: 50
+    bottom: 50,
   })),
   matches: jest.fn(() => true),
   closest: jest.fn(),
   parentNode: {
-    removeChild: jest.fn()
-  }
+    removeChild: jest.fn(),
+  },
 };
 
 const mockContainer = {
   id: '',
   className: '',
   innerHTML: '',
-  style: { 
+  style: {
     cssText: '',
-    opacity: '0'
+    opacity: '0',
   },
   appendChild: jest.fn(),
   remove: jest.fn(),
   getBoundingClientRect: jest.fn(() => ({
     width: 200,
-    height: 100
-  }))
+    height: 100,
+  })),
 };
 
 Object.defineProperty(document, 'getElementById', {
-  value: jest.fn(() => mockContainer)
+  value: jest.fn(() => mockContainer),
 });
 
 Object.defineProperty(document, 'createElement', {
-  value: jest.fn(() => mockContainer)
+  value: jest.fn(() => mockContainer),
 });
 
 Object.defineProperty(document, 'addEventListener', {
-  value: jest.fn()
+  value: jest.fn(),
 });
 
 Object.defineProperty(window, 'addEventListener', {
-  value: jest.fn()
+  value: jest.fn(),
 });
 
 Object.defineProperty(document.body, 'appendChild', {
-  value: jest.fn()
+  value: jest.fn(),
 });
 
 describe('TooltipManager', () => {
@@ -71,9 +71,13 @@ describe('TooltipManager', () => {
 
   describe('initialize', () => {
     test('should initialize tooltip manager', () => {
-      jest.spyOn(tooltipManager, 'createContainer').mockImplementation(() => {});
-      jest.spyOn(tooltipManager, 'setupEventListeners').mockImplementation(() => {});
-      
+      jest
+        .spyOn(tooltipManager, 'createContainer')
+        .mockImplementation(() => {});
+      jest
+        .spyOn(tooltipManager, 'setupEventListeners')
+        .mockImplementation(() => {});
+
       tooltipManager.initialize();
       expect(tooltipManager.isInitialized).toBe(true);
     });
@@ -89,16 +93,16 @@ describe('TooltipManager', () => {
     test('should add tooltip to element', () => {
       const element = mockElement;
       const text = 'Test tooltip';
-      
+
       tooltipManager.addTooltip(element, text);
-      
+
       expect(element.setAttribute).toHaveBeenCalledWith('data-tooltip', text);
     });
 
     test('should not add tooltip if element or text is missing', () => {
       tooltipManager.addTooltip(null, 'Test');
       tooltipManager.addTooltip(mockElement, null);
-      
+
       // エラーが発生しないことを確認
       expect(true).toBe(true);
     });
@@ -107,9 +111,9 @@ describe('TooltipManager', () => {
   describe('destroy', () => {
     test('should destroy tooltip manager', () => {
       tooltipManager.isInitialized = true;
-      
+
       tooltipManager.destroy();
-      
+
       expect(tooltipManager.isInitialized).toBe(false);
     });
   });
