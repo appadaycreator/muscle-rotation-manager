@@ -159,12 +159,12 @@ describe('TooltipManager', () => {
     test('ツールチップが非表示になる', (done) => {
       tooltipManager.hideTooltip();
 
-      // アニメーションの遅延を考慮
+      // アニメーションの遅延を考慮（短縮）
       setTimeout(() => {
         const container = document.getElementById('tooltip-container');
         expect(container.style.opacity).toBe('0');
         done();
-      }, 200);
+      }, 100);
     });
 
     test('アクティブツールチップがクリアされる', (done) => {
@@ -174,7 +174,7 @@ describe('TooltipManager', () => {
       setTimeout(() => {
         expect(tooltipManager.activeTooltip).toBeNull();
         done();
-      }, 200);
+      }, 100);
     });
   });
 
@@ -359,7 +359,7 @@ describe('TooltipManager', () => {
       // MutationObserverの処理を待つ
       setTimeout(() => {
         expect(newElement.getAttribute('data-tooltip')).toBe('Dynamic tooltip');
-      }, 100);
+      }, 50);
     });
   });
 
@@ -383,7 +383,7 @@ describe('TooltipManager', () => {
         const tooltip = container.querySelector('.tooltip');
         expect(tooltip).toBeTruthy();
         done();
-      }, 100);
+      }, 50);
     });
 
     test('マウスアウトでツールチップが非表示になる', (done) => {
@@ -400,7 +400,7 @@ describe('TooltipManager', () => {
           container.style.opacity === '0' || container.innerHTML === ''
         ).toBe(true);
         done();
-      }, 200);
+      }, 100);
     });
 
     test('スクロールでツールチップが非表示になる', (done) => {
@@ -413,7 +413,7 @@ describe('TooltipManager', () => {
       setTimeout(() => {
         expect(tooltipManager.activeTooltip).toBeNull();
         done();
-      }, 200);
+      }, 100);
     });
 
     test('リサイズでツールチップが非表示になる', (done) => {
@@ -426,7 +426,7 @@ describe('TooltipManager', () => {
       setTimeout(() => {
         expect(tooltipManager.activeTooltip).toBeNull();
         done();
-      }, 200);
+      }, 100);
     });
 
     test('Escapeキーでツールチップが非表示になる', (done) => {
@@ -439,7 +439,7 @@ describe('TooltipManager', () => {
       setTimeout(() => {
         expect(tooltipManager.activeTooltip).toBeNull();
         done();
-      }, 200);
+      }, 100);
     });
   });
 
@@ -467,12 +467,12 @@ describe('TooltipManager', () => {
       setTimeout(() => {
         expect(tooltipManager.activeTooltip).toBeNull();
         done();
-      }, 200);
+      }, 100);
     });
 
     test('タイムアウトがクリアされる', () => {
       tooltipManager.initialize();
-      tooltipManager.hoverTimeout = setTimeout(() => {}, 1000);
+      tooltipManager.hoverTimeout = setTimeout(() => {}, 100);
 
       const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
       tooltipManager.destroy();

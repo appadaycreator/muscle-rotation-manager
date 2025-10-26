@@ -9,66 +9,66 @@ import { showNotification, safeGetElement } from '../utils/helpers.js';
  * 新規ユーザーの初期設定フローを管理
  */
 class OnboardingManager {
-  constructor() {
-    this.currentStep = 0;
-    this.totalSteps = 5;
-    this.onboardingData = {};
-    this.isCompleted = false;
-  }
+    constructor() {
+        this.currentStep = 0;
+        this.totalSteps = 5;
+        this.onboardingData = {};
+        this.isCompleted = false;
+    }
 
-  /**
+    /**
    * オンボーディングが必要かチェック
    * @returns {boolean} オンボーディングが必要かどうか
    */
-  isOnboardingNeeded() {
-    try {
-      const userProfile = JSON.parse(
-        localStorage.getItem('userProfile') || '{}'
-      );
-      return !userProfile.onboarding_completed;
-    } catch (error) {
-      console.warn('オンボーディング状態の確認に失敗:', error);
-      return true; // エラー時は安全側に倒してオンボーディングを実行
+    isOnboardingNeeded() {
+        try {
+            const userProfile = JSON.parse(
+                localStorage.getItem('userProfile') || '{}'
+            );
+            return !userProfile.onboarding_completed;
+        } catch (error) {
+            console.warn('オンボーディング状態の確認に失敗:', error);
+            return true; // エラー時は安全側に倒してオンボーディングを実行
+        }
     }
-  }
 
-  /**
+    /**
    * オンボーディングフローを開始
    */
-  async startOnboarding() {
-    if (!this.isOnboardingNeeded()) {
-      console.log('オンボーディングは既に完了しています');
-      return;
+    async startOnboarding() {
+        if (!this.isOnboardingNeeded()) {
+            console.log('オンボーディングは既に完了しています');
+            return;
+        }
+
+        console.log('オンボーディングフローを開始します');
+        this.currentStep = 0;
+        this.onboardingData = {};
+
+        await this.showOnboardingModal();
     }
 
-    console.log('オンボーディングフローを開始します');
-    this.currentStep = 0;
-    this.onboardingData = {};
-
-    await this.showOnboardingModal();
-  }
-
-  /**
+    /**
    * オンボーディングモーダルを表示
    */
-  async showOnboardingModal() {
-    const modal = document.createElement('div');
-    modal.id = 'onboarding-modal';
-    modal.className =
+    async showOnboardingModal() {
+        const modal = document.createElement('div');
+        modal.id = 'onboarding-modal';
+        modal.className =
       'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
-    modal.innerHTML = this.getModalHTML();
+        modal.innerHTML = this.getModalHTML();
 
-    document.body.appendChild(modal);
-    this.setupModalEventListeners();
-    this.updateStepContent();
-  }
+        document.body.appendChild(modal);
+        this.setupModalEventListeners();
+        this.updateStepContent();
+    }
 
-  /**
+    /**
    * モーダルHTMLを取得
    * @returns {string} モーダルHTML
    */
-  getModalHTML() {
-    return `
+    getModalHTML() {
+        return `
             <div class="bg-white rounded-lg max-w-2xl mx-4 p-6 max-h-[90vh] overflow-y-auto">
                 <!-- ヘッダー -->
                 <div class="flex items-center justify-between mb-6">
@@ -118,106 +118,106 @@ class OnboardingManager {
                 </div>
             </div>
         `;
-  }
+    }
 
-  /**
+    /**
    * モーダルイベントリスナーを設定
    */
-  setupModalEventListeners() {
-    const closeBtn = safeGetElement('#close-onboarding');
-    const prevBtn = safeGetElement('#prev-step');
-    const nextBtn = safeGetElement('#next-step');
+    setupModalEventListeners() {
+        const closeBtn = safeGetElement('#close-onboarding');
+        const prevBtn = safeGetElement('#prev-step');
+        const nextBtn = safeGetElement('#next-step');
 
-    if (closeBtn) {
-      closeBtn.addEventListener('click', () => this.closeOnboarding());
-    }
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => this.closeOnboarding());
+        }
 
-    if (prevBtn) {
-      prevBtn.addEventListener('click', () => this.previousStep());
-    }
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => this.previousStep());
+        }
 
-    if (nextBtn) {
-      nextBtn.addEventListener('click', () => this.nextStep());
-    }
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => this.nextStep());
+        }
 
     // モーダル外クリックでは閉じない（重要な設定のため）
-  }
+    }
 
-  /**
+    /**
    * ステップコンテンツを更新
    */
-  updateStepContent() {
-    const stepContent = safeGetElement('#step-content');
-    const currentStepEl = safeGetElement('#current-step');
-    const progressBar = safeGetElement('#progress-bar');
-    const progressPercent = safeGetElement('#progress-percent');
-    const prevBtn = safeGetElement('#prev-step');
-    const nextBtn = safeGetElement('#next-step');
+    updateStepContent() {
+        const stepContent = safeGetElement('#step-content');
+        const currentStepEl = safeGetElement('#current-step');
+        const progressBar = safeGetElement('#progress-bar');
+        const progressPercent = safeGetElement('#progress-percent');
+        const prevBtn = safeGetElement('#prev-step');
+        const nextBtn = safeGetElement('#next-step');
 
-    if (!stepContent) {
-      return;
+        if (!stepContent) {
+            return;
+        }
+
+        // プログレス更新
+        const progress = ((this.currentStep + 1) / this.totalSteps) * 100;
+        if (currentStepEl) {
+            currentStepEl.textContent = this.currentStep + 1;
+        }
+        if (progressBar) {
+            progressBar.style.width = `${progress}%`;
+        }
+        if (progressPercent) {
+            progressPercent.textContent = Math.round(progress);
+        }
+
+        // ボタン状態更新
+        if (prevBtn) {
+            prevBtn.disabled = this.currentStep === 0;
+        }
+        if (nextBtn) {
+            if (this.currentStep === this.totalSteps - 1) {
+                nextBtn.innerHTML = '<i class="fas fa-check mr-2"></i>完了';
+                nextBtn.className = nextBtn.className.replace(
+                    'bg-blue-500 hover:bg-blue-600',
+                    'bg-green-500 hover:bg-green-600'
+                );
+            } else {
+                nextBtn.innerHTML = '次へ <i class="fas fa-arrow-right ml-2"></i>';
+                nextBtn.className = nextBtn.className.replace(
+                    'bg-green-500 hover:bg-green-600',
+                    'bg-blue-500 hover:bg-blue-600'
+                );
+            }
+        }
+
+        // ステップコンテンツ更新
+        stepContent.innerHTML = this.getStepContent(this.currentStep);
+        this.setupStepEventListeners();
     }
 
-    // プログレス更新
-    const progress = ((this.currentStep + 1) / this.totalSteps) * 100;
-    if (currentStepEl) {
-      currentStepEl.textContent = this.currentStep + 1;
-    }
-    if (progressBar) {
-      progressBar.style.width = `${progress}%`;
-    }
-    if (progressPercent) {
-      progressPercent.textContent = Math.round(progress);
-    }
-
-    // ボタン状態更新
-    if (prevBtn) {
-      prevBtn.disabled = this.currentStep === 0;
-    }
-    if (nextBtn) {
-      if (this.currentStep === this.totalSteps - 1) {
-        nextBtn.innerHTML = '<i class="fas fa-check mr-2"></i>完了';
-        nextBtn.className = nextBtn.className.replace(
-          'bg-blue-500 hover:bg-blue-600',
-          'bg-green-500 hover:bg-green-600'
-        );
-      } else {
-        nextBtn.innerHTML = '次へ <i class="fas fa-arrow-right ml-2"></i>';
-        nextBtn.className = nextBtn.className.replace(
-          'bg-green-500 hover:bg-green-600',
-          'bg-blue-500 hover:bg-blue-600'
-        );
-      }
-    }
-
-    // ステップコンテンツ更新
-    stepContent.innerHTML = this.getStepContent(this.currentStep);
-    this.setupStepEventListeners();
-  }
-
-  /**
+    /**
    * ステップコンテンツを取得
    * @param {number} step - ステップ番号
    * @returns {string} ステップHTML
    */
-  getStepContent(step) {
-    const steps = [
-      this.getWelcomeStep(),
-      this.getBasicInfoStep(),
-      this.getFitnessLevelStep(),
-      this.getGoalsStep(),
-      this.getScheduleStep(),
-    ];
+    getStepContent(step) {
+        const steps = [
+            this.getWelcomeStep(),
+            this.getBasicInfoStep(),
+            this.getFitnessLevelStep(),
+            this.getGoalsStep(),
+            this.getScheduleStep()
+        ];
 
-    return steps[step] || '';
-  }
+        return steps[step] || '';
+    }
 
-  /**
+    /**
    * ウェルカムステップ
    * @returns {string} ステップHTML
    */
-  getWelcomeStep() {
-    return `
+    getWelcomeStep() {
+        return `
             <div class="text-center">
                 <div class="mb-6">
                     <i class="fas fa-dumbbell text-6xl text-blue-500 mb-4"></i>
@@ -253,15 +253,15 @@ class OnboardingManager {
                 </p>
             </div>
         `;
-  }
+    }
 
-  /**
+    /**
    * 基本情報ステップ
    * @returns {string} ステップHTML
    */
-  getBasicInfoStep() {
-    const data = this.onboardingData;
-    return `
+    getBasicInfoStep() {
+        const data = this.onboardingData;
+        return `
             <div>
                 <h3 class="text-xl font-bold text-gray-800 mb-4">
                     <i class="fas fa-user text-blue-500 mr-2"></i>
@@ -333,15 +333,15 @@ class OnboardingManager {
                 </form>
             </div>
         `;
-  }
+    }
 
-  /**
+    /**
    * 体力レベルステップ
    * @returns {string} ステップHTML
    */
-  getFitnessLevelStep() {
-    const data = this.onboardingData;
-    return `
+    getFitnessLevelStep() {
+        const data = this.onboardingData;
+        return `
             <div>
                 <h3 class="text-xl font-bold text-gray-800 mb-4">
                     <i class="fas fa-dumbbell text-orange-500 mr-2"></i>
@@ -418,15 +418,15 @@ class OnboardingManager {
                 </form>
             </div>
         `;
-  }
+    }
 
-  /**
+    /**
    * 目標ステップ
    * @returns {string} ステップHTML
    */
-  getGoalsStep() {
-    const data = this.onboardingData;
-    return `
+    getGoalsStep() {
+        const data = this.onboardingData;
+        return `
             <div>
                 <h3 class="text-xl font-bold text-gray-800 mb-4">
                     <i class="fas fa-target text-red-500 mr-2"></i>
@@ -502,15 +502,15 @@ class OnboardingManager {
                 </form>
             </div>
         `;
-  }
+    }
 
-  /**
+    /**
    * スケジュールステップ
    * @returns {string} ステップHTML
    */
-  getScheduleStep() {
-    const data = this.onboardingData;
-    return `
+    getScheduleStep() {
+        const data = this.onboardingData;
+        return `
             <div>
                 <h3 class="text-xl font-bold text-gray-800 mb-4">
                     <i class="fas fa-calendar-alt text-purple-500 mr-2"></i>
@@ -613,244 +613,244 @@ class OnboardingManager {
                 </form>
             </div>
         `;
-  }
+    }
 
-  /**
+    /**
    * ステップイベントリスナーを設定
    */
-  setupStepEventListeners() {
+    setupStepEventListeners() {
     // ラジオボタンの選択時にスタイルを更新
-    const radioInputs = document.querySelectorAll('input[type="radio"]');
-    radioInputs.forEach((input) => {
-      input.addEventListener('change', (e) => {
-        const name = e.target.name;
-        document.querySelectorAll(`input[name="${name}"]`).forEach((radio) => {
-          const label = radio.closest('label');
-          if (label) {
-            if (radio.checked) {
-              label.classList.add('border-blue-500', 'bg-blue-50');
-              label.classList.remove('border-gray-200');
-            } else {
-              label.classList.remove('border-blue-500', 'bg-blue-50');
-              label.classList.add('border-gray-200');
-            }
-          }
+        const radioInputs = document.querySelectorAll('input[type="radio"]');
+        radioInputs.forEach((input) => {
+            input.addEventListener('change', (e) => {
+                const name = e.target.name;
+                document.querySelectorAll(`input[name="${name}"]`).forEach((radio) => {
+                    const label = radio.closest('label');
+                    if (label) {
+                        if (radio.checked) {
+                            label.classList.add('border-blue-500', 'bg-blue-50');
+                            label.classList.remove('border-gray-200');
+                        } else {
+                            label.classList.remove('border-blue-500', 'bg-blue-50');
+                            label.classList.add('border-gray-200');
+                        }
+                    }
+                });
+            });
         });
-      });
-    });
-  }
+    }
 
-  /**
+    /**
    * 次のステップへ進む
    */
-  async nextStep() {
+    async nextStep() {
     // 現在のステップのデータを保存
-    if (!(await this.saveCurrentStepData())) {
-      return; // バリデーションエラー
+        if (!(await this.saveCurrentStepData())) {
+            return; // バリデーションエラー
+        }
+
+        if (this.currentStep === this.totalSteps - 1) {
+            // 最後のステップ - オンボーディング完了
+            await this.completeOnboarding();
+        } else {
+            // 次のステップへ
+            this.currentStep++;
+            this.updateStepContent();
+        }
     }
 
-    if (this.currentStep === this.totalSteps - 1) {
-      // 最後のステップ - オンボーディング完了
-      await this.completeOnboarding();
-    } else {
-      // 次のステップへ
-      this.currentStep++;
-      this.updateStepContent();
-    }
-  }
-
-  /**
+    /**
    * 前のステップに戻る
    */
-  previousStep() {
-    if (this.currentStep > 0) {
-      this.currentStep--;
-      this.updateStepContent();
+    previousStep() {
+        if (this.currentStep > 0) {
+            this.currentStep--;
+            this.updateStepContent();
+        }
     }
-  }
 
-  /**
+    /**
    * 現在のステップのデータを保存
    * @returns {Promise<boolean>} 保存成功かどうか
    */
-  async saveCurrentStepData() {
-    const forms = [
-      null, // ウェルカムステップはフォームなし
-      '#basic-info-form',
-      '#fitness-level-form',
-      '#goals-form',
-      '#schedule-form',
-    ];
+    async saveCurrentStepData() {
+        const forms = [
+            null, // ウェルカムステップはフォームなし
+            '#basic-info-form',
+            '#fitness-level-form',
+            '#goals-form',
+            '#schedule-form'
+        ];
 
-    const formSelector = forms[this.currentStep];
-    if (!formSelector) {
-      return true;
-    }
+        const formSelector = forms[this.currentStep];
+        if (!formSelector) {
+            return true;
+        }
 
-    const form = safeGetElement(formSelector);
-    if (!form) {
-      return true;
-    }
+        const form = safeGetElement(formSelector);
+        if (!form) {
+            return true;
+        }
 
-    const formData = new FormData(form);
-    const stepData = {};
+        const formData = new FormData(form);
+        const stepData = {};
 
-    // フォームデータを取得
-    for (const [key, value] of formData.entries()) {
-      if (
-        key === 'age' ||
+        // フォームデータを取得
+        for (const [key, value] of formData.entries()) {
+            if (
+                key === 'age' ||
         key === 'experience_months' ||
         key === 'workout_frequency' ||
         key === 'preferred_workout_duration'
-      ) {
-        stepData[key] = parseInt(value) || 0;
-      } else if (
-        key === 'weight' ||
+            ) {
+                stepData[key] = parseInt(value) || 0;
+            } else if (
+                key === 'weight' ||
         key === 'height' ||
         key === 'sleep_hours_per_night'
-      ) {
-        stepData[key] = parseFloat(value) || null;
-      } else {
-        stepData[key] = value;
-      }
+            ) {
+                stepData[key] = parseFloat(value) || null;
+            } else {
+                stepData[key] = value;
+            }
+        }
+
+        // バリデーション
+        if (this.currentStep === 1) {
+            // 基本情報
+            const errors = [];
+            if (!stepData.display_name) {
+                errors.push('ニックネーム');
+            }
+            if (!stepData.age) {
+                errors.push('年齢');
+            }
+
+            if (errors.length > 0) {
+                showNotification(
+                    `以下の項目を入力してください: ${errors.join(', ')}`,
+                    'error'
+                );
+                return false;
+            }
+        } else if (this.currentStep === 2) {
+            // 体力レベル
+            if (!stepData.fitness_level) {
+                showNotification('体力レベルを選択してください', 'error');
+                return false;
+            }
+        } else if (this.currentStep === 3) {
+            // 目標
+            if (!stepData.primary_goal) {
+                showNotification('主要目標を選択してください', 'error');
+                return false;
+            }
+        } else if (this.currentStep === 4) {
+            // スケジュール
+            if (!stepData.workout_frequency) {
+                showNotification('週間トレーニング回数を選択してください', 'error');
+                return false;
+            }
+        }
+
+        // データを保存
+        this.onboardingData = { ...this.onboardingData, ...stepData };
+        return true;
     }
 
-    // バリデーション
-    if (this.currentStep === 1) {
-      // 基本情報
-      const errors = [];
-      if (!stepData.display_name) {
-        errors.push('ニックネーム');
-      }
-      if (!stepData.age) {
-        errors.push('年齢');
-      }
-
-      if (errors.length > 0) {
-        showNotification(
-          `以下の項目を入力してください: ${errors.join(', ')}`,
-          'error'
-        );
-        return false;
-      }
-    } else if (this.currentStep === 2) {
-      // 体力レベル
-      if (!stepData.fitness_level) {
-        showNotification('体力レベルを選択してください', 'error');
-        return false;
-      }
-    } else if (this.currentStep === 3) {
-      // 目標
-      if (!stepData.primary_goal) {
-        showNotification('主要目標を選択してください', 'error');
-        return false;
-      }
-    } else if (this.currentStep === 4) {
-      // スケジュール
-      if (!stepData.workout_frequency) {
-        showNotification('週間トレーニング回数を選択してください', 'error');
-        return false;
-      }
-    }
-
-    // データを保存
-    this.onboardingData = { ...this.onboardingData, ...stepData };
-    return true;
-  }
-
-  /**
+    /**
    * オンボーディングを完了
    */
-  async completeOnboarding() {
-    try {
-      // オンボーディングデータを統合
-      const profileData = {
-        ...this.onboardingData,
-        onboarding_completed: true,
-        onboarding_step: this.totalSteps,
-        onboarding_completed_at: new Date().toISOString(),
-      };
+    async completeOnboarding() {
+        try {
+            // オンボーディングデータを統合
+            const profileData = {
+                ...this.onboardingData,
+                onboarding_completed: true,
+                onboarding_step: this.totalSteps,
+                onboarding_completed_at: new Date().toISOString()
+            };
 
-      // プロフィールを保存
-      await this.saveProfile(profileData);
+            // プロフィールを保存
+            await this.saveProfile(profileData);
 
-      // 推奨サービスの設定を更新
-      recommendationService.updateUserSettings({
-        fitnessLevel: profileData.fitness_level,
-        primaryGoal: profileData.primary_goal,
-        workoutFrequency: profileData.workout_frequency,
-        recoveryPreference: profileData.recovery_preference,
-        sleepHoursPerNight: profileData.sleep_hours_per_night,
-      });
+            // 推奨サービスの設定を更新
+            recommendationService.updateUserSettings({
+                fitnessLevel: profileData.fitness_level,
+                primaryGoal: profileData.primary_goal,
+                workoutFrequency: profileData.workout_frequency,
+                recoveryPreference: profileData.recovery_preference,
+                sleepHoursPerNight: profileData.sleep_hours_per_night
+            });
 
-      // 成功メッセージ
-      showNotification('初期設定が完了しました！', 'success');
+            // 成功メッセージ
+            showNotification('初期設定が完了しました！', 'success');
 
-      // モーダルを閉じる
-      this.closeOnboarding();
+            // モーダルを閉じる
+            this.closeOnboarding();
 
-      // ダッシュボードを更新
-      if (window.pageManager) {
-        await window.pageManager.navigateToPage('dashboard');
-      }
-    } catch (error) {
-      console.error('オンボーディング完了エラー:', error);
-      showNotification('設定の保存に失敗しました', 'error');
+            // ダッシュボードを更新
+            if (window.pageManager) {
+                await window.pageManager.navigateToPage('dashboard');
+            }
+        } catch (error) {
+            console.error('オンボーディング完了エラー:', error);
+            showNotification('設定の保存に失敗しました', 'error');
+        }
     }
-  }
 
-  /**
+    /**
    * プロフィールを保存
    * @param {Object} profileData - プロフィールデータ
    */
-  async saveProfile(profileData) {
+    async saveProfile(profileData) {
     // ローカルストレージに保存
-    const existingProfile = JSON.parse(
-      localStorage.getItem('userProfile') || '{}'
-    );
-    const updatedProfile = { ...existingProfile, ...profileData };
-    localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
-
-    // Supabaseに保存（利用可能な場合）
-    if (supabaseService.isAvailable() && supabaseService.getCurrentUser()) {
-      try {
-        await supabaseService.saveUserProfile(profileData);
-      } catch (error) {
-        console.warn(
-          'Supabase profile save failed, using localStorage:',
-          error
+        const existingProfile = JSON.parse(
+            localStorage.getItem('userProfile') || '{}'
         );
-      }
-    }
-  }
+        const updatedProfile = { ...existingProfile, ...profileData };
+        localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
 
-  /**
+        // Supabaseに保存（利用可能な場合）
+        if (supabaseService.isAvailable() && supabaseService.getCurrentUser()) {
+            try {
+                await supabaseService.saveUserProfile(profileData);
+            } catch (error) {
+                console.warn(
+                    'Supabase profile save failed, using localStorage:',
+                    error
+                );
+            }
+        }
+    }
+
+    /**
    * オンボーディングを閉じる
    */
-  closeOnboarding() {
-    const modal = safeGetElement('#onboarding-modal');
-    if (modal) {
-      document.body.removeChild(modal);
+    closeOnboarding() {
+        const modal = safeGetElement('#onboarding-modal');
+        if (modal) {
+            document.body.removeChild(modal);
+        }
     }
-  }
 
-  /**
+    /**
    * オンボーディングをスキップ
    */
-  skipOnboarding() {
-    const profileData = {
-      onboarding_completed: true,
-      onboarding_step: 0, // スキップしたことを示す
-      onboarding_completed_at: new Date().toISOString(),
-    };
+    skipOnboarding() {
+        const profileData = {
+            onboarding_completed: true,
+            onboarding_step: 0, // スキップしたことを示す
+            onboarding_completed_at: new Date().toISOString()
+        };
 
-    this.saveProfile(profileData);
-    this.closeOnboarding();
-    showNotification(
-      '初期設定をスキップしました。後で設定ページから変更できます。',
-      'info'
-    );
-  }
+        this.saveProfile(profileData);
+        this.closeOnboarding();
+        showNotification(
+            '初期設定をスキップしました。後で設定ページから変更できます。',
+            'info'
+        );
+    }
 }
 
 // デフォルトエクスポート
