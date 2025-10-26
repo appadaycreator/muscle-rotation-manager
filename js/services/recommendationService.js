@@ -171,9 +171,7 @@ class RecommendationService {
             }
 
             // 各筋肉部位の回復データを計算
-            console.log('Processing MUSCLE_GROUPS:', MUSCLE_GROUPS);
             const recoveryData = MUSCLE_GROUPS.map(muscle => {
-                console.log(`Processing muscle: ${muscle.id}`, muscle);
                 // 該当部位の最新ワークアウトを検索
                 const lastWorkout = this.findLastWorkoutForMuscle(workoutHistory, muscle.id);
 

@@ -23,9 +23,39 @@
     <script type="module">
         import { helpPage } from './js/pages/helpPage.js';
         
-        // ページが読み込まれた時に初期化
+        // ページが読み込まれた時に初期化（認証チェックなし）
         document.addEventListener('DOMContentLoaded', async () => {
-            await helpPage.init();
+            try {
+                await helpPage.init();
+            } catch (error) {
+                console.error('Help page initialization error:', error);
+                // エラーが発生しても基本的なヘルプコンテンツを表示
+                const main = document.querySelector('main');
+                if (main) {
+                    main.innerHTML = `
+                        <div class="max-w-7xl mx-auto px-4 py-8">
+                            <h1 class="text-3xl font-bold text-gray-900 mb-4">ヘルプ・サポート</h1>
+                            <div class="bg-white rounded-lg shadow-md p-6">
+                                <h2 class="text-xl font-semibold text-gray-800 mb-4">基本的な使い方</h2>
+                                <div class="space-y-4">
+                                    <div>
+                                        <h3 class="font-semibold text-gray-700">1. ダッシュボード</h3>
+                                        <p class="text-gray-600">筋肉の回復状況を確認し、今日の推奨部位をチェックできます。</p>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-gray-700">2. ワークアウト記録</h3>
+                                        <p class="text-gray-600">部位を選択してワークアウトを開始し、セット数・回数・重量を記録します。</p>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-gray-700">3. 進捗管理</h3>
+                                        <p class="text-gray-600">カレンダーや分析ページでトレーニングの進捗を確認できます。</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
         });
     </script>
 </body>
