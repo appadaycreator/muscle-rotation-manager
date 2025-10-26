@@ -174,13 +174,17 @@ describe('AnalysisPage', () => {
 
       await analysisPage.loadWorkoutData();
 
-      expect(workoutDataService.loadWorkouts).toHaveBeenCalledWith({ limit: 1000 });
+      expect(workoutDataService.loadWorkouts).toHaveBeenCalledWith({
+        limit: 1000,
+      });
       expect(analysisPage.workoutData).toEqual(mockWorkoutData);
     });
 
     it('should handle workout data loading errors', async () => {
       // workoutDataService.loadWorkouts をエラーを投げるようにモック
-      workoutDataService.loadWorkouts.mockRejectedValue(new Error('Load failed'));
+      workoutDataService.loadWorkouts.mockRejectedValue(
+        new Error('Load failed')
+      );
 
       await analysisPage.loadWorkoutData();
 

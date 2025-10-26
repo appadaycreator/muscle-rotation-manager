@@ -228,12 +228,14 @@ MIT License
 
 **原因**: 相対パス（`./workout.html`）と絶対パス（`/workout.html`）の混在により、環境によってパス解決が異なる
 
-**解決方法**: 
+**解決方法**:
+
 - サイドバーのhref属性を絶対パスに統一
 - `Navigation.js`でパス変換ロジックを追加
 - クロスブラウザ対応のためのパス正規化
 
 **修正内容**:
+
 - `partials/sidebar.html`: すべてのhref属性を絶対パス（`/workout.html`など）に変更
 - `js/components/Navigation.js`: 相対パスを絶対パスに変換するロジックを追加
 - ダッシュボードリンクを`/index.html`に統一

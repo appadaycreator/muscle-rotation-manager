@@ -129,14 +129,14 @@ export class Navigation {
    */
   getCurrentPage() {
     const path = window.location.pathname;
-    
+
     // GitHub Pagesのパス（/muscle-rotation-manager/）を考慮
     const pathParts = path.split('/');
     const fileName = pathParts[pathParts.length - 1];
-    
+
     // ファイル名から拡張子を除去
     const pageName = fileName.replace('.html', '');
-    
+
     // 空文字列の場合はindexを返す
     return pageName || 'index';
   }

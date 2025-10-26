@@ -57,7 +57,6 @@ class MPAInitializer {
       '/muscle-rotation-manager/workout.html': 'workout',
       '/muscle-rotation-manager/calendar.html': 'calendar',
       '/muscle-rotation-manager/analysis.html': 'analysis',
-      '/muscle-rotation-manager/progress.html': 'progress',
       '/muscle-rotation-manager/exercises.html': 'exercises',
       '/muscle-rotation-manager/settings.html': 'settings',
       '/muscle-rotation-manager/help.html': 'help',
@@ -499,7 +498,7 @@ class MPAInitializer {
   /**
    * 初期化エラーを処理
    */
-  handleInitializationError(error) {
+  handleInitializationError(_error) {
     const mainContent = document.getElementById('main-content');
     if (mainContent) {
       mainContent.innerHTML = `

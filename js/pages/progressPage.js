@@ -3,12 +3,8 @@
 import { BasePage } from '../core/BasePage.js';
 import { workoutDataService } from '../services/workoutDataService.js';
 import { progressiveOverloadService } from '../services/progressiveOverloadService.js';
-import {
-  showNotification,
-  safeGetElement,
-  safeAsync,
-} from '../utils/helpers.js';
-import { handleError } from '../utils/errorHandler.js';
+import { authManager } from '../modules/authManager.js';
+import { showNotification, safeGetElement } from '../utils/helpers.js';
 
 class ProgressPage extends BasePage {
   constructor() {
@@ -200,14 +196,16 @@ class ProgressPage extends BasePage {
       // サンプルデータを追加（デモ用）
       if (this.workoutData.length === 0) {
         this.workoutData = this.generateSampleWorkoutData();
-        
+
         // サンプルデータを保存
         for (const workout of this.workoutData) {
           await workoutDataService.saveWorkout(workout);
         }
       }
 
-      console.log(`Loaded ${this.workoutData.length} workouts for progress analysis`);
+      console.log(
+        `Loaded ${this.workoutData.length} workouts for progress analysis`
+      );
     } catch (error) {
       console.error('Error loading workout data:', error);
       this.workoutData = this.generateSampleWorkoutData();
@@ -223,11 +221,20 @@ class ProgressPage extends BasePage {
   async loadProgressiveOverloadData() {
     try {
       console.log('Loading progressive overload data...');
-      this.progressiveOverloadData = await progressiveOverloadService.getOverallProgress(this.analysisPeriod);
-      console.log('Progressive overload data loaded:', this.progressiveOverloadData);
+      this.progressiveOverloadData =
+        await progressiveOverloadService.getOverallProgress(
+          this.analysisPeriod
+        );
+      console.log(
+        'Progressive overload data loaded:',
+        this.progressiveOverloadData
+      );
     } catch (error) {
       console.error('Error loading progressive overload data:', error);
-      showNotification('プログレッシブ・オーバーロードデータの読み込みに失敗しました', 'error');
+      showNotification(
+        'プログレッシブ・オーバーロードデータの読み込みに失敗しました',
+        'error'
+      );
     }
   }
 
@@ -262,7 +269,12 @@ class ProgressPage extends BasePage {
           exercises: [
             { name: 'ベンチプレス', sets: 3, reps: 10, weight },
             { name: 'プッシュアップ', sets: 3, reps: 15, weight: 0 },
-            { name: 'スクワット', sets: 3, reps: 12, weight: Math.floor(weight * 0.8) },
+            {
+              name: 'スクワット',
+              sets: 3,
+              reps: 12,
+              weight: Math.floor(weight * 0.8),
+            },
           ],
           duration: 45 + Math.floor(Math.random() * 30),
           notes: 'サンプルワークアウト',
@@ -294,7 +306,7 @@ class ProgressPage extends BasePage {
     }
 
     const data = this.progressiveOverloadData;
-    
+
     container.innerHTML = `
       <!-- 総合メトリクス -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -320,9 +332,10 @@ class ProgressPage extends BasePage {
       <div class="mb-6">
         <h4 class="text-md font-medium text-gray-700 mb-3">筋肉部位別進歩</h4>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          ${Object.entries(data.muscleGroupProgress).map(([muscle, progress]) => {
-            if (!progress) return '';
-            return `
+          ${Object.entries(data.muscleGroupProgress)
+            .map(([muscle, progress]) => {
+              if (!progress) return '';
+              return `
               <div class="border border-gray-200 rounded-lg p-4">
                 <h5 class="font-medium text-gray-800 mb-2">${this.getMuscleGroupName(muscle)}</h5>
                 <div class="space-y-2">
@@ -341,7 +354,8 @@ class ProgressPage extends BasePage {
                 </div>
               </div>
             `;
-          }).join('')}
+            })
+            .join('')}
         </div>
       </div>
 
@@ -349,39 +363,51 @@ class ProgressPage extends BasePage {
       <div>
         <h4 class="text-md font-medium text-gray-700 mb-3">総合推奨事項</h4>
         <div class="space-y-3">
-          ${data.recommendations.map(rec => `
+          ${data.recommendations
+            .map(
+              (rec) => `
             <div class="p-4 rounded-lg ${
-              rec.priority === 'high' ? 'bg-red-50 border-l-4 border-red-400' :
-              rec.priority === 'medium' ? 'bg-yellow-50 border-l-4 border-yellow-400' :
-              'bg-green-50 border-l-4 border-green-400'
+              rec.priority === 'high'
+                ? 'bg-red-50 border-l-4 border-red-400'
+                : rec.priority === 'medium'
+                  ? 'bg-yellow-50 border-l-4 border-yellow-400'
+                  : 'bg-green-50 border-l-4 border-green-400'
             }">
               <div class="flex items-start">
                 <div class="flex-shrink-0">
                   <i class="fas ${
-                    rec.priority === 'high' ? 'fa-exclamation-triangle text-red-400' :
-                    rec.priority === 'medium' ? 'fa-info-circle text-yellow-400' :
-                    'fa-check-circle text-green-400'
+                    rec.priority === 'high'
+                      ? 'fa-exclamation-triangle text-red-400'
+                      : rec.priority === 'medium'
+                        ? 'fa-info-circle text-yellow-400'
+                        : 'fa-check-circle text-green-400'
                   }"></i>
                 </div>
                 <div class="ml-3">
                   <p class="text-sm font-medium ${
-                    rec.priority === 'high' ? 'text-red-800' :
-                    rec.priority === 'medium' ? 'text-yellow-800' :
-                    'text-green-800'
+                    rec.priority === 'high'
+                      ? 'text-red-800'
+                      : rec.priority === 'medium'
+                        ? 'text-yellow-800'
+                        : 'text-green-800'
                   }">
                     ${rec.message}
                   </p>
                   <p class="text-sm ${
-                    rec.priority === 'high' ? 'text-red-700' :
-                    rec.priority === 'medium' ? 'text-yellow-700' :
-                    'text-green-700'
+                    rec.priority === 'high'
+                      ? 'text-red-700'
+                      : rec.priority === 'medium'
+                        ? 'text-yellow-700'
+                        : 'text-green-700'
                   } mt-1">
                     <strong>推奨アクション:</strong> ${rec.action}
                   </p>
                 </div>
               </div>
             </div>
-          `).join('')}
+          `
+            )
+            .join('')}
         </div>
       </div>
     `;
@@ -396,17 +422,21 @@ class ProgressPage extends BasePage {
 
     // エクササイズ一覧を取得
     const exercises = new Set();
-    this.workoutData.forEach(workout => {
-      (workout.exercises || []).forEach(exercise => {
+    this.workoutData.forEach((workout) => {
+      (workout.exercises || []).forEach((exercise) => {
         if (exercise.name) exercises.add(exercise.name);
       });
     });
 
     selector.innerHTML = `
       <option value="">エクササイズを選択</option>
-      ${Array.from(exercises).map(exercise => `
+      ${Array.from(exercises)
+        .map(
+          (exercise) => `
         <option value="${exercise}">${exercise}</option>
-      `).join('')}
+      `
+        )
+        .join('')}
     `;
   }
 
@@ -419,17 +449,21 @@ class ProgressPage extends BasePage {
 
     // 筋肉部位一覧を取得
     const muscleGroups = new Set();
-    this.workoutData.forEach(workout => {
-      (workout.muscle_groups || []).forEach(muscle => {
+    this.workoutData.forEach((workout) => {
+      (workout.muscle_groups || []).forEach((muscle) => {
         muscleGroups.add(muscle);
       });
     });
 
     selector.innerHTML = `
       <option value="">筋肉部位を選択</option>
-      ${Array.from(muscleGroups).map(muscle => `
+      ${Array.from(muscleGroups)
+        .map(
+          (muscle) => `
         <option value="${muscle}">${this.getMuscleGroupName(muscle)}</option>
-      `).join('')}
+      `
+        )
+        .join('')}
     `;
   }
 
@@ -465,7 +499,7 @@ class ProgressPage extends BasePage {
       periodSelect.addEventListener('change', async (event) => {
         this.analysisPeriod = parseInt(event.target.value);
         console.log('Analysis period changed to:', this.analysisPeriod);
-        
+
         // プログレッシブ・オーバーロードデータを再読み込み
         await this.loadProgressiveOverloadData();
         this.renderProgressiveOverloadAnalysis();
@@ -520,8 +554,11 @@ class ProgressPage extends BasePage {
         </div>
       `;
 
-      const analysis = await progressiveOverloadService.getExerciseProgress(exerciseName, this.analysisPeriod);
-      
+      const analysis = await progressiveOverloadService.getExerciseProgress(
+        exerciseName,
+        this.analysisPeriod
+      );
+
       container.innerHTML = `
         <div class="space-y-6">
           <!-- 進歩メトリクス -->
@@ -560,39 +597,51 @@ class ProgressPage extends BasePage {
           <div>
             <h4 class="text-md font-medium text-gray-700 mb-3">推奨事項</h4>
             <div class="space-y-3">
-              ${analysis.recommendations.map(rec => `
+              ${analysis.recommendations
+                .map(
+                  (rec) => `
                 <div class="p-4 rounded-lg ${
-                  rec.priority === 'high' ? 'bg-red-50 border-l-4 border-red-400' :
-                  rec.priority === 'medium' ? 'bg-yellow-50 border-l-4 border-yellow-400' :
-                  'bg-green-50 border-l-4 border-green-400'
+                  rec.priority === 'high'
+                    ? 'bg-red-50 border-l-4 border-red-400'
+                    : rec.priority === 'medium'
+                      ? 'bg-yellow-50 border-l-4 border-yellow-400'
+                      : 'bg-green-50 border-l-4 border-green-400'
                 }">
                   <div class="flex items-start">
                     <div class="flex-shrink-0">
                       <i class="fas ${
-                        rec.priority === 'high' ? 'fa-exclamation-triangle text-red-400' :
-                        rec.priority === 'medium' ? 'fa-info-circle text-yellow-400' :
-                        'fa-check-circle text-green-400'
+                        rec.priority === 'high'
+                          ? 'fa-exclamation-triangle text-red-400'
+                          : rec.priority === 'medium'
+                            ? 'fa-info-circle text-yellow-400'
+                            : 'fa-check-circle text-green-400'
                       }"></i>
                     </div>
                     <div class="ml-3">
                       <p class="text-sm font-medium ${
-                        rec.priority === 'high' ? 'text-red-800' :
-                        rec.priority === 'medium' ? 'text-yellow-800' :
-                        'text-green-800'
+                        rec.priority === 'high'
+                          ? 'text-red-800'
+                          : rec.priority === 'medium'
+                            ? 'text-yellow-800'
+                            : 'text-green-800'
                       }">
                         ${rec.message}
                       </p>
                       <p class="text-sm ${
-                        rec.priority === 'high' ? 'text-red-700' :
-                        rec.priority === 'medium' ? 'text-yellow-700' :
-                        'text-green-700'
+                        rec.priority === 'high'
+                          ? 'text-red-700'
+                          : rec.priority === 'medium'
+                            ? 'text-yellow-700'
+                            : 'text-green-700'
                       } mt-1">
                         <strong>推奨アクション:</strong> ${rec.action}
                       </p>
                     </div>
                   </div>
                 </div>
-              `).join('')}
+              `
+                )
+                .join('')}
             </div>
           </div>
         </div>
@@ -623,8 +672,11 @@ class ProgressPage extends BasePage {
         </div>
       `;
 
-      const analysis = await progressiveOverloadService.getMuscleGroupProgress(muscleGroup, this.analysisPeriod);
-      
+      const analysis = await progressiveOverloadService.getMuscleGroupProgress(
+        muscleGroup,
+        this.analysisPeriod
+      );
+
       container.innerHTML = `
         <div class="space-y-6">
           <!-- 基本統計 -->
@@ -647,7 +699,9 @@ class ProgressPage extends BasePage {
           <div>
             <h4 class="text-md font-medium text-gray-700 mb-3">エクササイズ一覧</h4>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              ${Object.entries(analysis.exercises.exerciseCounts).map(([exercise, count]) => `
+              ${Object.entries(analysis.exercises.exerciseCounts)
+                .map(
+                  ([exercise, count]) => `
                 <div class="border border-gray-200 rounded-lg p-4">
                   <h5 class="font-medium text-gray-800 mb-2">${exercise}</h5>
                   <div class="space-y-2">
@@ -655,17 +709,23 @@ class ProgressPage extends BasePage {
                       <span class="text-gray-600">実施回数:</span>
                       <span class="font-medium">${count}回</span>
                     </div>
-                    ${analysis.exercises.exerciseProgress[exercise] ? `
+                    ${
+                      analysis.exercises.exerciseProgress[exercise]
+                        ? `
                       <div class="flex justify-between text-sm">
                         <span class="text-gray-600">重量進歩:</span>
                         <span class="font-medium ${analysis.exercises.exerciseProgress[exercise].weightProgress > 0 ? 'text-green-600' : 'text-red-600'}">
                           ${analysis.exercises.exerciseProgress[exercise].weightProgress > 0 ? '+' : ''}${analysis.exercises.exerciseProgress[exercise].weightProgress}%
                         </span>
                       </div>
-                    ` : ''}
+                    `
+                        : ''
+                    }
                   </div>
                 </div>
-              `).join('')}
+              `
+                )
+                .join('')}
             </div>
           </div>
 
@@ -673,39 +733,51 @@ class ProgressPage extends BasePage {
           <div>
             <h4 class="text-md font-medium text-gray-700 mb-3">推奨事項</h4>
             <div class="space-y-3">
-              ${analysis.recommendations.map(rec => `
+              ${analysis.recommendations
+                .map(
+                  (rec) => `
                 <div class="p-4 rounded-lg ${
-                  rec.priority === 'high' ? 'bg-red-50 border-l-4 border-red-400' :
-                  rec.priority === 'medium' ? 'bg-yellow-50 border-l-4 border-yellow-400' :
-                  'bg-green-50 border-l-4 border-green-400'
+                  rec.priority === 'high'
+                    ? 'bg-red-50 border-l-4 border-red-400'
+                    : rec.priority === 'medium'
+                      ? 'bg-yellow-50 border-l-4 border-yellow-400'
+                      : 'bg-green-50 border-l-4 border-green-400'
                 }">
                   <div class="flex items-start">
                     <div class="flex-shrink-0">
                       <i class="fas ${
-                        rec.priority === 'high' ? 'fa-exclamation-triangle text-red-400' :
-                        rec.priority === 'medium' ? 'fa-info-circle text-yellow-400' :
-                        'fa-check-circle text-green-400'
+                        rec.priority === 'high'
+                          ? 'fa-exclamation-triangle text-red-400'
+                          : rec.priority === 'medium'
+                            ? 'fa-info-circle text-yellow-400'
+                            : 'fa-check-circle text-green-400'
                       }"></i>
                     </div>
                     <div class="ml-3">
                       <p class="text-sm font-medium ${
-                        rec.priority === 'high' ? 'text-red-800' :
-                        rec.priority === 'medium' ? 'text-yellow-800' :
-                        'text-green-800'
+                        rec.priority === 'high'
+                          ? 'text-red-800'
+                          : rec.priority === 'medium'
+                            ? 'text-yellow-800'
+                            : 'text-green-800'
                       }">
                         ${rec.message}
                       </p>
                       <p class="text-sm ${
-                        rec.priority === 'high' ? 'text-red-700' :
-                        rec.priority === 'medium' ? 'text-yellow-700' :
-                        'text-green-700'
+                        rec.priority === 'high'
+                          ? 'text-red-700'
+                          : rec.priority === 'medium'
+                            ? 'text-yellow-700'
+                            : 'text-green-700'
                       } mt-1">
                         <strong>推奨アクション:</strong> ${rec.action}
                       </p>
                     </div>
                   </div>
                 </div>
-              `).join('')}
+              `
+                )
+                .join('')}
             </div>
           </div>
         </div>

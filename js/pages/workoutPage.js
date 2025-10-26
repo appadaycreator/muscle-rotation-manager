@@ -153,10 +153,12 @@ export class WorkoutPage extends BasePage {
   async loadWorkoutHistory() {
     try {
       console.log('Loading workout history...');
-      
+
       // ワークアウトデータサービスから履歴を読み込み
-      const workoutHistory = await workoutDataService.loadWorkouts({ limit: 50 });
-      
+      const workoutHistory = await workoutDataService.loadWorkouts({
+        limit: 50,
+      });
+
       console.log('Workout history loaded:', workoutHistory.length, 'workouts');
       this.updateWorkoutHistory(workoutHistory);
     } catch (error) {
@@ -721,12 +723,12 @@ export class WorkoutPage extends BasePage {
     try {
       // ワークアウトデータサービスを使用して保存
       const success = await workoutDataService.saveWorkout(workoutData);
-      
+
       if (success) {
         this.currentWorkout.saved = true;
         showNotification('ワークアウトが保存されました', 'success');
         console.log('Workout saved successfully');
-        
+
         // 履歴を再読み込み
         await this.loadWorkoutHistory();
       } else {

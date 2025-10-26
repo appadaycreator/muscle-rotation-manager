@@ -28,8 +28,8 @@ describe('Navigation Component', () => {
   describe('ナビゲーションアイテムのリンク', () => {
     test('全てのナビゲーションアイテムが相対パスを使用している', () => {
       const navigationItems = navigation.navigationItems;
-      
-      navigationItems.forEach(item => {
+
+      navigationItems.forEach((item) => {
         // 絶対パス（/で始まる）を使用していないことを確認
         expect(item.href).not.toMatch(/^\/.*$/);
         // 相対パスまたはファイル名のみであることを確認
@@ -38,47 +38,65 @@ describe('Navigation Component', () => {
     });
 
     test('ダッシュボードリンクが正しい', () => {
-      const dashboardItem = navigation.navigationItems.find(item => item.id === 'dashboard');
+      const dashboardItem = navigation.navigationItems.find(
+        (item) => item.id === 'dashboard'
+      );
       expect(dashboardItem.href).toBe('index.html');
     });
 
     test('ワークアウトリンクが正しい', () => {
-      const workoutItem = navigation.navigationItems.find(item => item.id === 'workout');
+      const workoutItem = navigation.navigationItems.find(
+        (item) => item.id === 'workout'
+      );
       expect(workoutItem.href).toBe('workout.html');
     });
 
     test('カレンダーリンクが正しい', () => {
-      const calendarItem = navigation.navigationItems.find(item => item.id === 'calendar');
+      const calendarItem = navigation.navigationItems.find(
+        (item) => item.id === 'calendar'
+      );
       expect(calendarItem.href).toBe('calendar.html');
     });
 
     test('分析リンクが正しい', () => {
-      const analysisItem = navigation.navigationItems.find(item => item.id === 'analysis');
+      const analysisItem = navigation.navigationItems.find(
+        (item) => item.id === 'analysis'
+      );
       expect(analysisItem.href).toBe('analysis.html');
     });
 
     test('プログレッシブ・オーバーロードリンクが正しい', () => {
-      const progressItem = navigation.navigationItems.find(item => item.id === 'progress');
+      const progressItem = navigation.navigationItems.find(
+        (item) => item.id === 'progress'
+      );
       expect(progressItem.href).toBe('progress.html');
     });
 
     test('エクササイズデータベースリンクが正しい', () => {
-      const exercisesItem = navigation.navigationItems.find(item => item.id === 'exercises');
+      const exercisesItem = navigation.navigationItems.find(
+        (item) => item.id === 'exercises'
+      );
       expect(exercisesItem.href).toBe('exercises.html');
     });
 
     test('設定リンクが正しい', () => {
-      const settingsItem = navigation.navigationItems.find(item => item.id === 'settings');
+      const settingsItem = navigation.navigationItems.find(
+        (item) => item.id === 'settings'
+      );
       expect(settingsItem.href).toBe('settings.html');
     });
 
     test('ヘルプリンクが正しい', () => {
-      const helpItem = navigation.navigationItems.find(item => item.id === 'help');
+      const helpItem = navigation.navigationItems.find(
+        (item) => item.id === 'help'
+      );
       expect(helpItem.href).toBe('help.html');
     });
 
     test('プライバシーポリシーリンクが正しい', () => {
-      const privacyItem = navigation.navigationItems.find(item => item.id === 'privacy');
+      const privacyItem = navigation.navigationItems.find(
+        (item) => item.id === 'privacy'
+      );
       expect(privacyItem.href).toBe('privacy.html');
     });
   });
@@ -111,21 +129,21 @@ describe('HTMLファイルのリンク検証', () => {
       <a href="calendar.html">カレンダー</a>
       <a href="analysis.html">分析</a>
     `);
-    
+
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
-      text: mockText
+      text: mockText,
     });
-    
+
     const response = await fetch('partials/sidebar.html');
     expect(response.ok).toBe(true);
-    
+
     const html = await response.text();
-    
+
     // 絶対パス（/で始まる）のリンクがないことを確認
     const absoluteLinks = html.match(/href="\/[^"]*\.html"/g);
     expect(absoluteLinks).toBeNull();
-    
+
     // 相対パスのリンクがあることを確認
     const relativeLinks = html.match(/href="[^\/][^"]*\.html"/g);
     expect(relativeLinks).not.toBeNull();
@@ -139,21 +157,21 @@ describe('HTMLファイルのリンク検証', () => {
       <a href="calendar.html">カレンダー</a>
       <a href="analysis.html">分析</a>
     `);
-    
+
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
-      text: mockText
+      text: mockText,
     });
-    
+
     const response = await fetch('partials/footer.html');
     expect(response.ok).toBe(true);
-    
+
     const html = await response.text();
-    
+
     // 絶対パス（/で始まる）のリンクがないことを確認
     const absoluteLinks = html.match(/href="\/[^"]*\.html"/g);
     expect(absoluteLinks).toBeNull();
-    
+
     // 相対パスのリンクがあることを確認
     const relativeLinks = html.match(/href="[^\/][^"]*\.html"/g);
     expect(relativeLinks).not.toBeNull();

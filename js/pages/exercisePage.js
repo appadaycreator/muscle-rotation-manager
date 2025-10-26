@@ -17,6 +17,7 @@ class ExercisePage {
     this.currentFilters = {};
     this.selectedExercise = null;
     this.isLoading = false;
+    this.favoriteExercises = new Set(); // お気に入りエクササイズ
 
     // デバウンス検索
     this.debouncedSearch = debounce((searchTerm) => {
@@ -32,6 +33,9 @@ class ExercisePage {
   init() {
     // ツールチップ機能を初期化
     tooltipManager.initialize();
+
+    // お気に入りデータを読み込み
+    this.loadFavorites();
 
     this.setupEventListeners();
     this.loadInitialData();
@@ -91,6 +95,14 @@ class ExercisePage {
       addCustomBtn.addEventListener('click', () =>
         this.showCustomExerciseModal()
       );
+    }
+
+    // お気に入りフィルターボタン
+    const favoritesFilterBtn = document.getElementById('favorites-filter');
+    if (favoritesFilterBtn) {
+      favoritesFilterBtn.addEventListener('click', () => {
+        this.toggleFavoritesFilter();
+      });
     }
 
     // カテゴリ詳細ボタン
@@ -722,6 +734,14 @@ class ExercisePage {
         return false;
       }
 
+      // お気に入りフィルター
+      if (
+        filters.showFavoritesOnly &&
+        !this.favoriteExercises.has(exercise.id)
+      ) {
+        return false;
+      }
+
       return true;
     });
   }
@@ -770,6 +790,11 @@ class ExercisePage {
     const beginnerOnly = document.getElementById('beginner-filter')?.checked;
     if (beginnerOnly) {
       filters.isBeginnerFriendly = true;
+    }
+
+    // お気に入りフィルター
+    if (this.currentFilters.showFavoritesOnly) {
+      filters.showFavoritesOnly = true;
     }
 
     // ソート
@@ -874,6 +899,7 @@ class ExercisePage {
       document.getElementById('bodyweight-filter')?.checked;
     const compoundOnly = document.getElementById('compound-filter')?.checked;
     const beginnerOnly = document.getElementById('beginner-filter')?.checked;
+    const favoritesOnly = this.currentFilters.showFavoritesOnly;
 
     return !!(
       searchTerm ||
@@ -883,7 +909,8 @@ class ExercisePage {
       exerciseType ||
       bodyweightOnly ||
       compoundOnly ||
-      beginnerOnly
+      beginnerOnly ||
+      favoritesOnly
     );
   }
 
@@ -979,72 +1006,219 @@ class ExercisePage {
 
     const isCustom = exercise.is_custom;
     const customBadge = isCustom
-      ? '<span class="inline-block bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">' +
-        'カスタム</span>'
+      ? '<span class="inline-block bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full font-medium">' +
+        '<i class="fas fa-user-edit mr-1"></i>カスタム</span>'
       : '';
 
+    // 難易度に応じた色分け
+    const difficultyColor = this.getDifficultyColor(exercise.difficulty_level);
+
+    // エクイップメントアイコン
+    const equipmentIcon = this.getEquipmentIcon(exercise.equipment);
+
+    // 筋肉部位の色
+    const muscleColor = muscleGroup?.color_code || '#6B7280';
+
     return `
-            <div class="exercise-card bg-white rounded-lg shadow-md p-6 cursor-pointer 
-                        hover:shadow-lg transition-shadow duration-200" 
+            <div class="exercise-card bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-100 hover:border-blue-200 group" 
                  data-exercise-id="${exercise.id}">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="flex-1">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-2">
-                            ${exercise.name_ja}
-                        </h3>
-                        <p class="text-sm text-gray-600 mb-2">${exercise.name_en}</p>
-                        ${customBadge}
+                <div class="p-6">
+                    <!-- ヘッダー部分 -->
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-2">
+                                <h3 class="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+                                    ${exercise.name_ja}
+                                </h3>
+                                ${customBadge}
+                            </div>
+                            <p class="text-sm text-gray-600 mb-3">${exercise.name_en}</p>
+                        </div>
+                        <div class="flex-shrink-0 ml-4">
+                            ${
+                              exercise.image_url
+                                ? `<img src="${exercise.image_url}" alt="${exercise.name_ja}" 
+                      class="w-20 h-20 rounded-lg object-cover shadow-sm">`
+                                : `<div class="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center shadow-sm">
+                                    <i class="fas fa-dumbbell text-gray-400 text-2xl"></i>
+                                 </div>`
+                            }
+                        </div>
                     </div>
+                    
+                    <!-- 詳細情報 -->
+                    <div class="space-y-3 mb-4">
+                        <!-- 筋肉部位 -->
+                        <div class="flex items-center">
+                            <i class="fas fa-muscle w-4 text-gray-500 mr-3"></i>
+                            <span class="text-sm text-gray-600 mr-2">部位:</span>
+                            <span class="px-3 py-1 rounded-full text-xs font-medium" style="background-color: ${muscleColor}20; color: ${muscleColor}">
+                                ${muscleGroup?.name_ja || '未設定'}
+                            </span>
+                        </div>
+                        
+                        <!-- 難易度 -->
+                        <div class="flex items-center">
+                            <i class="fas fa-signal w-4 text-gray-500 mr-3"></i>
+                            <span class="text-sm text-gray-600 mr-2">難易度:</span>
+                            <div class="flex items-center">
+                                <span class="text-sm font-medium ${difficultyColor} mr-2">${difficultyStars}</span>
+                                <span class="text-xs text-gray-500">(${exercise.difficulty_level}/5)</span>
+                            </div>
+                        </div>
+                        
+                        <!-- エクイップメント -->
+                        <div class="flex items-center">
+                            <i class="fas ${equipmentIcon} w-4 text-gray-500 mr-3"></i>
+                            <span class="text-sm text-gray-600 mr-2">器具:</span>
+                            <span class="text-sm font-medium text-gray-800">${this.getEquipmentDisplayName(exercise.equipment)}</span>
+                        </div>
+                        
+                        <!-- エクササイズタイプ -->
+                        <div class="flex items-center">
+                            <i class="fas fa-tag w-4 text-gray-500 mr-3"></i>
+                            <span class="text-sm text-gray-600 mr-2">タイプ:</span>
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full font-medium">
+                                ${this.getExerciseTypeLabel(exercise.exercise_type)}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <!-- 説明 -->
                     ${
-                      exercise.image_url
-                        ? `<img src="${exercise.image_url}" alt="${exercise.name_ja}" 
-              class="w-16 h-16 rounded-lg object-cover ml-4">`
-                        : `<div class="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center ml-4">
-                            <i class="fas fa-dumbbell text-gray-400"></i>
-                         </div>`
+                      exercise.description
+                        ? `
+                    <div class="mb-4">
+                        <p class="text-sm text-gray-600 line-clamp-2">${exercise.description}</p>
+                    </div>
+                    `
+                        : ''
                     }
-                </div>
-                
-                <div class="space-y-2 mb-4">
-                    <div class="flex items-center text-sm">
-                        <span class="w-16 text-gray-500">部位:</span>
-                        <span class="px-2 py-1 rounded text-xs" style="background-color: ${muscleGroup?.color_code}20; color: ${muscleGroup?.color_code}">
-                            ${muscleGroup?.name_ja || '未設定'}
-                        </span>
-                    </div>
-                    <div class="flex items-center text-sm">
-                        <span class="w-16 text-gray-500">難易度:</span>
-                        <span class="text-yellow-500">${difficultyStars}</span>
-                    </div>
-                    <div class="flex items-center text-sm">
-                        <span class="w-16 text-gray-500">器具:</span>
-                        <span class="text-gray-700">${this.getEquipmentDisplayName(exercise.equipment)}</span>
-                    </div>
-                </div>
-                
-                <p class="text-sm text-gray-600 line-clamp-2">${exercise.description || ''}</p>
-                
-                <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
-                    <div class="flex items-center space-x-4 text-xs text-gray-500">
-                        ${exercise.is_bodyweight ? '<span class="bg-green-100 text-green-800 px-2 py-1 rounded">自重</span>' : ''}
-                        ${exercise.is_compound ? '<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">複合</span>' : ''}
-                        ${exercise.is_beginner_friendly ? '<span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded">初心者</span>' : ''}
-                    </div>
-                    <div class="flex items-center space-x-2 text-xs text-gray-500">
-                        ${
-                          exercise.average_rating > 0
-                            ? `<span>★${exercise.average_rating.toFixed(1)}</span>`
-                            : ''
-                        }
-                        ${
-                          exercise.usage_count > 0
-                            ? `<span>${exercise.usage_count}回使用</span>`
-                            : ''
-                        }
+                    
+                    <!-- フッター -->
+                    <div class="flex justify-between items-center pt-3 border-t border-gray-100">
+                        <div class="flex items-center space-x-3">
+                            ${exercise.is_compound ? '<span class="text-xs text-green-600 font-medium"><i class="fas fa-link mr-1"></i>複合</span>' : ''}
+                            ${exercise.is_bodyweight ? '<span class="text-xs text-blue-600 font-medium"><i class="fas fa-weight mr-1"></i>自重</span>' : ''}
+                            ${exercise.is_beginner_friendly ? '<span class="text-xs text-purple-600 font-medium"><i class="fas fa-seedling mr-1"></i>初心者向け</span>' : ''}
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button class="p-2 text-gray-400 hover:text-red-500 transition-colors" 
+                                    onclick="event.stopPropagation(); window.exercisePageInstance.toggleFavorite('${exercise.id}')"
+                                    title="お気に入り">
+                                <i class="${this.favoriteExercises.has(exercise.id) ? 'fas fa-heart text-red-500' : 'far fa-heart'}"></i>
+                            </button>
+                            <button class="p-2 text-gray-400 hover:text-blue-500 transition-colors" 
+                                    onclick="event.stopPropagation(); window.exercisePageInstance.showExerciseDetail('${exercise.id}')"
+                                    title="詳細">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         `;
+  }
+
+  /**
+   * 難易度に応じた色を取得
+   */
+  getDifficultyColor(level) {
+    const colors = {
+      1: 'text-green-600',
+      2: 'text-blue-600',
+      3: 'text-yellow-600',
+      4: 'text-orange-600',
+      5: 'text-red-600',
+    };
+    return colors[level] || 'text-gray-600';
+  }
+
+  /**
+   * エクイップメントアイコンを取得
+   */
+  getEquipmentIcon(equipment) {
+    const icons = {
+      bodyweight: 'fa-weight',
+      dumbbell: 'fa-dumbbell',
+      barbell: 'fa-weight-hanging',
+      machine: 'fa-cogs',
+      'cable machine': 'fa-link',
+      kettlebell: 'fa-dumbbell',
+      'resistance band': 'fa-expand-arrows-alt',
+      'pull-up bar': 'fa-grip-lines',
+      'dip bars': 'fa-grip-lines-vertical',
+    };
+    return icons[equipment] || 'fa-dumbbell';
+  }
+
+  /**
+   * お気に入りデータを読み込み
+   */
+  loadFavorites() {
+    try {
+      const favorites = localStorage.getItem('favoriteExercises');
+      if (favorites) {
+        this.favoriteExercises = new Set(JSON.parse(favorites));
+      }
+    } catch (error) {
+      console.error('Error loading favorites:', error);
+      this.favoriteExercises = new Set();
+    }
+  }
+
+  /**
+   * お気に入りデータを保存
+   */
+  saveFavorites() {
+    try {
+      localStorage.setItem(
+        'favoriteExercises',
+        JSON.stringify([...this.favoriteExercises])
+      );
+    } catch (error) {
+      console.error('Error saving favorites:', error);
+    }
+  }
+
+  /**
+   * お気に入りの切り替え
+   */
+  toggleFavorite(exerciseId) {
+    if (this.favoriteExercises.has(exerciseId)) {
+      this.favoriteExercises.delete(exerciseId);
+      showNotification('お気に入りから削除しました', 'info');
+    } else {
+      this.favoriteExercises.add(exerciseId);
+      showNotification('お気に入りに追加しました', 'success');
+    }
+
+    this.saveFavorites();
+    this.updateFavoriteButtons();
+  }
+
+  /**
+   * お気に入りフィルターの切り替え
+   */
+  toggleFavoritesFilter() {
+    const favoritesFilterBtn = document.getElementById('favorites-filter');
+    if (!favoritesFilterBtn) return;
+
+    const isActive = favoritesFilterBtn.classList.contains('bg-red-600');
+
+    if (isActive) {
+      // フィルターを解除
+      favoritesFilterBtn.classList.remove('bg-red-600', 'text-white');
+      favoritesFilterBtn.classList.add('bg-red-100', 'text-red-700');
+      this.currentFilters.showFavoritesOnly = false;
+    } else {
+      // フィルターを適用
+      favoritesFilterBtn.classList.remove('bg-red-100', 'text-red-700');
+      favoritesFilterBtn.classList.add('bg-red-600', 'text-white');
+      this.currentFilters.showFavoritesOnly = true;
+    }
+
+    this.applyFilters();
   }
 
   /**
@@ -2224,3 +2398,6 @@ class ExercisePage {
 
 // シングルトンインスタンスをエクスポート
 export const exercisePage = new ExercisePage();
+
+// グローバルインスタンスを設定
+window.exercisePageInstance = exercisePage;

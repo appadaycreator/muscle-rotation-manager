@@ -229,7 +229,7 @@ class AccessibilityManager {
   optimizeTabOrder() {
     const focusableElements = this.getFocusableElements();
 
-    focusableElements.forEach((element, index) => {
+    focusableElements.forEach((element, _index) => {
       // 論理的な順序でtabindexを設定
       if (!element.hasAttribute('tabindex')) {
         element.setAttribute('tabindex', '0');

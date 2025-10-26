@@ -90,7 +90,7 @@ class CalendarPage extends BasePage {
 
       // ワークアウトデータサービスから読み込み
       this.workoutData = await workoutDataService.loadWorkouts({ limit: 1000 });
-      
+
       // 予定されたワークアウトを読み込み
       this.plannedWorkouts = JSON.parse(
         localStorage.getItem('plannedWorkouts') || '[]'
@@ -100,7 +100,7 @@ class CalendarPage extends BasePage {
       if (this.workoutData.length === 0) {
         console.log('No workout data found, generating sample data...');
         this.workoutData = this.generateSampleWorkoutData();
-        
+
         // サンプルデータを保存
         for (const workout of this.workoutData) {
           await workoutDataService.saveWorkout(workout);
@@ -355,7 +355,7 @@ class CalendarPage extends BasePage {
     console.log('Rendering calendar...');
     this.updateMonthDisplay();
     this.renderCalendarDates();
-    
+
     // 統計の表示を少し遅延させて確実に実行
     setTimeout(async () => {
       await this.renderMonthlyStats();
@@ -525,11 +525,15 @@ class CalendarPage extends BasePage {
                     `
                         : ''
                     }
-                    ${dateInfo.workouts.length > 0 ? `
+                    ${
+                      dateInfo.workouts.length > 0
+                        ? `
                         <div class="text-xs text-gray-400 mt-1">
                             ${Math.floor(dateInfo.workouts.reduce((sum, w) => sum + (w.duration || 0), 0) / 60)}分
                         </div>
-                    ` : ''}
+                    `
+                        : ''
+                    }
                 </div>
             `;
       })
@@ -637,10 +641,10 @@ class CalendarPage extends BasePage {
 
     try {
       console.log(`Calculating stats for ${year}-${month + 1}`);
-      
+
       // ワークアウトデータサービスから統計を取得
       const stats = await workoutDataService.getMonthlyStats(year, month);
-      
+
       console.log('Monthly stats:', stats);
 
       // データが無い場合の表示
@@ -704,15 +708,22 @@ class CalendarPage extends BasePage {
 
     try {
       console.log(`Calculating muscle stats for ${year}-${month + 1}`);
-      
+
       // ワークアウトデータサービスから部位別統計を取得
-      const muscleStats = await workoutDataService.getMuscleGroupStats(year, month);
-      
+      const muscleStats = await workoutDataService.getMuscleGroupStats(
+        year,
+        month
+      );
+
       console.log('Muscle stats:', muscleStats);
 
       // MUSCLE_GROUPSの順序で表示
       statsContainer.innerHTML = MUSCLE_GROUPS.map((group) => {
-        const stats = muscleStats[group.id] || { count: 0, totalDuration: 0, exercises: [] };
+        const stats = muscleStats[group.id] || {
+          count: 0,
+          totalDuration: 0,
+          exercises: [],
+        };
         return `
             <div class="text-center p-3 ${group.bgColor} rounded-lg hover:shadow-md transition-shadow">
                 <div class="text-xl font-bold ${group.textColor}">
@@ -721,15 +732,19 @@ class CalendarPage extends BasePage {
                 <div class="text-sm ${group.textColor} font-medium">
                     ${group.name}
                 </div>
-                ${stats.count > 0 ? `
+                ${
+                  stats.count > 0
+                    ? `
                     <div class="text-xs ${group.textColor} opacity-75 mt-1">
                         ${Math.floor(stats.totalDuration / 60)}分
                     </div>
-                ` : `
+                `
+                    : `
                     <div class="text-xs ${group.textColor} opacity-50 mt-1">
                         未実施
                     </div>
-                `}
+                `
+                }
             </div>
         `;
       }).join('');

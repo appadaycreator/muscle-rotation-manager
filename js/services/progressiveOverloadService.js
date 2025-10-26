@@ -25,8 +25,12 @@ export class ProgressiveOverloadService {
 
     try {
       const workouts = await workoutDataService.loadWorkouts({ limit: 1000 });
-      const exerciseData = this.filterExerciseData(workouts, exerciseName, days);
-      
+      const exerciseData = this.filterExerciseData(
+        workouts,
+        exerciseName,
+        days
+      );
+
       const analysis = {
         exerciseName,
         period: days,
@@ -36,7 +40,7 @@ export class ProgressiveOverloadService {
         intensityProgression: this.calculateIntensityProgression(exerciseData),
         recommendations: this.generateRecommendations(exerciseData),
         trends: this.analyzeTrends(exerciseData),
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
       };
 
       this.setCachedAnalysis(cacheKey, analysis);
@@ -60,17 +64,22 @@ export class ProgressiveOverloadService {
 
     try {
       const workouts = await workoutDataService.loadWorkouts({ limit: 1000 });
-      const muscleData = this.filterMuscleGroupData(workouts, muscleGroup, days);
-      
+      const muscleData = this.filterMuscleGroupData(
+        workouts,
+        muscleGroup,
+        days
+      );
+
       const analysis = {
         muscleGroup,
         period: days,
         totalSessions: muscleData.length,
         exercises: this.analyzeMuscleGroupExercises(muscleData),
-        volumeProgression: this.calculateMuscleGroupVolumeProgression(muscleData),
+        volumeProgression:
+          this.calculateMuscleGroupVolumeProgression(muscleData),
         frequencyAnalysis: this.analyzeMuscleGroupFrequency(muscleData),
         recommendations: this.generateMuscleGroupRecommendations(muscleData),
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
       };
 
       this.setCachedAnalysis(cacheKey, analysis);
@@ -94,16 +103,18 @@ export class ProgressiveOverloadService {
     try {
       const workouts = await workoutDataService.loadWorkouts({ limit: 1000 });
       const recentWorkouts = this.filterRecentWorkouts(workouts, days);
-      
+
       const analysis = {
         period: days,
         totalWorkouts: recentWorkouts.length,
         overallMetrics: this.calculateOverallMetrics(recentWorkouts),
-        muscleGroupProgress: await this.calculateAllMuscleGroupProgress(recentWorkouts),
-        exerciseProgress: await this.calculateAllExerciseProgress(recentWorkouts),
+        muscleGroupProgress:
+          await this.calculateAllMuscleGroupProgress(recentWorkouts),
+        exerciseProgress:
+          await this.calculateAllExerciseProgress(recentWorkouts),
         consistencyScore: this.calculateConsistencyScore(recentWorkouts),
         recommendations: this.generateOverallRecommendations(recentWorkouts),
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
       };
 
       this.setCachedAnalysis(cacheKey, analysis);
@@ -126,17 +137,19 @@ export class ProgressiveOverloadService {
     cutoffDate.setDate(cutoffDate.getDate() - days);
 
     return workouts
-      .filter(workout => {
+      .filter((workout) => {
         const workoutDate = new Date(workout.date || workout.startTime);
         return workoutDate >= cutoffDate;
       })
-      .map(workout => ({
+      .map((workout) => ({
         ...workout,
-        exerciseData: (workout.exercises || []).filter(exercise => 
-          exercise.name && exercise.name.toLowerCase().includes(exerciseName.toLowerCase())
-        )
+        exerciseData: (workout.exercises || []).filter(
+          (exercise) =>
+            exercise.name &&
+            exercise.name.toLowerCase().includes(exerciseName.toLowerCase())
+        ),
       }))
-      .filter(workout => workout.exerciseData.length > 0);
+      .filter((workout) => workout.exerciseData.length > 0);
   }
 
   /**
@@ -151,13 +164,13 @@ export class ProgressiveOverloadService {
     cutoffDate.setDate(cutoffDate.getDate() - days);
 
     return workouts
-      .filter(workout => {
+      .filter((workout) => {
         const workoutDate = new Date(workout.date || workout.startTime);
         return workoutDate >= cutoffDate;
       })
-      .filter(workout => {
+      .filter((workout) => {
         const muscleGroups = workout.muscle_groups || [];
-        return muscleGroups.some(muscle => 
+        return muscleGroups.some((muscle) =>
           muscle.toLowerCase().includes(muscleGroup.toLowerCase())
         );
       });
@@ -173,7 +186,7 @@ export class ProgressiveOverloadService {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
 
-    return workouts.filter(workout => {
+    return workouts.filter((workout) => {
       const workoutDate = new Date(workout.date || workout.startTime);
       return workoutDate >= cutoffDate;
     });
@@ -192,44 +205,54 @@ export class ProgressiveOverloadService {
         consistencyScore: 0,
         averageWeight: 0,
         averageReps: 0,
-        averageSets: 0
+        averageSets: 0,
       };
     }
 
-    const sessions = exerciseData.map(workout => {
-      const exercise = workout.exerciseData[0];
-      return {
-        date: new Date(workout.date || workout.startTime),
-        weight: exercise.weight || 0,
-        reps: exercise.reps || 0,
-        sets: exercise.sets || 0,
-        volume: (exercise.weight || 0) * (exercise.reps || 0) * (exercise.sets || 0)
-      };
-    }).sort((a, b) => a.date - b.date);
+    const sessions = exerciseData
+      .map((workout) => {
+        const exercise = workout.exerciseData[0];
+        return {
+          date: new Date(workout.date || workout.startTime),
+          weight: exercise.weight || 0,
+          reps: exercise.reps || 0,
+          sets: exercise.sets || 0,
+          volume:
+            (exercise.weight || 0) *
+            (exercise.reps || 0) *
+            (exercise.sets || 0),
+        };
+      })
+      .sort((a, b) => a.date - b.date);
 
     const firstHalf = sessions.slice(0, Math.ceil(sessions.length / 2));
     const secondHalf = sessions.slice(Math.floor(sessions.length / 2));
 
     const firstHalfAvgVolume = this.calculateAverageVolume(firstHalf);
     const secondHalfAvgVolume = this.calculateAverageVolume(secondHalf);
-    const volumeProgression = firstHalfAvgVolume > 0 
-      ? ((secondHalfAvgVolume - firstHalfAvgVolume) / firstHalfAvgVolume) * 100 
-      : 0;
+    const volumeProgression =
+      firstHalfAvgVolume > 0
+        ? ((secondHalfAvgVolume - firstHalfAvgVolume) / firstHalfAvgVolume) *
+          100
+        : 0;
 
     const firstHalfAvgWeight = this.calculateAverageWeight(firstHalf);
     const secondHalfAvgWeight = this.calculateAverageWeight(secondHalf);
-    const intensityProgression = firstHalfAvgWeight > 0 
-      ? ((secondHalfAvgWeight - firstHalfAvgWeight) / firstHalfAvgWeight) * 100 
-      : 0;
+    const intensityProgression =
+      firstHalfAvgWeight > 0
+        ? ((secondHalfAvgWeight - firstHalfAvgWeight) / firstHalfAvgWeight) *
+          100
+        : 0;
 
     return {
       volumeProgression: Math.round(volumeProgression * 10) / 10,
       intensityProgression: Math.round(intensityProgression * 10) / 10,
       consistencyScore: this.calculateConsistencyScore(exerciseData),
-      averageWeight: Math.round(this.calculateAverageWeight(sessions) * 10) / 10,
+      averageWeight:
+        Math.round(this.calculateAverageWeight(sessions) * 10) / 10,
       averageReps: Math.round(this.calculateAverageReps(sessions) * 10) / 10,
       averageSets: Math.round(this.calculateAverageSets(sessions) * 10) / 10,
-      totalSessions: sessions.length
+      totalSessions: sessions.length,
     };
   }
 
@@ -239,17 +262,20 @@ export class ProgressiveOverloadService {
    * @returns {Array} ボリューム進歩データ
    */
   calculateVolumeProgression(exerciseData) {
-    return exerciseData.map(workout => {
-      const exercise = workout.exerciseData[0];
-      const volume = (exercise.weight || 0) * (exercise.reps || 0) * (exercise.sets || 0);
-      return {
-        date: new Date(workout.date || workout.startTime),
-        volume,
-        weight: exercise.weight || 0,
-        reps: exercise.reps || 0,
-        sets: exercise.sets || 0
-      };
-    }).sort((a, b) => a.date - b.date);
+    return exerciseData
+      .map((workout) => {
+        const exercise = workout.exerciseData[0];
+        const volume =
+          (exercise.weight || 0) * (exercise.reps || 0) * (exercise.sets || 0);
+        return {
+          date: new Date(workout.date || workout.startTime),
+          volume,
+          weight: exercise.weight || 0,
+          reps: exercise.reps || 0,
+          sets: exercise.sets || 0,
+        };
+      })
+      .sort((a, b) => a.date - b.date);
   }
 
   /**
@@ -258,16 +284,18 @@ export class ProgressiveOverloadService {
    * @returns {Array} 強度進歩データ
    */
   calculateIntensityProgression(exerciseData) {
-    return exerciseData.map(workout => {
-      const exercise = workout.exerciseData[0];
-      return {
-        date: new Date(workout.date || workout.startTime),
-        weight: exercise.weight || 0,
-        reps: exercise.reps || 0,
-        sets: exercise.sets || 0,
-        intensity: exercise.weight || 0
-      };
-    }).sort((a, b) => a.date - b.date);
+    return exerciseData
+      .map((workout) => {
+        const exercise = workout.exerciseData[0];
+        return {
+          date: new Date(workout.date || workout.startTime),
+          weight: exercise.weight || 0,
+          reps: exercise.reps || 0,
+          sets: exercise.sets || 0,
+          intensity: exercise.weight || 0,
+        };
+      })
+      .sort((a, b) => a.date - b.date);
   }
 
   /**
@@ -279,8 +307,8 @@ export class ProgressiveOverloadService {
     const exerciseCounts = {};
     const exerciseProgress = {};
 
-    muscleData.forEach(workout => {
-      (workout.exercises || []).forEach(exercise => {
+    muscleData.forEach((workout) => {
+      (workout.exercises || []).forEach((exercise) => {
         const exerciseName = exercise.name;
         if (!exerciseCounts[exerciseName]) {
           exerciseCounts[exerciseName] = 0;
@@ -291,32 +319,37 @@ export class ProgressiveOverloadService {
           date: new Date(workout.date || workout.startTime),
           weight: exercise.weight || 0,
           reps: exercise.reps || 0,
-          sets: exercise.sets || 0
+          sets: exercise.sets || 0,
         });
       });
     });
 
     // 各エクササイズの進歩を計算
-    Object.keys(exerciseProgress).forEach(exerciseName => {
-      const sessions = exerciseProgress[exerciseName].sort((a, b) => a.date - b.date);
+    Object.keys(exerciseProgress).forEach((exerciseName) => {
+      const sessions = exerciseProgress[exerciseName].sort(
+        (a, b) => a.date - b.date
+      );
       if (sessions.length >= 2) {
         const firstSession = sessions[0];
         const lastSession = sessions[sessions.length - 1];
-        const weightProgress = firstSession.weight > 0 
-          ? ((lastSession.weight - firstSession.weight) / firstSession.weight) * 100 
-          : 0;
-        
+        const weightProgress =
+          firstSession.weight > 0
+            ? ((lastSession.weight - firstSession.weight) /
+                firstSession.weight) *
+              100
+            : 0;
+
         exerciseProgress[exerciseName] = {
           sessions: sessions,
           weightProgress: Math.round(weightProgress * 10) / 10,
-          totalSessions: sessions.length
+          totalSessions: sessions.length,
         };
       }
     });
 
     return {
       exerciseCounts,
-      exerciseProgress
+      exerciseProgress,
     };
   }
 
@@ -326,18 +359,28 @@ export class ProgressiveOverloadService {
    * @returns {Array} ボリューム進歩データ
    */
   calculateMuscleGroupVolumeProgression(muscleData) {
-    return muscleData.map(workout => {
-      const totalVolume = (workout.exercises || []).reduce((sum, exercise) => {
-        return sum + ((exercise.weight || 0) * (exercise.reps || 0) * (exercise.sets || 0));
-      }, 0);
+    return muscleData
+      .map((workout) => {
+        const totalVolume = (workout.exercises || []).reduce(
+          (sum, exercise) => {
+            return (
+              sum +
+              (exercise.weight || 0) *
+                (exercise.reps || 0) *
+                (exercise.sets || 0)
+            );
+          },
+          0
+        );
 
-      return {
-        date: new Date(workout.date || workout.startTime),
-        volume: totalVolume,
-        exerciseCount: (workout.exercises || []).length,
-        duration: workout.duration || 0
-      };
-    }).sort((a, b) => a.date - b.date);
+        return {
+          date: new Date(workout.date || workout.startTime),
+          volume: totalVolume,
+          exerciseCount: (workout.exercises || []).length,
+          duration: workout.duration || 0,
+        };
+      })
+      .sort((a, b) => a.date - b.date);
   }
 
   /**
@@ -346,48 +389,57 @@ export class ProgressiveOverloadService {
    * @returns {Object} 頻度分析データ
    */
   analyzeMuscleGroupFrequency(muscleData) {
-    const sessions = muscleData.map(workout => ({
-      date: new Date(workout.date || workout.startTime)
-    })).sort((a, b) => a.date - b.date);
+    const sessions = muscleData
+      .map((workout) => ({
+        date: new Date(workout.date || workout.startTime),
+      }))
+      .sort((a, b) => a.date - b.date);
 
     if (sessions.length === 0) {
       return {
         averageDaysBetween: 0,
         frequencyScore: 0,
         lastWorkout: null,
-        nextRecommended: null
+        nextRecommended: null,
       };
     }
 
     // セッション間隔を計算
     const intervals = [];
     for (let i = 1; i < sessions.length; i++) {
-      const interval = (sessions[i].date - sessions[i-1].date) / (1000 * 60 * 60 * 24);
+      const interval =
+        (sessions[i].date - sessions[i - 1].date) / (1000 * 60 * 60 * 24);
       intervals.push(interval);
     }
 
-    const averageDaysBetween = intervals.length > 0 
-      ? intervals.reduce((sum, interval) => sum + interval, 0) / intervals.length 
-      : 0;
+    const averageDaysBetween =
+      intervals.length > 0
+        ? intervals.reduce((sum, interval) => sum + interval, 0) /
+          intervals.length
+        : 0;
 
     const lastWorkout = sessions[sessions.length - 1].date;
-    const daysSinceLastWorkout = (new Date() - lastWorkout) / (1000 * 60 * 60 * 24);
-    
+    const _daysSinceLastWorkout =
+      (new Date() - lastWorkout) / (1000 * 60 * 60 * 24);
+
     // 頻度スコア（理想的には2-3日間隔）
     const idealInterval = 2.5;
-    const frequencyScore = averageDaysBetween > 0 
-      ? Math.max(0, 100 - Math.abs(averageDaysBetween - idealInterval) * 20)
-      : 0;
+    const frequencyScore =
+      averageDaysBetween > 0
+        ? Math.max(0, 100 - Math.abs(averageDaysBetween - idealInterval) * 20)
+        : 0;
 
     const nextRecommended = new Date(lastWorkout);
-    nextRecommended.setDate(nextRecommended.getDate() + Math.round(averageDaysBetween));
+    nextRecommended.setDate(
+      nextRecommended.getDate() + Math.round(averageDaysBetween)
+    );
 
     return {
       averageDaysBetween: Math.round(averageDaysBetween * 10) / 10,
       frequencyScore: Math.round(frequencyScore),
       lastWorkout,
       nextRecommended,
-      totalSessions: sessions.length
+      totalSessions: sessions.length,
     };
   }
 
@@ -398,17 +450,27 @@ export class ProgressiveOverloadService {
    */
   calculateOverallMetrics(workouts) {
     const totalVolume = workouts.reduce((sum, workout) => {
-      return sum + (workout.exercises || []).reduce((exerciseSum, exercise) => {
-        return exerciseSum + ((exercise.weight || 0) * (exercise.reps || 0) * (exercise.sets || 0));
-      }, 0);
+      return (
+        sum +
+        (workout.exercises || []).reduce((exerciseSum, exercise) => {
+          return (
+            exerciseSum +
+            (exercise.weight || 0) * (exercise.reps || 0) * (exercise.sets || 0)
+          );
+        }, 0)
+      );
     }, 0);
 
-    const totalDuration = workouts.reduce((sum, workout) => sum + (workout.duration || 0), 0);
-    const averageDuration = workouts.length > 0 ? totalDuration / workouts.length : 0;
+    const totalDuration = workouts.reduce(
+      (sum, workout) => sum + (workout.duration || 0),
+      0
+    );
+    const averageDuration =
+      workouts.length > 0 ? totalDuration / workouts.length : 0;
 
     const muscleGroupCounts = {};
-    workouts.forEach(workout => {
-      (workout.muscle_groups || []).forEach(muscle => {
+    workouts.forEach((workout) => {
+      (workout.muscle_groups || []).forEach((muscle) => {
         muscleGroupCounts[muscle] = (muscleGroupCounts[muscle] || 0) + 1;
       });
     });
@@ -419,7 +481,8 @@ export class ProgressiveOverloadService {
       averageDuration: Math.round(averageDuration / 60), // 分単位
       muscleGroupDistribution: muscleGroupCounts,
       totalWorkouts: workouts.length,
-      averageVolumePerWorkout: workouts.length > 0 ? Math.round(totalVolume / workouts.length) : 0
+      averageVolumePerWorkout:
+        workouts.length > 0 ? Math.round(totalVolume / workouts.length) : 0,
     };
   }
 
@@ -430,16 +493,24 @@ export class ProgressiveOverloadService {
    */
   async calculateAllMuscleGroupProgress(workouts) {
     const muscleGroups = new Set();
-    workouts.forEach(workout => {
-      (workout.muscle_groups || []).forEach(muscle => muscleGroups.add(muscle));
+    workouts.forEach((workout) => {
+      (workout.muscle_groups || []).forEach((muscle) =>
+        muscleGroups.add(muscle)
+      );
     });
 
     const progress = {};
     for (const muscleGroup of muscleGroups) {
       try {
-        progress[muscleGroup] = await this.getMuscleGroupProgress(muscleGroup, 90);
+        progress[muscleGroup] = await this.getMuscleGroupProgress(
+          muscleGroup,
+          90
+        );
       } catch (error) {
-        console.warn(`Error calculating progress for muscle group ${muscleGroup}:`, error);
+        console.warn(
+          `Error calculating progress for muscle group ${muscleGroup}:`,
+          error
+        );
         progress[muscleGroup] = null;
       }
     }
@@ -454,8 +525,8 @@ export class ProgressiveOverloadService {
    */
   async calculateAllExerciseProgress(workouts) {
     const exercises = new Set();
-    workouts.forEach(workout => {
-      (workout.exercises || []).forEach(exercise => {
+    workouts.forEach((workout) => {
+      (workout.exercises || []).forEach((exercise) => {
         if (exercise.name) exercises.add(exercise.name);
       });
     });
@@ -463,9 +534,15 @@ export class ProgressiveOverloadService {
     const progress = {};
     for (const exerciseName of exercises) {
       try {
-        progress[exerciseName] = await this.getExerciseProgress(exerciseName, 90);
+        progress[exerciseName] = await this.getExerciseProgress(
+          exerciseName,
+          90
+        );
       } catch (error) {
-        console.warn(`Error calculating progress for exercise ${exerciseName}:`, error);
+        console.warn(
+          `Error calculating progress for exercise ${exerciseName}:`,
+          error
+        );
         progress[exerciseName] = null;
       }
     }
@@ -481,25 +558,33 @@ export class ProgressiveOverloadService {
   calculateConsistencyScore(workouts) {
     if (workouts.length < 2) return 0;
 
-    const sessions = workouts.map(workout => ({
-      date: new Date(workout.date || workout.startTime)
-    })).sort((a, b) => a.date - b.date);
+    const sessions = workouts
+      .map((workout) => ({
+        date: new Date(workout.date || workout.startTime),
+      }))
+      .sort((a, b) => a.date - b.date);
 
     // セッション間隔の一貫性を計算
     const intervals = [];
     for (let i = 1; i < sessions.length; i++) {
-      const interval = (sessions[i].date - sessions[i-1].date) / (1000 * 60 * 60 * 24);
+      const interval =
+        (sessions[i].date - sessions[i - 1].date) / (1000 * 60 * 60 * 24);
       intervals.push(interval);
     }
 
     if (intervals.length === 0) return 0;
 
-    const averageInterval = intervals.reduce((sum, interval) => sum + interval, 0) / intervals.length;
-    const variance = intervals.reduce((sum, interval) => sum + Math.pow(interval - averageInterval, 2), 0) / intervals.length;
+    const averageInterval =
+      intervals.reduce((sum, interval) => sum + interval, 0) / intervals.length;
+    const variance =
+      intervals.reduce(
+        (sum, interval) => sum + Math.pow(interval - averageInterval, 2),
+        0
+      ) / intervals.length;
     const standardDeviation = Math.sqrt(variance);
 
     // 標準偏差が小さいほど一貫性が高い
-    const consistencyScore = Math.max(0, 100 - (standardDeviation * 10));
+    const consistencyScore = Math.max(0, 100 - standardDeviation * 10);
     return Math.round(consistencyScore);
   }
 
@@ -516,8 +601,9 @@ export class ProgressiveOverloadService {
       recommendations.push({
         type: 'volume',
         priority: 'high',
-        message: 'ボリュームの増加が停滞しています。セット数やレップ数を増やすことを検討してください。',
-        action: 'セット数を1-2セット増やすか、レップ数を2-3回増やす'
+        message:
+          'ボリュームの増加が停滞しています。セット数やレップ数を増やすことを検討してください。',
+        action: 'セット数を1-2セット増やすか、レップ数を2-3回増やす',
       });
     }
 
@@ -525,8 +611,9 @@ export class ProgressiveOverloadService {
       recommendations.push({
         type: 'intensity',
         priority: 'medium',
-        message: '重量の増加が緩やかです。より重い重量にチャレンジしてみてください。',
-        action: '重量を2.5-5kg増やすか、より重い重量でレップ数を減らす'
+        message:
+          '重量の増加が緩やかです。より重い重量にチャレンジしてみてください。',
+        action: '重量を2.5-5kg増やすか、より重い重量でレップ数を減らす',
       });
     }
 
@@ -535,7 +622,7 @@ export class ProgressiveOverloadService {
         type: 'consistency',
         priority: 'high',
         message: 'トレーニングの一貫性を改善する必要があります。',
-        action: '定期的なスケジュールを設定し、週2-3回の頻度を維持する'
+        action: '定期的なスケジュールを設定し、週2-3回の頻度を維持する',
       });
     }
 
@@ -544,7 +631,7 @@ export class ProgressiveOverloadService {
         type: 'positive',
         priority: 'low',
         message: '素晴らしい進歩です！現在のトレーニングを継続してください。',
-        action: '現在のプログラムを維持し、必要に応じて微調整する'
+        action: '現在のプログラムを維持し、必要に応じて微調整する',
       });
     }
 
@@ -565,7 +652,7 @@ export class ProgressiveOverloadService {
         type: 'frequency',
         priority: 'high',
         message: 'この部位のトレーニング頻度が低すぎます。',
-        action: '週1-2回の頻度でトレーニングを増やす'
+        action: '週1-2回の頻度でトレーニングを増やす',
       });
     }
 
@@ -574,7 +661,8 @@ export class ProgressiveOverloadService {
         type: 'recovery',
         priority: 'medium',
         message: 'トレーニング間隔が長すぎる可能性があります。',
-        action: 'より頻繁にトレーニングするか、他の部位との組み合わせを検討する'
+        action:
+          'より頻繁にトレーニングするか、他の部位との組み合わせを検討する',
       });
     }
 
@@ -596,7 +684,7 @@ export class ProgressiveOverloadService {
         type: 'consistency',
         priority: 'high',
         message: 'トレーニングの一貫性を改善しましょう。',
-        action: '定期的なスケジュールを設定し、週3-4回の頻度を目標にする'
+        action: '定期的なスケジュールを設定し、週3-4回の頻度を目標にする',
       });
     }
 
@@ -605,7 +693,7 @@ export class ProgressiveOverloadService {
         type: 'volume',
         priority: 'medium',
         message: 'セッションあたりのボリュームを増やすことを検討してください。',
-        action: 'エクササイズ数やセット数を増やす'
+        action: 'エクササイズ数やセット数を増やす',
       });
     }
 
@@ -615,7 +703,7 @@ export class ProgressiveOverloadService {
         type: 'balance',
         priority: 'medium',
         message: 'より多くの筋肉部位をトレーニングしましょう。',
-        action: '新しいエクササイズや筋肉部位を追加する'
+        action: '新しいエクササイズや筋肉部位を追加する',
       });
     }
 
@@ -628,33 +716,55 @@ export class ProgressiveOverloadService {
    * @returns {Object} トレンド分析データ
    */
   analyzeTrends(exerciseData) {
-    const sessions = exerciseData.map(workout => {
-      const exercise = workout.exerciseData[0];
-      return {
-        date: new Date(workout.date || workout.startTime),
-        weight: exercise.weight || 0,
-        reps: exercise.reps || 0,
-        sets: exercise.sets || 0,
-        volume: (exercise.weight || 0) * (exercise.reps || 0) * (exercise.sets || 0)
-      };
-    }).sort((a, b) => a.date - b.date);
+    const sessions = exerciseData
+      .map((workout) => {
+        const exercise = workout.exerciseData[0];
+        return {
+          date: new Date(workout.date || workout.startTime),
+          weight: exercise.weight || 0,
+          reps: exercise.reps || 0,
+          sets: exercise.sets || 0,
+          volume:
+            (exercise.weight || 0) *
+            (exercise.reps || 0) *
+            (exercise.sets || 0),
+        };
+      })
+      .sort((a, b) => a.date - b.date);
 
     if (sessions.length < 3) {
       return {
         weightTrend: 'insufficient_data',
         volumeTrend: 'insufficient_data',
-        consistencyTrend: 'insufficient_data'
+        consistencyTrend: 'insufficient_data',
       };
     }
 
     // 線形回帰でトレンドを計算
-    const weightTrend = this.calculateLinearTrend(sessions.map(s => s.weight));
-    const volumeTrend = this.calculateLinearTrend(sessions.map(s => s.volume));
+    const weightTrend = this.calculateLinearTrend(
+      sessions.map((s) => s.weight)
+    );
+    const volumeTrend = this.calculateLinearTrend(
+      sessions.map((s) => s.volume)
+    );
 
     return {
-      weightTrend: weightTrend > 0.1 ? 'increasing' : weightTrend < -0.1 ? 'decreasing' : 'stable',
-      volumeTrend: volumeTrend > 0.1 ? 'increasing' : volumeTrend < -0.1 ? 'decreasing' : 'stable',
-      consistencyTrend: this.calculateConsistencyScore(exerciseData) > 70 ? 'good' : 'needs_improvement'
+      weightTrend:
+        weightTrend > 0.1
+          ? 'increasing'
+          : weightTrend < -0.1
+            ? 'decreasing'
+            : 'stable',
+      volumeTrend:
+        volumeTrend > 0.1
+          ? 'increasing'
+          : volumeTrend < -0.1
+            ? 'decreasing'
+            : 'stable',
+      consistencyTrend:
+        this.calculateConsistencyScore(exerciseData) > 70
+          ? 'good'
+          : 'needs_improvement',
     };
   }
 
@@ -665,7 +775,7 @@ export class ProgressiveOverloadService {
    */
   calculateLinearTrend(values) {
     const n = values.length;
-    const x = Array.from({length: n}, (_, i) => i);
+    const x = Array.from({ length: n }, (_, i) => i);
     const y = values;
 
     const sumX = x.reduce((sum, val) => sum + val, 0);
@@ -679,33 +789,37 @@ export class ProgressiveOverloadService {
 
   // ヘルパーメソッド
   calculateAverageVolume(sessions) {
-    return sessions.length > 0 
-      ? sessions.reduce((sum, session) => sum + session.volume, 0) / sessions.length 
+    return sessions.length > 0
+      ? sessions.reduce((sum, session) => sum + session.volume, 0) /
+          sessions.length
       : 0;
   }
 
   calculateAverageWeight(sessions) {
-    return sessions.length > 0 
-      ? sessions.reduce((sum, session) => sum + session.weight, 0) / sessions.length 
+    return sessions.length > 0
+      ? sessions.reduce((sum, session) => sum + session.weight, 0) /
+          sessions.length
       : 0;
   }
 
   calculateAverageReps(sessions) {
-    return sessions.length > 0 
-      ? sessions.reduce((sum, session) => sum + session.reps, 0) / sessions.length 
+    return sessions.length > 0
+      ? sessions.reduce((sum, session) => sum + session.reps, 0) /
+          sessions.length
       : 0;
   }
 
   calculateAverageSets(sessions) {
-    return sessions.length > 0 
-      ? sessions.reduce((sum, session) => sum + session.sets, 0) / sessions.length 
+    return sessions.length > 0
+      ? sessions.reduce((sum, session) => sum + session.sets, 0) /
+          sessions.length
       : 0;
   }
 
   // キャッシュ管理
   getCachedAnalysis(key) {
     const cached = this.analysisCache.get(key);
-    if (cached && (Date.now() - cached.timestamp) < this.cacheExpiry) {
+    if (cached && Date.now() - cached.timestamp < this.cacheExpiry) {
       return cached.data;
     }
     return null;
@@ -714,7 +828,7 @@ export class ProgressiveOverloadService {
   setCachedAnalysis(key, data) {
     this.analysisCache.set(key, {
       data,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 
