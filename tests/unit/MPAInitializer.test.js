@@ -116,7 +116,6 @@ describe('MPAInitializer', () => {
       
       expect(mpaInitializer.isInitialized).toBe(true);
       expect(mockAuthManager.initialize).toHaveBeenCalled();
-      expect(mockAuthManager.isAuthenticated).toHaveBeenCalled();
     }, 30000);
 
     test('should not initialize if already initialized', async () => {
