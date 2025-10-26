@@ -145,8 +145,8 @@ class CalendarPage extends BasePage {
           date: date.toISOString().split('T')[0],
           muscle_groups: randomMuscles,
           exercises: [
-            { name: 'ベンチプレス', sets: 3, reps: 10, weight: 80 },
-            { name: 'プッシュアップ', sets: 3, reps: 15, weight: 0 },
+            { name: 'ベンチプレス', sets: 2, reps: 8, weight: 50 }, // セット数と重量を減らす
+            { name: 'プッシュアップ', sets: 2, reps: 10, weight: 0 }, // 回数を減らす
           ],
           duration: 45,
           notes: 'サンプルワークアウト',

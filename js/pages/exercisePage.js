@@ -105,6 +105,14 @@ class ExercisePage {
       });
     }
 
+    // 筋肉部位カードクリックイベント
+    document.querySelectorAll('.muscle-card').forEach((card) => {
+      card.addEventListener('click', () => {
+        const category = card.dataset.category;
+        this.filterByMuscleGroup(category);
+      });
+    });
+
     // カテゴリ詳細ボタン
     document.querySelectorAll('.category-detail-btn').forEach((btn) => {
       btn.addEventListener('click', (e) => {
@@ -328,6 +336,35 @@ class ExercisePage {
       'resistance band': 'レジスタンスバンド',
     };
     return names[equipment] || equipment;
+  }
+
+  /**
+   * 筋肉部位でフィルタリング
+   * @param {string} muscleGroup - 筋肉部位
+   */
+  async filterByMuscleGroup(muscleGroup) {
+    try {
+      console.log('Filtering by muscle group:', muscleGroup);
+      
+      // 筋肉部位フィルターを設定
+      const muscleGroupFilter = document.getElementById('muscle-group-filter');
+      if (muscleGroupFilter) {
+        muscleGroupFilter.value = muscleGroup;
+      }
+      
+      // フィルターを適用
+      await this.applyFilters();
+      
+      // フィルター適用の通知
+      showNotification(`${this.getMuscleGroupDisplayName(muscleGroup)}のエクササイズを表示中`, 'info');
+      
+    } catch (error) {
+      console.error('Error filtering by muscle group:', error);
+      handleError(error, {
+        context: '筋肉部位フィルタリング',
+        showNotification: true,
+      });
+    }
   }
 
   /**
@@ -1150,13 +1187,33 @@ class ExercisePage {
     }
 
     if (this.currentExercises.length === 0) {
+      const hasActiveFilters = this.hasActiveFilters();
+      const searchTerm = document.getElementById('exercise-search')?.value || '';
+      
+      let message = '';
+      let suggestion = '';
+      
+      if (hasActiveFilters || searchTerm.trim()) {
+        message = '該当するエクササイズがありません';
+        suggestion = '検索条件やフィルターを変更してお試しください';
+      } else {
+        message = 'エクササイズデータがありません';
+        suggestion = 'エクササイズデータを読み込み中です...';
+      }
+      
       container.innerHTML = `
                 <div class="text-center py-12">
                     <div class="text-gray-400 mb-4">
                         <i class="fas fa-search text-4xl"></i>
                     </div>
-                    <p class="text-gray-600">エクササイズが見つかりませんでした</p>
-                    <p class="text-sm text-gray-500 mt-2">検索条件を変更してお試しください</p>
+                    <p class="text-gray-600">${message}</p>
+                    <p class="text-sm text-gray-500 mt-2">${suggestion}</p>
+                    ${hasActiveFilters ? `
+                    <button onclick="exercisePage.resetFilters()" 
+                            class="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                        <i class="fas fa-refresh mr-2"></i>フィルターをリセット
+                    </button>
+                    ` : ''}
                 </div>
             `;
       return;

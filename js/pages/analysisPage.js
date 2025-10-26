@@ -359,31 +359,31 @@ class AnalysisPage {
           .slice(0, 1); // 1つの部位のみに制限
 
         // 重量の進歩をシミュレート（より現実的な値に調整）
-        const baseWeight = 60; // ベース重量を下げる
+        const baseWeight = 40; // ベース重量をさらに下げる
         const progressFactor = Math.max(0, (30 - i) / 30); // 30日ベースに変更
-        const weight = Math.floor(baseWeight + progressFactor * 15); // 進歩幅を縮小
+        const weight = Math.floor(baseWeight + progressFactor * 10); // 進歩幅をさらに縮小
 
         // エクササイズ数を制限（1-2個のみ）
         const exercises = [];
         if (randomMuscles.includes('胸')) {
           exercises.push(
-            { name: 'ベンチプレス', sets: 3, reps: 8, weight },
-            { name: 'プッシュアップ', sets: 2, reps: 12, weight: 0 }
+            { name: 'ベンチプレス', sets: 2, reps: 8, weight }, // セット数を減らす
+            { name: 'プッシュアップ', sets: 2, reps: 10, weight: 0 } // 回数も減らす
           );
         } else if (randomMuscles.includes('背中')) {
           exercises.push(
-            { name: 'デッドリフト', sets: 3, reps: 5, weight: Math.floor(weight * 1.2) },
-            { name: 'プルアップ', sets: 2, reps: 8, weight: 0 }
+            { name: 'デッドリフト', sets: 2, reps: 5, weight: Math.floor(weight * 1.1) }, // セット数と重量倍率を減らす
+            { name: 'プルアップ', sets: 2, reps: 6, weight: 0 } // 回数を減らす
           );
         } else if (randomMuscles.includes('脚')) {
           exercises.push(
-            { name: 'スクワット', sets: 3, reps: 10, weight: Math.floor(weight * 0.8) },
-            { name: 'ランジ', sets: 2, reps: 12, weight: 0 }
+            { name: 'スクワット', sets: 2, reps: 8, weight: Math.floor(weight * 0.7) }, // セット数と重量倍率を減らす
+            { name: 'ランジ', sets: 2, reps: 8, weight: 0 } // 回数を減らす
           );
         } else {
           // その他の部位
           exercises.push(
-            { name: 'ダンベルカール', sets: 3, reps: 10, weight: Math.floor(weight * 0.5) }
+            { name: 'ダンベルカール', sets: 2, reps: 8, weight: Math.floor(weight * 0.4) } // セット数と重量倍率を減らす
           );
         }
 
