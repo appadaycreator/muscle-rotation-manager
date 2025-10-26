@@ -46,6 +46,7 @@ class MPAInitializer {
       '/calendar.html': 'calendar',
       '/analysis.html': 'analysis',
       '/progress.html': 'progress',
+      '/muscle-rotation-manager/progress.html': 'progress',
       '/exercises.html': 'exercises',
       '/settings.html': 'settings',
       '/help.html': 'help',

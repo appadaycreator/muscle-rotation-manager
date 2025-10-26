@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="./" />
-    <title>プログレス - MuscleRotationManager</title>
+    <title>プログレッシブ・オーバーロード - MuscleRotationManager</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
@@ -44,11 +44,11 @@
 
     <meta
       name="description"
-      content="プログレッシブ・オーバーロード追跡。効率的な筋トレ部位ローテーションを科学的に管理"
+      content="プログレッシブ・オーバーロード分析。トレーニングの進歩を定量的に分析し、最適なローテーションを計画"
     />
     <meta
       name="keywords"
-      content="筋トレ,プログレス,オーバーロード,進捗,追跡,トレーニング"
+      content="筋トレ,プログレッシブ・オーバーロード,分析,進歩,トレーニング"
     />
 
     <!-- PWA Meta Tags -->
@@ -75,9 +75,6 @@
     <!-- FontAwesome JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/js/all.min.js"></script>
 
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
-
     <!-- Supabase CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/index.min.js"></script>
   </head>
@@ -94,154 +91,99 @@
         <main class="flex-1 p-6">
           <div id="main-content">
             <div class="mb-8">
-              <h1 class="text-3xl font-bold text-gray-900">
-                プログレッシブ・オーバーロード
-              </h1>
+              <h1 class="text-3xl font-bold text-gray-900">プログレッシブ・オーバーロード</h1>
               <p class="mt-2 text-gray-600">
-                筋力とボリュームの進捗を追跡し、継続的な成長を実現しましょう
+                トレーニングの進歩を定量的に分析し、最適なローテーションを計画しましょう
               </p>
             </div>
 
-            <!-- Progress Overview -->
-            <div
-              class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
-            >
-              <div class="bg-white overflow-hidden shadow rounded-lg">
-                <div class="p-5">
-                  <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                      <i class="fas fa-chart-line text-2xl text-green-600"></i>
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                      <dl>
-                        <dt class="text-sm font-medium text-gray-500 truncate">
-                          総ボリューム
-                        </dt>
-                        <dd
-                          class="text-lg font-medium text-gray-900"
-                          id="total-volume"
-                        >
-                          0 kg
-                        </dd>
-                      </dl>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="bg-white overflow-hidden shadow rounded-lg">
-                <div class="p-5">
-                  <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                      <i class="fas fa-weight text-2xl text-blue-600"></i>
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                      <dl>
-                        <dt class="text-sm font-medium text-gray-500 truncate">
-                          最大重量
-                        </dt>
-                        <dd
-                          class="text-lg font-medium text-gray-900"
-                          id="max-weight"
-                        >
-                          0 kg
-                        </dd>
-                      </dl>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="bg-white overflow-hidden shadow rounded-lg">
-                <div class="p-5">
-                  <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                      <i class="fas fa-trophy text-2xl text-yellow-600"></i>
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                      <dl>
-                        <dt class="text-sm font-medium text-gray-500 truncate">
-                          PR達成
-                        </dt>
-                        <dd
-                          class="text-lg font-medium text-gray-900"
-                          id="pr-achieved"
-                        >
-                          0回
-                        </dd>
-                      </dl>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="bg-white overflow-hidden shadow rounded-lg">
-                <div class="p-5">
-                  <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                      <i class="fas fa-fire text-2xl text-red-600"></i>
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                      <dl>
-                        <dt class="text-sm font-medium text-gray-500 truncate">
-                          継続日数
-                        </dt>
-                        <dd
-                          class="text-lg font-medium text-gray-900"
-                          id="streak-days"
-                        >
-                          0日
-                        </dd>
-                      </dl>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Exercise Progress -->
+            <!-- 分析設定 -->
             <div class="bg-white shadow rounded-lg mb-8">
               <div class="px-4 py-5 sm:p-6">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
-                  エクササイズ別進捗
-                </h3>
-                <div id="exercise-progress">
-                  <!-- Exercise progress will be loaded here -->
+                <div class="flex justify-between items-center mb-4">
+                  <h3 class="text-lg leading-6 font-medium text-gray-900">分析設定</h3>
+                  <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-2">
+                      <label class="text-sm text-gray-600">分析期間:</label>
+                      <select id="analysis-period" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
+                        <option value="30">30日</option>
+                        <option value="60">60日</option>
+                        <option value="90" selected>90日</option>
+                        <option value="180">180日</option>
+                      </select>
+                    </div>
+                    <button id="refresh-analysis" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm">
+                      <i class="fas fa-sync-alt mr-2"></i>分析を更新
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <!-- Progress Charts -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-              <!-- Volume Progression Chart -->
-              <div class="bg-white shadow rounded-lg">
-                <div class="px-4 py-5 sm:p-6">
-                  <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
-                    ボリューム進捗
-                  </h3>
-                  <canvas id="volume-chart" width="400" height="200"></canvas>
-                </div>
-              </div>
-
-              <!-- Strength Progression Chart -->
-              <div class="bg-white shadow rounded-lg">
-                <div class="px-4 py-5 sm:p-6">
-                  <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
-                    筋力進捗
-                  </h3>
-                  <canvas id="strength-chart" width="400" height="200"></canvas>
+            <!-- 総合分析 -->
+            <div class="bg-white shadow rounded-lg mb-8">
+              <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">総合分析</h3>
+                <div id="overall-analysis">
+                  <div class="text-center text-gray-500 py-4">
+                    <i class="fas fa-spinner fa-spin text-xl mb-2"></i>
+                    <p>分析データを読み込み中...</p>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <!-- Personal Records -->
+            <!-- エクササイズ別分析 -->
+            <div class="bg-white shadow rounded-lg mb-8">
+              <div class="px-4 py-5 sm:p-6">
+                <div class="flex justify-between items-center mb-4">
+                  <h3 class="text-lg leading-6 font-medium text-gray-900">エクササイズ別分析</h3>
+                  <div class="flex items-center space-x-2">
+                    <label class="text-sm text-gray-600">エクササイズ:</label>
+                    <select id="exercise-selector" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
+                      <option value="">エクササイズを選択</option>
+                    </select>
+                  </div>
+                </div>
+                <div id="exercise-analysis">
+                  <div class="text-center text-gray-500 py-8">
+                    <i class="fas fa-dumbbell text-4xl text-gray-300 mb-4"></i>
+                    <p>エクササイズを選択して詳細分析を表示</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 筋肉部位別分析 -->
+            <div class="bg-white shadow rounded-lg mb-8">
+              <div class="px-4 py-5 sm:p-6">
+                <div class="flex justify-between items-center mb-4">
+                  <h3 class="text-lg leading-6 font-medium text-gray-900">筋肉部位別分析</h3>
+                  <div class="flex items-center space-x-2">
+                    <label class="text-sm text-gray-600">筋肉部位:</label>
+                    <select id="muscle-group-selector" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
+                      <option value="">筋肉部位を選択</option>
+                    </select>
+                  </div>
+                </div>
+                <div id="muscle-group-analysis">
+                  <div class="text-center text-gray-500 py-8">
+                    <i class="fas fa-muscle text-4xl text-gray-300 mb-4"></i>
+                    <p>筋肉部位を選択して詳細分析を表示</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 推奨事項 -->
             <div class="bg-white shadow rounded-lg">
               <div class="px-4 py-5 sm:p-6">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
-                  パーソナルレコード
-                </h3>
-                <div id="personal-records">
-                  <!-- Personal records will be loaded here -->
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">推奨事項</h3>
+                <div id="recommendations">
+                  <div class="text-center text-gray-500 py-4">
+                    <i class="fas fa-spinner fa-spin text-xl mb-2"></i>
+                    <p>推奨事項を生成中...</p>
+                  </div>
                 </div>
               </div>
             </div>

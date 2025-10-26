@@ -1,14 +1,12 @@
 // analysisPage.js - 分析ページの機能
 
-// import { supabaseService } from '../services/supabaseService.js';
-// import { muscleGroupService } from '../services/muscleGroupService.js';
 import { authManager } from '../modules/authManager.js';
-// import { chartService } from '../services/chartService.js';
+import { workoutDataService } from '../services/workoutDataService.js';
+import { progressiveOverloadService } from '../services/progressiveOverloadService.js';
 import {
   showNotification,
   safeAsync,
   safeGetElement,
-  // safeGetElements
 } from '../utils/helpers.js';
 import { handleError } from '../utils/errorHandler.js';
 
@@ -17,6 +15,10 @@ class AnalysisPage {
     this.workoutData = [];
     this.charts = {};
     this.isLoading = false;
+    this.progressiveOverloadData = null;
+    this.selectedExercise = null;
+    this.selectedMuscleGroup = null;
+    this.analysisPeriod = 90; // デフォルト90日
   }
 
   /**
@@ -32,9 +34,12 @@ class AnalysisPage {
         this.renderAnalysisPage();
 
         await this.loadWorkoutData();
+        await this.loadProgressiveOverloadData();
         this.renderStatistics();
+        this.renderProgressiveOverloadSection();
         this.renderCharts();
         this.generateAnalysisReport();
+        this.setupEventListeners();
       },
       '分析ページの初期化',
       (error) => {
@@ -167,6 +172,30 @@ class AnalysisPage {
                 </div>
             </div>
 
+            <!-- プログレッシブ・オーバーロード分析 -->
+            <div class="bg-white shadow rounded-lg mb-8">
+                <div class="px-4 py-5 sm:p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">プログレッシブ・オーバーロード分析</h3>
+                        <div class="flex items-center space-x-2">
+                            <label class="text-sm text-gray-600">期間:</label>
+                            <select id="analysis-period" class="border border-gray-300 rounded-md px-2 py-1 text-sm">
+                                <option value="30">30日</option>
+                                <option value="60">60日</option>
+                                <option value="90" selected>90日</option>
+                                <option value="180">180日</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="progressive-overload-content">
+                        <div class="text-center text-gray-500 py-4">
+                            <i class="fas fa-spinner fa-spin text-xl mb-2"></i>
+                            <p>プログレッシブ・オーバーロード分析を読み込み中...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- 進歩統計 -->
             <div class="bg-white shadow rounded-lg mb-8">
                 <div class="px-4 py-5 sm:p-6">
@@ -263,14 +292,17 @@ class AnalysisPage {
     try {
       this.isLoading = true;
 
-      // ローカルストレージから読み込み（認証なしでも動作）
-      this.workoutData = JSON.parse(
-        localStorage.getItem('workoutHistory') || '[]'
-      );
+      // ワークアウトデータサービスから読み込み
+      this.workoutData = await workoutDataService.loadWorkouts({ limit: 1000 });
 
       // サンプルデータを追加（デモ用）
       if (this.workoutData.length === 0) {
         this.workoutData = this.generateSampleWorkoutData();
+        
+        // サンプルデータを保存
+        for (const workout of this.workoutData) {
+          await workoutDataService.saveWorkout(workout);
+        }
       }
 
       console.log(`Loaded ${this.workoutData.length} workouts for analysis`);
@@ -280,6 +312,20 @@ class AnalysisPage {
       showNotification('ワークアウトデータの読み込みに失敗しました', 'error');
     } finally {
       this.isLoading = false;
+    }
+  }
+
+  /**
+   * プログレッシブ・オーバーロードデータを読み込み
+   */
+  async loadProgressiveOverloadData() {
+    try {
+      console.log('Loading progressive overload data...');
+      this.progressiveOverloadData = await progressiveOverloadService.getOverallProgress(this.analysisPeriod);
+      console.log('Progressive overload data loaded:', this.progressiveOverloadData);
+    } catch (error) {
+      console.error('Error loading progressive overload data:', error);
+      showNotification('プログレッシブ・オーバーロードデータの読み込みに失敗しました', 'error');
     }
   }
 
@@ -332,6 +378,157 @@ class AnalysisPage {
     this.renderOverallStats();
     this.renderMuscleGroupStats();
     this.renderProgressStats();
+  }
+
+  /**
+   * プログレッシブ・オーバーロードセクションをレンダリング
+   */
+  renderProgressiveOverloadSection() {
+    const container = safeGetElement('#progressive-overload-content');
+    if (!container) {
+      console.warn('Progressive overload container not found');
+      return;
+    }
+
+    if (!this.progressiveOverloadData) {
+      container.innerHTML = `
+        <div class="text-center text-gray-500 py-4">
+          <i class="fas fa-exclamation-triangle text-xl mb-2"></i>
+          <p>プログレッシブ・オーバーロードデータがありません</p>
+        </div>
+      `;
+      return;
+    }
+
+    const data = this.progressiveOverloadData;
+    
+    container.innerHTML = `
+      <!-- 総合メトリクス -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="text-center p-4 bg-blue-50 rounded-lg">
+          <div class="text-2xl font-bold text-blue-600">${data.totalWorkouts}</div>
+          <div class="text-sm text-gray-600">総ワークアウト数</div>
+        </div>
+        <div class="text-center p-4 bg-green-50 rounded-lg">
+          <div class="text-2xl font-bold text-green-600">${data.overallMetrics.totalVolume}</div>
+          <div class="text-sm text-gray-600">総ボリューム</div>
+        </div>
+        <div class="text-center p-4 bg-purple-50 rounded-lg">
+          <div class="text-2xl font-bold text-purple-600">${data.consistencyScore}</div>
+          <div class="text-sm text-gray-600">一貫性スコア</div>
+        </div>
+        <div class="text-center p-4 bg-orange-50 rounded-lg">
+          <div class="text-2xl font-bold text-orange-600">${data.overallMetrics.averageVolumePerWorkout}</div>
+          <div class="text-sm text-gray-600">平均ボリューム</div>
+        </div>
+      </div>
+
+      <!-- 筋肉部位別進歩 -->
+      <div class="mb-6">
+        <h4 class="text-md font-medium text-gray-700 mb-3">筋肉部位別進歩</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          ${Object.entries(data.muscleGroupProgress).map(([muscle, progress]) => {
+            if (!progress) return '';
+            return `
+              <div class="border border-gray-200 rounded-lg p-4">
+                <h5 class="font-medium text-gray-800 mb-2">${this.getMuscleGroupName(muscle)}</h5>
+                <div class="space-y-2">
+                  <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">セッション数:</span>
+                    <span class="font-medium">${progress.totalSessions}</span>
+                  </div>
+                  <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">頻度スコア:</span>
+                    <span class="font-medium">${progress.frequencyAnalysis.frequencyScore}</span>
+                  </div>
+                  <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">平均間隔:</span>
+                    <span class="font-medium">${progress.frequencyAnalysis.averageDaysBetween}日</span>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+
+      <!-- 推奨事項 -->
+      <div class="mb-6">
+        <h4 class="text-md font-medium text-gray-700 mb-3">推奨事項</h4>
+        <div class="space-y-3">
+          ${data.recommendations.map(rec => `
+            <div class="p-4 rounded-lg ${
+              rec.priority === 'high' ? 'bg-red-50 border-l-4 border-red-400' :
+              rec.priority === 'medium' ? 'bg-yellow-50 border-l-4 border-yellow-400' :
+              'bg-green-50 border-l-4 border-green-400'
+            }">
+              <div class="flex items-start">
+                <div class="flex-shrink-0">
+                  <i class="fas ${
+                    rec.priority === 'high' ? 'fa-exclamation-triangle text-red-400' :
+                    rec.priority === 'medium' ? 'fa-info-circle text-yellow-400' :
+                    'fa-check-circle text-green-400'
+                  }"></i>
+                </div>
+                <div class="ml-3">
+                  <p class="text-sm font-medium ${
+                    rec.priority === 'high' ? 'text-red-800' :
+                    rec.priority === 'medium' ? 'text-yellow-800' :
+                    'text-green-800'
+                  }">
+                    ${rec.message}
+                  </p>
+                  <p class="text-sm ${
+                    rec.priority === 'high' ? 'text-red-700' :
+                    rec.priority === 'medium' ? 'text-yellow-700' :
+                    'text-green-700'
+                  } mt-1">
+                    <strong>推奨アクション:</strong> ${rec.action}
+                  </p>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <!-- エクササイズ別進歩 -->
+      <div>
+        <h4 class="text-md font-medium text-gray-700 mb-3">エクササイズ別進歩</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          ${Object.entries(data.exerciseProgress).slice(0, 6).map(([exercise, progress]) => {
+            if (!progress) return '';
+            return `
+              <div class="border border-gray-200 rounded-lg p-4">
+                <h5 class="font-medium text-gray-800 mb-2">${exercise}</h5>
+                <div class="space-y-2">
+                  <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">セッション数:</span>
+                    <span class="font-medium">${progress.totalSessions}</span>
+                  </div>
+                  <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">ボリューム進歩:</span>
+                    <span class="font-medium ${progress.progressMetrics.volumeProgression > 0 ? 'text-green-600' : 'text-red-600'}">
+                      ${progress.progressMetrics.volumeProgression > 0 ? '+' : ''}${progress.progressMetrics.volumeProgression}%
+                    </span>
+                  </div>
+                  <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">強度進歩:</span>
+                    <span class="font-medium ${progress.progressMetrics.intensityProgression > 0 ? 'text-green-600' : 'text-red-600'}">
+                      ${progress.progressMetrics.intensityProgression > 0 ? '+' : ''}${progress.progressMetrics.intensityProgression}%
+                    </span>
+                  </div>
+                  <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">平均重量:</span>
+                    <span class="font-medium">${progress.progressMetrics.averageWeight}kg</span>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
   }
 
   /**
@@ -881,6 +1078,32 @@ class AnalysisPage {
   }
 
   /**
+   * イベントリスナーを設定
+   */
+  setupEventListeners() {
+    // 分析期間の変更
+    const periodSelect = safeGetElement('#analysis-period');
+    if (periodSelect) {
+      periodSelect.addEventListener('change', async (event) => {
+        this.analysisPeriod = parseInt(event.target.value);
+        console.log('Analysis period changed to:', this.analysisPeriod);
+        
+        // プログレッシブ・オーバーロードデータを再読み込み
+        await this.loadProgressiveOverloadData();
+        this.renderProgressiveOverloadSection();
+      });
+    }
+  }
+
+  /**
+   * イベントリスナーを設定
+   */
+  setupEventListeners() {
+    // 分析ページのイベントリスナーを設定
+    console.log('Setting up analysis page event listeners');
+  }
+
+  /**
    * チャートを破棄
    */
   destroy() {
@@ -896,3 +1119,4 @@ class AnalysisPage {
 // デフォルトエクスポート
 const analysisPage = new AnalysisPage();
 export default analysisPage;
+export { AnalysisPage };

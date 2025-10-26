@@ -2,10 +2,12 @@
  * AnalysisPage テストスイート
  */
 
-import analysisPage from '../../js/pages/analysisPage.js';
+import { AnalysisPage } from '../../js/pages/analysisPage.js';
 import { supabaseService } from '../../js/services/supabaseService.js';
 import { muscleGroupService } from '../../js/services/muscleGroupService.js';
 import { authManager } from '../../js/modules/authManager.js';
+import { workoutDataService } from '../../js/services/workoutDataService.js';
+import { progressiveOverloadService } from '../../js/services/progressiveOverloadService.js';
 import {
   showNotification,
   safeAsync,
@@ -29,6 +31,19 @@ jest.mock('../../js/services/muscleGroupService.js', () => ({
   },
 }));
 
+jest.mock('../../js/services/progressiveOverloadService.js', () => ({
+  progressiveOverloadService: {
+    getOverallProgress: jest.fn(),
+  },
+}));
+
+jest.mock('../../js/services/workoutDataService.js', () => ({
+  workoutDataService: {
+    loadWorkouts: jest.fn(),
+    saveWorkout: jest.fn(),
+  },
+}));
+
 jest.mock('../../js/modules/authManager.js', () => ({
   authManager: {
     isAuthenticated: jest.fn(),
@@ -47,10 +62,13 @@ jest.mock('../../js/utils/errorHandler.js', () => ({
 }));
 
 describe('AnalysisPage', () => {
+  let analysisPage;
+
   beforeEach(() => {
     jest.clearAllMocks();
     document.body.innerHTML = '<div id="main-content"></div>';
     safeGetElement.mockReturnValue(document.querySelector('#main-content'));
+    analysisPage = new AnalysisPage();
   });
 
   describe('constructor', () => {
@@ -144,42 +162,25 @@ describe('AnalysisPage', () => {
   });
 
   describe('loadWorkoutData', () => {
-    it('should load workout data from localStorage', async () => {
+    it('should load workout data from workoutDataService', async () => {
       const mockWorkoutData = [
         { id: 1, date: '2024-01-01', exercises: [] },
         { id: 2, date: '2024-01-02', exercises: [] },
       ];
 
-      // localStorage のモック
-      Object.defineProperty(window, 'localStorage', {
-        value: {
-          getItem: jest.fn().mockReturnValue(JSON.stringify(mockWorkoutData)),
-          setItem: jest.fn(),
-          removeItem: jest.fn(),
-        },
-        writable: true,
-      });
+      // workoutDataService.loadWorkouts をモック
+      workoutDataService.loadWorkouts.mockResolvedValue(mockWorkoutData);
+      workoutDataService.saveWorkout.mockResolvedValue(true);
 
       await analysisPage.loadWorkoutData();
 
-      expect(window.localStorage.getItem).toHaveBeenCalledWith(
-        'workoutHistory'
-      );
+      expect(workoutDataService.loadWorkouts).toHaveBeenCalledWith({ limit: 1000 });
       expect(analysisPage.workoutData).toEqual(mockWorkoutData);
     });
 
     it('should handle workout data loading errors', async () => {
-      // localStorage.getItem をエラーを投げるようにモック
-      Object.defineProperty(window, 'localStorage', {
-        value: {
-          getItem: jest.fn().mockImplementation(() => {
-            throw new Error('localStorage error');
-          }),
-          setItem: jest.fn(),
-          removeItem: jest.fn(),
-        },
-        writable: true,
-      });
+      // workoutDataService.loadWorkouts をエラーを投げるようにモック
+      workoutDataService.loadWorkouts.mockRejectedValue(new Error('Load failed'));
 
       await analysisPage.loadWorkoutData();
 

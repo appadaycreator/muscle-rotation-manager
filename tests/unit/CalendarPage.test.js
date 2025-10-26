@@ -126,7 +126,12 @@ describe('CalendarPage', () => {
       expect(window.localStorage.getItem).toHaveBeenCalledWith(
         'workoutHistory'
       );
-      expect(calendarPage.workoutData).toEqual(mockWorkouts);
+      // workoutDataServiceは日付順でソートするため、新しい順（降順）で期待
+      const expectedSortedWorkouts = [
+        { id: 2, date: '2024-01-02', exercises: [] },
+        { id: 1, date: '2024-01-01', exercises: [] },
+      ];
+      expect(calendarPage.workoutData).toEqual(expectedSortedWorkouts);
     });
 
     it('should generate sample data when no data available', async () => {
