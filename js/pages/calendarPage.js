@@ -629,9 +629,11 @@ class CalendarPage extends BasePage {
   /**
    * 部位別統計を計算
    * @param {Object} muscleGroups - 筋肉部位別カウント
+   * @param {Object} muscleGroupDuration - 部位別時間データ
+   * @param {Object} muscleGroupSets - 部位別セット数データ
    * @returns {Object} 部位別統計データ
    */
-  calculateMuscleGroupStats(muscleGroups) {
+  calculateMuscleGroupStats(muscleGroups, muscleGroupDuration = {}, muscleGroupSets = {}) {
     const muscleGroupNames = {
       chest: '胸',
       back: '背中',
@@ -644,9 +646,14 @@ class CalendarPage extends BasePage {
     const stats = {};
     Object.entries(muscleGroups).forEach(([muscleGroup, count]) => {
       const displayName = muscleGroupNames[muscleGroup] || muscleGroup;
+      const duration = Math.round(muscleGroupDuration[muscleGroup] || 0);
+      const sets = muscleGroupSets[muscleGroup] || 0;
+      
       stats[muscleGroup] = {
         name: displayName,
         count: count,
+        duration: duration,
+        sets: sets,
         percentage: 0, // 後で計算
       };
     });
@@ -702,7 +709,7 @@ class CalendarPage extends BasePage {
         const colorClass =
           muscleGroupColors[muscleGroup] || 'bg-gray-50 text-gray-600';
         return `
-          <div class="text-center p-3 ${colorClass} rounded-lg">
+          <div class="text-center p-3 ${colorClass} rounded-lg relative group">
             <div class="text-xl font-bold">
               ${stat.count}
             </div>
@@ -711,6 +718,16 @@ class CalendarPage extends BasePage {
             </div>
             <div class="text-xs mt-1 opacity-75">
               ${stat.percentage}%
+            </div>
+            <div class="text-xs mt-1 opacity-60">
+              ${stat.duration}分
+            </div>
+            <div class="text-xs mt-1 opacity-60">
+              ${stat.sets}セット
+            </div>
+            <div class="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <i class="fas fa-info-circle text-xs cursor-help" 
+                 title="回数: ${stat.count}回, 時間: ${stat.duration}分, セット数: ${stat.sets}セット"></i>
             </div>
           </div>
         `;
@@ -752,9 +769,11 @@ class CalendarPage extends BasePage {
         return;
       }
 
-      // 部位別統計を計算
+      // 部位別統計を計算（時間とセット数も含む）
       const muscleGroupStats = this.calculateMuscleGroupStats(
-        stats.muscleGroups
+        stats.muscleGroups,
+        stats.muscleGroupDuration,
+        stats.muscleGroupSets
       );
 
       statsContainer.innerHTML = `

@@ -425,22 +425,33 @@ class ExercisePage {
     } catch (error) {
       console.error('Error loading exercises:', error);
 
-      // エラー詳細を表示
-      const errorMessage = error.message || '予期しないエラーが発生しました';
-      const errorDetails = error.stack || 'スタックトレースが利用できません';
+      // より具体的なエラーメッセージを表示
+      let errorMessage = 'エクササイズの読み込みに失敗しました';
+      if (error.message) {
+        if (error.message.includes('network') || error.message.includes('fetch')) {
+          errorMessage = 'ネットワークエラーが発生しました。インターネット接続を確認してください。';
+        } else if (error.message.includes('permission') || error.message.includes('unauthorized')) {
+          errorMessage = 'アクセス権限がありません。ログインし直してください。';
+        } else if (error.message.includes('not found')) {
+          errorMessage = 'エクササイズデータが見つかりません。';
+        } else {
+          errorMessage = error.message;
+        }
+      }
 
       console.error('Error details:', {
         message: errorMessage,
-        details: errorDetails,
+        originalError: error,
         exercises: this.currentExercises?.length || 0,
       });
 
       // ユーザーフレンドリーなエラーメッセージを表示
       this.showErrorState(errorMessage);
 
+      // エラーハンドラーに委譲（通知は表示しない）
       handleError(error, {
         context: 'エクササイズ読み込み',
-        showNotification: true,
+        showNotification: false, // 通知を無効化
         logToConsole: true,
       });
     } finally {

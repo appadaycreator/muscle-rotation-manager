@@ -245,38 +245,53 @@ class ProgressPage extends BasePage {
     const today = new Date();
     const sampleData = [];
 
-    // 過去90日分のサンプルデータを生成
-    for (let i = 0; i < 90; i++) {
+    // 過去30日分のサンプルデータを生成（90日から30日に短縮）
+    for (let i = 0; i < 30; i++) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
 
-      // 2-3日に1回の頻度でワークアウトを生成
-      if (i % 2 === 0 || i % 3 === 0) {
+      // 3-4日に1回の頻度でワークアウトを生成（頻度を下げる）
+      if (i % 3 === 0 || i % 4 === 0) {
         const muscleGroups = ['胸', '背中', '肩', '腕', '脚', '腹筋'];
         const randomMuscles = muscleGroups
           .sort(() => 0.5 - Math.random())
-          .slice(0, 2);
+          .slice(0, 1); // 1つの部位のみに制限
 
-        // 重量の進歩をシミュレート
-        const baseWeight = 80;
-        const progressFactor = Math.max(0, (90 - i) / 90);
-        const weight = Math.floor(baseWeight + progressFactor * 20);
+        // 重量の進歩をシミュレート（より現実的な値に調整）
+        const baseWeight = 60; // ベース重量を下げる
+        const progressFactor = Math.max(0, (30 - i) / 30); // 30日ベースに変更
+        const weight = Math.floor(baseWeight + progressFactor * 15); // 進歩幅を縮小
+
+        // エクササイズ数を制限（1-2個のみ）
+        const exercises = [];
+        if (randomMuscles.includes('胸')) {
+          exercises.push(
+            { name: 'ベンチプレス', sets: 3, reps: 8, weight },
+            { name: 'プッシュアップ', sets: 2, reps: 12, weight: 0 }
+          );
+        } else if (randomMuscles.includes('背中')) {
+          exercises.push(
+            { name: 'デッドリフト', sets: 3, reps: 5, weight: Math.floor(weight * 1.2) },
+            { name: 'プルアップ', sets: 2, reps: 8, weight: 0 }
+          );
+        } else if (randomMuscles.includes('脚')) {
+          exercises.push(
+            { name: 'スクワット', sets: 3, reps: 10, weight: Math.floor(weight * 0.8) },
+            { name: 'ランジ', sets: 2, reps: 12, weight: 0 }
+          );
+        } else {
+          // その他の部位
+          exercises.push(
+            { name: 'ダンベルカール', sets: 3, reps: 10, weight: Math.floor(weight * 0.5) }
+          );
+        }
 
         sampleData.push({
           id: `sample-${i}`,
           date: date.toISOString().split('T')[0],
           muscle_groups: randomMuscles,
-          exercises: [
-            { name: 'ベンチプレス', sets: 3, reps: 10, weight },
-            { name: 'プッシュアップ', sets: 3, reps: 15, weight: 0 },
-            {
-              name: 'スクワット',
-              sets: 3,
-              reps: 12,
-              weight: Math.floor(weight * 0.8),
-            },
-          ],
-          duration: 45 + Math.floor(Math.random() * 30),
+          exercises: exercises.slice(0, 2), // 最大2個のエクササイズに制限
+          duration: 30 + Math.floor(Math.random() * 20), // 30-50分に短縮
           notes: 'サンプルワークアウト',
         });
       }
@@ -487,6 +502,236 @@ class ProgressPage extends BasePage {
     };
 
     return muscleGroupNames[muscleId] || muscleId;
+  }
+
+  /**
+   * エクササイズ別詳細分析をレンダリング
+   */
+  async renderExerciseAnalysis() {
+    const container = safeGetElement('#exercise-analysis');
+    if (!container) {
+      console.warn('Exercise analysis container not found');
+      return;
+    }
+
+    if (!this.selectedExercise) {
+      container.innerHTML = `
+        <div class="text-center text-gray-500 py-8">
+          <i class="fas fa-info-circle text-xl mb-2"></i>
+          <p>エクササイズを選択してください</p>
+        </div>
+      `;
+      return;
+    }
+
+    try {
+      // 選択されたエクササイズのデータを取得
+      const exerciseData = this.workoutData.filter(workout => 
+        workout.exercises && workout.exercises.some(ex => ex.name === this.selectedExercise)
+      );
+
+      if (exerciseData.length === 0) {
+        container.innerHTML = `
+          <div class="text-center text-gray-500 py-8">
+            <i class="fas fa-exclamation-triangle text-xl mb-2"></i>
+            <p>選択されたエクササイズのデータがありません</p>
+          </div>
+        `;
+        return;
+      }
+
+      // 統計データを計算
+      const stats = this.calculateExerciseStats(exerciseData, this.selectedExercise);
+      
+      container.innerHTML = `
+        <div class="bg-white rounded-lg p-6">
+          <h3 class="text-xl font-semibold text-gray-800 mb-4">
+            <i class="fas fa-dumbbell text-blue-500 mr-2"></i>
+            ${this.selectedExercise} の詳細分析
+          </h3>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="text-center p-4 bg-blue-50 rounded-lg">
+              <div class="text-2xl font-bold text-blue-600">${stats.totalSessions}</div>
+              <div class="text-sm text-gray-600">総セッション数</div>
+            </div>
+            <div class="text-center p-4 bg-green-50 rounded-lg">
+              <div class="text-2xl font-bold text-green-600">${stats.maxWeight}kg</div>
+              <div class="text-sm text-gray-600">最大重量</div>
+            </div>
+            <div class="text-center p-4 bg-purple-50 rounded-lg">
+              <div class="text-2xl font-bold text-purple-600">${stats.avgWeight}kg</div>
+              <div class="text-sm text-gray-600">平均重量</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="text-center p-4 bg-orange-50 rounded-lg">
+              <div class="text-2xl font-bold text-orange-600">${stats.totalVolume}</div>
+              <div class="text-sm text-gray-600">総ボリューム</div>
+            </div>
+            <div class="text-center p-4 bg-pink-50 rounded-lg">
+              <div class="text-2xl font-bold text-pink-600">${stats.progressRate}%</div>
+              <div class="text-sm text-gray-600">進歩率</div>
+            </div>
+          </div>
+
+          <div class="mt-6">
+            <h4 class="text-lg font-semibold text-gray-800 mb-3">重量推移</h4>
+            <div class="chart-container" style="height: 300px;">
+              <canvas id="exercise-progress-chart"></canvas>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // グラフを描画
+      await this.renderExerciseProgressChart(exerciseData, this.selectedExercise);
+
+    } catch (error) {
+      console.error('Error rendering exercise analysis:', error);
+      container.innerHTML = `
+        <div class="text-center text-red-500 py-8">
+          <i class="fas fa-exclamation-triangle text-xl mb-2"></i>
+          <p>エクササイズ分析の表示に失敗しました</p>
+        </div>
+      `;
+    }
+  }
+
+  /**
+   * エクササイズの統計データを計算
+   */
+  calculateExerciseStats(exerciseData, exerciseName) {
+    const exerciseSessions = [];
+    
+    exerciseData.forEach(workout => {
+      const exercise = workout.exercises.find(ex => ex.name === exerciseName);
+      if (exercise) {
+        exerciseSessions.push({
+          date: workout.date || workout.startTime,
+          weight: exercise.weight || 0,
+          reps: exercise.reps || 0,
+          sets: exercise.sets || 0,
+          volume: (exercise.weight || 0) * (exercise.reps || 0) * (exercise.sets || 0)
+        });
+      }
+    });
+
+    if (exerciseSessions.length === 0) {
+      return {
+        totalSessions: 0,
+        maxWeight: 0,
+        avgWeight: 0,
+        totalVolume: 0,
+        progressRate: 0
+      };
+    }
+
+    const weights = exerciseSessions.map(s => s.weight).filter(w => w > 0);
+    const volumes = exerciseSessions.map(s => s.volume);
+    
+    const maxWeight = Math.max(...weights);
+    const avgWeight = weights.length > 0 ? Math.round(weights.reduce((a, b) => a + b, 0) / weights.length) : 0;
+    const totalVolume = volumes.reduce((a, b) => a + b, 0);
+    
+    // 進歩率計算（最初と最後の重量を比較）
+    const firstWeight = weights[0] || 0;
+    const lastWeight = weights[weights.length - 1] || 0;
+    const progressRate = firstWeight > 0 ? Math.round(((lastWeight - firstWeight) / firstWeight) * 100) : 0;
+
+    return {
+      totalSessions: exerciseSessions.length,
+      maxWeight,
+      avgWeight,
+      totalVolume,
+      progressRate
+    };
+  }
+
+  /**
+   * エクササイズ進捗グラフを描画
+   */
+  async renderExerciseProgressChart(exerciseData, exerciseName) {
+    try {
+      if (typeof Chart === 'undefined') {
+        console.warn('Chart.js not available for exercise progress chart');
+        return;
+      }
+
+      const canvas = safeGetElement('#exercise-progress-chart');
+      if (!canvas) {
+        console.warn('Exercise progress chart canvas not found');
+        return;
+      }
+
+      const exerciseSessions = [];
+      exerciseData.forEach(workout => {
+        const exercise = workout.exercises.find(ex => ex.name === exerciseName);
+        if (exercise && exercise.weight > 0) {
+          exerciseSessions.push({
+            date: new Date(workout.date || workout.startTime),
+            weight: exercise.weight
+          });
+        }
+      });
+
+      if (exerciseSessions.length === 0) {
+        canvas.parentElement.innerHTML = `
+          <div class="text-center text-gray-500 py-8">
+            <i class="fas fa-info-circle text-xl mb-2"></i>
+            <p>重量データがありません</p>
+          </div>
+        `;
+        return;
+      }
+
+      // 日付順にソート
+      exerciseSessions.sort((a, b) => a.date - b.date);
+
+      const chart = new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels: exerciseSessions.map(s => s.date.toLocaleDateString()),
+          datasets: [{
+            label: '重量 (kg)',
+            data: exerciseSessions.map(s => s.weight),
+            borderColor: '#3B82F6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            tension: 0.4,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: '重量 (kg)'
+              }
+            },
+            x: {
+              title: {
+                display: true,
+                text: '日付'
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top'
+            }
+          }
+        }
+      });
+
+    } catch (error) {
+      console.error('Error rendering exercise progress chart:', error);
+    }
   }
 
   /**

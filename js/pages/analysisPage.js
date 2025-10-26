@@ -346,32 +346,53 @@ class AnalysisPage {
     const today = new Date();
     const sampleData = [];
 
-    // 過去90日分のサンプルデータを生成
-    for (let i = 0; i < 90; i++) {
+    // 過去30日分のサンプルデータを生成（90日から30日に短縮）
+    for (let i = 0; i < 30; i++) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
 
-      // 2-3日に1回の頻度でワークアウトを生成
-      if (i % 2 === 0 || i % 3 === 0) {
+      // 3-4日に1回の頻度でワークアウトを生成（頻度を下げる）
+      if (i % 3 === 0 || i % 4 === 0) {
         const muscleGroups = ['胸', '背中', '肩', '腕', '脚', '腹筋'];
         const randomMuscles = muscleGroups
           .sort(() => 0.5 - Math.random())
-          .slice(0, 2);
+          .slice(0, 1); // 1つの部位のみに制限
 
-        // 重量の進歩をシミュレート
-        const baseWeight = 80;
-        const progressFactor = Math.max(0, (90 - i) / 90); // 時間とともに重量が増加
-        const weight = Math.floor(baseWeight + progressFactor * 20);
+        // 重量の進歩をシミュレート（より現実的な値に調整）
+        const baseWeight = 60; // ベース重量を下げる
+        const progressFactor = Math.max(0, (30 - i) / 30); // 30日ベースに変更
+        const weight = Math.floor(baseWeight + progressFactor * 15); // 進歩幅を縮小
+
+        // エクササイズ数を制限（1-2個のみ）
+        const exercises = [];
+        if (randomMuscles.includes('胸')) {
+          exercises.push(
+            { name: 'ベンチプレス', sets: 3, reps: 8, weight },
+            { name: 'プッシュアップ', sets: 2, reps: 12, weight: 0 }
+          );
+        } else if (randomMuscles.includes('背中')) {
+          exercises.push(
+            { name: 'デッドリフト', sets: 3, reps: 5, weight: Math.floor(weight * 1.2) },
+            { name: 'プルアップ', sets: 2, reps: 8, weight: 0 }
+          );
+        } else if (randomMuscles.includes('脚')) {
+          exercises.push(
+            { name: 'スクワット', sets: 3, reps: 10, weight: Math.floor(weight * 0.8) },
+            { name: 'ランジ', sets: 2, reps: 12, weight: 0 }
+          );
+        } else {
+          // その他の部位
+          exercises.push(
+            { name: 'ダンベルカール', sets: 3, reps: 10, weight: Math.floor(weight * 0.5) }
+          );
+        }
 
         sampleData.push({
           id: `sample-${i}`,
           date: date.toISOString().split('T')[0],
           muscle_groups: randomMuscles,
-          exercises: [
-            { name: 'ベンチプレス', sets: 3, reps: 10, weight },
-            { name: 'プッシュアップ', sets: 3, reps: 15, weight: 0 },
-          ],
-          duration: 45 + Math.floor(Math.random() * 30), // 45-75分
+          exercises: exercises.slice(0, 2), // 最大2個のエクササイズに制限
+          duration: 30 + Math.floor(Math.random() * 20), // 30-50分に短縮
           notes: 'サンプルワークアウト',
         });
       }
@@ -738,9 +759,17 @@ class AnalysisPage {
     try {
       // Chart.jsが読み込まれているかチェック
       if (typeof Chart === 'undefined') {
-        console.error('Chart.js is not loaded');
-        showNotification('グラフライブラリの読み込みに失敗しました', 'error');
-        return;
+        console.warn('Chart.js is not loaded, loading dynamically...');
+        
+        // Chart.jsを動的に読み込み
+        await this.loadChartJS();
+        
+        // 再度チェック
+        if (typeof Chart === 'undefined') {
+          console.error('Chart.js loading failed');
+          showNotification('グラフライブラリの読み込みに失敗しました', 'error');
+          return;
+        }
       }
 
       // チャートの描画を順次実行
@@ -754,9 +783,33 @@ class AnalysisPage {
       console.error('Error rendering charts:', error);
       handleError(error, {
         context: 'チャート描画',
-        showNotification: true,
+        showNotification: false, // 通知を無効化
       });
     }
+  }
+
+  /**
+   * Chart.jsを動的に読み込み
+   */
+  async loadChartJS() {
+    return new Promise((resolve, reject) => {
+      if (typeof Chart !== 'undefined') {
+        resolve();
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+      script.onload = () => {
+        console.log('Chart.js loaded successfully');
+        resolve();
+      };
+      script.onerror = () => {
+        console.error('Failed to load Chart.js');
+        reject(new Error('Chart.js loading failed'));
+      };
+      document.head.appendChild(script);
+    });
   }
 
   /**

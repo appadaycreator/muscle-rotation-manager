@@ -293,22 +293,40 @@ export class WorkoutDataService {
         totalDuration: 0,
         workoutDays: new Set(),
         muscleGroups: {},
+        muscleGroupDuration: {}, // 部位別時間を追加
+        muscleGroupSets: {}, // 部位別セット数を追加
         exercises: {},
       };
 
       workouts.forEach((workout) => {
         // 総時間
-        stats.totalDuration += workout.duration || 0;
+        const workoutDuration = workout.duration || 0;
+        stats.totalDuration += workoutDuration;
 
         // トレーニング日数
         const workoutDate =
           workout.date || workout.startTime || workout.workout_date;
         stats.workoutDays.add(workoutDate);
 
-        // 部位別カウント
+        // 部位別カウント（回数、時間、セット数）
         if (workout.muscle_groups) {
           workout.muscle_groups.forEach((muscle) => {
+            // 部位別回数
             stats.muscleGroups[muscle] = (stats.muscleGroups[muscle] || 0) + 1;
+            
+            // 部位別時間（ワークアウト時間を部位数で分割）
+            const durationPerMuscle = workoutDuration / workout.muscle_groups.length;
+            stats.muscleGroupDuration[muscle] = (stats.muscleGroupDuration[muscle] || 0) + durationPerMuscle;
+            
+            // 部位別セット数
+            if (workout.exercises) {
+              const muscleExercises = workout.exercises.filter(exercise => 
+                exercise.muscle_group === muscle || 
+                (exercise.name && exercise.name.includes(muscle))
+              );
+              const totalSets = muscleExercises.reduce((sum, exercise) => sum + (exercise.sets || 0), 0);
+              stats.muscleGroupSets[muscle] = (stats.muscleGroupSets[muscle] || 0) + totalSets;
+            }
           });
         }
 
