@@ -13,12 +13,13 @@ import { tooltipManager } from '../utils/TooltipManager.js';
  */
 export class WorkoutPage extends BasePage {
   constructor() {
-    super();
+    super({ pageName: 'WorkoutPage' });
     this.navigation = new Navigation();
     this.currentWorkout = null;
     this.workoutTimer = null;
     this.workoutStartTime = null;
     this.exercises = [];
+    this.isWorkoutActive = false;
     this.muscleGroups = ['胸', '背中', '肩', '腕', '脚', '腹筋'];
     this.selectedMuscles = [];
     this.selectedExercises = [];
@@ -728,34 +729,223 @@ export class WorkoutPage extends BasePage {
   }
 
   /**
+   * エクササイズを読み込み
+   */
+  async loadExercises() {
+    try {
+      const { exerciseService } = await import('../services/exerciseService.js');
+      this.exercises = await exerciseService.getExercises();
+      console.log('Exercises loaded:', this.exercises);
+    } catch (error) {
+      console.error('Error loading exercises:', error);
+      this.exercises = [];
+    }
+  }
+
+  /**
    * ワークアウトにエクササイズを追加
    */
-  addExerciseToWorkout(exerciseName) {
-    const container = document.getElementById('workout-exercises');
-    if (!container) {
-      return;
+  addExerciseToWorkout(exercise) {
+    // currentWorkoutを初期化
+    if (!this.currentWorkout) {
+      this.currentWorkout = { exercises: [] };
+    }
+    if (!this.currentWorkout.exercises) {
+      this.currentWorkout.exercises = [];
     }
 
-    const exerciseElement = document.createElement('div');
-    exerciseElement.className =
-      'flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg';
-    exerciseElement.innerHTML = `
-            <div class="flex items-center">
-                <i class="fas fa-dumbbell text-blue-500 mr-3"></i>
-                <span class="font-medium text-gray-900">${exerciseName}</span>
-            </div>
-            <div class="flex items-center space-x-2">
-                <button class="btn-secondary text-sm px-3 py-1">
-                    <i class="fas fa-plus mr-1"></i>セット追加
-                </button>
-                <button class="btn-danger text-sm px-3 py-1">
-                    <i class="fas fa-trash mr-1"></i>削除
-                </button>
-            </div>
-        `;
+    // エクササイズを追加
+    this.currentWorkout.exercises.push(exercise);
 
-    container.appendChild(exerciseElement);
-    showNotification(`${exerciseName}を追加しました`, 'success');
+    // DOM要素も更新（存在する場合）
+    const container = document.getElementById('workout-exercises');
+    if (container) {
+      const exerciseElement = document.createElement('div');
+      exerciseElement.className =
+        'flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg';
+      exerciseElement.innerHTML = `
+              <div class="flex items-center">
+                  <i class="fas fa-dumbbell text-blue-500 mr-3"></i>
+                  <span class="font-medium text-gray-900">${exercise.name || exercise}</span>
+              </div>
+              <div class="flex items-center space-x-2">
+                  <button class="btn-secondary text-sm px-3 py-1">
+                      <i class="fas fa-plus mr-1"></i>セット追加
+                  </button>
+                  <button class="btn-danger text-sm px-3 py-1">
+                      <i class="fas fa-trash mr-1"></i>削除
+                  </button>
+              </div>
+          `;
+
+      container.appendChild(exerciseElement);
+    }
+
+    showNotification(`${exercise.name || exercise}を追加しました`, 'success');
+  }
+
+  /**
+   * ワークアウトからエクササイズを削除
+   */
+  removeExerciseFromWorkout(exerciseId) {
+    if (!this.currentWorkout) {
+      this.currentWorkout = { exercises: [] };
+    }
+    this.currentWorkout.exercises = this.currentWorkout.exercises.filter(
+      ex => ex.id !== exerciseId
+    );
+  }
+
+  /**
+   * エクササイズにセットを追加
+   */
+  addSetToExercise(exerciseId, setData) {
+    if (!this.currentWorkout) {
+      this.currentWorkout = { exercises: [] };
+    }
+    const exercise = this.currentWorkout.exercises.find(ex => ex.id === exerciseId);
+    if (exercise) {
+      if (!exercise.sets) {
+        exercise.sets = [];
+      }
+      exercise.sets.push(setData);
+    }
+  }
+
+  /**
+   * エクササイズからセットを削除
+   */
+  removeSetFromExercise(exerciseId, setIndex) {
+    if (!this.currentWorkout) {
+      return;
+    }
+    const exercise = this.currentWorkout.exercises.find(ex => ex.id === exerciseId);
+    if (exercise && exercise.sets) {
+      exercise.sets.splice(setIndex, 1);
+    }
+  }
+
+  /**
+   * エクササイズのセットを更新
+   */
+  updateSetInExercise(exerciseId, setIndex, setData) {
+    if (!this.currentWorkout) {
+      return;
+    }
+    const exercise = this.currentWorkout.exercises.find(ex => ex.id === exerciseId);
+    if (exercise && exercise.sets && exercise.sets[setIndex]) {
+      exercise.sets[setIndex] = setData;
+    }
+  }
+
+  /**
+   * ワークアウト統計を計算
+   */
+  calculateWorkoutStats() {
+    if (!this.currentWorkout || !this.currentWorkout.exercises) {
+      return { totalVolume: 0, totalSets: 0, totalReps: 0 };
+    }
+
+    let totalVolume = 0;
+    let totalSets = 0;
+    let totalReps = 0;
+
+    this.currentWorkout.exercises.forEach(exercise => {
+      if (exercise.sets) {
+        exercise.sets.forEach(set => {
+          totalVolume += (set.weight || 0) * (set.reps || 0);
+          totalSets += 1;
+          totalReps += set.reps || 0;
+        });
+      }
+    });
+
+    return { totalVolume, totalSets, totalReps };
+  }
+
+  /**
+   * エクササイズのボリュームを計算
+   */
+  calculateExerciseVolume(exerciseId) {
+    if (!this.currentWorkout) {
+      return 0;
+    }
+    const exercise = this.currentWorkout.exercises.find(ex => ex.id === exerciseId);
+    if (!exercise || !exercise.sets) {
+      return 0;
+    }
+
+    return exercise.sets.reduce((volume, set) => {
+      return volume + (set.weight || 0) * (set.reps || 0);
+    }, 0);
+  }
+
+  /**
+   * ワークアウトインターフェースをレンダリング
+   */
+  renderWorkoutInterface() {
+    const container = document.getElementById('main-content');
+    if (!container) return;
+
+    container.innerHTML = `
+      <div class="workout-interface">
+        <h1>ワークアウト</h1>
+        <div id="workout-exercises"></div>
+      </div>
+    `;
+  }
+
+  /**
+   * エクササイズリストをレンダリング
+   */
+  renderExerciseList() {
+    const container = document.getElementById('exercise-list');
+    if (!container) return;
+
+    container.innerHTML = this.exercises.map(exercise => 
+      `<div class="exercise-item">${exercise.name}</div>`
+    ).join('');
+  }
+
+  /**
+   * 現在のワークアウトをレンダリング
+   */
+  renderCurrentWorkout() {
+    const container = document.getElementById('current-workout');
+    if (!container || !this.currentWorkout || !this.currentWorkout.exercises) return;
+
+    container.innerHTML = this.currentWorkout.exercises.map(exercise => 
+      `<div class="workout-exercise">${exercise.name || exercise}</div>`
+    ).join('');
+  }
+
+  /**
+   * ワークアウトを保存
+   */
+  async saveWorkout() {
+    try {
+      const { supabaseService } = await import('../services/supabaseService.js');
+      const { workoutDataService } = await import('../services/workoutDataService.js');
+      
+      // 認証チェック
+      if (!supabaseService.isAuthenticated()) {
+        console.error('User not authenticated');
+        return;
+      }
+
+      if (!this.currentWorkout) {
+        console.error('No workout to save');
+        return;
+      }
+
+      // ワークアウトデータを保存
+      await workoutDataService.saveWorkout(this.currentWorkout);
+      showNotification('ワークアウトを保存しました', 'success');
+      
+    } catch (error) {
+      console.error('Error saving workout:', error);
+      showNotification('ワークアウトの保存に失敗しました', 'error');
+    }
   }
 
   /**
@@ -1575,10 +1765,12 @@ export class WorkoutPage extends BasePage {
 }
 
 // MPAInitializer用のエクスポート
-const workoutPage = new WorkoutPage();
+// ページが読み込まれた時に自動初期化
+document.addEventListener('DOMContentLoaded', async () => {
+  console.log('Workout page DOM loaded');
+  const workoutPage = new WorkoutPage();
+  await workoutPage.initialize();
+  window.workoutPageInstance = workoutPage;
+});
 
-export default {
-  initialize: async () => {
-    await workoutPage.initialize();
-  },
-};
+export default WorkoutPage;
