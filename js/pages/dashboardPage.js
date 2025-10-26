@@ -27,6 +27,11 @@ class DashboardPage {
     console.log('Dashboard page initialized');
 
     try {
+      // authManagerの初期化を確認
+      if (!authManager.isInitialized) {
+        await authManager.initialize();
+      }
+
       // 認証チェックをスキップしてダッシュボードを表示
       // ツールチップ機能を初期化
       tooltipManager.initialize();

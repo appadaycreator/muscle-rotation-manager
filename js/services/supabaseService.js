@@ -36,8 +36,17 @@ export class SupabaseService {
       averageResponseTime: 0,
     };
 
+    // DOMが完全に読み込まれてから初期化を開始
     if (this.autoInitialize) {
-      this.initialize();
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+          console.log('📄 DOM loaded, starting Supabase initialization...');
+          this.initialize();
+        });
+      } else {
+        console.log('📄 DOM already loaded, starting Supabase initialization...');
+        this.initialize();
+      }
     }
   }
 
@@ -66,7 +75,7 @@ export class SupabaseService {
       }
 
       // Supabaseライブラリの読み込みを待つ
-      await this.waitForSupabaseLibrary();
+      const libraryLoaded = await this.waitForSupabaseLibrary();
 
       // CDNから読み込まれたSupabaseライブラリを使用
       if (!window.supabase || !window.supabase.createClient) {
@@ -76,7 +85,11 @@ export class SupabaseService {
           userAgent: navigator.userAgent,
           url: window.location.href
         });
-        throw new Error('Supabase library not loaded from CDN');
+        
+        // ライブラリが読み込まれていない場合は警告のみで続行
+        console.warn('⚠️ Continuing without Supabase - some features may be limited');
+        this.isConnected = false;
+        return false;
       }
 
       const { createClient } = window.supabase;
@@ -123,23 +136,132 @@ export class SupabaseService {
    * @returns {Promise<void>}
    */
   async waitForSupabaseLibrary() {
-    const maxWaitTime = 5000; // 5秒
-    const checkInterval = 100; // 100ms
+    const maxWaitTime = 15000; // 15秒に延長
+    const checkInterval = 300; // 300msに調整
     let elapsedTime = 0;
 
     console.log('⏳ Waiting for Supabase library to load...');
 
+    // まず、ライブラリが既に読み込まれているかチェック
+    if (window.supabase && window.supabase.createClient) {
+      console.log('✅ Supabase library already loaded');
+      return;
+    }
+
+    // ライブラリの読み込みを待つ
     while (elapsedTime < maxWaitTime) {
+      // 複数の方法でライブラリの存在をチェック
       if (window.supabase && window.supabase.createClient) {
         console.log('✅ Supabase library loaded successfully');
         return;
       }
 
+      // 代替チェック: グローバルスコープでの確認
+      if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+        console.log('✅ Supabase library loaded successfully (alternative check)');
+        return;
+      }
+
+      // さらに詳細なチェック
+      if (window.supabase && typeof window.supabase.createClient === 'function') {
+        console.log('✅ Supabase library loaded successfully (function check)');
+        return;
+      }
+
       await new Promise((resolve) => setTimeout(resolve, checkInterval));
       elapsedTime += checkInterval;
+      
+      // 進捗ログ
+      if (elapsedTime % 3000 === 0) {
+        console.log(`⏳ Still waiting for Supabase library... (${elapsedTime}ms elapsed)`);
+        
+        // タイムアウトが近い場合、代替CDNを試す
+        if (elapsedTime >= 12000 && !window.supabase) {
+          console.log('🔄 Attempting to load Supabase from alternative CDN...');
+          try {
+            await this.loadSupabaseFromAlternativeCDN();
+          } catch (error) {
+            console.warn('Alternative CDN loading failed:', error);
+          }
+        }
+      }
     }
 
-    throw new Error('Supabase library loading timeout');
+    // タイムアウト時の詳細情報をログ出力
+    console.error('Supabase library loading timeout details:', {
+      windowSupabase: typeof window.supabase,
+      windowSupabaseCreateClient: typeof (window.supabase && window.supabase.createClient),
+      documentReadyState: document.readyState,
+      scripts: Array.from(document.scripts).map(s => s.src).filter(src => src.includes('supabase')),
+      elapsedTime,
+      userAgent: navigator.userAgent
+    });
+
+    // タイムアウトでもエラーを投げずに警告のみ
+    console.warn('⚠️ Supabase library loading timeout - continuing without Supabase');
+    return false; // 失敗を示すが、エラーは投げない
+  }
+
+  /**
+   * 代替CDNからSupabaseライブラリを読み込む
+   * @returns {Promise<void>}
+   */
+  async loadSupabaseFromAlternativeCDN() {
+    return new Promise((resolve, reject) => {
+      // 既に読み込まれている場合はスキップ
+      if (window.supabase && window.supabase.createClient) {
+        resolve();
+        return;
+      }
+
+      console.log('🔄 Loading Supabase from alternative CDNs...');
+      
+      // 複数のCDNを順番に試す
+      const cdnUrls = [
+        'https://unpkg.com/@supabase/supabase-js@2.38.4/dist/index.min.js',
+        'https://cdn.skypack.dev/@supabase/supabase-js@2.38.4',
+        'https://esm.sh/@supabase/supabase-js@2.38.4'
+      ];
+      
+      let currentIndex = 0;
+      
+      function tryNextCDN() {
+        if (currentIndex >= cdnUrls.length) {
+          console.error('❌ All alternative CDN attempts failed');
+          reject(new Error('Failed to load Supabase from all alternative CDNs'));
+          return;
+        }
+        
+        const url = cdnUrls[currentIndex];
+        console.log(`🔄 Trying alternative CDN ${currentIndex + 1}/${cdnUrls.length}: ${url}`);
+        
+        const script = document.createElement('script');
+        script.src = url;
+        script.onload = () => {
+          console.log(`✅ Supabase library loaded from alternative CDN ${currentIndex + 1}`);
+          resolve();
+        };
+        script.onerror = () => {
+          console.warn(`❌ Failed to load from alternative CDN ${currentIndex + 1}, trying next...`);
+          currentIndex++;
+          tryNextCDN();
+        };
+        
+        // タイムアウト設定（8秒）
+        setTimeout(() => {
+          if (script.parentNode) {
+            script.parentNode.removeChild(script);
+            console.warn(`⏰ Timeout for alternative CDN ${currentIndex + 1}, trying next...`);
+            currentIndex++;
+            tryNextCDN();
+          }
+        }, 8000);
+        
+        document.head.appendChild(script);
+      }
+      
+      tryNextCDN();
+    });
   }
 
   /**

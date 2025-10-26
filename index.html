@@ -95,7 +95,91 @@
     <script src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/js/all.min.js"></script>
 
     <!-- Supabase JavaScript -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/index.min.js"></script>
+    <script>
+      // Supabaseライブラリの読み込みを監視
+      async function loadSupabaseLibrary() {
+        try {
+          // 既に読み込まれている場合
+          if (window.supabase && window.supabase.createClient) {
+            console.log('✅ Supabase library already loaded');
+            return true;
+          }
+
+          console.log('🔄 Loading Supabase library...');
+          
+          // ローカルライブラリを最初に試す
+          try {
+            console.log('🔄 Trying local Supabase library...');
+            const localModule = await import('./lib/supabase.min.js');
+            if (localModule.default && localModule.default.createClient) {
+              window.supabase = localModule.default;
+              console.log('✅ Supabase library loaded from local file');
+              return true;
+            } else if (localModule.createClient) {
+              window.supabase = localModule;
+              console.log('✅ Supabase library loaded from local file');
+              return true;
+            }
+          } catch (localError) {
+            console.warn('❌ Local Supabase library failed:', localError.message);
+          }
+          
+          // CDN URLを使用（CORS対応）
+          const cdnUrls = [
+            'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/main/index.js',
+            'https://unpkg.com/@supabase/supabase-js@2.38.4/dist/main/index.js',
+            'https://cdn.skypack.dev/@supabase/supabase-js@2.38.4',
+            'https://esm.sh/@supabase/supabase-js@2.38.4'
+          ];
+          
+          for (let i = 0; i < cdnUrls.length; i++) {
+            const url = cdnUrls[i];
+            console.log(`🔄 Trying CDN ${i + 1}/${cdnUrls.length}: ${url}`);
+            
+            try {
+              // 動的インポートを使用
+              const module = await import(url);
+              
+              // モジュールからSupabaseを取得
+              if (module.default && module.default.createClient) {
+                window.supabase = module.default;
+                console.log(`✅ Supabase library loaded successfully from CDN ${i + 1}`);
+                return true;
+              } else if (module.createClient) {
+                window.supabase = module;
+                console.log(`✅ Supabase library loaded successfully from CDN ${i + 1}`);
+                return true;
+              } else {
+                console.warn(`❌ Supabase library loaded but not accessible from CDN ${i + 1}, trying next...`);
+                continue;
+              }
+            } catch (error) {
+              console.warn(`❌ Failed to load from CDN ${i + 1}:`, error.message);
+              continue;
+            }
+          }
+          
+          throw new Error('Failed to load Supabase library from all sources');
+          
+        } catch (error) {
+          console.error('Supabase library loading failed:', error);
+          return false;
+        }
+      }
+
+      // ページ読み込み時にSupabaseライブラリを読み込み
+      loadSupabaseLibrary().then(success => {
+        if (!success) {
+          console.warn('⚠️ Continuing without Supabase - some features may be limited');
+          
+          // ゲストモードを有効にしてアプリケーションを動作させる
+          if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('guestMode', 'true');
+            console.log('🎯 Guest mode enabled due to Supabase loading failure');
+          }
+        }
+      });
+    </script>
 
     <!-- Google Tag Manager -->
     <script>
@@ -1259,36 +1343,43 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-      // Progress Chart
-      const ctx = document.getElementById('progressChart').getContext('2d');
-      new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
-          datasets: [
-            {
-              label: 'トレーニング日数',
-              data: [12, 15, 18, 20, 22, 25],
-              borderColor: '#667eea',
-              backgroundColor: 'rgba(102, 126, 234, 0.1)',
-              tension: 0.4,
+      // Progress Chart - DOM要素の存在確認を追加
+      document.addEventListener('DOMContentLoaded', function() {
+        const progressChartElement = document.getElementById('progressChart');
+        if (progressChartElement) {
+          const ctx = progressChartElement.getContext('2d');
+          new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
+              datasets: [
+                {
+                  label: 'トレーニング日数',
+                  data: [12, 15, 18, 20, 22, 25],
+                  borderColor: '#667eea',
+                  backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                  tension: 0.4,
+                },
+              ],
             },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              display: false,
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  display: false,
+                },
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                },
+              },
             },
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-            },
-          },
-        },
+          });
+        } else {
+          console.warn('Progress chart element not found');
+        }
       });
 
       // Smooth scrolling for navigation links
