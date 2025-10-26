@@ -64,6 +64,12 @@ export class WorkoutPage extends BasePage {
         // エクササイズデータを読み込み
         await this.loadExerciseData();
 
+        // 筋肉グループボタンを生成
+        this.loadMuscleGroups();
+        
+        // エクササイズプリセットを初期化
+        this.clearExercisePresets();
+
         // DOM要素が読み込まれた後にイベントリスナーを設定
         setTimeout(() => {
             console.log('Setting up event listeners after DOM load...');
@@ -298,6 +304,7 @@ export class WorkoutPage extends BasePage {
         }
 
         this.updateQuickStartButton();
+        this.loadExercisesForSelectedMuscles();
     }
 
     /**
@@ -418,6 +425,118 @@ export class WorkoutPage extends BasePage {
 
         container.appendChild(exerciseElement);
         showNotification(`${exerciseName}を追加しました`, 'success');
+    }
+
+    /**
+     * 筋肉グループボタンを生成
+     */
+    loadMuscleGroups() {
+        const container = document.getElementById('muscle-groups-grid');
+        if (!container) {
+            console.error('Muscle groups grid container not found');
+            return;
+        }
+
+        // 筋肉グループのアイコンと色を定義
+        const muscleGroupConfig = {
+            '胸': { icon: 'fas fa-heart', color: 'text-red-500', bgColor: 'bg-red-50', hoverColor: 'hover:bg-red-100' },
+            '背中': { icon: 'fas fa-user', color: 'text-blue-500', bgColor: 'bg-blue-50', hoverColor: 'hover:bg-blue-100' },
+            '肩': { icon: 'fas fa-arrow-up', color: 'text-green-500', bgColor: 'bg-green-50', hoverColor: 'hover:bg-green-100' },
+            '腕': { icon: 'fas fa-hand-paper', color: 'text-purple-500', bgColor: 'bg-purple-50', hoverColor: 'hover:bg-purple-100' },
+            '脚': { icon: 'fas fa-running', color: 'text-orange-500', bgColor: 'bg-orange-50', hoverColor: 'hover:bg-orange-100' },
+            '腹筋': { icon: 'fas fa-dumbbell', color: 'text-yellow-500', bgColor: 'bg-yellow-50', hoverColor: 'hover:bg-yellow-100' }
+        };
+
+        container.innerHTML = this.muscleGroups.map(muscle => {
+            const config = muscleGroupConfig[muscle] || { icon: 'fas fa-dumbbell', color: 'text-gray-500', bgColor: 'bg-gray-50', hoverColor: 'hover:bg-gray-100' };
+            
+            return `
+                <button class="muscle-group-btn ${config.bgColor} ${config.hoverColor} border-2 border-gray-200 rounded-lg p-4 text-center transition-all duration-200 hover:shadow-md" 
+                        data-muscle="${muscle}">
+                    <div class="flex flex-col items-center space-y-2">
+                        <i class="${config.icon} ${config.color} text-2xl"></i>
+                        <span class="font-medium text-gray-800">${muscle}</span>
+                    </div>
+                </button>
+            `;
+        }).join('');
+
+        console.log('Muscle group buttons generated:', this.muscleGroups.length);
+    }
+
+    /**
+     * 選択された筋肉グループに基づいてエクササイズを表示
+     */
+    loadExercisesForSelectedMuscles() {
+        const selectedMuscles = Array.from(document.querySelectorAll('.muscle-group-btn.selected'))
+            .map(btn => btn.dataset.muscle);
+        
+        if (selectedMuscles.length === 0) {
+            this.clearExercisePresets();
+            return;
+        }
+
+        const container = document.getElementById('exercise-presets');
+        if (!container) {
+            console.error('Exercise presets container not found');
+            return;
+        }
+
+        // 選択された筋肉グループのエクササイズを取得
+        const relevantExercises = this.getDefaultExercises().filter(exercise => 
+            selectedMuscles.includes(exercise.muscle_group)
+        );
+
+        if (relevantExercises.length === 0) {
+            container.innerHTML = `
+                <div class="col-span-full text-center text-gray-500 py-4">
+                    <i class="fas fa-info-circle text-xl mb-2"></i>
+                    <p>選択された部位のエクササイズが見つかりません</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = relevantExercises.map(exercise => `
+            <button class="exercise-preset-btn bg-white border border-gray-200 rounded-lg p-3 text-left hover:bg-gray-50 hover:border-blue-300 transition-all duration-200" 
+                    data-exercise="${exercise.name}" data-muscle="${exercise.muscle_group}">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h4 class="font-medium text-gray-900">${exercise.name}</h4>
+                        <p class="text-sm text-gray-500">${exercise.muscle_group} • ${exercise.equipment}</p>
+                    </div>
+                    <div class="flex items-center space-x-1">
+                        ${'★'.repeat(exercise.difficulty)}
+                        <span class="text-xs text-gray-400 ml-1">${exercise.difficulty}/5</span>
+                    </div>
+                </div>
+            </button>
+        `).join('');
+
+        // エクササイズボタンのイベントリスナーを設定
+        container.querySelectorAll('.exercise-preset-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const exerciseName = btn.dataset.exercise;
+                this.addExerciseToWorkout(exerciseName);
+            });
+        });
+
+        console.log('Loaded exercises for selected muscles:', selectedMuscles, relevantExercises.length);
+    }
+
+    /**
+     * エクササイズプリセットをクリア
+     */
+    clearExercisePresets() {
+        const container = document.getElementById('exercise-presets');
+        if (container) {
+            container.innerHTML = `
+                <div class="col-span-full text-center text-gray-500 py-4">
+                    <i class="fas fa-hand-pointer text-xl mb-2"></i>
+                    <p>筋肉部位を選択してください</p>
+                </div>
+            `;
+        }
     }
 
     /**
