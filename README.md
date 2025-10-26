@@ -104,6 +104,28 @@ npm run lint:fix
 npm run format
 ```
 
+### デプロイ
+
+#### 高速デプロイ（推奨）
+```bash
+# 高速デプロイ（テストスキップ）
+./deploy.sh fast
+
+# または
+npm run deploy:fast
+```
+
+#### フルデプロイ
+```bash
+# フルビルド（テスト含む）
+./deploy.sh full
+
+# または
+npm run build:full && gh-pages -d .
+```
+
+詳細なデプロイ最適化については [DEPLOY_OPTIMIZATION.md](./DEPLOY_OPTIMIZATION.md) を参照してください。
+
 ## アーキテクチャ
 
 ### MPA（マルチページアプリケーション）設計
