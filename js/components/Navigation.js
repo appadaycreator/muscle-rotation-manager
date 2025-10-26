@@ -19,63 +19,63 @@ export class Navigation {
         id: 'dashboard',
         name: 'ダッシュボード',
         icon: 'fas fa-tachometer-alt',
-        href: './dashboard.html',
+        href: '/index.html',
         requiresAuth: true,
       },
       {
         id: 'workout',
         name: 'ワークアウト',
         icon: 'fas fa-dumbbell',
-        href: './workout.html',
+        href: '/workout.html',
         requiresAuth: true,
       },
       {
         id: 'calendar',
         name: 'カレンダー',
         icon: 'fas fa-calendar-alt',
-        href: './calendar.html',
+        href: '/calendar.html',
         requiresAuth: true,
       },
       {
         id: 'analysis',
         name: '分析',
         icon: 'fas fa-chart-line',
-        href: './analysis.html',
+        href: '/analysis.html',
         requiresAuth: true,
       },
       {
         id: 'progress',
         name: 'プログレッシブ・オーバーロード',
         icon: 'fas fa-trophy',
-        href: './progress.html',
+        href: '/progress.html',
         requiresAuth: true,
       },
       {
         id: 'exercises',
         name: 'エクササイズデータベース',
         icon: 'fas fa-database',
-        href: './exercises.html',
+        href: '/exercises.html',
         requiresAuth: true,
       },
       {
         id: 'settings',
         name: '設定',
         icon: 'fas fa-cog',
-        href: './settings.html',
+        href: '/settings.html',
         requiresAuth: true,
       },
       {
         id: 'help',
         name: '使い方',
         icon: 'fas fa-question-circle',
-        href: './help.html',
+        href: '/help.html',
         requiresAuth: false,
       },
       {
         id: 'privacy',
         name: 'プライバシーポリシー',
         icon: 'fas fa-shield-alt',
-        href: './privacy.html',
+        href: '/privacy.html',
         requiresAuth: false,
       },
     ];
@@ -369,6 +369,20 @@ export class Navigation {
 
     // モバイルサイドバーを閉じる
     this.closeMobileSidebar();
+
+    // 絶対パスの場合は直接遷移を許可
+    if (href.startsWith('/')) {
+      console.log('Navigation allowed, proceeding to:', href);
+      // デフォルトのブラウザナビゲーションを使用
+      return;
+    }
+
+    // 相対パスの場合は絶対パスに変換
+    if (href.startsWith('./')) {
+      const absoluteHref = href.replace('./', '/');
+      console.log('Converting relative path to absolute:', absoluteHref);
+      navLink.href = absoluteHref;
+    }
 
     console.log('Navigation allowed, proceeding to:', href);
   }
