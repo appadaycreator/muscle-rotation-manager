@@ -1,6 +1,6 @@
 // js/services/SupabaseService.js - Supabase統合サービス
 
-import { SUPABASE_CONFIG } from '../utils/constants.js';
+// import { SUPABASE_CONFIG } from '../utils/constants.js';
 import { handleError } from '../utils/errorHandler.js';
 
 /**
@@ -70,11 +70,6 @@ export class SupabaseService {
       console.log('⚠️ Continuing without Supabase - using local data only');
       this.isConnected = false;
       return false;
-
-      // ヘルスチェックの開始
-      this.startHealthCheck();
-
-      return true;
     } catch (error) {
       console.error(
         `❌ Failed to initialize Supabase client (attempt ${this.connectionAttempts}):`,
@@ -108,65 +103,6 @@ export class SupabaseService {
   async waitForSupabaseLibrary() {
     console.log('⚠️ Supabase library loading disabled to avoid ES module issues');
     throw new Error('Supabase library loading disabled');
-
-    // まず、ライブラリが既に読み込まれているかチェック
-    if (window.supabase && window.supabase.createClient) {
-      console.log('✅ Supabase library already loaded');
-      return;
-    }
-
-    // ライブラリの読み込みを待つ
-    while (elapsedTime < maxWaitTime) {
-      // 複数の方法でライブラリの存在をチェック
-      if (window.supabase && window.supabase.createClient) {
-        console.log('✅ Supabase library loaded successfully');
-        return;
-      }
-
-      // 代替チェック: グローバルスコープでの確認
-      if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
-        console.log('✅ Supabase library loaded successfully (alternative check)');
-        return;
-      }
-
-      // さらに詳細なチェック
-      if (window.supabase && typeof window.supabase.createClient === 'function') {
-        console.log('✅ Supabase library loaded successfully (function check)');
-        return;
-      }
-
-      await new Promise((resolve) => setTimeout(resolve, checkInterval));
-      elapsedTime += checkInterval;
-      
-      // 進捗ログ
-      if (elapsedTime % 3000 === 0) {
-        console.log(`⏳ Still waiting for Supabase library... (${elapsedTime}ms elapsed)`);
-        
-        // タイムアウトが近い場合、代替CDNを試す
-        if (elapsedTime >= 12000 && !window.supabase) {
-          console.log('🔄 Attempting to load Supabase from alternative CDN...');
-          try {
-            await this.loadSupabaseFromAlternativeCDN();
-          } catch (error) {
-            console.warn('Alternative CDN loading failed:', error);
-          }
-        }
-      }
-    }
-
-    // タイムアウト時の詳細情報をログ出力
-    console.error('Supabase library loading timeout details:', {
-      windowSupabase: typeof window.supabase,
-      windowSupabaseCreateClient: typeof (window.supabase && window.supabase.createClient),
-      documentReadyState: document.readyState,
-      scripts: Array.from(document.scripts).map(s => s.src).filter(src => src.includes('supabase')),
-      elapsedTime,
-      userAgent: navigator.userAgent
-    });
-
-    // タイムアウトでもエラーを投げずに警告のみ
-    console.warn('⚠️ Supabase library loading timeout - continuing without Supabase');
-    return false; // 失敗を示すが、エラーは投げない
   }
 
   /**
@@ -964,7 +900,7 @@ export class SupabaseService {
         };
       }
 
-      const user = session.user;
+      // const user = session.user;
 
       // ワークアウト履歴を取得して統計を計算
       const { data: workouts, error: workoutsError } = await this.client

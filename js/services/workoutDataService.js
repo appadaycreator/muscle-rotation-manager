@@ -223,7 +223,7 @@ export class WorkoutDataService {
    */
   async loadFromSupabase(options = {}) {
     try {
-      const { limit = 100, startDate, endDate } = options;
+      const { limit = 100 } = options;
 
       // Supabaseが利用可能かチェック
       if (!supabaseService.isAvailable()) {
