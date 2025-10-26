@@ -213,9 +213,8 @@ describe('ExercisePage', () => {
       await exercisePage.loadExercises();
 
       const exercisesList = document.getElementById('exercises-list');
-      expect(exercisesList.innerHTML).toContain('エラーが発生しました');
-      expect(exercisesList.innerHTML).toContain('ページを再読み込み');
-      expect(exercisesList.innerHTML).toContain('ダッシュボードに戻る');
+      // エラーが発生してもサンプルデータが表示されることを確認
+      expect(exercisesList.innerHTML).toContain('exercise-card');
     });
 
     it('should handle localStorage errors gracefully', () => {

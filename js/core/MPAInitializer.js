@@ -309,7 +309,7 @@ class MPAInitializer {
    */
   setupGuestData() {
     try {
-      // サンプルエクササイズデータ
+      // サンプルエクササイズデータ（現実的な値に調整）
       const sampleExercises = [
         {
           id: 'bench-press',
@@ -341,9 +341,29 @@ class MPAInitializer {
           type: 'compound',
           description: '全身の筋肉を鍛えるエクササイズ',
         },
+        {
+          id: 'push-ups',
+          name: 'プッシュアップ',
+          name_ja: 'プッシュアップ',
+          muscle_group: 'chest',
+          difficulty: 2,
+          equipment: 'bodyweight',
+          type: 'compound',
+          description: '自重で胸筋を鍛えるエクササイズ',
+        },
+        {
+          id: 'pull-ups',
+          name: 'プルアップ',
+          name_ja: 'プルアップ',
+          muscle_group: 'back',
+          difficulty: 4,
+          equipment: 'bodyweight',
+          type: 'compound',
+          description: '背筋を鍛える自重エクササイズ',
+        },
       ];
 
-      // サンプルワークアウトデータ
+      // サンプルワークアウトデータ（現実的な値に調整）
       const sampleWorkouts = [
         {
           id: 'workout-1',
@@ -353,11 +373,18 @@ class MPAInitializer {
               name: 'ベンチプレス',
               sets: 3,
               reps: 10,
-              weight: 80,
+              weight: 60, // 現実的な重量に調整
+            },
+            {
+              name: 'プッシュアップ',
+              sets: 3,
+              reps: 15,
+              weight: 0, // 自重
             },
           ],
           duration: 45,
           notes: '胸の日',
+          muscle_groups: ['chest'],
         },
         {
           id: 'workout-2',
@@ -367,11 +394,39 @@ class MPAInitializer {
               name: 'スクワット',
               sets: 3,
               reps: 12,
-              weight: 100,
+              weight: 0, // 自重
+            },
+            {
+              name: 'デッドリフト',
+              sets: 3,
+              reps: 8,
+              weight: 80, // 現実的な重量に調整
             },
           ],
-          duration: 30,
-          notes: '脚の日',
+          duration: 50,
+          notes: '脚と背中の日',
+          muscle_groups: ['legs', 'back'],
+        },
+        {
+          id: 'workout-3',
+          date: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
+          exercises: [
+            {
+              name: 'プルアップ',
+              sets: 3,
+              reps: 8,
+              weight: 0, // 自重
+            },
+            {
+              name: 'ベンチプレス',
+              sets: 3,
+              reps: 8,
+              weight: 65, // 現実的な重量に調整
+            },
+          ],
+          duration: 40,
+          notes: '上半身の日',
+          muscle_groups: ['back', 'chest'],
         },
       ];
 
@@ -384,10 +439,11 @@ class MPAInitializer {
           exercises: sampleExercises,
           workouts: sampleWorkouts,
           createdAt: new Date().toISOString(),
+          isSampleData: true, // サンプルデータであることを明示
         })
       );
 
-      console.log('Guest mode data setup completed');
+      console.log('Guest mode data setup completed with realistic values');
     } catch (error) {
       console.error('Failed to setup guest data:', error);
     }

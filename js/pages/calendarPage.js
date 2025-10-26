@@ -627,6 +627,98 @@ class CalendarPage extends BasePage {
   }
 
   /**
+   * 部位別統計を計算
+   * @param {Object} muscleGroups - 筋肉部位別カウント
+   * @returns {Object} 部位別統計データ
+   */
+  calculateMuscleGroupStats(muscleGroups) {
+    const muscleGroupNames = {
+      chest: '胸',
+      back: '背中',
+      shoulders: '肩',
+      arms: '腕',
+      legs: '脚',
+      core: '腹筋',
+    };
+
+    const stats = {};
+    Object.entries(muscleGroups).forEach(([muscleGroup, count]) => {
+      const displayName = muscleGroupNames[muscleGroup] || muscleGroup;
+      stats[muscleGroup] = {
+        name: displayName,
+        count: count,
+        percentage: 0, // 後で計算
+      };
+    });
+
+    // パーセンテージを計算
+    const totalCount = Object.values(stats).reduce(
+      (sum, stat) => sum + stat.count,
+      0
+    );
+    Object.values(stats).forEach((stat) => {
+      stat.percentage =
+        totalCount > 0 ? Math.round((stat.count / totalCount) * 100) : 0;
+    });
+
+    return stats;
+  }
+
+  /**
+   * 部位別統計をレンダリング
+   * @param {Object} muscleGroupStats - 部位別統計データ
+   */
+  async renderMuscleGroupStats(muscleGroupStats) {
+    const muscleStatsContainer = document.getElementById('muscle-stats');
+    if (!muscleStatsContainer) {
+      console.log('Muscle stats container not found');
+      return;
+    }
+
+    if (Object.keys(muscleGroupStats).length === 0) {
+      muscleStatsContainer.innerHTML = `
+        <div class="text-center col-span-6">
+          <div class="text-gray-500">
+            <i class="fas fa-info-circle mr-2"></i>
+            部位別統計データがありません
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    const muscleGroupColors = {
+      chest: 'bg-red-50 text-red-600',
+      back: 'bg-blue-50 text-blue-600',
+      shoulders: 'bg-green-50 text-green-600',
+      arms: 'bg-yellow-50 text-yellow-600',
+      legs: 'bg-purple-50 text-purple-600',
+      core: 'bg-pink-50 text-pink-600',
+    };
+
+    muscleStatsContainer.innerHTML = Object.entries(muscleGroupStats)
+      .sort(([, a], [, b]) => b.count - a.count)
+      .map(([muscleGroup, stat]) => {
+        const colorClass =
+          muscleGroupColors[muscleGroup] || 'bg-gray-50 text-gray-600';
+        return `
+          <div class="text-center p-3 ${colorClass} rounded-lg">
+            <div class="text-xl font-bold">
+              ${stat.count}
+            </div>
+            <div class="text-sm">
+              ${stat.name}
+            </div>
+            <div class="text-xs mt-1 opacity-75">
+              ${stat.percentage}%
+            </div>
+          </div>
+        `;
+      })
+      .join('');
+  }
+
+  /**
    * 月間統計をレンダリング
    */
   async renderMonthlyStats() {
@@ -660,6 +752,11 @@ class CalendarPage extends BasePage {
         return;
       }
 
+      // 部位別統計を計算
+      const muscleGroupStats = this.calculateMuscleGroupStats(
+        stats.muscleGroups
+      );
+
       statsContainer.innerHTML = `
             <div class="text-center p-4 bg-blue-50 rounded-lg">
                 <div class="text-2xl font-bold text-blue-600">${stats.totalWorkouts}</div>
@@ -680,6 +777,9 @@ class CalendarPage extends BasePage {
                 <div class="text-sm text-gray-600">平均時間</div>
             </div>
         `;
+
+      // 部位別統計を表示
+      await this.renderMuscleGroupStats(muscleGroupStats);
     } catch (error) {
       console.error('Error rendering monthly stats:', error);
       statsContainer.innerHTML = `

@@ -331,6 +331,56 @@ class ExercisePage {
   }
 
   /**
+   * 筋肉部位の表示名を取得
+   * @param {string} muscleGroup - 筋肉部位ID
+   * @returns {string} 表示名
+   */
+  getMuscleGroupDisplayName(muscleGroup) {
+    const names = {
+      chest: '胸',
+      back: '背中',
+      shoulders: '肩',
+      arms: '腕',
+      legs: '脚',
+      core: '腹筋',
+    };
+    return names[muscleGroup] || muscleGroup || '未設定';
+  }
+
+  /**
+   * 筋肉部位の色を取得
+   * @param {string} muscleGroup - 筋肉部位ID
+   * @returns {string} 色コード
+   */
+  getMuscleGroupColor(muscleGroup) {
+    const colors = {
+      chest: '#EF4444', // 赤
+      back: '#3B82F6', // 青
+      shoulders: '#10B981', // 緑
+      arms: '#F59E0B', // オレンジ
+      legs: '#8B5CF6', // 紫
+      core: '#EC4899', // ピンク
+    };
+    return colors[muscleGroup] || '#6B7280';
+  }
+
+  /**
+   * エクササイズタイプの表示名を取得
+   * @param {string} type - エクササイズタイプ
+   * @returns {string} 表示名
+   */
+  getExerciseTypeLabel(type) {
+    const labels = {
+      compound: '複合種目',
+      isolation: '単関節種目',
+      strength: '筋力',
+      cardio: '有酸素',
+      flexibility: '柔軟性',
+    };
+    return labels[type] || type || '未設定';
+  }
+
+  /**
    * エクササイズを読み込み
    */
   async loadExercises() {
@@ -837,8 +887,12 @@ class ExercisePage {
         });
       }
 
-      // 筋肉部位フィルター
-      if (filters.muscleGroup) {
+      // 筋肉部位フィルター（muscleGroupIdとmuscleGroupの両方に対応）
+      if (filters.muscleGroupId) {
+        filtered = filtered.filter(
+          (exercise) => exercise.muscle_group === filters.muscleGroupId
+        );
+      } else if (filters.muscleGroup) {
         filtered = filtered.filter(
           (exercise) => exercise.muscle_group === filters.muscleGroup
         );
@@ -866,25 +920,32 @@ class ExercisePage {
       }
 
       // ボディウェイトフィルター
-      if (filters.bodyweight) {
+      if (filters.isBodyweight) {
         filtered = filtered.filter(
           (exercise) => exercise.equipment === 'bodyweight'
         );
       }
 
       // コンパウンドフィルター
-      if (filters.compound) {
+      if (filters.isCompound) {
         filtered = filtered.filter((exercise) => exercise.type === 'compound');
       }
 
       // 初心者フィルター
-      if (filters.beginner) {
+      if (filters.isBeginnerFriendly) {
         filtered = filtered.filter((exercise) => exercise.difficulty <= 2);
       }
 
+      // お気に入りフィルター
+      if (filters.showFavoritesOnly) {
+        filtered = filtered.filter((exercise) =>
+          this.favoriteExercises.has(exercise.id)
+        );
+      }
+
       // ソート適用
-      if (filters.sort) {
-        filtered = this.sortExercises(filtered, filters.sort);
+      if (filters.sortBy) {
+        filtered = this.sortExercises(filtered, filters.sortBy);
       }
 
       return filtered;
@@ -905,6 +966,7 @@ class ExercisePage {
       const sorted = [...exercises];
 
       switch (sortType) {
+        case 'name':
         case 'name_asc':
           return sorted.sort((a, b) =>
             (a.name_ja || a.name || '').localeCompare(b.name_ja || b.name || '')
@@ -913,6 +975,7 @@ class ExercisePage {
           return sorted.sort((a, b) =>
             (b.name_ja || b.name || '').localeCompare(a.name_ja || a.name || '')
           );
+        case 'difficulty':
         case 'difficulty_asc':
           return sorted.sort(
             (a, b) => (a.difficulty || 0) - (b.difficulty || 0)
@@ -920,6 +983,14 @@ class ExercisePage {
         case 'difficulty_desc':
           return sorted.sort(
             (a, b) => (b.difficulty || 0) - (a.difficulty || 0)
+          );
+        case 'rating':
+          return sorted.sort(
+            (a, b) => (b.average_rating || 0) - (a.average_rating || 0)
+          );
+        case 'usage':
+          return sorted.sort(
+            (a, b) => (b.usage_count || 0) - (a.usage_count || 0)
           );
         case 'muscle_group':
           return sorted.sort((a, b) =>
@@ -1099,10 +1170,14 @@ class ExercisePage {
    * @returns {string} HTML文字列
    */
   renderExerciseCard(exercise) {
-    const muscleGroup = exercise.muscle_groups;
+    // サンプルデータの構造に合わせて調整
+    const muscleGroupName = this.getMuscleGroupDisplayName(
+      exercise.muscle_group
+    );
+    const difficultyLevel =
+      exercise.difficulty || exercise.difficulty_level || 1;
     const difficultyStars =
-      '★'.repeat(exercise.difficulty_level) +
-      '☆'.repeat(5 - exercise.difficulty_level);
+      '★'.repeat(difficultyLevel) + '☆'.repeat(5 - difficultyLevel);
 
     const isCustom = exercise.is_custom;
     const customBadge = isCustom
@@ -1111,13 +1186,13 @@ class ExercisePage {
       : '';
 
     // 難易度に応じた色分け
-    const difficultyColor = this.getDifficultyColor(exercise.difficulty_level);
+    const difficultyColor = this.getDifficultyColor(difficultyLevel);
 
     // エクイップメントアイコン
     const equipmentIcon = this.getEquipmentIcon(exercise.equipment);
 
     // 筋肉部位の色
-    const muscleColor = muscleGroup?.color_code || '#6B7280';
+    const muscleColor = this.getMuscleGroupColor(exercise.muscle_group);
 
     return `
             <div class="exercise-card bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-100 hover:border-blue-200 group" 
@@ -1128,16 +1203,16 @@ class ExercisePage {
                         <div class="flex-1">
                             <div class="flex items-center gap-2 mb-2">
                                 <h3 class="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                                    ${exercise.name_ja}
+                                    ${exercise.name_ja || exercise.name}
                                 </h3>
                                 ${customBadge}
                             </div>
-                            <p class="text-sm text-gray-600 mb-3">${exercise.name_en}</p>
+                            <p class="text-sm text-gray-600 mb-3">${exercise.name_en || exercise.name}</p>
                         </div>
                         <div class="flex-shrink-0 ml-4">
                             ${
                               exercise.image_url
-                                ? `<img src="${exercise.image_url}" alt="${exercise.name_ja}" 
+                                ? `<img src="${exercise.image_url}" alt="${exercise.name_ja || exercise.name}" 
                       class="w-20 h-20 rounded-lg object-cover shadow-sm">`
                                 : `<div class="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center shadow-sm">
                                     <i class="fas fa-dumbbell text-gray-400 text-2xl"></i>
@@ -1153,7 +1228,7 @@ class ExercisePage {
                             <i class="fas fa-muscle w-4 text-gray-500 mr-3"></i>
                             <span class="text-sm text-gray-600 mr-2">部位:</span>
                             <span class="px-3 py-1 rounded-full text-xs font-medium" style="background-color: ${muscleColor}20; color: ${muscleColor}">
-                                ${muscleGroup?.name_ja || '未設定'}
+                                ${muscleGroupName}
                             </span>
                         </div>
                         
@@ -1163,7 +1238,7 @@ class ExercisePage {
                             <span class="text-sm text-gray-600 mr-2">難易度:</span>
                             <div class="flex items-center">
                                 <span class="text-sm font-medium ${difficultyColor} mr-2">${difficultyStars}</span>
-                                <span class="text-xs text-gray-500">(${exercise.difficulty_level}/5)</span>
+                                <span class="text-xs text-gray-500">(${difficultyLevel}/5)</span>
                             </div>
                         </div>
                         
@@ -1179,7 +1254,7 @@ class ExercisePage {
                             <i class="fas fa-tag w-4 text-gray-500 mr-3"></i>
                             <span class="text-sm text-gray-600 mr-2">タイプ:</span>
                             <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full font-medium">
-                                ${this.getExerciseTypeLabel(exercise.exercise_type)}
+                                ${this.getExerciseTypeLabel(exercise.type || exercise.exercise_type)}
                             </span>
                         </div>
                     </div>
@@ -1198,9 +1273,9 @@ class ExercisePage {
                     <!-- フッター -->
                     <div class="flex justify-between items-center pt-3 border-t border-gray-100">
                         <div class="flex items-center space-x-3">
-                            ${exercise.is_compound ? '<span class="text-xs text-green-600 font-medium"><i class="fas fa-link mr-1"></i>複合</span>' : ''}
-                            ${exercise.is_bodyweight ? '<span class="text-xs text-blue-600 font-medium"><i class="fas fa-weight mr-1"></i>自重</span>' : ''}
-                            ${exercise.is_beginner_friendly ? '<span class="text-xs text-purple-600 font-medium"><i class="fas fa-seedling mr-1"></i>初心者向け</span>' : ''}
+                            ${exercise.type === 'compound' ? '<span class="text-xs text-green-600 font-medium"><i class="fas fa-link mr-1"></i>複合</span>' : ''}
+                            ${exercise.equipment === 'bodyweight' ? '<span class="text-xs text-blue-600 font-medium"><i class="fas fa-weight mr-1"></i>自重</span>' : ''}
+                            ${difficultyLevel <= 2 ? '<span class="text-xs text-purple-600 font-medium"><i class="fas fa-seedling mr-1"></i>初心者向け</span>' : ''}
                         </div>
                         <div class="flex items-center space-x-2">
                             <button class="p-2 text-gray-400 hover:text-red-500 transition-colors" 

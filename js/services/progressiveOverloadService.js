@@ -497,9 +497,27 @@ export class ProgressiveOverloadService {
             const reps = Number(exercise.reps) || 0;
             const sets = Number(exercise.sets) || 0;
 
-            // 異常値のチェック（重量1000kg以上、回数100回以上、セット数20以上は除外）
-            if (weight > 1000 || reps > 100 || sets > 20) {
-              console.warn('Suspicious exercise data detected:', exercise);
+            // より厳格な異常値のチェック
+            // 重量: 300kg以上、回数: 50回以上、セット数: 10以上は除外
+            if (weight > 300 || reps > 50 || sets > 10) {
+              console.warn('Suspicious exercise data detected and excluded:', {
+                exercise: exercise.name || 'Unknown',
+                weight,
+                reps,
+                sets,
+                reason:
+                  weight > 300
+                    ? 'excessive weight'
+                    : reps > 50
+                      ? 'excessive reps'
+                      : 'excessive sets',
+              });
+              return exerciseSum;
+            }
+
+            // 負の値も除外
+            if (weight < 0 || reps < 0 || sets < 0) {
+              console.warn('Negative values detected and excluded:', exercise);
               return exerciseSum;
             }
 

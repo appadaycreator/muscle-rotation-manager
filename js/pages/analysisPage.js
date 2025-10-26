@@ -414,21 +414,37 @@ class AnalysisPage {
     container.innerHTML = `
       <!-- 総合メトリクス -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div class="text-center p-4 bg-blue-50 rounded-lg">
+        <div class="text-center p-4 bg-blue-50 rounded-lg relative group">
           <div class="text-2xl font-bold text-blue-600">${data.totalWorkouts}</div>
-          <div class="text-sm text-gray-600">総ワークアウト数</div>
+          <div class="text-sm text-gray-600 flex items-center justify-center">
+            総ワークアウト数
+            <i class="fas fa-info-circle ml-1 text-gray-400 cursor-help" 
+               title="記録されたワークアウトの総数です。継続的なトレーニングの指標として使用されます。"></i>
+          </div>
         </div>
-        <div class="text-center p-4 bg-green-50 rounded-lg">
-          <div class="text-2xl font-bold text-green-600">${data.overallMetrics.totalVolume}</div>
-          <div class="text-sm text-gray-600">総ボリューム</div>
+        <div class="text-center p-4 bg-green-50 rounded-lg relative group">
+          <div class="text-2xl font-bold text-green-600">${this.formatVolume(data.overallMetrics.totalVolume)}</div>
+          <div class="text-sm text-gray-600 flex items-center justify-center">
+            総ボリューム
+            <i class="fas fa-info-circle ml-1 text-gray-400 cursor-help" 
+               title="全てのエクササイズの重量×回数×セット数の合計です。筋力向上の指標として使用されます。"></i>
+          </div>
         </div>
-        <div class="text-center p-4 bg-purple-50 rounded-lg">
-          <div class="text-2xl font-bold text-purple-600">${data.consistencyScore}</div>
-          <div class="text-sm text-gray-600">一貫性スコア</div>
+        <div class="text-center p-4 bg-purple-50 rounded-lg relative group">
+          <div class="text-2xl font-bold text-purple-600">${data.consistencyScore}%</div>
+          <div class="text-sm text-gray-600 flex items-center justify-center">
+            一貫性スコア
+            <i class="fas fa-info-circle ml-1 text-gray-400 cursor-help" 
+               title="トレーニングの継続性を表すスコアです。高いほど定期的にトレーニングを行っています。"></i>
+          </div>
         </div>
-        <div class="text-center p-4 bg-orange-50 rounded-lg">
-          <div class="text-2xl font-bold text-orange-600">${data.overallMetrics.averageVolumePerWorkout}</div>
-          <div class="text-sm text-gray-600">平均ボリューム</div>
+        <div class="text-center p-4 bg-orange-50 rounded-lg relative group">
+          <div class="text-2xl font-bold text-orange-600">${this.formatVolume(data.overallMetrics.averageVolumePerWorkout)}</div>
+          <div class="text-sm text-gray-600 flex items-center justify-center">
+            平均ボリューム
+            <i class="fas fa-info-circle ml-1 text-gray-400 cursor-help" 
+               title="1回のワークアウトあたりの平均ボリュームです。トレーニング強度の指標として使用されます。"></i>
+          </div>
         </div>
       </div>
 
@@ -1131,6 +1147,21 @@ class AnalysisPage {
       }
     });
     this.charts = {};
+  }
+
+  /**
+   * ボリュームをフォーマット
+   * @param {number} volume - ボリューム値
+   * @returns {string} フォーマットされたボリューム
+   */
+  formatVolume(volume) {
+    if (volume >= 1000000) {
+      return `${(volume / 1000000).toFixed(1)}M`;
+    } else if (volume >= 1000) {
+      return `${(volume / 1000).toFixed(1)}K`;
+    } else {
+      return volume.toString();
+    }
   }
 }
 
