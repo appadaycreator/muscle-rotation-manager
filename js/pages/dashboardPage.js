@@ -20,13 +20,7 @@ class DashboardPage {
         console.log('Dashboard page initialized');
 
         try {
-            // 認証状態を確認
-            const isAuthenticated = await authManager.isAuthenticated();
-            if (!isAuthenticated) {
-                this.showLoginPrompt();
-                return;
-            }
-
+            // 認証チェックをスキップしてダッシュボードを表示
             // ツールチップ機能を初期化
             tooltipManager.initialize();
 
@@ -63,9 +57,6 @@ class DashboardPage {
 
             // 筋肉部位クリックハンドラーを設定
             this.setupMusclePartHandlers();
-
-            // 認証ボタンの設定
-            this.setupAuthButton();
 
         } catch (error) {
             console.error('Error initializing dashboard:', error);
@@ -665,14 +656,20 @@ class DashboardPage {
         } catch (error) {
             console.error('筋肉回復データの取得に失敗:', error);
             // フォールバック: 基本的なモックデータを返す
-            return MUSCLE_GROUPS.map((muscle, index) => ({
-                ...muscle,
-                lastTrained: `${index + 1}日前`,
-                recovery: Math.floor(Math.random() * 100),
-                recoveryColor: 'text-green-600',
-                recoveryClass: 'bg-green-500',
-                nextRecommended: '明日'
-            }));
+            return MUSCLE_GROUPS.map((muscle, index) => {
+                const recovery = Math.floor(Math.random() * 100);
+                const recoveryColor = recovery >= 80 ? 'text-green-600' : recovery >= 50 ? 'text-yellow-600' : 'text-red-600';
+                const recoveryClass = recovery >= 80 ? 'bg-green-500' : recovery >= 50 ? 'bg-yellow-500' : 'bg-red-500';
+                
+                return {
+                    ...muscle,
+                    lastTrained: `${index + 1}日前`,
+                    recovery: recovery,
+                    recoveryColor: recoveryColor,
+                    recoveryClass: recoveryClass,
+                    nextRecommended: recovery >= 80 ? '今すぐ' : '明日'
+                };
+            });
         }
     }
 

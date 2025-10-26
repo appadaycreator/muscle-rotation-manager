@@ -459,14 +459,6 @@ class SettingsPage {
                     </div>
                 </div>
             </div>
-        `;
-                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg 
-                                              focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                       placeholder="170.0"
-                                       required>
-                                <div id="height-error" class="text-red-600 text-sm mt-1 hidden"></div>
-                            </div>
-                        </div>
 
                         <!-- アバター画像 -->
                         <div>
@@ -785,11 +777,11 @@ class SettingsPage {
                             <div class="space-y-2">
                                 <div class="flex items-center">
                                     <i class="fas fa-envelope text-gray-500 w-5"></i>
-                                    <span class="ml-2 text-gray-700">${userEmail}</span>
+                                    <span class="ml-2 text-gray-700">${this.userProfile?.email || '未設定'}</span>
                                 </div>
                                 <div class="flex items-center">
                                     <i class="fas fa-user text-gray-500 w-5"></i>
-                                    <span class="ml-2 text-gray-700">${userNickname || '未設定'}</span>
+                                    <span class="ml-2 text-gray-700">${this.userProfile?.nickname || '未設定'}</span>
                                 </div>
                             </div>
                         </div>
