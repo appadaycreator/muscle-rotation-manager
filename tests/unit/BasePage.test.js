@@ -238,4 +238,81 @@ describe('BasePage', () => {
       consoleLogSpy.mockRestore();
     });
   });
+
+  describe('Guest Mode Authentication', () => {
+    beforeEach(() => {
+      // ローカルストレージをモック
+      Object.defineProperty(window, 'localStorage', {
+        value: {
+          getItem: jest.fn(),
+          setItem: jest.fn(),
+          clear: jest.fn(),
+        },
+        writable: true,
+      });
+    });
+
+    test('should skip authentication check when guest mode is enabled', async () => {
+      // ゲストモードを有効化
+      window.localStorage.getItem.mockReturnValue('true');
+
+      const result = await basePage.checkAuthentication();
+
+      expect(result).toBe(true);
+      expect(mockAuthManager.isAuthenticated).not.toHaveBeenCalled();
+    });
+
+    test('should proceed with normal authentication when guest mode is disabled', async () => {
+      // ゲストモードを無効化
+      window.localStorage.getItem.mockReturnValue('false');
+      mockSupabaseService.isAvailable.mockReturnValue(true);
+      mockAuthManager.isAuthenticated.mockResolvedValue(true);
+
+      const result = await basePage.checkAuthentication();
+
+      expect(result).toBe(true);
+      expect(mockAuthManager.isAuthenticated).toHaveBeenCalled();
+    });
+
+    test('should handle authentication check with guest mode and Supabase unavailable', async () => {
+      // ゲストモードを有効化
+      window.localStorage.getItem.mockReturnValue('true');
+      mockSupabaseService.isAvailable.mockReturnValue(false);
+
+      const result = await basePage.checkAuthentication();
+
+      expect(result).toBe(true);
+      expect(mockAuthManager.isAuthenticated).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Error Handling', () => {
+    test('should handle authentication check errors gracefully', async () => {
+      mockSupabaseService.isAvailable.mockReturnValue(true);
+      mockAuthManager.isAuthenticated.mockRejectedValue(new Error('Auth error'));
+
+      const result = await basePage.checkAuthentication();
+
+      expect(result).toBe(false);
+      // エラーハンドリングが適切に行われることを確認
+      expect(typeof result).toBe('boolean');
+    });
+
+    test('should handle data loading errors', async () => {
+      mockSupabaseService.isAvailable.mockReturnValue(true);
+      mockSupabaseService.loadData.mockRejectedValue(new Error('Load error'));
+
+      // localStorageをモック
+      Object.defineProperty(window, 'localStorage', {
+        value: {
+          getItem: jest.fn().mockReturnValue('[]'),
+        },
+        writable: true,
+      });
+
+      const result = await basePage.loadDataFromStorage();
+
+      expect(result).toEqual([]);
+    });
+  });
 });

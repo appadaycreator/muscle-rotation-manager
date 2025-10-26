@@ -312,4 +312,134 @@ describe('MPAInitializer', () => {
       expect(mpaInitializer.getCurrentPage()).toBeDefined();
     });
   });
+
+  describe('Guest Mode', () => {
+    beforeEach(() => {
+      // ローカルストレージをクリア
+      localStorage.clear();
+    });
+
+    test('should enable guest mode and setup sample data', () => {
+      // ゲストモードを有効化
+      mpaInitializer.enableGuestMode();
+
+      // ゲストモードフラグが設定されているかチェック
+      expect(localStorage.getItem('guestMode')).toBe('true');
+      expect(localStorage.getItem('guestModeEnabledAt')).toBeDefined();
+
+      // サンプルデータが設定されているかチェック
+      const exercises = JSON.parse(localStorage.getItem('exercises') || '[]');
+      const workouts = JSON.parse(localStorage.getItem('workouts') || '[]');
+      const guestData = JSON.parse(localStorage.getItem('guestModeData') || '{}');
+
+      expect(exercises.length).toBeGreaterThan(0);
+      expect(workouts.length).toBeGreaterThan(0);
+      expect(guestData.exercises).toBeDefined();
+      expect(guestData.workouts).toBeDefined();
+      expect(guestData.createdAt).toBeDefined();
+    });
+
+    test('should check authentication with guest mode enabled', async () => {
+      // ゲストモードを有効化
+      localStorage.setItem('guestMode', 'true');
+
+      const result = await mpaInitializer.checkAuthentication();
+
+      expect(result).toBe(true);
+      expect(mockAuthManager.isAuthenticated).not.toHaveBeenCalled();
+    });
+
+    test('should show login prompt with guest mode option', () => {
+      // DOMをセットアップ
+      document.body.innerHTML = '<div id="main-content"></div>';
+
+      mpaInitializer.showLoginPrompt();
+
+      const mainContent = document.getElementById('main-content');
+      expect(mainContent.innerHTML).toContain('ログインが必要です');
+      expect(mainContent.innerHTML).toContain('ゲストモードで体験');
+      expect(mainContent.innerHTML).toContain('ホームに戻る');
+    });
+
+    test('should setup login prompt listeners', () => {
+      // DOMをセットアップ
+      document.body.innerHTML = `
+        <div id="main-content">
+          <button onclick="this.showAuthModal('login')"></button>
+          <button onclick="this.enableGuestMode()"></button>
+        </div>
+      `;
+
+      mpaInitializer.setupLoginPromptListeners();
+
+      // イベントリスナーが設定されているかチェック
+      const loginBtn = document.querySelector('[onclick*="showAuthModal"]');
+      const guestBtn = document.querySelector('[onclick*="enableGuestMode"]');
+
+      expect(loginBtn).toBeDefined();
+      expect(guestBtn).toBeDefined();
+    });
+
+    test('should handle guest mode data setup errors', () => {
+      // localStorageを無効化してエラーを発生させる
+      const originalSetItem = localStorage.setItem;
+      localStorage.setItem = jest.fn(() => {
+        throw new Error('Storage error');
+      });
+
+      // エラーが発生してもクラッシュしないことを確認
+      expect(() => {
+        mpaInitializer.setupGuestData();
+      }).not.toThrow();
+
+      // localStorageを復元
+      localStorage.setItem = originalSetItem;
+    });
+  });
+
+  describe('Authentication Check', () => {
+    test('should skip authentication check when Supabase is not available', async () => {
+      mockSupabaseService.isAvailable.mockReturnValue(false);
+
+      const result = await mpaInitializer.checkAuthentication();
+
+      expect(result).toBe(true);
+      expect(mockAuthManager.isAuthenticated).not.toHaveBeenCalled();
+    });
+
+    test('should return true when user is authenticated', async () => {
+      mockSupabaseService.isAvailable.mockReturnValue(true);
+      mockAuthManager.isAuthenticated.mockResolvedValue(true);
+      mockAuthManager.getCurrentUser.mockResolvedValue({ email: 'test@example.com' });
+
+      const result = await mpaInitializer.checkAuthentication();
+
+      expect(result).toBe(true);
+      expect(mockAuthManager.isAuthenticated).toHaveBeenCalled();
+    });
+
+    test('should show login prompt when user is not authenticated', async () => {
+      mockSupabaseService.isAvailable.mockReturnValue(true);
+      mockAuthManager.isAuthenticated.mockResolvedValue(false);
+
+      const showLoginPromptSpy = jest.spyOn(mpaInitializer, 'showLoginPrompt');
+
+      const result = await mpaInitializer.checkAuthentication();
+
+      expect(result).toBe(false);
+      expect(showLoginPromptSpy).toHaveBeenCalled();
+    });
+
+    test('should handle authentication check errors', async () => {
+      mockSupabaseService.isAvailable.mockReturnValue(true);
+      mockAuthManager.isAuthenticated.mockRejectedValue(new Error('Auth error'));
+
+      const showLoginPromptSpy = jest.spyOn(mpaInitializer, 'showLoginPrompt');
+
+      const result = await mpaInitializer.checkAuthentication();
+
+      expect(result).toBe(false);
+      expect(showLoginPromptSpy).toHaveBeenCalled();
+    });
+  });
 });

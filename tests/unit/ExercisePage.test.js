@@ -194,4 +194,164 @@ describe('ExercisePage', () => {
       expect(exercisePage.init).toBeDefined();
     });
   });
+
+  describe('Error Handling', () => {
+    beforeEach(() => {
+      // DOMをセットアップ
+      document.body.innerHTML = `
+        <div id="exercises-list"></div>
+        <div id="exercises-loader"></div>
+      `;
+    });
+
+    it('should show error state when loadExercises fails', async () => {
+      // エラーを発生させる
+      const error = new Error('Load exercises failed');
+      exerciseService.getAllExercises.mockRejectedValue(error);
+
+      // loadExercisesメソッドを直接テスト
+      await exercisePage.loadExercises();
+
+      const exercisesList = document.getElementById('exercises-list');
+      expect(exercisesList.innerHTML).toContain('エラーが発生しました');
+      expect(exercisesList.innerHTML).toContain('ページを再読み込み');
+      expect(exercisesList.innerHTML).toContain('ダッシュボードに戻る');
+    });
+
+    it('should handle localStorage errors gracefully', () => {
+      // localStorageを無効化
+      const originalGetItem = localStorage.getItem;
+      localStorage.getItem = jest.fn(() => {
+        throw new Error('Storage error');
+      });
+
+      // getLocalExercisesメソッドをテスト
+      const result = exercisePage.getLocalExercises();
+
+      expect(Array.isArray(result)).toBe(true);
+      expect(result.length).toBeGreaterThan(0); // サンプルデータが返される
+
+      // localStorageを復元
+      localStorage.getItem = originalGetItem;
+    });
+
+    it('should show error state with specific error message', () => {
+      const errorMessage = 'データベース接続エラー';
+      
+      exercisePage.showErrorState(errorMessage);
+
+      const exercisesList = document.getElementById('exercises-list');
+      expect(exercisesList.innerHTML).toContain(errorMessage);
+      expect(exercisesList.innerHTML).toContain('エラーが発生しました');
+    });
+  });
+
+  describe('Guest Mode', () => {
+    beforeEach(() => {
+      // ローカルストレージをクリア
+      localStorage.clear();
+    });
+
+    it('should load sample exercises when no local data exists', () => {
+      const exercises = exercisePage.getLocalExercises();
+
+      expect(Array.isArray(exercises)).toBe(true);
+      expect(exercises.length).toBeGreaterThan(0);
+      
+      // サンプルデータの構造をチェック
+      const firstExercise = exercises[0];
+      expect(firstExercise).toHaveProperty('id');
+      expect(firstExercise).toHaveProperty('name');
+      expect(firstExercise).toHaveProperty('muscle_group');
+    });
+
+    it('should load exercises from localStorage when available', () => {
+      const mockExercises = [
+        { id: 'custom-1', name: 'カスタムエクササイズ', muscle_group: 'chest' }
+      ];
+      
+      localStorage.setItem('exercises', JSON.stringify(mockExercises));
+
+      const exercises = exercisePage.getLocalExercises();
+
+      expect(exercises).toEqual(mockExercises);
+    });
+
+    it('should handle corrupted localStorage data', () => {
+      localStorage.setItem('exercises', 'invalid json');
+
+      const exercises = exercisePage.getLocalExercises();
+
+      expect(Array.isArray(exercises)).toBe(true);
+      expect(exercises.length).toBeGreaterThan(0); // サンプルデータが返される
+    });
+  });
+
+  describe('Data Loading', () => {
+    beforeEach(() => {
+      // DOMをセットアップ
+      document.body.innerHTML = `
+        <div id="exercises-list"></div>
+        <div id="exercises-loader"></div>
+        <input id="exercise-search" value="" />
+        <select id="muscle-group-filter"></select>
+        <select id="equipment-filter"></select>
+      `;
+    });
+
+    it('should load exercises successfully', async () => {
+      const mockExercises = [
+        { id: 1, name: 'ベンチプレス', muscle_group: 'chest' },
+        { id: 2, name: 'スクワット', muscle_group: 'legs' }
+      ];
+
+      // getLocalExercisesをモック
+      jest.spyOn(exercisePage, 'getLocalExercises').mockReturnValue(mockExercises);
+
+      await exercisePage.loadExercises();
+
+      expect(exercisePage.currentExercises).toEqual(mockExercises);
+    });
+
+    it('should apply search filter', async () => {
+      const mockExercises = [
+        { id: 1, name: 'ベンチプレス', muscle_group: 'chest' },
+        { id: 2, name: 'スクワット', muscle_group: 'legs' }
+      ];
+
+      // 検索語を設定
+      document.getElementById('exercise-search').value = 'ベンチ';
+
+      jest.spyOn(exercisePage, 'getLocalExercises').mockReturnValue(mockExercises);
+      jest.spyOn(exercisePage, 'filterExercises').mockReturnValue([mockExercises[0]]);
+
+      await exercisePage.loadExercises();
+
+      expect(exercisePage.filterExercises).toHaveBeenCalled();
+    });
+
+    it('should update exercise count after loading', async () => {
+      const mockExercises = [
+        { id: 1, name: 'ベンチプレス', muscle_group: 'chest' }
+      ];
+
+      // DOMをセットアップ
+      document.body.innerHTML = `
+        <div id="exercises-list"></div>
+        <div id="exercises-loader"></div>
+        <input id="exercise-search" value="" />
+        <span id="current-count"></span>
+        <span id="total-count"></span>
+        <div id="exercise-count"></div>
+      `;
+
+      jest.spyOn(exercisePage, 'getLocalExercises').mockReturnValue(mockExercises);
+      jest.spyOn(exercisePage, 'renderExercises').mockImplementation();
+      jest.spyOn(exercisePage, 'updateExerciseCount').mockImplementation();
+
+      await exercisePage.loadExercises();
+
+      expect(exercisePage.updateExerciseCount).toHaveBeenCalled();
+    });
+  });
 });

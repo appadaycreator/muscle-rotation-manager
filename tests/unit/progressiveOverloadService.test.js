@@ -361,4 +361,137 @@ describe('ProgressiveOverloadService', () => {
       expect(result.volumeTrend).toBeDefined();
     });
   });
+
+  describe('calculateOverallMetrics', () => {
+    test('should calculate overall metrics from workout data', () => {
+      const mockWorkouts = [
+        {
+          exercises: [
+            { weight: 80, reps: 10, sets: 3 },
+            { weight: 60, reps: 12, sets: 3 },
+          ],
+          duration: 45,
+          muscle_groups: ['chest', 'shoulders'],
+        },
+        {
+          exercises: [
+            { weight: 100, reps: 8, sets: 3 },
+          ],
+          duration: 30,
+          muscle_groups: ['legs'],
+        },
+      ];
+
+      const result = serviceInstance.calculateOverallMetrics(mockWorkouts);
+
+      expect(result).toBeDefined();
+      expect(result.totalVolume).toBeGreaterThan(0);
+      expect(result.totalDuration).toBeGreaterThan(0);
+      expect(result.totalWorkouts).toBe(2);
+      expect(result.muscleGroupDistribution).toBeDefined();
+      expect(result.averageVolumePerWorkout).toBeGreaterThan(0);
+    });
+
+    test('should handle empty workout data', () => {
+      const result = serviceInstance.calculateOverallMetrics([]);
+
+      expect(result.totalVolume).toBe(0);
+      expect(result.totalDuration).toBe(0);
+      expect(result.totalWorkouts).toBe(0);
+      expect(result.muscleGroupDistribution).toEqual({});
+      expect(result.averageVolumePerWorkout).toBe(0);
+    });
+
+    test('should handle null or undefined workout data', () => {
+      const result1 = serviceInstance.calculateOverallMetrics(null);
+      const result2 = serviceInstance.calculateOverallMetrics(undefined);
+
+      expect(result1.totalVolume).toBe(0);
+      expect(result2.totalVolume).toBe(0);
+    });
+
+    test('should filter out suspicious exercise data', () => {
+      const mockWorkouts = [
+        {
+          exercises: [
+            { weight: 80, reps: 10, sets: 3 }, // 正常なデータ
+            { weight: 2000, reps: 10, sets: 3 }, // 異常な重量
+            { weight: 80, reps: 200, sets: 3 }, // 異常な回数
+            { weight: 80, reps: 10, sets: 50 }, // 異常なセット数
+          ],
+          duration: 45,
+          muscle_groups: ['chest'],
+        },
+      ];
+
+      const result = serviceInstance.calculateOverallMetrics(mockWorkouts);
+
+      // 正常なデータのみが計算に含まれる
+      expect(result.totalVolume).toBe(80 * 10 * 3); // 2400
+      expect(result.totalWorkouts).toBe(1);
+    });
+
+    test('should filter out suspicious duration data', () => {
+      const mockWorkouts = [
+        {
+          exercises: [{ weight: 80, reps: 10, sets: 3 }],
+          duration: 45, // 正常な時間
+          muscle_groups: ['chest'],
+        },
+        {
+          exercises: [{ weight: 80, reps: 10, sets: 3 }],
+          duration: 400, // 異常な時間（6時間40分）
+          muscle_groups: ['chest'],
+        },
+      ];
+
+      const result = serviceInstance.calculateOverallMetrics(mockWorkouts);
+
+      // 正常な時間のみが計算に含まれる
+      expect(result.totalDuration).toBe(Math.round(45 / 60)); // 1分
+      expect(result.totalWorkouts).toBe(2); // ワークアウト数はカウントされる
+    });
+
+    test('should handle workouts without exercises', () => {
+      const mockWorkouts = [
+        {
+          duration: 45,
+          muscle_groups: ['chest'],
+        },
+        {
+          exercises: [],
+          duration: 30,
+          muscle_groups: ['legs'],
+        },
+      ];
+
+      const result = serviceInstance.calculateOverallMetrics(mockWorkouts);
+
+      expect(result.totalVolume).toBe(0);
+      expect(result.totalDuration).toBe(Math.round(75 / 60)); // 1分
+      expect(result.totalWorkouts).toBe(2);
+    });
+
+    test('should handle invalid exercise data gracefully', () => {
+      const mockWorkouts = [
+        {
+          exercises: [
+            null,
+            undefined,
+            'invalid',
+            { weight: 'invalid', reps: 'invalid', sets: 'invalid' },
+            { weight: 80, reps: 10, sets: 3 }, // 正常なデータ
+          ],
+          duration: 45,
+          muscle_groups: ['chest'],
+        },
+      ];
+
+      const result = serviceInstance.calculateOverallMetrics(mockWorkouts);
+
+      // 正常なデータのみが計算に含まれる
+      expect(result.totalVolume).toBe(80 * 10 * 3); // 2400
+      expect(result.totalWorkouts).toBe(1);
+    });
+  });
 });

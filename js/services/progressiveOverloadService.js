@@ -449,41 +449,109 @@ export class ProgressiveOverloadService {
    * @returns {Object} 総合メトリクス
    */
   calculateOverallMetrics(workouts) {
-    const totalVolume = workouts.reduce((sum, workout) => {
-      return (
-        sum +
-        (workout.exercises || []).reduce((exerciseSum, exercise) => {
-          return (
-            exerciseSum +
-            (exercise.weight || 0) * (exercise.reps || 0) * (exercise.sets || 0)
-          );
-        }, 0)
-      );
-    }, 0);
+    try {
+      if (!workouts || !Array.isArray(workouts) || workouts.length === 0) {
+        return {
+          totalVolume: 0,
+          totalDuration: 0,
+          averageDuration: 0,
+          muscleGroupDistribution: {},
+          totalWorkouts: 0,
+          averageVolumePerWorkout: 0,
+        };
+      }
 
-    const totalDuration = workouts.reduce(
-      (sum, workout) => sum + (workout.duration || 0),
-      0
-    );
-    const averageDuration =
-      workouts.length > 0 ? totalDuration / workouts.length : 0;
-
-    const muscleGroupCounts = {};
-    workouts.forEach((workout) => {
-      (workout.muscle_groups || []).forEach((muscle) => {
-        muscleGroupCounts[muscle] = (muscleGroupCounts[muscle] || 0) + 1;
+      // データの検証とクリーニング
+      const validWorkouts = workouts.filter(workout => {
+        return workout && 
+               typeof workout === 'object' && 
+               (workout.exercises || workout.muscle_groups || workout.duration !== undefined);
       });
-    });
 
-    return {
-      totalVolume: Math.round(totalVolume),
-      totalDuration: Math.round(totalDuration / 60), // 分単位
-      averageDuration: Math.round(averageDuration / 60), // 分単位
-      muscleGroupDistribution: muscleGroupCounts,
-      totalWorkouts: workouts.length,
-      averageVolumePerWorkout:
-        workouts.length > 0 ? Math.round(totalVolume / workouts.length) : 0,
-    };
+      if (validWorkouts.length === 0) {
+        return {
+          totalVolume: 0,
+          totalDuration: 0,
+          averageDuration: 0,
+          muscleGroupDistribution: {},
+          totalWorkouts: 0,
+          averageVolumePerWorkout: 0,
+        };
+      }
+
+      const totalVolume = validWorkouts.reduce((sum, workout) => {
+        if (!workout.exercises || !Array.isArray(workout.exercises)) {
+          return sum;
+        }
+
+        return sum + workout.exercises.reduce((exerciseSum, exercise) => {
+          if (!exercise || typeof exercise !== 'object') {
+            return exerciseSum;
+          }
+
+          const weight = Number(exercise.weight) || 0;
+          const reps = Number(exercise.reps) || 0;
+          const sets = Number(exercise.sets) || 0;
+
+          // 異常値のチェック（重量1000kg以上、回数100回以上、セット数20以上は除外）
+          if (weight > 1000 || reps > 100 || sets > 20) {
+            console.warn('Suspicious exercise data detected:', exercise);
+            return exerciseSum;
+          }
+
+          return exerciseSum + (weight * reps * sets);
+        }, 0);
+      }, 0);
+
+      const totalDuration = validWorkouts.reduce(
+        (sum, workout) => {
+          const duration = Number(workout.duration) || 0;
+          // 異常値のチェック（5時間以上は除外）
+          if (duration > 300) {
+            console.warn('Suspicious duration detected:', duration);
+            return sum;
+          }
+          return sum + duration;
+        },
+        0
+      );
+
+      const averageDuration = validWorkouts.length > 0 ? totalDuration / validWorkouts.length : 0;
+
+      const muscleGroupCounts = {};
+      validWorkouts.forEach((workout) => {
+        if (workout.muscle_groups && Array.isArray(workout.muscle_groups)) {
+          workout.muscle_groups.forEach((muscle) => {
+            if (muscle && typeof muscle === 'string') {
+              muscleGroupCounts[muscle] = (muscleGroupCounts[muscle] || 0) + 1;
+            }
+          });
+        }
+      });
+
+      const result = {
+        totalVolume: Math.round(totalVolume),
+        totalDuration: Math.round(totalDuration / 60), // 分単位
+        averageDuration: Math.round(averageDuration / 60), // 分単位
+        muscleGroupDistribution: muscleGroupCounts,
+        totalWorkouts: validWorkouts.length,
+        averageVolumePerWorkout:
+          validWorkouts.length > 0 ? Math.round(totalVolume / validWorkouts.length) : 0,
+      };
+
+      console.log('Overall metrics calculated:', result);
+      return result;
+    } catch (error) {
+      console.error('Error calculating overall metrics:', error);
+      return {
+        totalVolume: 0,
+        totalDuration: 0,
+        averageDuration: 0,
+        muscleGroupDistribution: {},
+        totalWorkouts: 0,
+        averageVolumePerWorkout: 0,
+      };
+    }
   }
 
   /**

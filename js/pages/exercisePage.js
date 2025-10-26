@@ -337,12 +337,16 @@ class ExercisePage {
     this.showLoading(true);
 
     try {
+      console.log('Loading exercises...');
+      
       const searchTerm =
         document.getElementById('exercise-search')?.value || '';
       const filters = this.getCurrentFilters();
 
       // ローカルストレージからエクササイズデータを読み込み（認証なしでも動作）
       this.currentExercises = this.getLocalExercises();
+      
+      console.log(`Loaded ${this.currentExercises.length} exercises from local storage`);
 
       // 検索・フィルタリングを適用
       if (searchTerm || this.hasActiveFilters()) {
@@ -351,6 +355,7 @@ class ExercisePage {
           searchTerm,
           filters
         );
+        console.log(`Filtered to ${this.currentExercises.length} exercises`);
       }
 
       this.renderExercises();
@@ -359,12 +364,30 @@ class ExercisePage {
       if (typeof this.updateExerciseCount === 'function') {
         this.updateExerciseCount();
       } else {
-        console.error('updateExerciseCount method not found');
+        console.warn('updateExerciseCount method not found, skipping count update');
       }
+      
+      console.log('Exercises loaded successfully');
     } catch (error) {
+      console.error('Error loading exercises:', error);
+      
+      // エラー詳細を表示
+      const errorMessage = error.message || '予期しないエラーが発生しました';
+      const errorDetails = error.stack || 'スタックトレースが利用できません';
+      
+      console.error('Error details:', {
+        message: errorMessage,
+        details: errorDetails,
+        exercises: this.currentExercises?.length || 0
+      });
+      
+      // ユーザーフレンドリーなエラーメッセージを表示
+      this.showErrorState(errorMessage);
+      
       handleError(error, {
         context: 'エクササイズ読み込み',
         showNotification: true,
+        logToConsole: true,
       });
     } finally {
       this.showLoading(false);
@@ -375,17 +398,23 @@ class ExercisePage {
    * ローカルエクササイズデータを取得
    */
   getLocalExercises() {
-    // ローカルストレージからエクササイズデータを読み込み
-    const localExercises = JSON.parse(
-      localStorage.getItem('exercises') || '[]'
-    );
+    try {
+      // ローカルストレージからエクササイズデータを読み込み
+      const localExercises = JSON.parse(
+        localStorage.getItem('exercises') || '[]'
+      );
 
-    // サンプルデータを追加（デモ用）
-    if (localExercises.length === 0) {
+      // サンプルデータを追加（デモ用）
+      if (localExercises.length === 0) {
+        return this.getSampleExercises();
+      }
+
+      return localExercises;
+    } catch (error) {
+      console.warn('Failed to parse exercises from localStorage:', error);
+      // JSONパースエラーの場合はサンプルデータを返す
       return this.getSampleExercises();
     }
-
-    return localExercises;
   }
 
   /**
@@ -812,29 +841,155 @@ class ExercisePage {
    * @param {string} searchTerm - 検索語
    */
   async performSearch(searchTerm) {
-    this.showLoading(true);
-
     try {
-      const filters = this.getCurrentFilters();
-      this.currentExercises = await exerciseService.searchExercises(
-        searchTerm,
-        filters
-      );
-      this.renderExercises();
-
-      // updateExerciseCountメソッドが存在することを確認してから呼び出し
-      if (typeof this.updateExerciseCount === 'function') {
-        this.updateExerciseCount();
-      } else {
-        console.error('updateExerciseCount method not found');
+      console.log('Performing search:', searchTerm);
+      
+      if (!searchTerm.trim()) {
+        // 検索語が空の場合は全件表示
+        await this.loadExercises();
+        return;
       }
+
+      this.showLoading(true);
+
+      // ローカルエクササイズから検索
+      const allExercises = this.getLocalExercises();
+      const filteredExercises = this.filterExercises(
+        allExercises,
+        searchTerm,
+        this.getCurrentFilters()
+      );
+
+      this.currentExercises = filteredExercises;
+      this.renderExercises();
+      this.updateExerciseCount();
+
+      console.log(`Search completed: ${filteredExercises.length} exercises found`);
     } catch (error) {
+      console.error('Search failed:', error);
       handleError(error, {
         context: 'エクササイズ検索',
         showNotification: true,
       });
     } finally {
       this.showLoading(false);
+    }
+  }
+
+  /**
+   * エクササイズをフィルタリング
+   * @param {Array} exercises - エクササイズ配列
+   * @param {string} searchTerm - 検索語
+   * @param {Object} filters - フィルター条件
+   * @returns {Array} フィルタリングされたエクササイズ配列
+   */
+  filterExercises(exercises, searchTerm = '', filters = {}) {
+    try {
+      let filtered = [...exercises];
+
+      // 検索語によるフィルタリング
+      if (searchTerm.trim()) {
+        const searchLower = searchTerm.toLowerCase();
+        filtered = filtered.filter(exercise => {
+          return (
+            exercise.name?.toLowerCase().includes(searchLower) ||
+            exercise.name_ja?.toLowerCase().includes(searchLower) ||
+            exercise.description?.toLowerCase().includes(searchLower) ||
+            exercise.muscle_group?.toLowerCase().includes(searchLower)
+          );
+        });
+      }
+
+      // 筋肉部位フィルター
+      if (filters.muscleGroup) {
+        filtered = filtered.filter(exercise => 
+          exercise.muscle_group === filters.muscleGroup
+        );
+      }
+
+      // 器具フィルター
+      if (filters.equipment) {
+        filtered = filtered.filter(exercise => 
+          exercise.equipment === filters.equipment
+        );
+      }
+
+      // 難易度フィルター
+      if (filters.difficulty) {
+        filtered = filtered.filter(exercise => 
+          exercise.difficulty === parseInt(filters.difficulty)
+        );
+      }
+
+      // エクササイズタイプフィルター
+      if (filters.exerciseType) {
+        filtered = filtered.filter(exercise => 
+          exercise.type === filters.exerciseType
+        );
+      }
+
+      // ボディウェイトフィルター
+      if (filters.bodyweight) {
+        filtered = filtered.filter(exercise => 
+          exercise.equipment === 'bodyweight'
+        );
+      }
+
+      // コンパウンドフィルター
+      if (filters.compound) {
+        filtered = filtered.filter(exercise => 
+          exercise.type === 'compound'
+        );
+      }
+
+      // 初心者フィルター
+      if (filters.beginner) {
+        filtered = filtered.filter(exercise => 
+          exercise.difficulty <= 2
+        );
+      }
+
+      // ソート適用
+      if (filters.sort) {
+        filtered = this.sortExercises(filtered, filters.sort);
+      }
+
+      return filtered;
+    } catch (error) {
+      console.error('Filtering failed:', error);
+      return exercises; // エラーの場合は元の配列を返す
+    }
+  }
+
+  /**
+   * エクササイズをソート
+   * @param {Array} exercises - エクササイズ配列
+   * @param {string} sortType - ソートタイプ
+   * @returns {Array} ソートされたエクササイズ配列
+   */
+  sortExercises(exercises, sortType) {
+    try {
+      const sorted = [...exercises];
+
+      switch (sortType) {
+        case 'name_asc':
+          return sorted.sort((a, b) => (a.name_ja || a.name || '').localeCompare(b.name_ja || b.name || ''));
+        case 'name_desc':
+          return sorted.sort((a, b) => (b.name_ja || b.name || '').localeCompare(a.name_ja || a.name || ''));
+        case 'difficulty_asc':
+          return sorted.sort((a, b) => (a.difficulty || 0) - (b.difficulty || 0));
+        case 'difficulty_desc':
+          return sorted.sort((a, b) => (b.difficulty || 0) - (a.difficulty || 0));
+        case 'muscle_group':
+          return sorted.sort((a, b) => (a.muscle_group || '').localeCompare(b.muscle_group || ''));
+        case 'equipment':
+          return sorted.sort((a, b) => (a.equipment || '').localeCompare(b.equipment || ''));
+        default:
+          return sorted;
+      }
+    } catch (error) {
+      console.error('Sorting failed:', error);
+      return exercises; // エラーの場合は元の配列を返す
     }
   }
 
@@ -1991,6 +2146,41 @@ class ExercisePage {
   closeAllModals() {
     this.closeDetailModal();
     this.closeCustomModal();
+  }
+
+  /**
+   * エラー状態を表示
+   * @param {string} errorMessage - エラーメッセージ
+   */
+  showErrorState(errorMessage) {
+    const exercisesList = document.getElementById('exercises-list');
+    if (exercisesList) {
+      exercisesList.innerHTML = `
+        <div class="text-center py-8">
+          <div class="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
+            <div class="flex items-center justify-center mb-4">
+              <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-red-800 mb-2">エラーが発生しました</h3>
+            <p class="text-red-600 mb-4">${errorMessage}</p>
+            <div class="space-y-2">
+              <button 
+                onclick="location.reload()" 
+                class="w-full bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
+              >
+                ページを再読み込み
+              </button>
+              <button 
+                onclick="window.location.href='dashboard.html'" 
+                class="w-full bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors"
+              >
+                ダッシュボードに戻る
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
   }
 
   /**

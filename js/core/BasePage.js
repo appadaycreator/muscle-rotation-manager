@@ -109,6 +109,19 @@ export class BasePage {
         `🔐 Checking authentication for ${this.pageName} page (requiresAuth: ${this.requiresAuth})`
       );
 
+      // ゲストモードが有効かチェック
+      let isGuestMode = false;
+      try {
+        isGuestMode = localStorage.getItem('guestMode') === 'true';
+      } catch (error) {
+        console.warn('Failed to check guest mode:', error);
+      }
+      
+      if (isGuestMode) {
+        console.log(`🔐 Guest mode is enabled for ${this.pageName} page - skipping auth check`);
+        return true;
+      }
+
       // Supabaseが利用可能かチェック
       if (!supabaseService.isAvailable()) {
         console.log(
@@ -121,6 +134,7 @@ export class BasePage {
       console.log(`🔐 Authentication result for ${this.pageName}:`, {
         isAuthenticated,
         requiresAuth: this.requiresAuth,
+        guestMode: isGuestMode,
       });
 
       if (!isAuthenticated && this.requiresAuth) {

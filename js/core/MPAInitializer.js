@@ -4,6 +4,7 @@ import { authManager } from '../modules/authManager.js';
 import { supabaseService } from '../services/supabaseService.js';
 import { showNotification } from '../utils/helpers.js';
 import { handleError } from '../utils/errorHandler.js';
+import { onboardingManager } from '../utils/onboardingManager.js';
 import { tooltipManager } from '../utils/TooltipManager.js';
 
 /**
@@ -114,6 +115,9 @@ class MPAInitializer {
         this.setupPerformanceMonitoring();
       }
 
+      // 8. オンボーディングのチェック
+      this.checkOnboarding();
+
       this.initializationTime = performance.now() - startTime;
       this.isInitialized = true;
 
@@ -155,6 +159,19 @@ class MPAInitializer {
    */
   async checkAuthentication() {
     try {
+      // ゲストモードが有効かチェック
+      let isGuestMode = false;
+      try {
+        isGuestMode = localStorage.getItem('guestMode') === 'true';
+      } catch (error) {
+        console.warn('Failed to check guest mode:', error);
+      }
+      
+      if (isGuestMode) {
+        console.log('🔐 Guest mode is enabled, skipping authentication check');
+        return true;
+      }
+
       // Supabaseが利用可能かチェック
       if (!supabaseService.isAvailable()) {
         console.log('🔐 Supabase not available, skipping authentication check');
@@ -167,6 +184,7 @@ class MPAInitializer {
       console.log('🔐 Authentication check:', {
         isAuthenticated,
         user: currentUser?.email || 'anonymous',
+        guestMode: isGuestMode,
       });
 
       if (!isAuthenticated) {
@@ -189,33 +207,187 @@ class MPAInitializer {
     const mainContent = document.getElementById('main-content');
     if (mainContent) {
       mainContent.innerHTML = `
-                <div class="min-h-screen flex items-center justify-center bg-gray-50">
-                    <div class="max-w-md w-full space-y-8">
-                        <div class="text-center">
-                            <h2 class="mt-6 text-3xl font-extrabold text-gray-900">
-                                ログインが必要です
-                            </h2>
-                            <p class="mt-2 text-sm text-gray-600">
-                                このページにアクセスするにはログインしてください
-                            </p>
-                        </div>
-                        <div class="mt-8 space-y-6">
-                            <div class="space-y-4">
-                                <button onclick="window.location.href='index.html'"
-                                        class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                    <i class="fas fa-home mr-2"></i>
-                                    ホームに戻る
-                                </button>
-                                <button data-action="login"
-                                        class="group relative w-full flex justify-center py-2 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                    <i class="fas fa-sign-in-alt mr-2"></i>
-                                    ログイン
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
+        <div class="min-h-screen flex items-center justify-center bg-gray-50">
+          <div class="max-w-md w-full space-y-8">
+            <div class="text-center">
+              <h2 class="mt-6 text-3xl font-extrabold text-gray-900">
+                ログインが必要です
+              </h2>
+              <p class="mt-2 text-sm text-gray-600">
+                このページにアクセスするにはログインしてください
+              </p>
+            </div>
+            <div class="mt-8 space-y-6">
+              <div class="space-y-4">
+                <button onclick="window.location.href='index.html'"
+                        class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                  <i class="fas fa-home mr-2"></i>
+                  ホームに戻る
+                </button>
+                <button onclick="this.showAuthModal('login')"
+                        class="group relative w-full flex justify-center py-2 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                  <i class="fas fa-sign-in-alt mr-2"></i>
+                  ログイン
+                </button>
+                <button onclick="this.enableGuestMode()"
+                        class="group relative w-full flex justify-center py-2 px-4 border border-green-300 text-sm font-medium rounded-md text-green-700 bg-green-50 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                  <i class="fas fa-user-friends mr-2"></i>
+                  ゲストモードで体験
+                </button>
+              </div>
+              <div class="text-center">
+                <p class="text-xs text-gray-500">
+                  ゲストモードではサンプルデータで機能を体験できます
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // イベントリスナーを設定
+      this.setupLoginPromptListeners();
+    }
+  }
+
+  /**
+   * ログインプロンプトのイベントリスナーを設定
+   */
+  setupLoginPromptListeners() {
+    // ログインボタンのクリックイベント
+    const loginBtn = document.querySelector('[onclick*="showAuthModal"]');
+    if (loginBtn) {
+      loginBtn.onclick = () => {
+        if (typeof authManager !== 'undefined' && authManager.showAuthModal) {
+          authManager.showAuthModal('login');
+        } else {
+          window.location.href = 'index.html';
+        }
+      };
+    }
+
+    // ゲストモードボタンのクリックイベント
+    const guestBtn = document.querySelector('[onclick*="enableGuestMode"]');
+    if (guestBtn) {
+      guestBtn.onclick = () => {
+        this.enableGuestMode();
+      };
+    }
+  }
+
+  /**
+   * ゲストモードを有効化
+   */
+  enableGuestMode() {
+    try {
+      // ゲストモードフラグを設定
+      localStorage.setItem('guestMode', 'true');
+      localStorage.setItem('guestModeEnabledAt', new Date().toISOString());
+      
+      // サンプルデータを設定
+      this.setupGuestData();
+      
+      // 通知を表示
+      if (typeof showNotification === 'function') {
+        showNotification('ゲストモードが有効になりました', 'success');
+      }
+      
+      // ページをリロードしてゲストモードを反映
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+      
+    } catch (error) {
+      console.error('Failed to enable guest mode:', error);
+      if (typeof showNotification === 'function') {
+        showNotification('ゲストモードの有効化に失敗しました', 'error');
+      }
+    }
+  }
+
+  /**
+   * ゲストモード用のサンプルデータを設定
+   */
+  setupGuestData() {
+    try {
+      // サンプルエクササイズデータ
+      const sampleExercises = [
+        {
+          id: 'bench-press',
+          name: 'ベンチプレス',
+          name_ja: 'ベンチプレス',
+          muscle_group: 'chest',
+          difficulty: 3,
+          equipment: 'barbell',
+          type: 'compound',
+          description: '胸筋を鍛える基本的なエクササイズ'
+        },
+        {
+          id: 'squat',
+          name: 'スクワット',
+          name_ja: 'スクワット',
+          muscle_group: 'legs',
+          difficulty: 2,
+          equipment: 'bodyweight',
+          type: 'compound',
+          description: '脚の筋肉を鍛える基本的なエクササイズ'
+        },
+        {
+          id: 'deadlift',
+          name: 'デッドリフト',
+          name_ja: 'デッドリフト',
+          muscle_group: 'back',
+          difficulty: 5,
+          equipment: 'barbell',
+          type: 'compound',
+          description: '全身の筋肉を鍛えるエクササイズ'
+        }
+      ];
+
+      // サンプルワークアウトデータ
+      const sampleWorkouts = [
+        {
+          id: 'workout-1',
+          date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+          exercises: [
+            {
+              name: 'ベンチプレス',
+              sets: 3,
+              reps: 10,
+              weight: 80
+            }
+          ],
+          duration: 45,
+          notes: '胸の日'
+        },
+        {
+          id: 'workout-2',
+          date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+          exercises: [
+            {
+              name: 'スクワット',
+              sets: 3,
+              reps: 12,
+              weight: 100
+            }
+          ],
+          duration: 30,
+          notes: '脚の日'
+        }
+      ];
+
+      // ローカルストレージに保存
+      localStorage.setItem('exercises', JSON.stringify(sampleExercises));
+      localStorage.setItem('workouts', JSON.stringify(sampleWorkouts));
+      localStorage.setItem('guestModeData', JSON.stringify({
+        exercises: sampleExercises,
+        workouts: sampleWorkouts,
+        createdAt: new Date().toISOString()
+      }));
+
+      console.log('Guest mode data setup completed');
+    } catch (error) {
+      console.error('Failed to setup guest data:', error);
     }
   }
 
@@ -593,6 +765,35 @@ class MPAInitializer {
       '⚠️ Supabase initialization timeout - proceeding without Supabase'
     );
     return false;
+  }
+
+  /**
+   * オンボーディングをチェック
+   */
+  checkOnboarding() {
+    try {
+      // ゲストモードの場合はオンボーディングをスキップ
+      const isGuestMode = localStorage.getItem('guestMode') === 'true';
+      if (isGuestMode) {
+        console.log('🎯 Guest mode detected, skipping onboarding');
+        return;
+      }
+
+      // 初回アクセスかチェック
+      const isFirstVisit = !localStorage.getItem('muscleRotationOnboarding_completed');
+      if (isFirstVisit) {
+        console.log('🎯 First visit detected, starting onboarding');
+        
+        // 少し遅延してからオンボーディングを開始（ページ読み込み完了後）
+        setTimeout(() => {
+          onboardingManager.startOnboarding();
+        }, 1000);
+      } else {
+        console.log('🎯 Returning user, onboarding already completed');
+      }
+    } catch (error) {
+      console.error('Failed to check onboarding:', error);
+    }
   }
 
   /**
