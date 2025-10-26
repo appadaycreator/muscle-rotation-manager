@@ -7,47 +7,47 @@ import { safeGetElement } from '../utils/helpers.js';
  * ヘルプページクラス
  */
 class HelpPage {
-    constructor() {
-        this.isInitialized = false;
-    }
+  constructor() {
+    this.isInitialized = false;
+  }
 
-    /**
+  /**
    * 初期化
    */
-    async init() {
-        if (this.isInitialized) {
-            return;
-        }
-
-        try {
-            console.log('🔄 Initializing help page...');
-
-            // ツールチップ機能を初期化
-            tooltipManager.initialize();
-
-            // ヘルプページのコンテンツを表示
-            this.renderHelpPage();
-
-            // ツールチップを設定
-            this.setupTooltips();
-
-            this.isInitialized = true;
-            console.log('✅ Help page initialized successfully');
-        } catch (error) {
-            console.error('❌ Failed to initialize help page:', error);
-        }
+  async init() {
+    if (this.isInitialized) {
+      return;
     }
 
-    /**
+    try {
+      console.log('🔄 Initializing help page...');
+
+      // ツールチップ機能を初期化
+      tooltipManager.initialize();
+
+      // ヘルプページのコンテンツを表示
+      this.renderHelpPage();
+
+      // ツールチップを設定
+      this.setupTooltips();
+
+      this.isInitialized = true;
+      console.log('✅ Help page initialized successfully');
+    } catch (error) {
+      console.error('❌ Failed to initialize help page:', error);
+    }
+  }
+
+  /**
    * ヘルプページをレンダリング
    */
-    renderHelpPage() {
-        const main = safeGetElement('main');
-        if (!main) {
-            return;
-        }
+  renderHelpPage() {
+    const main = safeGetElement('main');
+    if (!main) {
+      return;
+    }
 
-        main.innerHTML = `
+    main.innerHTML = `
             <div class="max-w-7xl mx-auto px-4 py-8">
                 <!-- ヘッダー -->
                 <div class="mb-8">
@@ -191,90 +191,90 @@ class HelpPage {
                 </div>
             </div>
         `;
-    }
+  }
 
-    /**
+  /**
    * ツールチップを設定
    */
-    setupTooltips() {
-        try {
-            console.log('Setting up tooltips for help page');
+  setupTooltips() {
+    try {
+      console.log('Setting up tooltips for help page');
 
-            // クイックスタートガイドのツールチップ
-            tooltipManager.addTooltip('.bg-blue-50', {
-                content:
+      // クイックスタートガイドのツールチップ
+      tooltipManager.addTooltip('.bg-blue-50', {
+        content:
           'アカウント作成は初回のみ必要です。メールアドレスとパスワードを設定してください。',
-                position: 'top'
-            });
+        position: 'top',
+      });
 
-            tooltipManager.addTooltip('.bg-green-50', {
-                content:
+      tooltipManager.addTooltip('.bg-green-50', {
+        content:
           'ワークアウトページで筋肉部位を選択し、エクササイズを追加してトレーニングを開始できます。',
-                position: 'top'
-            });
+        position: 'top',
+      });
 
-            tooltipManager.addTooltip('.bg-purple-50', {
-                content:
+      tooltipManager.addTooltip('.bg-purple-50', {
+        content:
           'プログレスページで1RM計算や進捗グラフを確認し、目標達成を目指しましょう。',
-                position: 'top'
-            });
+        position: 'top',
+      });
 
-            // よくある質問のツールチップ
-            tooltipManager.addTooltip('.border-blue-500', {
-                content:
+      // よくある質問のツールチップ
+      tooltipManager.addTooltip('.border-blue-500', {
+        content:
           'ワークアウトは自動保存されます。手動で保存する必要はありません。',
-                position: 'right'
-            });
+        position: 'right',
+      });
 
-            tooltipManager.addTooltip('.border-green-500', {
-                content: 'プログレスページで詳細な進捗分析とグラフを確認できます。',
-                position: 'right'
-            });
+      tooltipManager.addTooltip('.border-green-500', {
+        content: 'プログレスページで詳細な進捗分析とグラフを確認できます。',
+        position: 'right',
+      });
 
-            tooltipManager.addTooltip('.border-purple-500', {
-                content:
+      tooltipManager.addTooltip('.border-purple-500', {
+        content:
           'エクササイズページでカスタムエクササイズを追加・編集できます。',
-                position: 'right'
-            });
+        position: 'right',
+      });
 
-            tooltipManager.addTooltip('.border-orange-500', {
-                content:
+      tooltipManager.addTooltip('.border-orange-500', {
+        content:
           '設定ページでプロフィール情報やトレーニング設定を変更できます。',
-                position: 'right'
-            });
+        position: 'right',
+      });
 
-            // 機能別ガイドのツールチップ
-            tooltipManager.addTooltip('h3', {
-                content: '各機能の詳細な使い方を確認できます。',
-                position: 'top'
-            });
+      // 機能別ガイドのツールチップ
+      tooltipManager.addTooltip('h3', {
+        content: '各機能の詳細な使い方を確認できます。',
+        position: 'top',
+      });
 
-            // サポート情報のツールチップ
-            tooltipManager.addTooltip('.fa-envelope', {
-                content: 'メールでのお問い合わせは24時間以内に回答いたします。',
-                position: 'top'
-            });
+      // サポート情報のツールチップ
+      tooltipManager.addTooltip('.fa-envelope', {
+        content: 'メールでのお問い合わせは24時間以内に回答いたします。',
+        position: 'top',
+      });
 
-            tooltipManager.addTooltip('.fa-clock', {
-                content: '平日の営業時間内のお問い合わせは迅速に対応いたします。',
-                position: 'top'
-            });
+      tooltipManager.addTooltip('.fa-clock', {
+        content: '平日の営業時間内のお問い合わせは迅速に対応いたします。',
+        position: 'top',
+      });
 
-            tooltipManager.addTooltip('.fa-bell', {
-                content: '設定ページで通知設定を変更できます。',
-                position: 'top'
-            });
+      tooltipManager.addTooltip('.fa-bell', {
+        content: '設定ページで通知設定を変更できます。',
+        position: 'top',
+      });
 
-            tooltipManager.addTooltip('.fa-download', {
-                content: 'アプリは自動更新されるため、常に最新機能を利用できます。',
-                position: 'top'
-            });
+      tooltipManager.addTooltip('.fa-download', {
+        content: 'アプリは自動更新されるため、常に最新機能を利用できます。',
+        position: 'top',
+      });
 
-            console.log('✅ Tooltips setup complete for help page');
-        } catch (error) {
-            console.error('❌ Failed to setup tooltips:', error);
-        }
+      console.log('✅ Tooltips setup complete for help page');
+    } catch (error) {
+      console.error('❌ Failed to setup tooltips:', error);
     }
+  }
 }
 
 // シングルトンインスタンスをエクスポート

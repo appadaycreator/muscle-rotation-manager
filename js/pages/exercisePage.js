@@ -11,872 +11,872 @@ import { tooltipManager } from '../utils/TooltipManager.js';
  * エクササイズ管理ページクラス
  */
 class ExercisePage {
-    constructor() {
-        this.currentExercises = [];
-        this.totalExercises = 0;
-        this.currentFilters = {};
-        this.selectedExercise = null;
-        this.isLoading = false;
+  constructor() {
+    this.currentExercises = [];
+    this.totalExercises = 0;
+    this.currentFilters = {};
+    this.selectedExercise = null;
+    this.isLoading = false;
 
-        // デバウンス検索
-        this.debouncedSearch = debounce((searchTerm) => {
-            this.performSearch(searchTerm);
-        }, 300);
+    // デバウンス検索
+    this.debouncedSearch = debounce((searchTerm) => {
+      this.performSearch(searchTerm);
+    }, 300);
 
-        this.init();
-    }
+    this.init();
+  }
 
-    /**
+  /**
    * 初期化
    */
-    init() {
+  init() {
     // ツールチップ機能を初期化
-        tooltipManager.initialize();
+    tooltipManager.initialize();
 
-        this.setupEventListeners();
-        this.loadInitialData();
-        this.setupTooltips();
-    }
+    this.setupEventListeners();
+    this.loadInitialData();
+    this.setupTooltips();
+  }
 
-    /**
+  /**
    * イベントリスナーの設定
    */
-    setupEventListeners() {
+  setupEventListeners() {
     // 検索入力
-        const searchInput = document.getElementById('exercise-search');
-        if (searchInput) {
-            searchInput.addEventListener('input', (e) => {
-                this.debouncedSearch(e.target.value);
-            });
-        }
-
-        // フィルター
-        const filterElements = [
-            'muscle-group-filter',
-            'difficulty-filter',
-            'equipment-filter',
-            'exercise-type-filter'
-        ];
-
-        filterElements.forEach((id) => {
-            const element = document.getElementById(id);
-            if (element) {
-                element.addEventListener('change', () => this.applyFilters());
-            }
-        });
-
-        // チェックボックスフィルター
-        const checkboxFilters = [
-            'bodyweight-filter',
-            'compound-filter',
-            'beginner-filter'
-        ];
-
-        checkboxFilters.forEach((id) => {
-            const element = document.getElementById(id);
-            if (element) {
-                element.addEventListener('change', () => this.applyFilters());
-            }
-        });
-
-        // ソート
-        const sortSelect = document.getElementById('exercise-sort');
-        if (sortSelect) {
-            sortSelect.addEventListener('change', () => this.applyFilters());
-        }
-
-        // カスタムエクササイズ追加ボタン
-        const addCustomBtn = document.getElementById('add-custom-exercise-btn');
-        if (addCustomBtn) {
-            addCustomBtn.addEventListener('click', () =>
-                this.showCustomExerciseModal()
-            );
-        }
-
-        // カテゴリ詳細ボタン
-        document.querySelectorAll('.category-detail-btn').forEach((btn) => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const muscle = btn.dataset.muscle;
-                this.showCategoryDetail(muscle);
-            });
-        });
-
-        // フィルターリセットボタン
-        const resetFiltersBtn = document.getElementById('reset-filters-btn');
-        if (resetFiltersBtn) {
-            resetFiltersBtn.addEventListener('click', () => this.resetFilters());
-        }
-
-        // モーダル関連
-        this.setupModalEventListeners();
+    const searchInput = document.getElementById('exercise-search');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        this.debouncedSearch(e.target.value);
+      });
     }
 
-    /**
+    // フィルター
+    const filterElements = [
+      'muscle-group-filter',
+      'difficulty-filter',
+      'equipment-filter',
+      'exercise-type-filter',
+    ];
+
+    filterElements.forEach((id) => {
+      const element = document.getElementById(id);
+      if (element) {
+        element.addEventListener('change', () => this.applyFilters());
+      }
+    });
+
+    // チェックボックスフィルター
+    const checkboxFilters = [
+      'bodyweight-filter',
+      'compound-filter',
+      'beginner-filter',
+    ];
+
+    checkboxFilters.forEach((id) => {
+      const element = document.getElementById(id);
+      if (element) {
+        element.addEventListener('change', () => this.applyFilters());
+      }
+    });
+
+    // ソート
+    const sortSelect = document.getElementById('exercise-sort');
+    if (sortSelect) {
+      sortSelect.addEventListener('change', () => this.applyFilters());
+    }
+
+    // カスタムエクササイズ追加ボタン
+    const addCustomBtn = document.getElementById('add-custom-exercise-btn');
+    if (addCustomBtn) {
+      addCustomBtn.addEventListener('click', () =>
+        this.showCustomExerciseModal()
+      );
+    }
+
+    // カテゴリ詳細ボタン
+    document.querySelectorAll('.category-detail-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const muscle = btn.dataset.muscle;
+        this.showCategoryDetail(muscle);
+      });
+    });
+
+    // フィルターリセットボタン
+    const resetFiltersBtn = document.getElementById('reset-filters-btn');
+    if (resetFiltersBtn) {
+      resetFiltersBtn.addEventListener('click', () => this.resetFilters());
+    }
+
+    // モーダル関連
+    this.setupModalEventListeners();
+  }
+
+  /**
    * モーダルイベントリスナーの設定
    */
-    setupModalEventListeners() {
+  setupModalEventListeners() {
     // エクササイズ詳細モーダル
-        const detailModal = document.getElementById('exercise-detail-modal');
-        if (detailModal) {
-            const closeBtn = detailModal.querySelector('.modal-close');
-            if (closeBtn) {
-                closeBtn.addEventListener('click', () => this.closeDetailModal());
-            }
-        }
-
-        // カスタムエクササイズモーダル
-        const customModal = document.getElementById('custom-exercise-modal');
-        if (customModal) {
-            const closeBtn = customModal.querySelector('.modal-close');
-            const cancelBtn = customModal.querySelector('.cancel-btn');
-            const saveBtn = customModal.querySelector('.save-btn');
-
-            if (closeBtn) {
-                closeBtn.addEventListener('click', () => this.closeCustomModal());
-            }
-            if (cancelBtn) {
-                cancelBtn.addEventListener('click', () => this.closeCustomModal());
-            }
-            if (saveBtn) {
-                saveBtn.addEventListener('click', () => this.saveCustomExercise());
-            }
-        }
-
-        // ファイルアップロードイベントリスナー
-        this.setupFileUploadListeners();
-
-        // モーダル外クリックで閉じる
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('modal')) {
-                this.closeAllModals();
-            }
-        });
+    const detailModal = document.getElementById('exercise-detail-modal');
+    if (detailModal) {
+      const closeBtn = detailModal.querySelector('.modal-close');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => this.closeDetailModal());
+      }
     }
 
-    /**
+    // カスタムエクササイズモーダル
+    const customModal = document.getElementById('custom-exercise-modal');
+    if (customModal) {
+      const closeBtn = customModal.querySelector('.modal-close');
+      const cancelBtn = customModal.querySelector('.cancel-btn');
+      const saveBtn = customModal.querySelector('.save-btn');
+
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => this.closeCustomModal());
+      }
+      if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => this.closeCustomModal());
+      }
+      if (saveBtn) {
+        saveBtn.addEventListener('click', () => this.saveCustomExercise());
+      }
+    }
+
+    // ファイルアップロードイベントリスナー
+    this.setupFileUploadListeners();
+
+    // モーダル外クリックで閉じる
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('modal')) {
+        this.closeAllModals();
+      }
+    });
+  }
+
+  /**
    * ファイルアップロードイベントリスナーの設定
    */
-    setupFileUploadListeners() {
+  setupFileUploadListeners() {
     // 画像アップロード
-        const imageUpload = document.getElementById('custom-image-upload');
-        if (imageUpload) {
-            imageUpload.addEventListener('change', (e) => this.handleImageUpload(e));
-        }
-
-        // 動画アップロード
-        const videoUpload = document.getElementById('custom-video-upload');
-        if (videoUpload) {
-            videoUpload.addEventListener('change', (e) => this.handleVideoUpload(e));
-        }
-
-        // 画像削除ボタン
-        const removeImageBtn = document.getElementById('remove-image-btn');
-        if (removeImageBtn) {
-            removeImageBtn.addEventListener('click', () => this.removeImage());
-        }
-
-        // 動画削除ボタン
-        const removeVideoBtn = document.getElementById('remove-video-btn');
-        if (removeVideoBtn) {
-            removeVideoBtn.addEventListener('click', () => this.removeVideo());
-        }
+    const imageUpload = document.getElementById('custom-image-upload');
+    if (imageUpload) {
+      imageUpload.addEventListener('change', (e) => this.handleImageUpload(e));
     }
 
-    /**
+    // 動画アップロード
+    const videoUpload = document.getElementById('custom-video-upload');
+    if (videoUpload) {
+      videoUpload.addEventListener('change', (e) => this.handleVideoUpload(e));
+    }
+
+    // 画像削除ボタン
+    const removeImageBtn = document.getElementById('remove-image-btn');
+    if (removeImageBtn) {
+      removeImageBtn.addEventListener('click', () => this.removeImage());
+    }
+
+    // 動画削除ボタン
+    const removeVideoBtn = document.getElementById('remove-video-btn');
+    if (removeVideoBtn) {
+      removeVideoBtn.addEventListener('click', () => this.removeVideo());
+    }
+  }
+
+  /**
    * 初期データの読み込み
    */
-    async loadInitialData() {
-        this.showLoading(true);
+  async loadInitialData() {
+    this.showLoading(true);
 
-        try {
-            // 筋肉部位フィルターを設定
-            await this.setupMuscleGroupFilter();
+    try {
+      // 筋肉部位フィルターを設定
+      await this.setupMuscleGroupFilter();
 
-            // 器具フィルターを設定
-            await this.setupEquipmentFilter();
+      // 器具フィルターを設定
+      await this.setupEquipmentFilter();
 
-            // 総件数を取得
-            await this.loadTotalExerciseCount();
+      // 総件数を取得
+      await this.loadTotalExerciseCount();
 
-            // 初期エクササイズを読み込み
-            await this.loadExercises();
-        } catch (error) {
-            handleError(error, {
-                context: 'エクササイズページ初期化',
-                showNotification: true
-            });
-        } finally {
-            this.showLoading(false);
-        }
+      // 初期エクササイズを読み込み
+      await this.loadExercises();
+    } catch (error) {
+      handleError(error, {
+        context: 'エクササイズページ初期化',
+        showNotification: true,
+      });
+    } finally {
+      this.showLoading(false);
     }
+  }
 
-    /**
+  /**
    * 筋肉部位フィルターの設定
    */
-    async setupMuscleGroupFilter() {
-        const select = document.getElementById('muscle-group-filter');
-        if (!select) {
-            return;
-        }
-
-        // デフォルトオプションをクリア
-        select.innerHTML = '<option value="">すべての部位</option>';
-
-        try {
-            // 筋肉部位データを取得（認証なしでも動作）
-            const muscleGroups = [
-                { id: 'chest', name: 'Chest', name_ja: '胸' },
-                { id: 'back', name: 'Back', name_ja: '背中' },
-                { id: 'shoulders', name: 'Shoulders', name_ja: '肩' },
-                { id: 'arms', name: 'Arms', name_ja: '腕' },
-                { id: 'legs', name: 'Legs', name_ja: '脚' },
-                { id: 'core', name: 'Core', name_ja: '腹筋' }
-            ];
-
-            muscleGroups.forEach((group) => {
-                const option = document.createElement('option');
-                option.value = group.id;
-                option.textContent = group.name_ja;
-                select.appendChild(option);
-            });
-
-            console.log(
-                'Muscle group filter setup complete. Total options:',
-                select.options.length
-            );
-        } catch (error) {
-            console.error('Failed to load muscle groups:', error);
-        }
+  async setupMuscleGroupFilter() {
+    const select = document.getElementById('muscle-group-filter');
+    if (!select) {
+      return;
     }
 
-    /**
+    // デフォルトオプションをクリア
+    select.innerHTML = '<option value="">すべての部位</option>';
+
+    try {
+      // 筋肉部位データを取得（認証なしでも動作）
+      const muscleGroups = [
+        { id: 'chest', name: 'Chest', name_ja: '胸' },
+        { id: 'back', name: 'Back', name_ja: '背中' },
+        { id: 'shoulders', name: 'Shoulders', name_ja: '肩' },
+        { id: 'arms', name: 'Arms', name_ja: '腕' },
+        { id: 'legs', name: 'Legs', name_ja: '脚' },
+        { id: 'core', name: 'Core', name_ja: '腹筋' },
+      ];
+
+      muscleGroups.forEach((group) => {
+        const option = document.createElement('option');
+        option.value = group.id;
+        option.textContent = group.name_ja;
+        select.appendChild(option);
+      });
+
+      console.log(
+        'Muscle group filter setup complete. Total options:',
+        select.options.length
+      );
+    } catch (error) {
+      console.error('Failed to load muscle groups:', error);
+    }
+  }
+
+  /**
    * 器具フィルターの設定
    */
-    async setupEquipmentFilter() {
-        const select = document.getElementById('equipment-filter');
-        if (!select) {
-            return;
-        }
-
-        try {
-            // 器具データを取得（認証なしでも動作）
-            const equipment = [
-                'bodyweight',
-                'barbell',
-                'dumbbell',
-                'machine',
-                'cable',
-                'kettlebell',
-                'resistance-band'
-            ];
-
-            // デフォルトオプションをクリア
-            select.innerHTML = '<option value="">すべての器具</option>';
-
-            // 器具を追加
-            equipment.forEach((eq) => {
-                const option = document.createElement('option');
-                option.value = eq;
-                option.textContent = this.getEquipmentDisplayName(eq);
-                select.appendChild(option);
-            });
-        } catch (error) {
-            console.warn('Failed to setup equipment filter:', error);
-        }
+  async setupEquipmentFilter() {
+    const select = document.getElementById('equipment-filter');
+    if (!select) {
+      return;
     }
 
-    /**
+    try {
+      // 器具データを取得（認証なしでも動作）
+      const equipment = [
+        'bodyweight',
+        'barbell',
+        'dumbbell',
+        'machine',
+        'cable',
+        'kettlebell',
+        'resistance-band',
+      ];
+
+      // デフォルトオプションをクリア
+      select.innerHTML = '<option value="">すべての器具</option>';
+
+      // 器具を追加
+      equipment.forEach((eq) => {
+        const option = document.createElement('option');
+        option.value = eq;
+        option.textContent = this.getEquipmentDisplayName(eq);
+        select.appendChild(option);
+      });
+    } catch (error) {
+      console.warn('Failed to setup equipment filter:', error);
+    }
+  }
+
+  /**
    * 総エクササイズ件数を取得
    */
-    async loadTotalExerciseCount() {
-        try {
-            // ローカルエクササイズデータから件数をカウント（認証なしでも動作）
-            const allExercises = this.getLocalExercises();
-            this.totalExercises = allExercises.length;
-        } catch (error) {
-            console.warn('Failed to load total exercise count:', error);
-            this.totalExercises = 0;
-        }
+  async loadTotalExerciseCount() {
+    try {
+      // ローカルエクササイズデータから件数をカウント（認証なしでも動作）
+      const allExercises = this.getLocalExercises();
+      this.totalExercises = allExercises.length;
+    } catch (error) {
+      console.warn('Failed to load total exercise count:', error);
+      this.totalExercises = 0;
     }
+  }
 
-    /**
+  /**
    * 器具の表示名を取得
    * @param {string} equipment - 器具名
    * @returns {string} 表示名
    */
-    getEquipmentDisplayName(equipment) {
-        const names = {
-            bodyweight: '自重',
-            dumbbell: 'ダンベル',
-            barbell: 'バーベル',
-            machine: 'マシン',
-            'cable machine': 'ケーブルマシン',
-            'pull-up bar': '懸垂バー',
-            'resistance band': 'レジスタンスバンド'
-        };
-        return names[equipment] || equipment;
-    }
+  getEquipmentDisplayName(equipment) {
+    const names = {
+      bodyweight: '自重',
+      dumbbell: 'ダンベル',
+      barbell: 'バーベル',
+      machine: 'マシン',
+      'cable machine': 'ケーブルマシン',
+      'pull-up bar': '懸垂バー',
+      'resistance band': 'レジスタンスバンド',
+    };
+    return names[equipment] || equipment;
+  }
 
-    /**
+  /**
    * エクササイズを読み込み
    */
-    async loadExercises() {
-        this.showLoading(true);
+  async loadExercises() {
+    this.showLoading(true);
 
-        try {
-            const searchTerm =
+    try {
+      const searchTerm =
         document.getElementById('exercise-search')?.value || '';
-            const filters = this.getCurrentFilters();
+      const filters = this.getCurrentFilters();
 
-            // ローカルストレージからエクササイズデータを読み込み（認証なしでも動作）
-            this.currentExercises = this.getLocalExercises();
+      // ローカルストレージからエクササイズデータを読み込み（認証なしでも動作）
+      this.currentExercises = this.getLocalExercises();
 
-            // 検索・フィルタリングを適用
-            if (searchTerm || this.hasActiveFilters()) {
-                this.currentExercises = this.filterExercises(
-                    this.currentExercises,
-                    searchTerm,
-                    filters
-                );
-            }
+      // 検索・フィルタリングを適用
+      if (searchTerm || this.hasActiveFilters()) {
+        this.currentExercises = this.filterExercises(
+          this.currentExercises,
+          searchTerm,
+          filters
+        );
+      }
 
-            this.renderExercises();
+      this.renderExercises();
 
-            // updateExerciseCountメソッドが存在することを確認してから呼び出し
-            if (typeof this.updateExerciseCount === 'function') {
-                this.updateExerciseCount();
-            } else {
-                console.error('updateExerciseCount method not found');
-            }
-        } catch (error) {
-            handleError(error, {
-                context: 'エクササイズ読み込み',
-                showNotification: true
-            });
-        } finally {
-            this.showLoading(false);
-        }
+      // updateExerciseCountメソッドが存在することを確認してから呼び出し
+      if (typeof this.updateExerciseCount === 'function') {
+        this.updateExerciseCount();
+      } else {
+        console.error('updateExerciseCount method not found');
+      }
+    } catch (error) {
+      handleError(error, {
+        context: 'エクササイズ読み込み',
+        showNotification: true,
+      });
+    } finally {
+      this.showLoading(false);
     }
+  }
 
-    /**
+  /**
    * ローカルエクササイズデータを取得
    */
-    getLocalExercises() {
+  getLocalExercises() {
     // ローカルストレージからエクササイズデータを読み込み
-        const localExercises = JSON.parse(
-            localStorage.getItem('exercises') || '[]'
-        );
+    const localExercises = JSON.parse(
+      localStorage.getItem('exercises') || '[]'
+    );
 
-        // サンプルデータを追加（デモ用）
-        if (localExercises.length === 0) {
-            return this.getSampleExercises();
-        }
-
-        return localExercises;
+    // サンプルデータを追加（デモ用）
+    if (localExercises.length === 0) {
+      return this.getSampleExercises();
     }
 
-    /**
+    return localExercises;
+  }
+
+  /**
    * サンプルエクササイズデータを取得
    */
-    getSampleExercises() {
-        return [
-            // 胸のエクササイズ
-            {
-                id: 'bench-press',
-                name: 'ベンチプレス',
-                name_ja: 'ベンチプレス',
-                muscle_group: 'chest',
-                difficulty: 3,
-                equipment: 'barbell',
-                type: 'compound'
-            },
-            {
-                id: 'push-ups',
-                name: 'プッシュアップ',
-                name_ja: 'プッシュアップ',
-                muscle_group: 'chest',
-                difficulty: 2,
-                equipment: 'bodyweight',
-                type: 'compound'
-            },
-            {
-                id: 'dumbbell-press',
-                name: 'ダンベルプレス',
-                name_ja: 'ダンベルプレス',
-                muscle_group: 'chest',
-                difficulty: 2,
-                equipment: 'dumbbell',
-                type: 'compound'
-            },
-            {
-                id: 'incline-press',
-                name: 'インクラインプレス',
-                name_ja: 'インクラインプレス',
-                muscle_group: 'chest',
-                difficulty: 3,
-                equipment: 'barbell',
-                type: 'compound'
-            },
-            {
-                id: 'decline-press',
-                name: 'デクラインプレス',
-                name_ja: 'デクラインプレス',
-                muscle_group: 'chest',
-                difficulty: 3,
-                equipment: 'barbell',
-                type: 'compound'
-            },
+  getSampleExercises() {
+    return [
+      // 胸のエクササイズ
+      {
+        id: 'bench-press',
+        name: 'ベンチプレス',
+        name_ja: 'ベンチプレス',
+        muscle_group: 'chest',
+        difficulty: 3,
+        equipment: 'barbell',
+        type: 'compound',
+      },
+      {
+        id: 'push-ups',
+        name: 'プッシュアップ',
+        name_ja: 'プッシュアップ',
+        muscle_group: 'chest',
+        difficulty: 2,
+        equipment: 'bodyweight',
+        type: 'compound',
+      },
+      {
+        id: 'dumbbell-press',
+        name: 'ダンベルプレス',
+        name_ja: 'ダンベルプレス',
+        muscle_group: 'chest',
+        difficulty: 2,
+        equipment: 'dumbbell',
+        type: 'compound',
+      },
+      {
+        id: 'incline-press',
+        name: 'インクラインプレス',
+        name_ja: 'インクラインプレス',
+        muscle_group: 'chest',
+        difficulty: 3,
+        equipment: 'barbell',
+        type: 'compound',
+      },
+      {
+        id: 'decline-press',
+        name: 'デクラインプレス',
+        name_ja: 'デクラインプレス',
+        muscle_group: 'chest',
+        difficulty: 3,
+        equipment: 'barbell',
+        type: 'compound',
+      },
 
-            // 背中のエクササイズ
-            {
-                id: 'pull-ups',
-                name: 'プルアップ',
-                name_ja: 'プルアップ',
-                muscle_group: 'back',
-                difficulty: 4,
-                equipment: 'bodyweight',
-                type: 'compound'
-            },
-            {
-                id: 'rows',
-                name: 'ロウイング',
-                name_ja: 'ロウイング',
-                muscle_group: 'back',
-                difficulty: 3,
-                equipment: 'barbell',
-                type: 'compound'
-            },
-            {
-                id: 'lat-pulldown',
-                name: 'ラットプルダウン',
-                name_ja: 'ラットプルダウン',
-                muscle_group: 'back',
-                difficulty: 2,
-                equipment: 'machine',
-                type: 'compound'
-            },
-            {
-                id: 'deadlift',
-                name: 'デッドリフト',
-                name_ja: 'デッドリフト',
-                muscle_group: 'back',
-                difficulty: 5,
-                equipment: 'barbell',
-                type: 'compound'
-            },
-            {
-                id: 'bent-over-row',
-                name: 'ベントオーバーロウ',
-                name_ja: 'ベントオーバーロウ',
-                muscle_group: 'back',
-                difficulty: 3,
-                equipment: 'barbell',
-                type: 'compound'
-            },
+      // 背中のエクササイズ
+      {
+        id: 'pull-ups',
+        name: 'プルアップ',
+        name_ja: 'プルアップ',
+        muscle_group: 'back',
+        difficulty: 4,
+        equipment: 'bodyweight',
+        type: 'compound',
+      },
+      {
+        id: 'rows',
+        name: 'ロウイング',
+        name_ja: 'ロウイング',
+        muscle_group: 'back',
+        difficulty: 3,
+        equipment: 'barbell',
+        type: 'compound',
+      },
+      {
+        id: 'lat-pulldown',
+        name: 'ラットプルダウン',
+        name_ja: 'ラットプルダウン',
+        muscle_group: 'back',
+        difficulty: 2,
+        equipment: 'machine',
+        type: 'compound',
+      },
+      {
+        id: 'deadlift',
+        name: 'デッドリフト',
+        name_ja: 'デッドリフト',
+        muscle_group: 'back',
+        difficulty: 5,
+        equipment: 'barbell',
+        type: 'compound',
+      },
+      {
+        id: 'bent-over-row',
+        name: 'ベントオーバーロウ',
+        name_ja: 'ベントオーバーロウ',
+        muscle_group: 'back',
+        difficulty: 3,
+        equipment: 'barbell',
+        type: 'compound',
+      },
 
-            // 肩のエクササイズ
-            {
-                id: 'overhead-press',
-                name: 'オーバーヘッドプレス',
-                name_ja: 'オーバーヘッドプレス',
-                muscle_group: 'shoulders',
-                difficulty: 4,
-                equipment: 'barbell',
-                type: 'compound'
-            },
-            {
-                id: 'lateral-raises',
-                name: 'サイドレイズ',
-                name_ja: 'サイドレイズ',
-                muscle_group: 'shoulders',
-                difficulty: 2,
-                equipment: 'dumbbell',
-                type: 'isolation'
-            },
-            {
-                id: 'rear-delt-fly',
-                name: 'リアデルトフライ',
-                name_ja: 'リアデルトフライ',
-                muscle_group: 'shoulders',
-                difficulty: 2,
-                equipment: 'dumbbell',
-                type: 'isolation'
-            },
-            {
-                id: 'front-raises',
-                name: 'フロントレイズ',
-                name_ja: 'フロントレイズ',
-                muscle_group: 'shoulders',
-                difficulty: 2,
-                equipment: 'dumbbell',
-                type: 'isolation'
-            },
-            {
-                id: 'arnold-press',
-                name: 'アーノルドプレス',
-                name_ja: 'アーノルドプレス',
-                muscle_group: 'shoulders',
-                difficulty: 3,
-                equipment: 'dumbbell',
-                type: 'compound'
-            },
+      // 肩のエクササイズ
+      {
+        id: 'overhead-press',
+        name: 'オーバーヘッドプレス',
+        name_ja: 'オーバーヘッドプレス',
+        muscle_group: 'shoulders',
+        difficulty: 4,
+        equipment: 'barbell',
+        type: 'compound',
+      },
+      {
+        id: 'lateral-raises',
+        name: 'サイドレイズ',
+        name_ja: 'サイドレイズ',
+        muscle_group: 'shoulders',
+        difficulty: 2,
+        equipment: 'dumbbell',
+        type: 'isolation',
+      },
+      {
+        id: 'rear-delt-fly',
+        name: 'リアデルトフライ',
+        name_ja: 'リアデルトフライ',
+        muscle_group: 'shoulders',
+        difficulty: 2,
+        equipment: 'dumbbell',
+        type: 'isolation',
+      },
+      {
+        id: 'front-raises',
+        name: 'フロントレイズ',
+        name_ja: 'フロントレイズ',
+        muscle_group: 'shoulders',
+        difficulty: 2,
+        equipment: 'dumbbell',
+        type: 'isolation',
+      },
+      {
+        id: 'arnold-press',
+        name: 'アーノルドプレス',
+        name_ja: 'アーノルドプレス',
+        muscle_group: 'shoulders',
+        difficulty: 3,
+        equipment: 'dumbbell',
+        type: 'compound',
+      },
 
-            // 腕のエクササイズ
-            {
-                id: 'bicep-curls',
-                name: 'バイセップカール',
-                name_ja: 'バイセップカール',
-                muscle_group: 'arms',
-                difficulty: 2,
-                equipment: 'dumbbell',
-                type: 'isolation'
-            },
-            {
-                id: 'tricep-dips',
-                name: 'トライセップディップス',
-                name_ja: 'トライセップディップス',
-                muscle_group: 'arms',
-                difficulty: 3,
-                equipment: 'bodyweight',
-                type: 'compound'
-            },
-            {
-                id: 'hammer-curls',
-                name: 'ハンマーカール',
-                name_ja: 'ハンマーカール',
-                muscle_group: 'arms',
-                difficulty: 2,
-                equipment: 'dumbbell',
-                type: 'isolation'
-            },
-            {
-                id: 'close-grip-press',
-                name: 'クローズグリッププレス',
-                name_ja: 'クローズグリッププレス',
-                muscle_group: 'arms',
-                difficulty: 3,
-                equipment: 'barbell',
-                type: 'compound'
-            },
-            {
-                id: 'preacher-curls',
-                name: 'プリーチャーカール',
-                name_ja: 'プリーチャーカール',
-                muscle_group: 'arms',
-                difficulty: 2,
-                equipment: 'barbell',
-                type: 'isolation'
-            },
+      // 腕のエクササイズ
+      {
+        id: 'bicep-curls',
+        name: 'バイセップカール',
+        name_ja: 'バイセップカール',
+        muscle_group: 'arms',
+        difficulty: 2,
+        equipment: 'dumbbell',
+        type: 'isolation',
+      },
+      {
+        id: 'tricep-dips',
+        name: 'トライセップディップス',
+        name_ja: 'トライセップディップス',
+        muscle_group: 'arms',
+        difficulty: 3,
+        equipment: 'bodyweight',
+        type: 'compound',
+      },
+      {
+        id: 'hammer-curls',
+        name: 'ハンマーカール',
+        name_ja: 'ハンマーカール',
+        muscle_group: 'arms',
+        difficulty: 2,
+        equipment: 'dumbbell',
+        type: 'isolation',
+      },
+      {
+        id: 'close-grip-press',
+        name: 'クローズグリッププレス',
+        name_ja: 'クローズグリッププレス',
+        muscle_group: 'arms',
+        difficulty: 3,
+        equipment: 'barbell',
+        type: 'compound',
+      },
+      {
+        id: 'preacher-curls',
+        name: 'プリーチャーカール',
+        name_ja: 'プリーチャーカール',
+        muscle_group: 'arms',
+        difficulty: 2,
+        equipment: 'barbell',
+        type: 'isolation',
+      },
 
-            // 脚のエクササイズ
-            {
-                id: 'squats',
-                name: 'スクワット',
-                name_ja: 'スクワット',
-                muscle_group: 'legs',
-                difficulty: 3,
-                equipment: 'barbell',
-                type: 'compound'
-            },
-            {
-                id: 'lunges',
-                name: 'ランジ',
-                name_ja: 'ランジ',
-                muscle_group: 'legs',
-                difficulty: 3,
-                equipment: 'bodyweight',
-                type: 'compound'
-            },
-            {
-                id: 'leg-press',
-                name: 'レッグプレス',
-                name_ja: 'レッグプレス',
-                muscle_group: 'legs',
-                difficulty: 2,
-                equipment: 'machine',
-                type: 'compound'
-            },
-            {
-                id: 'bulgarian-squats',
-                name: 'ブルガリアンスクワット',
-                name_ja: 'ブルガリアンスクワット',
-                muscle_group: 'legs',
-                difficulty: 4,
-                equipment: 'bodyweight',
-                type: 'compound'
-            },
-            {
-                id: 'calf-raises',
-                name: 'カーフレイズ',
-                name_ja: 'カーフレイズ',
-                muscle_group: 'legs',
-                difficulty: 2,
-                equipment: 'bodyweight',
-                type: 'isolation'
-            },
+      // 脚のエクササイズ
+      {
+        id: 'squats',
+        name: 'スクワット',
+        name_ja: 'スクワット',
+        muscle_group: 'legs',
+        difficulty: 3,
+        equipment: 'barbell',
+        type: 'compound',
+      },
+      {
+        id: 'lunges',
+        name: 'ランジ',
+        name_ja: 'ランジ',
+        muscle_group: 'legs',
+        difficulty: 3,
+        equipment: 'bodyweight',
+        type: 'compound',
+      },
+      {
+        id: 'leg-press',
+        name: 'レッグプレス',
+        name_ja: 'レッグプレス',
+        muscle_group: 'legs',
+        difficulty: 2,
+        equipment: 'machine',
+        type: 'compound',
+      },
+      {
+        id: 'bulgarian-squats',
+        name: 'ブルガリアンスクワット',
+        name_ja: 'ブルガリアンスクワット',
+        muscle_group: 'legs',
+        difficulty: 4,
+        equipment: 'bodyweight',
+        type: 'compound',
+      },
+      {
+        id: 'calf-raises',
+        name: 'カーフレイズ',
+        name_ja: 'カーフレイズ',
+        muscle_group: 'legs',
+        difficulty: 2,
+        equipment: 'bodyweight',
+        type: 'isolation',
+      },
 
-            // 腹筋のエクササイズ
-            {
-                id: 'plank',
-                name: 'プランク',
-                name_ja: 'プランク',
-                muscle_group: 'core',
-                difficulty: 2,
-                equipment: 'bodyweight',
-                type: 'isolation'
-            },
-            {
-                id: 'crunches',
-                name: 'クランチ',
-                name_ja: 'クランチ',
-                muscle_group: 'core',
-                difficulty: 1,
-                equipment: 'bodyweight',
-                type: 'isolation'
-            },
-            {
-                id: 'russian-twists',
-                name: 'ロシアンツイスト',
-                name_ja: 'ロシアンツイスト',
-                muscle_group: 'core',
-                difficulty: 2,
-                equipment: 'bodyweight',
-                type: 'isolation'
-            },
-            {
-                id: 'mountain-climbers',
-                name: 'マウンテンクライマー',
-                name_ja: 'マウンテンクライマー',
-                muscle_group: 'core',
-                difficulty: 3,
-                equipment: 'bodyweight',
-                type: 'compound'
-            },
-            {
-                id: 'bicycle-crunches',
-                name: 'バイシクルクランチ',
-                name_ja: 'バイシクルクランチ',
-                muscle_group: 'core',
-                difficulty: 2,
-                equipment: 'bodyweight',
-                type: 'isolation'
-            }
-        ];
-    }
+      // 腹筋のエクササイズ
+      {
+        id: 'plank',
+        name: 'プランク',
+        name_ja: 'プランク',
+        muscle_group: 'core',
+        difficulty: 2,
+        equipment: 'bodyweight',
+        type: 'isolation',
+      },
+      {
+        id: 'crunches',
+        name: 'クランチ',
+        name_ja: 'クランチ',
+        muscle_group: 'core',
+        difficulty: 1,
+        equipment: 'bodyweight',
+        type: 'isolation',
+      },
+      {
+        id: 'russian-twists',
+        name: 'ロシアンツイスト',
+        name_ja: 'ロシアンツイスト',
+        muscle_group: 'core',
+        difficulty: 2,
+        equipment: 'bodyweight',
+        type: 'isolation',
+      },
+      {
+        id: 'mountain-climbers',
+        name: 'マウンテンクライマー',
+        name_ja: 'マウンテンクライマー',
+        muscle_group: 'core',
+        difficulty: 3,
+        equipment: 'bodyweight',
+        type: 'compound',
+      },
+      {
+        id: 'bicycle-crunches',
+        name: 'バイシクルクランチ',
+        name_ja: 'バイシクルクランチ',
+        muscle_group: 'core',
+        difficulty: 2,
+        equipment: 'bodyweight',
+        type: 'isolation',
+      },
+    ];
+  }
 
-    /**
+  /**
    * エクササイズをフィルタリング
    */
-    filterExercises(exercises, searchTerm, filters) {
-        return exercises.filter((exercise) => {
-            // 検索語でフィルタリング
-            if (searchTerm) {
-                const searchLower = searchTerm.toLowerCase();
-                const nameMatch =
+  filterExercises(exercises, searchTerm, filters) {
+    return exercises.filter((exercise) => {
+      // 検索語でフィルタリング
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        const nameMatch =
           exercise.name_ja?.toLowerCase().includes(searchLower) ||
           exercise.name?.toLowerCase().includes(searchLower);
-                if (!nameMatch) {
-                    return false;
-                }
-            }
+        if (!nameMatch) {
+          return false;
+        }
+      }
 
-            // 筋肉部位でフィルタリング
-            if (
-                filters.muscleGroupId &&
+      // 筋肉部位でフィルタリング
+      if (
+        filters.muscleGroupId &&
         exercise.muscle_group !== filters.muscleGroupId
-            ) {
-                return false;
-            }
+      ) {
+        return false;
+      }
 
-            // 難易度でフィルタリング
-            if (
-                filters.difficulty &&
+      // 難易度でフィルタリング
+      if (
+        filters.difficulty &&
         exercise.difficulty !== parseInt(filters.difficulty)
-            ) {
-                return false;
-            }
+      ) {
+        return false;
+      }
 
-            // 器具でフィルタリング
-            if (filters.equipment && exercise.equipment !== filters.equipment) {
-                return false;
-            }
+      // 器具でフィルタリング
+      if (filters.equipment && exercise.equipment !== filters.equipment) {
+        return false;
+      }
 
-            // タイプでフィルタリング
-            if (filters.type && exercise.type !== filters.type) {
-                return false;
-            }
+      // タイプでフィルタリング
+      if (filters.type && exercise.type !== filters.type) {
+        return false;
+      }
 
-            // ボディウェイトフィルター
-            if (filters.bodyweight && exercise.equipment !== 'bodyweight') {
-                return false;
-            }
+      // ボディウェイトフィルター
+      if (filters.bodyweight && exercise.equipment !== 'bodyweight') {
+        return false;
+      }
 
-            // コンパウンドフィルター
-            if (filters.compound && exercise.type !== 'compound') {
-                return false;
-            }
+      // コンパウンドフィルター
+      if (filters.compound && exercise.type !== 'compound') {
+        return false;
+      }
 
-            // 初心者フィルター
-            if (filters.beginner && exercise.difficulty > 2) {
-                return false;
-            }
+      // 初心者フィルター
+      if (filters.beginner && exercise.difficulty > 2) {
+        return false;
+      }
 
-            return true;
-        });
-    }
+      return true;
+    });
+  }
 
-    /**
+  /**
    * 現在のフィルター条件を取得
    * @returns {Object} フィルター条件
    */
-    getCurrentFilters() {
-        const filters = {};
+  getCurrentFilters() {
+    const filters = {};
 
-        // セレクトボックスフィルター
-        const muscleGroup = document.getElementById('muscle-group-filter')?.value;
-        console.log('Muscle group filter value:', muscleGroup);
-        if (muscleGroup) {
-            filters.muscleGroupId = muscleGroup;
-        }
-
-        const difficulty = document.getElementById('difficulty-filter')?.value;
-        if (difficulty) {
-            filters.difficulty = parseInt(difficulty);
-        }
-
-        const equipment = document.getElementById('equipment-filter')?.value;
-        if (equipment) {
-            filters.equipment = equipment;
-        }
-
-        const exerciseType = document.getElementById('exercise-type-filter')?.value;
-        if (exerciseType) {
-            filters.exerciseType = exerciseType;
-        }
-
-        // チェックボックスフィルター
-        const bodyweightOnly =
-      document.getElementById('bodyweight-filter')?.checked;
-        if (bodyweightOnly) {
-            filters.isBodyweight = true;
-        }
-
-        const compoundOnly = document.getElementById('compound-filter')?.checked;
-        if (compoundOnly) {
-            filters.isCompound = true;
-        }
-
-        const beginnerOnly = document.getElementById('beginner-filter')?.checked;
-        if (beginnerOnly) {
-            filters.isBeginnerFriendly = true;
-        }
-
-        // ソート
-        const sortBy = document.getElementById('exercise-sort')?.value;
-        if (sortBy) {
-            filters.sortBy = sortBy;
-        }
-
-        console.log('Final filters object:', filters);
-        return filters;
+    // セレクトボックスフィルター
+    const muscleGroup = document.getElementById('muscle-group-filter')?.value;
+    console.log('Muscle group filter value:', muscleGroup);
+    if (muscleGroup) {
+      filters.muscleGroupId = muscleGroup;
     }
 
-    /**
+    const difficulty = document.getElementById('difficulty-filter')?.value;
+    if (difficulty) {
+      filters.difficulty = parseInt(difficulty);
+    }
+
+    const equipment = document.getElementById('equipment-filter')?.value;
+    if (equipment) {
+      filters.equipment = equipment;
+    }
+
+    const exerciseType = document.getElementById('exercise-type-filter')?.value;
+    if (exerciseType) {
+      filters.exerciseType = exerciseType;
+    }
+
+    // チェックボックスフィルター
+    const bodyweightOnly =
+      document.getElementById('bodyweight-filter')?.checked;
+    if (bodyweightOnly) {
+      filters.isBodyweight = true;
+    }
+
+    const compoundOnly = document.getElementById('compound-filter')?.checked;
+    if (compoundOnly) {
+      filters.isCompound = true;
+    }
+
+    const beginnerOnly = document.getElementById('beginner-filter')?.checked;
+    if (beginnerOnly) {
+      filters.isBeginnerFriendly = true;
+    }
+
+    // ソート
+    const sortBy = document.getElementById('exercise-sort')?.value;
+    if (sortBy) {
+      filters.sortBy = sortBy;
+    }
+
+    console.log('Final filters object:', filters);
+    return filters;
+  }
+
+  /**
    * 検索を実行
    * @param {string} searchTerm - 検索語
    */
-    async performSearch(searchTerm) {
-        this.showLoading(true);
+  async performSearch(searchTerm) {
+    this.showLoading(true);
 
-        try {
-            const filters = this.getCurrentFilters();
-            this.currentExercises = await exerciseService.searchExercises(
-                searchTerm,
-                filters
-            );
-            this.renderExercises();
+    try {
+      const filters = this.getCurrentFilters();
+      this.currentExercises = await exerciseService.searchExercises(
+        searchTerm,
+        filters
+      );
+      this.renderExercises();
 
-            // updateExerciseCountメソッドが存在することを確認してから呼び出し
-            if (typeof this.updateExerciseCount === 'function') {
-                this.updateExerciseCount();
-            } else {
-                console.error('updateExerciseCount method not found');
-            }
-        } catch (error) {
-            handleError(error, {
-                context: 'エクササイズ検索',
-                showNotification: true
-            });
-        } finally {
-            this.showLoading(false);
-        }
+      // updateExerciseCountメソッドが存在することを確認してから呼び出し
+      if (typeof this.updateExerciseCount === 'function') {
+        this.updateExerciseCount();
+      } else {
+        console.error('updateExerciseCount method not found');
+      }
+    } catch (error) {
+      handleError(error, {
+        context: 'エクササイズ検索',
+        showNotification: true,
+      });
+    } finally {
+      this.showLoading(false);
     }
+  }
 
-    /**
+  /**
    * フィルターを適用
    */
-    async applyFilters() {
-        console.log('Applying filters...');
-        const currentFilters = this.getCurrentFilters();
-        console.log('Current filters:', currentFilters);
-        await this.loadExercises();
-    }
+  async applyFilters() {
+    console.log('Applying filters...');
+    const currentFilters = this.getCurrentFilters();
+    console.log('Current filters:', currentFilters);
+    await this.loadExercises();
+  }
 
-    /**
+  /**
    * エクササイズ件数を更新
    */
-    updateExerciseCount() {
-        try {
-            const currentCountElement = document.getElementById('current-count');
-            const totalCountElement = document.getElementById('total-count');
+  updateExerciseCount() {
+    try {
+      const currentCountElement = document.getElementById('current-count');
+      const totalCountElement = document.getElementById('total-count');
 
-            if (currentCountElement && totalCountElement) {
-                const currentCount = this.currentExercises
-                    ? this.currentExercises.length
-                    : 0;
-                const totalCount = this.totalExercises || currentCount;
+      if (currentCountElement && totalCountElement) {
+        const currentCount = this.currentExercises
+          ? this.currentExercises.length
+          : 0;
+        const totalCount = this.totalExercises || currentCount;
 
-                currentCountElement.textContent = currentCount;
-                totalCountElement.textContent = totalCount;
+        currentCountElement.textContent = currentCount;
+        totalCountElement.textContent = totalCount;
 
-                // フィルターが適用されている場合の表示を更新
-                const countElement = document.getElementById('exercise-count');
-                if (countElement) {
-                    if (this.hasActiveFilters()) {
-                        countElement.innerHTML = `
+        // フィルターが適用されている場合の表示を更新
+        const countElement = document.getElementById('exercise-count');
+        if (countElement) {
+          if (this.hasActiveFilters()) {
+            countElement.innerHTML = `
                             <span id="current-count">${currentCount}</span>件中 <span id="total-count">${totalCount}</span>件を表示
                             <span class="text-blue-600 ml-2">（フィルター適用中）</span>
                         `;
-                    } else {
-                        countElement.innerHTML = `
+          } else {
+            countElement.innerHTML = `
                             <span id="current-count">${currentCount}</span>件中 <span id="total-count">${totalCount}</span>件を表示
                         `;
-                    }
-                }
-            }
-        } catch (error) {
-            console.error('Error updating exercise count:', error);
+          }
         }
+      }
+    } catch (error) {
+      console.error('Error updating exercise count:', error);
     }
+  }
 
-    /**
+  /**
    * アクティブなフィルターがあるかチェック
    * @returns {boolean} フィルターが適用されているかどうか
    */
-    hasActiveFilters() {
-        const searchTerm = document.getElementById('exercise-search')?.value || '';
-        const muscleGroup = document.getElementById('muscle-group-filter')?.value;
-        const equipment = document.getElementById('equipment-filter')?.value;
-        const difficulty = document.getElementById('difficulty-filter')?.value;
-        const exerciseType = document.getElementById('exercise-type-filter')?.value;
-        const bodyweightOnly =
+  hasActiveFilters() {
+    const searchTerm = document.getElementById('exercise-search')?.value || '';
+    const muscleGroup = document.getElementById('muscle-group-filter')?.value;
+    const equipment = document.getElementById('equipment-filter')?.value;
+    const difficulty = document.getElementById('difficulty-filter')?.value;
+    const exerciseType = document.getElementById('exercise-type-filter')?.value;
+    const bodyweightOnly =
       document.getElementById('bodyweight-filter')?.checked;
-        const compoundOnly = document.getElementById('compound-filter')?.checked;
-        const beginnerOnly = document.getElementById('beginner-filter')?.checked;
+    const compoundOnly = document.getElementById('compound-filter')?.checked;
+    const beginnerOnly = document.getElementById('beginner-filter')?.checked;
 
-        return !!(
-            searchTerm ||
+    return !!(
+      searchTerm ||
       muscleGroup ||
       equipment ||
       difficulty ||
@@ -884,64 +884,64 @@ class ExercisePage {
       bodyweightOnly ||
       compoundOnly ||
       beginnerOnly
-        );
-    }
+    );
+  }
 
-    /**
+  /**
    * フィルターをリセット
    */
-    async resetFilters() {
+  async resetFilters() {
     // 検索ボックスをクリア
-        const searchInput = document.getElementById('exercise-search');
-        if (searchInput) {
-            searchInput.value = '';
-        }
-
-        // セレクトボックスをリセット
-        const selectElements = [
-            'muscle-group-filter',
-            'equipment-filter',
-            'difficulty-filter',
-            'exercise-type-filter'
-        ];
-
-        selectElements.forEach((id) => {
-            const element = document.getElementById(id);
-            if (element) {
-                element.selectedIndex = 0;
-            }
-        });
-
-        // チェックボックスをリセット
-        const checkboxElements = [
-            'bodyweight-filter',
-            'compound-filter',
-            'beginner-filter'
-        ];
-
-        checkboxElements.forEach((id) => {
-            const element = document.getElementById(id);
-            if (element) {
-                element.checked = false;
-            }
-        });
-
-        // エクササイズ一覧を再読み込み
-        await this.loadExercises();
-        this.updateExerciseCount();
+    const searchInput = document.getElementById('exercise-search');
+    if (searchInput) {
+      searchInput.value = '';
     }
 
-    /**
+    // セレクトボックスをリセット
+    const selectElements = [
+      'muscle-group-filter',
+      'equipment-filter',
+      'difficulty-filter',
+      'exercise-type-filter',
+    ];
+
+    selectElements.forEach((id) => {
+      const element = document.getElementById(id);
+      if (element) {
+        element.selectedIndex = 0;
+      }
+    });
+
+    // チェックボックスをリセット
+    const checkboxElements = [
+      'bodyweight-filter',
+      'compound-filter',
+      'beginner-filter',
+    ];
+
+    checkboxElements.forEach((id) => {
+      const element = document.getElementById(id);
+      if (element) {
+        element.checked = false;
+      }
+    });
+
+    // エクササイズ一覧を再読み込み
+    await this.loadExercises();
+    this.updateExerciseCount();
+  }
+
+  /**
    * エクササイズ一覧を描画
    */
-    renderExercises() {
-        const container = document.getElementById('exercises-list');
-        if (!container) {
-            return;
-        }
+  renderExercises() {
+    const container = document.getElementById('exercises-list');
+    if (!container) {
+      return;
+    }
 
-        if (this.currentExercises.length === 0) {
-            container.innerHTML = `
+    if (this.currentExercises.length === 0) {
+      container.innerHTML = `
                 <div class="text-center py-12">
                     <div class="text-gray-400 mb-4">
                         <i class="fas fa-search text-4xl"></i>
@@ -950,40 +950,40 @@ class ExercisePage {
                     <p class="text-sm text-gray-500 mt-2">検索条件を変更してお試しください</p>
                 </div>
             `;
-            return;
-        }
-
-        container.innerHTML = this.currentExercises
-            .map((exercise) => this.renderExerciseCard(exercise))
-            .join('');
-
-        // カードクリックイベントを設定
-        container.querySelectorAll('.exercise-card').forEach((card) => {
-            card.addEventListener('click', () => {
-                const exerciseId = card.dataset.exerciseId;
-                this.showExerciseDetail(exerciseId);
-            });
-        });
+      return;
     }
 
-    /**
+    container.innerHTML = this.currentExercises
+      .map((exercise) => this.renderExerciseCard(exercise))
+      .join('');
+
+    // カードクリックイベントを設定
+    container.querySelectorAll('.exercise-card').forEach((card) => {
+      card.addEventListener('click', () => {
+        const exerciseId = card.dataset.exerciseId;
+        this.showExerciseDetail(exerciseId);
+      });
+    });
+  }
+
+  /**
    * エクササイズカードを描画
    * @param {Object} exercise - エクササイズデータ
    * @returns {string} HTML文字列
    */
-    renderExerciseCard(exercise) {
-        const muscleGroup = exercise.muscle_groups;
-        const difficultyStars =
+  renderExerciseCard(exercise) {
+    const muscleGroup = exercise.muscle_groups;
+    const difficultyStars =
       '★'.repeat(exercise.difficulty_level) +
       '☆'.repeat(5 - exercise.difficulty_level);
 
-        const isCustom = exercise.is_custom;
-        const customBadge = isCustom
-            ? '<span class="inline-block bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">' +
+    const isCustom = exercise.is_custom;
+    const customBadge = isCustom
+      ? '<span class="inline-block bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">' +
         'カスタム</span>'
-            : '';
+      : '';
 
-        return `
+    return `
             <div class="exercise-card bg-white rounded-lg shadow-md p-6 cursor-pointer 
                         hover:shadow-lg transition-shadow duration-200" 
                  data-exercise-id="${exercise.id}">
@@ -996,13 +996,13 @@ class ExercisePage {
                         ${customBadge}
                     </div>
                     ${
-    exercise.image_url
-        ? `<img src="${exercise.image_url}" alt="${exercise.name_ja}" 
+                      exercise.image_url
+                        ? `<img src="${exercise.image_url}" alt="${exercise.name_ja}" 
               class="w-16 h-16 rounded-lg object-cover ml-4">`
-        : `<div class="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center ml-4">
+                        : `<div class="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center ml-4">
                             <i class="fas fa-dumbbell text-gray-400"></i>
                          </div>`
-}
+                    }
                 </div>
                 
                 <div class="space-y-2 mb-4">
@@ -1032,61 +1032,61 @@ class ExercisePage {
                     </div>
                     <div class="flex items-center space-x-2 text-xs text-gray-500">
                         ${
-    exercise.average_rating > 0
-        ? `<span>★${exercise.average_rating.toFixed(1)}</span>`
-        : ''
-}
+                          exercise.average_rating > 0
+                            ? `<span>★${exercise.average_rating.toFixed(1)}</span>`
+                            : ''
+                        }
                         ${
-    exercise.usage_count > 0
-        ? `<span>${exercise.usage_count}回使用</span>`
-        : ''
-}
+                          exercise.usage_count > 0
+                            ? `<span>${exercise.usage_count}回使用</span>`
+                            : ''
+                        }
                     </div>
                 </div>
             </div>
         `;
-    }
+  }
 
-    /**
+  /**
    * カテゴリ詳細を表示
    * @param {string} muscleGroup - 筋肉部位
    */
-    async showCategoryDetail(muscleGroup) {
-        console.log('Showing category detail for:', muscleGroup);
-        try {
-            const categoryInfo =
+  async showCategoryDetail(muscleGroup) {
+    console.log('Showing category detail for:', muscleGroup);
+    try {
+      const categoryInfo =
         await muscleGroupService.getMuscleGroupCategoryInfo(muscleGroup);
-            console.log('Retrieved category info:', categoryInfo);
+      console.log('Retrieved category info:', categoryInfo);
 
-            if (categoryInfo) {
-                this.renderCategoryDetail(categoryInfo);
-                this.showDetailModal();
-            } else {
-                console.error('Category info is null or undefined for:', muscleGroup);
-                showNotification('カテゴリ情報を取得できませんでした', 'error');
-            }
-        } catch (error) {
-            console.error('Error getting category info:', error);
-            showNotification('カテゴリ情報の取得中にエラーが発生しました', 'error');
-        }
+      if (categoryInfo) {
+        this.renderCategoryDetail(categoryInfo);
+        this.showDetailModal();
+      } else {
+        console.error('Category info is null or undefined for:', muscleGroup);
+        showNotification('カテゴリ情報を取得できませんでした', 'error');
+      }
+    } catch (error) {
+      console.error('Error getting category info:', error);
+      showNotification('カテゴリ情報の取得中にエラーが発生しました', 'error');
     }
+  }
 
-    /**
+  /**
    * カテゴリ詳細を描画
    * @param {Object} categoryInfo - カテゴリ情報
    */
-    renderCategoryDetail(categoryInfo) {
-        const modal = document.getElementById('exercise-detail-modal');
-        if (!modal) {
-            return;
-        }
+  renderCategoryDetail(categoryInfo) {
+    const modal = document.getElementById('exercise-detail-modal');
+    if (!modal) {
+      return;
+    }
 
-        const content = modal.querySelector('.modal-content');
-        if (!content) {
-            return;
-        }
+    const content = modal.querySelector('.modal-content');
+    if (!content) {
+      return;
+    }
 
-        content.innerHTML = `
+    content.innerHTML = `
             <div class="modal-header flex justify-between items-center p-6 border-b">
                 <div class="flex items-center">
                     <i class="${categoryInfo.icon} ${categoryInfo.color} text-3xl mr-4"></i>
@@ -1111,15 +1111,15 @@ class ExercisePage {
                         <h3 class="text-lg font-semibold text-gray-900 mb-3">効果・メリット</h3>
                         <ul class="space-y-2">
                             ${categoryInfo.benefits
-        .map(
-            (benefit) => `
+                              .map(
+                                (benefit) => `
                                 <li class="flex items-start">
                                     <i class="fas fa-check text-green-500 mr-2 mt-1"></i>
                                     <span class="text-gray-700">${benefit}</span>
                                 </li>
                             `
-        )
-        .join('')}
+                              )
+                              .join('')}
                         </ul>
                     </div>
 
@@ -1127,15 +1127,15 @@ class ExercisePage {
                         <h3 class="text-lg font-semibold text-gray-900 mb-3">代表的なエクササイズ</h3>
                         <ul class="space-y-2">
                             ${categoryInfo.exercises
-        .map(
-            (exercise) => `
+                              .map(
+                                (exercise) => `
                                 <li class="flex items-start">
                                     <i class="fas fa-dumbbell text-blue-500 mr-2 mt-1"></i>
                                     <span class="text-gray-700">${exercise}</span>
                                 </li>
                             `
-        )
-        .join('')}
+                              )
+                              .join('')}
                         </ul>
                     </div>
                 </div>
@@ -1145,15 +1145,15 @@ class ExercisePage {
                         <h3 class="text-lg font-semibold text-gray-900 mb-3">コツ・ポイント</h3>
                         <ul class="space-y-2">
                             ${categoryInfo.tips
-        .map(
-            (tip) => `
+                              .map(
+                                (tip) => `
                                 <li class="flex items-start">
                                     <i class="fas fa-lightbulb text-yellow-500 mr-2 mt-1"></i>
                                     <span class="text-gray-700">${tip}</span>
                                 </li>
                             `
-        )
-        .join('')}
+                              )
+                              .join('')}
                         </ul>
                     </div>
 
@@ -1161,15 +1161,15 @@ class ExercisePage {
                         <h3 class="text-lg font-semibold text-gray-900 mb-3">よくある間違い</h3>
                         <ul class="space-y-2">
                             ${categoryInfo.commonMistakes
-        .map(
-            (mistake) => `
+                              .map(
+                                (mistake) => `
                                 <li class="flex items-start">
                                     <i class="fas fa-exclamation-triangle text-red-500 mr-2 mt-1"></i>
                                     <span class="text-gray-700">${mistake}</span>
                                 </li>
                             `
-        )
-        .join('')}
+                              )
+                              .join('')}
                         </ul>
                     </div>
                 </div>
@@ -1192,180 +1192,180 @@ class ExercisePage {
             </div>
         `;
 
-        // イベントリスナーを再設定
-        const closeButtons = content.querySelectorAll('.modal-close');
-        closeButtons.forEach((btn) => {
-            btn.addEventListener('click', () => this.closeDetailModal());
-        });
+    // イベントリスナーを再設定
+    const closeButtons = content.querySelectorAll('.modal-close');
+    closeButtons.forEach((btn) => {
+      btn.addEventListener('click', () => this.closeDetailModal());
+    });
 
-        // フィルターボタンのイベントリスナー
-        const filterBtn = content.querySelector('.filter-category-btn');
-        if (filterBtn) {
-            filterBtn.addEventListener('click', async () => {
-                await this.applyCategoryFilter(categoryInfo.name);
-                this.closeDetailModal();
-                // エクササイズ一覧にスクロール
-                this.scrollToExerciseList();
-            });
-        }
+    // フィルターボタンのイベントリスナー
+    const filterBtn = content.querySelector('.filter-category-btn');
+    if (filterBtn) {
+      filterBtn.addEventListener('click', async () => {
+        await this.applyCategoryFilter(categoryInfo.name);
+        this.closeDetailModal();
+        // エクササイズ一覧にスクロール
+        this.scrollToExerciseList();
+      });
     }
+  }
 
-    /**
+  /**
    * カテゴリフィルターを適用
    * @param {string} categoryName - カテゴリ名
    */
-    async applyCategoryFilter(categoryName) {
-        try {
-            console.log('Applying category filter for:', categoryName);
+  async applyCategoryFilter(categoryName) {
+    try {
+      console.log('Applying category filter for:', categoryName);
 
-            // 筋肉部位名のマッピング（カテゴリ詳細の名前からデータベースの筋肉部位名へ）
-            const categoryNameMapping = {
-                胸筋: '胸',
-                背筋: '背中',
-                脚筋: '脚',
-                肩筋: '肩',
-                腕筋: '腕',
-                腹: '腹',
-                体幹: '腹'
-            };
+      // 筋肉部位名のマッピング（カテゴリ詳細の名前からデータベースの筋肉部位名へ）
+      const categoryNameMapping = {
+        胸筋: '胸',
+        背筋: '背中',
+        脚筋: '脚',
+        肩筋: '肩',
+        腕筋: '腕',
+        腹: '腹',
+        体幹: '腹',
+      };
 
-            const mappedName = categoryNameMapping[categoryName] || categoryName;
-            console.log('Mapped category name:', mappedName);
+      const mappedName = categoryNameMapping[categoryName] || categoryName;
+      console.log('Mapped category name:', mappedName);
 
-            // 筋肉部位サービスから筋肉部位を取得
-            const muscleGroup =
+      // 筋肉部位サービスから筋肉部位を取得
+      const muscleGroup =
         await muscleGroupService.getMuscleGroupByName(mappedName);
-            console.log('Found muscle group:', muscleGroup);
+      console.log('Found muscle group:', muscleGroup);
 
-            if (muscleGroup) {
-                const muscleGroupFilter = document.getElementById(
-                    'muscle-group-filter'
-                );
-                if (muscleGroupFilter) {
-                    console.log('Setting muscle group filter to:', muscleGroup.id);
-                    muscleGroupFilter.value = muscleGroup.id;
+      if (muscleGroup) {
+        const muscleGroupFilter = document.getElementById(
+          'muscle-group-filter'
+        );
+        if (muscleGroupFilter) {
+          console.log('Setting muscle group filter to:', muscleGroup.id);
+          muscleGroupFilter.value = muscleGroup.id;
 
-                    // フィルターを適用
-                    await this.applyFilters();
-                    this.updateExerciseCount();
+          // フィルターを適用
+          await this.applyFilters();
+          this.updateExerciseCount();
 
-                    // フィルター適用の通知を表示
-                    showNotification(
-                        `${muscleGroup.name_ja}のエクササイズで絞り込みました`,
-                        'success'
-                    );
-                } else {
-                    console.error('Muscle group filter element not found');
-                    showNotification('フィルター要素が見つかりませんでした', 'error');
-                }
-            } else {
-                console.warn(
-                    'Muscle group not found for category:',
-                    categoryName,
-                    'mapped to:',
-                    mappedName
-                );
-
-                // フォールバック: 直接筋肉部位IDで検索
-                const directMapping = {
-                    胸筋: 'chest',
-                    背筋: 'back',
-                    脚筋: 'legs',
-                    肩筋: 'shoulders',
-                    腕筋: 'arms',
-                    腹: 'abs',
-                    体幹: 'abs'
-                };
-
-                const directId = directMapping[categoryName];
-                if (directId) {
-                    console.log('Trying direct ID mapping:', directId);
-                    const muscleGroupFilter = document.getElementById(
-                        'muscle-group-filter'
-                    );
-                    if (muscleGroupFilter) {
-                        // 筋肉部位フィルターのオプションを確認
-                        const options = Array.from(muscleGroupFilter.options);
-                        console.log(
-                            'Available filter options:',
-                            options.map((opt) => ({ value: opt.value, text: opt.text }))
-                        );
-
-                        // 筋肉部位IDで直接検索
-                        const targetOption = options.find((opt) => opt.value === directId);
-                        if (targetOption) {
-                            muscleGroupFilter.value = directId;
-                            await this.applyFilters();
-                            this.updateExerciseCount();
-                            showNotification(
-                                `${targetOption.text}のエクササイズで絞り込みました`,
-                                'success'
-                            );
-                        } else {
-                            console.error('Target option not found:', directId);
-                            showNotification(
-                                `筋肉部位「${categoryName}」のフィルターが見つかりませんでした`,
-                                'error'
-                            );
-                        }
-                    }
-                } else {
-                    showNotification(
-                        `筋肉部位「${categoryName}」が見つかりませんでした`,
-                        'error'
-                    );
-                }
-            }
-        } catch (error) {
-            console.error('Failed to apply category filter:', error);
-            showNotification('フィルターの適用に失敗しました', 'error');
+          // フィルター適用の通知を表示
+          showNotification(
+            `${muscleGroup.name_ja}のエクササイズで絞り込みました`,
+            'success'
+          );
+        } else {
+          console.error('Muscle group filter element not found');
+          showNotification('フィルター要素が見つかりませんでした', 'error');
         }
-    }
+      } else {
+        console.warn(
+          'Muscle group not found for category:',
+          categoryName,
+          'mapped to:',
+          mappedName
+        );
 
-    /**
+        // フォールバック: 直接筋肉部位IDで検索
+        const directMapping = {
+          胸筋: 'chest',
+          背筋: 'back',
+          脚筋: 'legs',
+          肩筋: 'shoulders',
+          腕筋: 'arms',
+          腹: 'abs',
+          体幹: 'abs',
+        };
+
+        const directId = directMapping[categoryName];
+        if (directId) {
+          console.log('Trying direct ID mapping:', directId);
+          const muscleGroupFilter = document.getElementById(
+            'muscle-group-filter'
+          );
+          if (muscleGroupFilter) {
+            // 筋肉部位フィルターのオプションを確認
+            const options = Array.from(muscleGroupFilter.options);
+            console.log(
+              'Available filter options:',
+              options.map((opt) => ({ value: opt.value, text: opt.text }))
+            );
+
+            // 筋肉部位IDで直接検索
+            const targetOption = options.find((opt) => opt.value === directId);
+            if (targetOption) {
+              muscleGroupFilter.value = directId;
+              await this.applyFilters();
+              this.updateExerciseCount();
+              showNotification(
+                `${targetOption.text}のエクササイズで絞り込みました`,
+                'success'
+              );
+            } else {
+              console.error('Target option not found:', directId);
+              showNotification(
+                `筋肉部位「${categoryName}」のフィルターが見つかりませんでした`,
+                'error'
+              );
+            }
+          }
+        } else {
+          showNotification(
+            `筋肉部位「${categoryName}」が見つかりませんでした`,
+            'error'
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Failed to apply category filter:', error);
+      showNotification('フィルターの適用に失敗しました', 'error');
+    }
+  }
+
+  /**
    * エクササイズ詳細を表示
    * @param {string} exerciseId - エクササイズID
    */
-    async showExerciseDetail(exerciseId) {
-        try {
-            const exercise = await exerciseService.getExerciseDetails(exerciseId);
-            if (!exercise) {
-                showNotification('エクササイズの詳細を取得できませんでした', 'error');
-                return;
-            }
+  async showExerciseDetail(exerciseId) {
+    try {
+      const exercise = await exerciseService.getExerciseDetails(exerciseId);
+      if (!exercise) {
+        showNotification('エクササイズの詳細を取得できませんでした', 'error');
+        return;
+      }
 
-            this.selectedExercise = exercise;
-            this.renderExerciseDetail(exercise);
-            this.showDetailModal();
-        } catch (error) {
-            handleError(error, {
-                context: 'エクササイズ詳細表示',
-                showNotification: true
-            });
-        }
+      this.selectedExercise = exercise;
+      this.renderExerciseDetail(exercise);
+      this.showDetailModal();
+    } catch (error) {
+      handleError(error, {
+        context: 'エクササイズ詳細表示',
+        showNotification: true,
+      });
     }
+  }
 
-    /**
+  /**
    * エクササイズ詳細を描画
    * @param {Object} exercise - エクササイズデータ
    */
-    renderExerciseDetail(exercise) {
-        const modal = document.getElementById('exercise-detail-modal');
-        if (!modal) {
-            return;
-        }
+  renderExerciseDetail(exercise) {
+    const modal = document.getElementById('exercise-detail-modal');
+    if (!modal) {
+      return;
+    }
 
-        const content = modal.querySelector('.modal-content');
-        if (!content) {
-            return;
-        }
+    const content = modal.querySelector('.modal-content');
+    if (!content) {
+      return;
+    }
 
-        const muscleGroup = exercise.muscle_groups;
-        const difficultyStars =
+    const muscleGroup = exercise.muscle_groups;
+    const difficultyStars =
       '★'.repeat(exercise.difficulty_level) +
       '☆'.repeat(5 - exercise.difficulty_level);
 
-        content.innerHTML = `
+    content.innerHTML = `
             <div class="modal-header flex justify-between items-center p-6 border-b">
                 <h2 class="text-2xl font-bold text-gray-900">${exercise.name_ja}</h2>
                 <button class="modal-close text-gray-400 hover:text-gray-600">
@@ -1377,24 +1377,24 @@ class ExercisePage {
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         ${
-    exercise.image_url
-        ? `<img src="${exercise.image_url}" alt="${exercise.name_ja}" class="w-full h-48 rounded-lg object-cover mb-4">`
-        : `<div class="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center mb-4">
+                          exercise.image_url
+                            ? `<img src="${exercise.image_url}" alt="${exercise.name_ja}" class="w-full h-48 rounded-lg object-cover mb-4">`
+                            : `<div class="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center mb-4">
                                 <i class="fas fa-dumbbell text-gray-400 text-4xl"></i>
                              </div>`
-}
+                        }
                         
                         ${
-    exercise.video_url
-        ? `<div class="mb-4">
+                          exercise.video_url
+                            ? `<div class="mb-4">
                                 <a href="${exercise.video_url}" target="_blank" 
                                    class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
                                     <i class="fab fa-youtube mr-2"></i>
                                     動画を見る
                                 </a>
                              </div>`
-        : ''
-}
+                            : ''
+                        }
                     </div>
                     
                     <div>
@@ -1438,40 +1438,40 @@ class ExercisePage {
                 </div>
                 
                 ${
-    exercise.description
-        ? `<div class="mt-6">
+                  exercise.description
+                    ? `<div class="mt-6">
                         <h3 class="font-semibold text-gray-900 mb-2">説明</h3>
                         <p class="text-gray-700">${exercise.description}</p>
                      </div>`
-        : ''
-}
+                    : ''
+                }
                 
                 ${
-    exercise.instructions
-        ? `<div class="mt-6">
+                  exercise.instructions
+                    ? `<div class="mt-6">
                         <h3 class="font-semibold text-gray-900 mb-2">実行方法</h3>
                         <p class="text-gray-700 whitespace-pre-line">${exercise.instructions}</p>
                      </div>`
-        : ''
-}
+                    : ''
+                }
                 
                 ${
-    exercise.tips
-        ? `<div class="mt-6">
+                  exercise.tips
+                    ? `<div class="mt-6">
                         <h3 class="font-semibold text-gray-900 mb-2">コツ・ポイント</h3>
                         <p class="text-gray-700 whitespace-pre-line">${exercise.tips}</p>
                      </div>`
-        : ''
-}
+                    : ''
+                }
                 
                 ${
-    exercise.common_mistakes
-        ? `<div class="mt-6">
+                  exercise.common_mistakes
+                    ? `<div class="mt-6">
                         <h3 class="font-semibold text-gray-900 mb-2">よくある間違い</h3>
                         <p class="text-gray-700 whitespace-pre-line">${exercise.common_mistakes}</p>
                      </div>`
-        : ''
-}
+                    : ''
+                }
             </div>
             
             <div class="modal-footer p-6 border-t bg-gray-50">
@@ -1482,17 +1482,17 @@ class ExercisePage {
                     </div>
                     <div class="space-x-2">
                         ${
-    exercise.is_custom &&
+                          exercise.is_custom &&
                           supabaseService.getCurrentUser()?.id ===
                             exercise.created_by_user_id
-        ? `<button class="edit-exercise-btn px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            ? `<button class="edit-exercise-btn px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
                                 編集
                              </button>
                              <button class="delete-exercise-btn px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
                                 削除
                              </button>`
-        : ''
-}
+                            : ''
+                        }
                         <button class="modal-close px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
                             閉じる
                         </button>
@@ -1501,532 +1501,532 @@ class ExercisePage {
             </div>
         `;
 
-        // イベントリスナーを再設定
-        const closeButtons = content.querySelectorAll('.modal-close');
-        closeButtons.forEach((btn) => {
-            btn.addEventListener('click', () => this.closeDetailModal());
-        });
+    // イベントリスナーを再設定
+    const closeButtons = content.querySelectorAll('.modal-close');
+    closeButtons.forEach((btn) => {
+      btn.addEventListener('click', () => this.closeDetailModal());
+    });
 
-        // 編集・削除ボタンのイベントリスナー
-        const editBtn = content.querySelector('.edit-exercise-btn');
-        if (editBtn) {
-            editBtn.addEventListener('click', () =>
-                this.editCustomExercise(exercise)
-            );
-        }
-
-        const deleteBtn = content.querySelector('.delete-exercise-btn');
-        if (deleteBtn) {
-            deleteBtn.addEventListener('click', () =>
-                this.deleteCustomExercise(exercise.id)
-            );
-        }
+    // 編集・削除ボタンのイベントリスナー
+    const editBtn = content.querySelector('.edit-exercise-btn');
+    if (editBtn) {
+      editBtn.addEventListener('click', () =>
+        this.editCustomExercise(exercise)
+      );
     }
 
-    /**
+    const deleteBtn = content.querySelector('.delete-exercise-btn');
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', () =>
+        this.deleteCustomExercise(exercise.id)
+      );
+    }
+  }
+
+  /**
    * カスタムエクササイズモーダルを表示
    * @param {Object} exercise - 編集するエクササイズ（新規作成時はnull）
    */
-    showCustomExerciseModal(exercise = null) {
-        const modal = document.getElementById('custom-exercise-modal');
-        if (!modal) {
-            return;
-        }
-
-        // フォームをリセット
-        const form = modal.querySelector('form');
-        if (form) {
-            form.reset();
-        }
-
-        // 編集モードの場合はデータを設定
-        if (exercise) {
-            this.populateCustomExerciseForm(exercise);
-        }
-
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
+  showCustomExerciseModal(exercise = null) {
+    const modal = document.getElementById('custom-exercise-modal');
+    if (!modal) {
+      return;
     }
 
-    /**
+    // フォームをリセット
+    const form = modal.querySelector('form');
+    if (form) {
+      form.reset();
+    }
+
+    // 編集モードの場合はデータを設定
+    if (exercise) {
+      this.populateCustomExerciseForm(exercise);
+    }
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  }
+
+  /**
    * カスタムエクササイズフォームにデータを設定
    * @param {Object} exercise - エクササイズデータ
    */
-    populateCustomExerciseForm(exercise) {
-        const fields = [
-            'custom-name-ja',
-            'custom-name-en',
-            'custom-muscle-group',
-            'custom-equipment',
-            'custom-difficulty',
-            'custom-exercise-type',
-            'custom-description',
-            'custom-instructions',
-            'custom-tips',
-            'custom-mistakes'
-        ];
+  populateCustomExerciseForm(exercise) {
+    const fields = [
+      'custom-name-ja',
+      'custom-name-en',
+      'custom-muscle-group',
+      'custom-equipment',
+      'custom-difficulty',
+      'custom-exercise-type',
+      'custom-description',
+      'custom-instructions',
+      'custom-tips',
+      'custom-mistakes',
+    ];
 
-        fields.forEach((fieldId) => {
-            const element = document.getElementById(fieldId);
-            if (element && exercise) {
-                const fieldName = fieldId.replace('custom-', '').replace('-', '_');
-                if (fieldName === 'muscle_group') {
-                    element.value = exercise.muscle_group_id;
-                } else if (fieldName === 'difficulty') {
-                    element.value = exercise.difficulty_level;
-                } else {
-                    element.value = exercise[fieldName] || '';
-                }
-            }
-        });
+    fields.forEach((fieldId) => {
+      const element = document.getElementById(fieldId);
+      if (element && exercise) {
+        const fieldName = fieldId.replace('custom-', '').replace('-', '_');
+        if (fieldName === 'muscle_group') {
+          element.value = exercise.muscle_group_id;
+        } else if (fieldName === 'difficulty') {
+          element.value = exercise.difficulty_level;
+        } else {
+          element.value = exercise[fieldName] || '';
+        }
+      }
+    });
 
-        // チェックボックス
-        const checkboxes = [
-            'custom-bodyweight',
-            'custom-compound',
-            'custom-beginner',
-            'custom-public'
-        ];
+    // チェックボックス
+    const checkboxes = [
+      'custom-bodyweight',
+      'custom-compound',
+      'custom-beginner',
+      'custom-public',
+    ];
 
-        checkboxes.forEach((checkboxId) => {
-            const element = document.getElementById(checkboxId);
-            if (element && exercise) {
-                const fieldName = checkboxId.replace('custom-', '').replace('-', '_');
-                if (fieldName === 'bodyweight') {
-                    element.checked = exercise.is_bodyweight;
-                } else if (fieldName === 'compound') {
-                    element.checked = exercise.is_compound;
-                } else if (fieldName === 'beginner') {
-                    element.checked = exercise.is_beginner_friendly;
-                } else if (fieldName === 'public') {
-                    element.checked = exercise.is_public;
-                }
-            }
-        });
-    }
+    checkboxes.forEach((checkboxId) => {
+      const element = document.getElementById(checkboxId);
+      if (element && exercise) {
+        const fieldName = checkboxId.replace('custom-', '').replace('-', '_');
+        if (fieldName === 'bodyweight') {
+          element.checked = exercise.is_bodyweight;
+        } else if (fieldName === 'compound') {
+          element.checked = exercise.is_compound;
+        } else if (fieldName === 'beginner') {
+          element.checked = exercise.is_beginner_friendly;
+        } else if (fieldName === 'public') {
+          element.checked = exercise.is_public;
+        }
+      }
+    });
+  }
 
-    /**
+  /**
    * カスタムエクササイズを保存
    */
-    async saveCustomExercise() {
-        try {
-            showNotification('エクササイズを保存中...', 'info');
+  async saveCustomExercise() {
+    try {
+      showNotification('エクササイズを保存中...', 'info');
 
-            const formData = this.getCustomExerciseFormData();
-            let savedExercise;
+      const formData = this.getCustomExerciseFormData();
+      let savedExercise;
 
-            if (this.selectedExercise && this.selectedExercise.is_custom) {
-                // 更新
-                savedExercise = await exerciseService.updateCustomExercise(
-                    this.selectedExercise.id,
-                    formData
-                );
-            } else {
-                // 新規作成
-                savedExercise = await exerciseService.createCustomExercise(formData);
-            }
+      if (this.selectedExercise && this.selectedExercise.is_custom) {
+        // 更新
+        savedExercise = await exerciseService.updateCustomExercise(
+          this.selectedExercise.id,
+          formData
+        );
+      } else {
+        // 新規作成
+        savedExercise = await exerciseService.createCustomExercise(formData);
+      }
 
-            // メディアファイルのアップロード
-            if (savedExercise) {
-                await this.uploadMediaFiles(savedExercise.id);
-            }
+      // メディアファイルのアップロード
+      if (savedExercise) {
+        await this.uploadMediaFiles(savedExercise.id);
+      }
 
-            this.closeCustomModal();
-            await this.loadExercises(); // リストを更新
-        } catch (error) {
-            handleError(error, {
-                context: 'カスタムエクササイズ保存',
-                showNotification: true
-            });
-        }
+      this.closeCustomModal();
+      await this.loadExercises(); // リストを更新
+    } catch (error) {
+      handleError(error, {
+        context: 'カスタムエクササイズ保存',
+        showNotification: true,
+      });
     }
+  }
 
-    /**
+  /**
    * メディアファイルをアップロード
    * @param {string} exerciseId - エクササイズID
    */
-    async uploadMediaFiles(exerciseId) {
-        const updateData = {};
+  async uploadMediaFiles(exerciseId) {
+    const updateData = {};
 
-        try {
-            // 画像アップロード
-            if (this.tempImageFile) {
-                showNotification('画像をアップロード中...', 'info');
-                const imageUrl = await exerciseService.uploadExerciseImage(
-                    this.tempImageFile,
-                    exerciseId
-                );
-                updateData.image_url = imageUrl;
-                this.tempImageFile = null;
-            }
+    try {
+      // 画像アップロード
+      if (this.tempImageFile) {
+        showNotification('画像をアップロード中...', 'info');
+        const imageUrl = await exerciseService.uploadExerciseImage(
+          this.tempImageFile,
+          exerciseId
+        );
+        updateData.image_url = imageUrl;
+        this.tempImageFile = null;
+      }
 
-            // 動画アップロード
-            if (this.tempVideoFile) {
-                showNotification('動画をアップロード中...', 'info');
-                const videoUrl = await exerciseService.uploadExerciseVideo(
-                    this.tempVideoFile,
-                    exerciseId
-                );
-                updateData.video_url = videoUrl;
+      // 動画アップロード
+      if (this.tempVideoFile) {
+        showNotification('動画をアップロード中...', 'info');
+        const videoUrl = await exerciseService.uploadExerciseVideo(
+          this.tempVideoFile,
+          exerciseId
+        );
+        updateData.video_url = videoUrl;
 
-                // 動画情報も更新
-                const videoInfo = await exerciseService.getVideoInfo(
-                    this.tempVideoFile
-                );
-                updateData.video_duration = videoInfo.duration;
+        // 動画情報も更新
+        const videoInfo = await exerciseService.getVideoInfo(
+          this.tempVideoFile
+        );
+        updateData.video_duration = videoInfo.duration;
 
-                this.tempVideoFile = null;
-            }
+        this.tempVideoFile = null;
+      }
 
-            // 動画URLが指定されている場合
-            const videoUrlInput = document.getElementById('custom-video-url')?.value;
-            if (videoUrlInput && !updateData.video_url) {
-                updateData.video_url = videoUrlInput;
-            }
+      // 動画URLが指定されている場合
+      const videoUrlInput = document.getElementById('custom-video-url')?.value;
+      if (videoUrlInput && !updateData.video_url) {
+        updateData.video_url = videoUrlInput;
+      }
 
-            // メディア情報を更新
-            if (Object.keys(updateData).length > 0) {
-                await exerciseService.updateCustomExercise(exerciseId, updateData);
-            }
-        } catch (error) {
-            console.error('Media upload error:', error);
-            showNotification(
-                'メディアファイルのアップロードに失敗しました',
-                'warning'
-            );
-        }
+      // メディア情報を更新
+      if (Object.keys(updateData).length > 0) {
+        await exerciseService.updateCustomExercise(exerciseId, updateData);
+      }
+    } catch (error) {
+      console.error('Media upload error:', error);
+      showNotification(
+        'メディアファイルのアップロードに失敗しました',
+        'warning'
+      );
     }
+  }
 
-    /**
+  /**
    * カスタムエクササイズフォームデータを取得
    * @returns {Object} フォームデータ
    */
-    getCustomExerciseFormData() {
-        return {
-            name_ja: document.getElementById('custom-name-ja')?.value || '',
-            name_en: document.getElementById('custom-name-en')?.value || '',
-            name: document.getElementById('custom-name-en')?.value || '', // nameフィールドも設定
-            muscle_group_id:
+  getCustomExerciseFormData() {
+    return {
+      name_ja: document.getElementById('custom-name-ja')?.value || '',
+      name_en: document.getElementById('custom-name-en')?.value || '',
+      name: document.getElementById('custom-name-en')?.value || '', // nameフィールドも設定
+      muscle_group_id:
         document.getElementById('custom-muscle-group')?.value || null,
-            equipment:
+      equipment:
         document.getElementById('custom-equipment')?.value || 'bodyweight',
-            difficulty_level:
+      difficulty_level:
         parseInt(document.getElementById('custom-difficulty')?.value) || 1,
-            exercise_type:
+      exercise_type:
         document.getElementById('custom-exercise-type')?.value || 'strength',
-            description: document.getElementById('custom-description')?.value || '',
-            instructions: document.getElementById('custom-instructions')?.value || '',
-            tips: document.getElementById('custom-tips')?.value || '',
-            common_mistakes: document.getElementById('custom-mistakes')?.value || '',
-            is_bodyweight:
+      description: document.getElementById('custom-description')?.value || '',
+      instructions: document.getElementById('custom-instructions')?.value || '',
+      tips: document.getElementById('custom-tips')?.value || '',
+      common_mistakes: document.getElementById('custom-mistakes')?.value || '',
+      is_bodyweight:
         document.getElementById('custom-bodyweight')?.checked || false,
-            is_compound: document.getElementById('custom-compound')?.checked || false,
-            is_beginner_friendly:
+      is_compound: document.getElementById('custom-compound')?.checked || false,
+      is_beginner_friendly:
         document.getElementById('custom-beginner')?.checked || false,
-            is_public: document.getElementById('custom-public')?.checked || false,
-            search_keywords: this.generateSearchKeywords()
-        };
-    }
+      is_public: document.getElementById('custom-public')?.checked || false,
+      search_keywords: this.generateSearchKeywords(),
+    };
+  }
 
-    /**
+  /**
    * 検索キーワードを生成
    * @returns {string} 検索キーワード
    */
-    generateSearchKeywords() {
-        const nameJa = document.getElementById('custom-name-ja')?.value || '';
-        const nameEn = document.getElementById('custom-name-en')?.value || '';
-        const description =
+  generateSearchKeywords() {
+    const nameJa = document.getElementById('custom-name-ja')?.value || '';
+    const nameEn = document.getElementById('custom-name-en')?.value || '';
+    const description =
       document.getElementById('custom-description')?.value || '';
 
-        return `${nameJa} ${nameEn} ${description}`.trim();
-    }
+    return `${nameJa} ${nameEn} ${description}`.trim();
+  }
 
-    /**
+  /**
    * カスタムエクササイズを編集
    * @param {Object} exercise - エクササイズデータ
    */
-    editCustomExercise(exercise) {
-        this.closeDetailModal();
-        this.selectedExercise = exercise;
-        this.showCustomExerciseModal(exercise);
-    }
+  editCustomExercise(exercise) {
+    this.closeDetailModal();
+    this.selectedExercise = exercise;
+    this.showCustomExerciseModal(exercise);
+  }
 
-    /**
+  /**
    * カスタムエクササイズを削除
    * @param {string} exerciseId - エクササイズID
    */
-    async deleteCustomExercise(exerciseId) {
+  async deleteCustomExercise(exerciseId) {
     // カスタム削除確認ダイアログ
-        const shouldDelete = await this.showDeleteConfirmDialog(
-            'このエクササイズを削除しますか？この操作は取り消せません。'
-        );
-        if (!shouldDelete) {
-            return;
-        }
-
-        try {
-            await exerciseService.deleteCustomExercise(exerciseId);
-            this.closeDetailModal();
-            await this.loadExercises(); // リストを更新
-        } catch (error) {
-            handleError(error, {
-                context: 'カスタムエクササイズ削除',
-                showNotification: true
-            });
-        }
+    const shouldDelete = await this.showDeleteConfirmDialog(
+      'このエクササイズを削除しますか？この操作は取り消せません。'
+    );
+    if (!shouldDelete) {
+      return;
     }
 
-    /**
+    try {
+      await exerciseService.deleteCustomExercise(exerciseId);
+      this.closeDetailModal();
+      await this.loadExercises(); // リストを更新
+    } catch (error) {
+      handleError(error, {
+        context: 'カスタムエクササイズ削除',
+        showNotification: true,
+      });
+    }
+  }
+
+  /**
    * 詳細モーダルを表示
    */
-    showDetailModal() {
-        const modal = document.getElementById('exercise-detail-modal');
-        if (modal) {
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        }
+  showDetailModal() {
+    const modal = document.getElementById('exercise-detail-modal');
+    if (modal) {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
     }
+  }
 
-    /**
+  /**
    * 詳細モーダルを閉じる
    */
-    closeDetailModal() {
-        const modal = document.getElementById('exercise-detail-modal');
-        if (modal) {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
-        this.selectedExercise = null;
+  closeDetailModal() {
+    const modal = document.getElementById('exercise-detail-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
     }
+    this.selectedExercise = null;
+  }
 
-    /**
+  /**
    * カスタムモーダルを閉じる
    */
-    closeCustomModal() {
-        const modal = document.getElementById('custom-exercise-modal');
-        if (modal) {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
-        this.selectedExercise = null;
+  closeCustomModal() {
+    const modal = document.getElementById('custom-exercise-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
     }
+    this.selectedExercise = null;
+  }
 
-    /**
+  /**
    * 全モーダルを閉じる
    */
-    closeAllModals() {
-        this.closeDetailModal();
-        this.closeCustomModal();
-    }
+  closeAllModals() {
+    this.closeDetailModal();
+    this.closeCustomModal();
+  }
 
-    /**
+  /**
    * ローディング状態を表示/非表示
    * @param {boolean} show - 表示するかどうか
    */
-    showLoading(show) {
-        this.isLoading = show;
-        const loader = document.getElementById('exercises-loader');
-        const list = document.getElementById('exercises-list');
+  showLoading(show) {
+    this.isLoading = show;
+    const loader = document.getElementById('exercises-loader');
+    const list = document.getElementById('exercises-list');
 
-        if (loader && list) {
-            if (show) {
-                loader.classList.remove('hidden');
-                list.classList.add('hidden');
-            } else {
-                loader.classList.add('hidden');
-                list.classList.remove('hidden');
-            }
-        }
+    if (loader && list) {
+      if (show) {
+        loader.classList.remove('hidden');
+        list.classList.add('hidden');
+      } else {
+        loader.classList.add('hidden');
+        list.classList.remove('hidden');
+      }
     }
+  }
 
-    /**
+  /**
    * 画像アップロードを処理
    * @param {Event} event - ファイル選択イベント
    */
-    async handleImageUpload(event) {
-        const file = event.target.files[0];
-        if (!file) {
-            return;
-        }
-
-        try {
-            // プレビューを表示
-            const previewUrl = await exerciseService.generateImagePreview(file);
-            this.showImagePreview(previewUrl);
-
-            // ファイルを一時保存（実際のアップロードは保存時に行う）
-            this.tempImageFile = file;
-        } catch (error) {
-            handleError(error, {
-                context: '画像プレビュー',
-                showNotification: true
-            });
-        }
+  async handleImageUpload(event) {
+    const file = event.target.files[0];
+    if (!file) {
+      return;
     }
 
-    /**
+    try {
+      // プレビューを表示
+      const previewUrl = await exerciseService.generateImagePreview(file);
+      this.showImagePreview(previewUrl);
+
+      // ファイルを一時保存（実際のアップロードは保存時に行う）
+      this.tempImageFile = file;
+    } catch (error) {
+      handleError(error, {
+        context: '画像プレビュー',
+        showNotification: true,
+      });
+    }
+  }
+
+  /**
    * 動画アップロードを処理
    * @param {Event} event - ファイル選択イベント
    */
-    async handleVideoUpload(event) {
-        const file = event.target.files[0];
-        if (!file) {
-            return;
-        }
-
-        try {
-            // 動画情報を取得
-            const videoInfo = await exerciseService.getVideoInfo(file);
-            this.showVideoPreview(file, videoInfo);
-
-            // ファイルを一時保存（実際のアップロードは保存時に行う）
-            this.tempVideoFile = file;
-        } catch (error) {
-            handleError(error, {
-                context: '動画プレビュー',
-                showNotification: true
-            });
-        }
+  async handleVideoUpload(event) {
+    const file = event.target.files[0];
+    if (!file) {
+      return;
     }
 
-    /**
+    try {
+      // 動画情報を取得
+      const videoInfo = await exerciseService.getVideoInfo(file);
+      this.showVideoPreview(file, videoInfo);
+
+      // ファイルを一時保存（実際のアップロードは保存時に行う）
+      this.tempVideoFile = file;
+    } catch (error) {
+      handleError(error, {
+        context: '動画プレビュー',
+        showNotification: true,
+      });
+    }
+  }
+
+  /**
    * 画像プレビューを表示
    * @param {string} previewUrl - プレビューURL
    */
-    showImagePreview(previewUrl) {
-        const placeholder = document.getElementById('image-placeholder');
-        const preview = document.getElementById('image-preview');
-        const previewImg = document.getElementById('image-preview-img');
-        const removeBtn = document.getElementById('remove-image-btn');
+  showImagePreview(previewUrl) {
+    const placeholder = document.getElementById('image-placeholder');
+    const preview = document.getElementById('image-preview');
+    const previewImg = document.getElementById('image-preview-img');
+    const removeBtn = document.getElementById('remove-image-btn');
 
-        if (placeholder && preview && previewImg && removeBtn) {
-            placeholder.classList.add('hidden');
-            preview.classList.remove('hidden');
-            removeBtn.classList.remove('hidden');
-            previewImg.src = previewUrl;
-        }
+    if (placeholder && preview && previewImg && removeBtn) {
+      placeholder.classList.add('hidden');
+      preview.classList.remove('hidden');
+      removeBtn.classList.remove('hidden');
+      previewImg.src = previewUrl;
     }
+  }
 
-    /**
+  /**
    * 動画プレビューを表示
    * @param {File} file - 動画ファイル
    * @param {Object} videoInfo - 動画情報
    */
-    showVideoPreview(file) {
-        const placeholder = document.getElementById('video-placeholder');
-        const preview = document.getElementById('video-preview');
-        const previewVideo = document.getElementById('video-preview-video');
-        const removeBtn = document.getElementById('remove-video-btn');
+  showVideoPreview(file) {
+    const placeholder = document.getElementById('video-placeholder');
+    const preview = document.getElementById('video-preview');
+    const previewVideo = document.getElementById('video-preview-video');
+    const removeBtn = document.getElementById('remove-video-btn');
 
-        if (placeholder && preview && previewVideo && removeBtn) {
-            placeholder.classList.add('hidden');
-            preview.classList.remove('hidden');
-            removeBtn.classList.remove('hidden');
+    if (placeholder && preview && previewVideo && removeBtn) {
+      placeholder.classList.add('hidden');
+      preview.classList.remove('hidden');
+      removeBtn.classList.remove('hidden');
 
-            const videoUrl = URL.createObjectURL(file);
-            previewVideo.src = videoUrl;
-            previewVideo.load();
-        }
+      const videoUrl = URL.createObjectURL(file);
+      previewVideo.src = videoUrl;
+      previewVideo.load();
     }
+  }
 
-    /**
+  /**
    * 画像を削除
    */
-    removeImage() {
-        const placeholder = document.getElementById('image-placeholder');
-        const preview = document.getElementById('image-preview');
-        const previewImg = document.getElementById('image-preview-img');
-        const removeBtn = document.getElementById('remove-image-btn');
-        const fileInput = document.getElementById('custom-image-upload');
+  removeImage() {
+    const placeholder = document.getElementById('image-placeholder');
+    const preview = document.getElementById('image-preview');
+    const previewImg = document.getElementById('image-preview-img');
+    const removeBtn = document.getElementById('remove-image-btn');
+    const fileInput = document.getElementById('custom-image-upload');
 
-        if (placeholder && preview && previewImg && removeBtn && fileInput) {
-            placeholder.classList.remove('hidden');
-            preview.classList.add('hidden');
-            removeBtn.classList.add('hidden');
-            previewImg.src = '';
-            fileInput.value = '';
-            this.tempImageFile = null;
-        }
+    if (placeholder && preview && previewImg && removeBtn && fileInput) {
+      placeholder.classList.remove('hidden');
+      preview.classList.add('hidden');
+      removeBtn.classList.add('hidden');
+      previewImg.src = '';
+      fileInput.value = '';
+      this.tempImageFile = null;
     }
+  }
 
-    /**
+  /**
    * 動画を削除
    */
-    removeVideo() {
-        const placeholder = document.getElementById('video-placeholder');
-        const preview = document.getElementById('video-preview');
-        const previewVideo = document.getElementById('video-preview-video');
-        const removeBtn = document.getElementById('remove-video-btn');
-        const fileInput = document.getElementById('custom-video-upload');
+  removeVideo() {
+    const placeholder = document.getElementById('video-placeholder');
+    const preview = document.getElementById('video-preview');
+    const previewVideo = document.getElementById('video-preview-video');
+    const removeBtn = document.getElementById('remove-video-btn');
+    const fileInput = document.getElementById('custom-video-upload');
 
-        if (placeholder && preview && previewVideo && removeBtn && fileInput) {
-            placeholder.classList.remove('hidden');
-            preview.classList.add('hidden');
-            removeBtn.classList.add('hidden');
+    if (placeholder && preview && previewVideo && removeBtn && fileInput) {
+      placeholder.classList.remove('hidden');
+      preview.classList.add('hidden');
+      removeBtn.classList.add('hidden');
 
-            // 動画URLを解放
-            if (previewVideo.src) {
-                URL.revokeObjectURL(previewVideo.src);
-            }
-            previewVideo.src = '';
-            fileInput.value = '';
-            this.tempVideoFile = null;
-        }
+      // 動画URLを解放
+      if (previewVideo.src) {
+        URL.revokeObjectURL(previewVideo.src);
+      }
+      previewVideo.src = '';
+      fileInput.value = '';
+      this.tempVideoFile = null;
     }
+  }
 
-    /**
+  /**
    * エクササイズ一覧にスクロール
    */
-    scrollToExerciseList() {
-        const exerciseList = document.getElementById('exercises-list');
-        if (exerciseList) {
-            // 少し上にオフセットを設けて、ヘッダーに隠れないようにする
-            const offset = 100;
-            const elementPosition = exerciseList.getBoundingClientRect().top;
-            const offsetPosition = elementPosition + window.pageYOffset - offset;
+  scrollToExerciseList() {
+    const exerciseList = document.getElementById('exercises-list');
+    if (exerciseList) {
+      // 少し上にオフセットを設けて、ヘッダーに隠れないようにする
+      const offset = 100;
+      const elementPosition = exerciseList.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
 
-            window.scrollTo({
-                top: offsetPosition,
-                behavior: 'smooth'
-            });
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth',
+      });
 
-            // フィルター適用の視覚的フィードバック
-            this.highlightExerciseList();
-        }
+      // フィルター適用の視覚的フィードバック
+      this.highlightExerciseList();
     }
+  }
 
-    /**
+  /**
    * エクササイズ一覧をハイライト
    */
-    highlightExerciseList() {
-        const exerciseList = document.getElementById('exercises-list');
-        if (exerciseList) {
-            // ハイライト効果を追加
-            exerciseList.classList.add('ring-2', 'ring-blue-500', 'ring-opacity-50');
+  highlightExerciseList() {
+    const exerciseList = document.getElementById('exercises-list');
+    if (exerciseList) {
+      // ハイライト効果を追加
+      exerciseList.classList.add('ring-2', 'ring-blue-500', 'ring-opacity-50');
 
-            // 2秒後にハイライトを削除
-            setTimeout(() => {
-                exerciseList.classList.remove(
-                    'ring-2',
-                    'ring-blue-500',
-                    'ring-opacity-50'
-                );
-            }, 2000);
-        }
+      // 2秒後にハイライトを削除
+      setTimeout(() => {
+        exerciseList.classList.remove(
+          'ring-2',
+          'ring-blue-500',
+          'ring-opacity-50'
+        );
+      }, 2000);
     }
+  }
 
-    /**
+  /**
    * 削除確認ダイアログを表示
    * @param {string} message - 確認メッセージ
    * @returns {Promise<boolean>} 削除するかどうか
    */
-    showDeleteConfirmDialog(message) {
-        return new Promise((resolve) => {
-            // カスタム確認ダイアログを作成
-            const dialog = document.createElement('div');
-            dialog.className =
+  showDeleteConfirmDialog(message) {
+    return new Promise((resolve) => {
+      // カスタム確認ダイアログを作成
+      const dialog = document.createElement('div');
+      dialog.className =
         'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
-            dialog.innerHTML = `
+      dialog.innerHTML = `
                 <div class="bg-white rounded-lg p-6 max-w-md mx-4">
                     <div class="flex items-center mb-4">
                         <i class="fas fa-exclamation-triangle text-red-500 text-xl mr-3"></i>
@@ -2044,182 +2044,182 @@ class ExercisePage {
                 </div>
             `;
 
-            document.body.appendChild(dialog);
+      document.body.appendChild(dialog);
 
-            // イベントリスナー
-            const cancelBtn = dialog.querySelector('.cancel-btn');
-            const deleteBtn = dialog.querySelector('.delete-btn');
+      // イベントリスナー
+      const cancelBtn = dialog.querySelector('.cancel-btn');
+      const deleteBtn = dialog.querySelector('.delete-btn');
 
-            const cleanup = () => {
-                document.body.removeChild(dialog);
-            };
+      const cleanup = () => {
+        document.body.removeChild(dialog);
+      };
 
-            cancelBtn.addEventListener('click', () => {
-                cleanup();
-                resolve(false);
-            });
+      cancelBtn.addEventListener('click', () => {
+        cleanup();
+        resolve(false);
+      });
 
-            deleteBtn.addEventListener('click', () => {
-                cleanup();
-                resolve(true);
-            });
+      deleteBtn.addEventListener('click', () => {
+        cleanup();
+        resolve(true);
+      });
 
-            // ESCキーで閉じる
-            const handleKeydown = (e) => {
-                if (e.key === 'Escape') {
-                    cleanup();
-                    resolve(false);
-                    document.removeEventListener('keydown', handleKeydown);
-                }
-            };
-            document.addEventListener('keydown', handleKeydown);
+      // ESCキーで閉じる
+      const handleKeydown = (e) => {
+        if (e.key === 'Escape') {
+          cleanup();
+          resolve(false);
+          document.removeEventListener('keydown', handleKeydown);
+        }
+      };
+      document.addEventListener('keydown', handleKeydown);
 
-            // 背景クリックでキャンセル
-            dialog.addEventListener('click', (e) => {
-                if (e.target === dialog) {
-                    cleanup();
-                    resolve(false);
-                }
-            });
-        });
-    }
+      // 背景クリックでキャンセル
+      dialog.addEventListener('click', (e) => {
+        if (e.target === dialog) {
+          cleanup();
+          resolve(false);
+        }
+      });
+    });
+  }
 
-    /**
+  /**
    * ツールチップを設定
    */
-    setupTooltips() {
-        try {
-            console.log('Setting up tooltips for exercise page');
+  setupTooltips() {
+    try {
+      console.log('Setting up tooltips for exercise page');
 
-            // 検索機能のツールチップ
-            tooltipManager.addTooltip(
-                '#exercise-search',
-                'エクササイズ名で検索できます。部分一致で検索されます。',
-                {
-                    position: 'bottom'
-                }
-            );
-
-            // フィルター機能のツールチップ
-            tooltipManager.addTooltip(
-                '#muscle-group-filter',
-                '筋肉部位でフィルタリングできます。複数選択可能です。',
-                {
-                    position: 'bottom'
-                }
-            );
-
-            tooltipManager.addTooltip(
-                '#equipment-filter',
-                '使用器具でフィルタリングできます。',
-                {
-                    position: 'bottom'
-                }
-            );
-
-            tooltipManager.addTooltip(
-                '#difficulty-filter',
-                '難易度でフィルタリングできます。',
-                {
-                    position: 'bottom'
-                }
-            );
-
-            // エクササイズカードのツールチップ
-            tooltipManager.addTooltip(
-                '.exercise-card',
-                'エクササイズの詳細情報を表示します。クリックで詳細を確認できます。',
-                {
-                    position: 'top'
-                }
-            );
-
-            // エクササイズ追加ボタンのツールチップ
-            tooltipManager.addTooltip(
-                '#add-exercise-btn',
-                '新しいエクササイズを追加します。',
-                {
-                    position: 'top'
-                }
-            );
-
-            // エクササイズ編集ボタンのツールチップ
-            tooltipManager.addTooltip(
-                '.edit-exercise-btn',
-                'エクササイズの情報を編集します。',
-                {
-                    position: 'top'
-                }
-            );
-
-            // エクササイズ削除ボタンのツールチップ
-            tooltipManager.addTooltip(
-                '.delete-exercise-btn',
-                'エクササイズを削除します。この操作は取り消せません。',
-                {
-                    position: 'top'
-                }
-            );
-
-            // 筋肉部位タグのツールチップ
-            tooltipManager.addTooltip(
-                '.muscle-group-tag',
-                'このエクササイズで鍛えられる筋肉部位です。',
-                {
-                    position: 'top'
-                }
-            );
-
-            // 難易度バッジのツールチップ
-            tooltipManager.addTooltip(
-                '.difficulty-badge',
-                'エクササイズの難易度レベルです。',
-                {
-                    position: 'top'
-                }
-            );
-
-            // 器具アイコンのツールチップ
-            tooltipManager.addTooltip(
-                '.equipment-icon',
-                'このエクササイズに必要な器具です。',
-                {
-                    position: 'top'
-                }
-            );
-
-            // ページネーションのツールチップ
-            tooltipManager.addTooltip(
-                '.pagination-btn',
-                '他のページのエクササイズを表示します。',
-                {
-                    position: 'top'
-                }
-            );
-
-            // ソート機能のツールチップ
-            tooltipManager.addTooltip(
-                '#sort-select',
-                'エクササイズの並び順を変更できます。',
-                {
-                    position: 'bottom'
-                }
-            );
-
-            // 表示件数のツールチップ
-            tooltipManager.addTooltip(
-                '#items-per-page',
-                '1ページに表示するエクササイズの数を設定できます。',
-                {
-                    position: 'bottom'
-                }
-            );
-
-            console.log('✅ Tooltips setup complete for exercise page');
-        } catch (error) {
-            console.error('❌ Failed to setup tooltips:', error);
+      // 検索機能のツールチップ
+      tooltipManager.addTooltip(
+        '#exercise-search',
+        'エクササイズ名で検索できます。部分一致で検索されます。',
+        {
+          position: 'bottom',
         }
+      );
+
+      // フィルター機能のツールチップ
+      tooltipManager.addTooltip(
+        '#muscle-group-filter',
+        '筋肉部位でフィルタリングできます。複数選択可能です。',
+        {
+          position: 'bottom',
+        }
+      );
+
+      tooltipManager.addTooltip(
+        '#equipment-filter',
+        '使用器具でフィルタリングできます。',
+        {
+          position: 'bottom',
+        }
+      );
+
+      tooltipManager.addTooltip(
+        '#difficulty-filter',
+        '難易度でフィルタリングできます。',
+        {
+          position: 'bottom',
+        }
+      );
+
+      // エクササイズカードのツールチップ
+      tooltipManager.addTooltip(
+        '.exercise-card',
+        'エクササイズの詳細情報を表示します。クリックで詳細を確認できます。',
+        {
+          position: 'top',
+        }
+      );
+
+      // エクササイズ追加ボタンのツールチップ
+      tooltipManager.addTooltip(
+        '#add-exercise-btn',
+        '新しいエクササイズを追加します。',
+        {
+          position: 'top',
+        }
+      );
+
+      // エクササイズ編集ボタンのツールチップ
+      tooltipManager.addTooltip(
+        '.edit-exercise-btn',
+        'エクササイズの情報を編集します。',
+        {
+          position: 'top',
+        }
+      );
+
+      // エクササイズ削除ボタンのツールチップ
+      tooltipManager.addTooltip(
+        '.delete-exercise-btn',
+        'エクササイズを削除します。この操作は取り消せません。',
+        {
+          position: 'top',
+        }
+      );
+
+      // 筋肉部位タグのツールチップ
+      tooltipManager.addTooltip(
+        '.muscle-group-tag',
+        'このエクササイズで鍛えられる筋肉部位です。',
+        {
+          position: 'top',
+        }
+      );
+
+      // 難易度バッジのツールチップ
+      tooltipManager.addTooltip(
+        '.difficulty-badge',
+        'エクササイズの難易度レベルです。',
+        {
+          position: 'top',
+        }
+      );
+
+      // 器具アイコンのツールチップ
+      tooltipManager.addTooltip(
+        '.equipment-icon',
+        'このエクササイズに必要な器具です。',
+        {
+          position: 'top',
+        }
+      );
+
+      // ページネーションのツールチップ
+      tooltipManager.addTooltip(
+        '.pagination-btn',
+        '他のページのエクササイズを表示します。',
+        {
+          position: 'top',
+        }
+      );
+
+      // ソート機能のツールチップ
+      tooltipManager.addTooltip(
+        '#sort-select',
+        'エクササイズの並び順を変更できます。',
+        {
+          position: 'bottom',
+        }
+      );
+
+      // 表示件数のツールチップ
+      tooltipManager.addTooltip(
+        '#items-per-page',
+        '1ページに表示するエクササイズの数を設定できます。',
+        {
+          position: 'bottom',
+        }
+      );
+
+      console.log('✅ Tooltips setup complete for exercise page');
+    } catch (error) {
+      console.error('❌ Failed to setup tooltips:', error);
     }
+  }
 }
 
 // シングルトンインスタンスをエクスポート

@@ -3,93 +3,93 @@
 import { supabaseService } from '../services/supabaseService.js';
 import recommendationService from '../services/recommendationService.js';
 import {
-    showNotification,
-    createErrorHTML,
-    formatWorkoutDate,
-    getDaysAgo,
-    getWorkoutColor,
-    parseExercises
+  showNotification,
+  createErrorHTML,
+  formatWorkoutDate,
+  getDaysAgo,
+  getWorkoutColor,
+  parseExercises,
 } from '../utils/helpers.js';
 import { MUSCLE_GROUPS } from '../utils/constants.js';
 import { authManager } from '../modules/authManager.js';
 import { tooltipManager } from '../utils/TooltipManager.js';
 
 class DashboardPage {
-    constructor() {
-        this.muscleRecoveryData = [];
-        this.recommendations = [];
-    }
+  constructor() {
+    this.muscleRecoveryData = [];
+    this.recommendations = [];
+  }
 
-    /**
+  /**
    * ダッシュボードページを初期化
    */
-    async initialize() {
-        console.log('Dashboard page initialized');
+  async initialize() {
+    console.log('Dashboard page initialized');
 
-        try {
-            // 認証チェックをスキップしてダッシュボードを表示
-            // ツールチップ機能を初期化
-            tooltipManager.initialize();
+    try {
+      // 認証チェックをスキップしてダッシュボードを表示
+      // ツールチップ機能を初期化
+      tooltipManager.initialize();
 
-            // ダッシュボードコンテンツを表示
-            this.renderDashboard();
+      // ダッシュボードコンテンツを表示
+      this.renderDashboard();
 
-            // データを順次読み込み（エラーを個別に処理）
-            try {
-                await this.loadStats();
-            } catch (error) {
-                console.error('Stats loading failed:', error);
-            }
+      // データを順次読み込み（エラーを個別に処理）
+      try {
+        await this.loadStats();
+      } catch (error) {
+        console.error('Stats loading failed:', error);
+      }
 
-            try {
-                await this.loadRecommendations();
-            } catch (error) {
-                console.error('Recommendations loading failed:', error);
-            }
+      try {
+        await this.loadRecommendations();
+      } catch (error) {
+        console.error('Recommendations loading failed:', error);
+      }
 
-            try {
-                await this.loadMuscleRecoveryData();
-            } catch (error) {
-                console.error('Muscle recovery data loading failed:', error);
-            }
+      try {
+        await this.loadMuscleRecoveryData();
+      } catch (error) {
+        console.error('Muscle recovery data loading failed:', error);
+      }
 
-            try {
-                await this.loadRecentWorkouts();
-            } catch (error) {
-                console.error('Recent workouts loading failed:', error);
-            }
+      try {
+        await this.loadRecentWorkouts();
+      } catch (error) {
+        console.error('Recent workouts loading failed:', error);
+      }
 
-            // ツールチップを設定
-            this.setupTooltips();
+      // ツールチップを設定
+      this.setupTooltips();
 
-            // 筋肉部位クリックハンドラーを設定
-            this.setupMusclePartHandlers();
-        } catch (error) {
-            console.error('Error initializing dashboard:', error);
-            showNotification('ダッシュボードの初期化に失敗しました', 'error');
-        }
+      // 筋肉部位クリックハンドラーを設定
+      this.setupMusclePartHandlers();
+    } catch (error) {
+      console.error('Error initializing dashboard:', error);
+      showNotification('ダッシュボードの初期化に失敗しました', 'error');
     }
+  }
 
-    /**
+  /**
    * 筋肉部位クリックハンドラーを設定
    */
-    setupMusclePartHandlers() {
-        document.querySelectorAll('.muscle-part').forEach((part) => {
-            part.addEventListener('click', () => {
-                const muscle = part.dataset.muscle;
-                console.log(`Clicked muscle part: ${muscle}`);
-                this.handleMusclePartClick(muscle);
-            });
-        });
-    }
+  setupMusclePartHandlers() {
+    document.querySelectorAll('.muscle-part').forEach((part) => {
+      part.addEventListener('click', () => {
+        const muscle = part.dataset.muscle;
+        console.log(`Clicked muscle part: ${muscle}`);
+        this.handleMusclePartClick(muscle);
+      });
+    });
+  }
 
-    /**
+  /**
    * ログインプロンプトを表示
    */
-    showLoginPrompt() {
-        const mainContent = document.querySelector('main');
-        if (mainContent) {
-            mainContent.innerHTML = `
+  showLoginPrompt() {
+    const mainContent = document.querySelector('main');
+    if (mainContent) {
+      mainContent.innerHTML = `
                 <div class="text-center py-12">
                     <i class="fas fa-lock text-4xl text-gray-400 mb-4"></i>
                     <h2 class="text-2xl font-bold text-gray-900 mb-2">ログインが必要です</h2>
@@ -100,22 +100,22 @@ class DashboardPage {
                 </div>
             `;
 
-            document.getElementById('login-btn')?.addEventListener('click', () => {
-                authManager.showAuthModal('login');
-            });
-        }
+      document.getElementById('login-btn')?.addEventListener('click', () => {
+        authManager.showAuthModal('login');
+      });
     }
+  }
 
-    /**
+  /**
    * ダッシュボードコンテンツを表示
    */
-    renderDashboard() {
-        const mainContent = document.getElementById('main-content');
-        if (!mainContent) {
-            return;
-        }
+  renderDashboard() {
+    const mainContent = document.getElementById('main-content');
+    if (!mainContent) {
+      return;
+    }
 
-        mainContent.innerHTML = `
+    mainContent.innerHTML = `
             <div class="mb-8">
                 <h1 class="text-3xl font-bold text-gray-900">ダッシュボード</h1>
                 <p class="mt-2 text-gray-600">今日のトレーニング状況と推奨事項を確認しましょう</p>
@@ -227,110 +227,110 @@ class DashboardPage {
                 </div>
             </div>
         `;
-    }
+  }
 
-    /**
+  /**
    * 認証ボタンを設定
    */
-    setupAuthButton() {
-        const authButton = document.getElementById('auth-button');
-        if (authButton) {
-            authButton.addEventListener('click', () => {
-                authManager.showAuthModal('login');
-            });
-        }
+  setupAuthButton() {
+    const authButton = document.getElementById('auth-button');
+    if (authButton) {
+      authButton.addEventListener('click', () => {
+        authManager.showAuthModal('login');
+      });
     }
+  }
 
-    /**
+  /**
    * 統計データを読み込み
    */
-    async loadStats() {
-        try {
-            const stats = await supabaseService.getUserStats();
-            console.log('Loaded stats:', stats);
-            this.updateStatsDisplay(stats);
-        } catch (error) {
-            console.error('Error loading stats:', error);
-            // フォールバック: デフォルト値を表示
-            this.updateStatsDisplay({
-                totalWorkouts: 0,
-                currentStreak: 0,
-                weeklyProgress: 0,
-                lastWorkout: null
-            });
-        }
+  async loadStats() {
+    try {
+      const stats = await supabaseService.getUserStats();
+      console.log('Loaded stats:', stats);
+      this.updateStatsDisplay(stats);
+    } catch (error) {
+      console.error('Error loading stats:', error);
+      // フォールバック: デフォルト値を表示
+      this.updateStatsDisplay({
+        totalWorkouts: 0,
+        currentStreak: 0,
+        weeklyProgress: 0,
+        lastWorkout: null,
+      });
     }
+  }
 
-    /**
+  /**
    * 統計表示を更新
    */
-    updateStatsDisplay(stats) {
-        if (!stats) {
-            return;
-        }
-
-        // 総ワークアウト数
-        const totalWorkoutsElement = document.getElementById('total-workouts');
-        if (totalWorkoutsElement) {
-            totalWorkoutsElement.textContent = stats.totalWorkouts || 0;
-        }
-
-        // 現在のストリーク
-        const currentStreakElement = document.getElementById('current-streak');
-        if (currentStreakElement) {
-            currentStreakElement.textContent = stats.currentStreak || 0;
-        }
-
-        // 週間進捗
-        const weeklyProgressElement = document.getElementById('weekly-progress');
-        if (weeklyProgressElement) {
-            weeklyProgressElement.textContent = `${stats.weeklyProgress || 0}/3`;
-        }
-
-        // 最後のワークアウト
-        const lastWorkoutElement = document.getElementById('last-workout');
-        if (lastWorkoutElement) {
-            if (stats.lastWorkout) {
-                const lastWorkoutDate = new Date(stats.lastWorkout.date);
-                const daysAgo = Math.floor(
-                    (new Date() - lastWorkoutDate) / (1000 * 60 * 60 * 24)
-                );
-                lastWorkoutElement.textContent = `${daysAgo}日前`;
-            } else {
-                lastWorkoutElement.textContent = 'なし';
-            }
-        }
+  updateStatsDisplay(stats) {
+    if (!stats) {
+      return;
     }
 
-    /**
+    // 総ワークアウト数
+    const totalWorkoutsElement = document.getElementById('total-workouts');
+    if (totalWorkoutsElement) {
+      totalWorkoutsElement.textContent = stats.totalWorkouts || 0;
+    }
+
+    // 現在のストリーク
+    const currentStreakElement = document.getElementById('current-streak');
+    if (currentStreakElement) {
+      currentStreakElement.textContent = stats.currentStreak || 0;
+    }
+
+    // 週間進捗
+    const weeklyProgressElement = document.getElementById('weekly-progress');
+    if (weeklyProgressElement) {
+      weeklyProgressElement.textContent = `${stats.weeklyProgress || 0}/3`;
+    }
+
+    // 最後のワークアウト
+    const lastWorkoutElement = document.getElementById('last-workout');
+    if (lastWorkoutElement) {
+      if (stats.lastWorkout) {
+        const lastWorkoutDate = new Date(stats.lastWorkout.date);
+        const daysAgo = Math.floor(
+          (new Date() - lastWorkoutDate) / (1000 * 60 * 60 * 24)
+        );
+        lastWorkoutElement.textContent = `${daysAgo}日前`;
+      } else {
+        lastWorkoutElement.textContent = 'なし';
+      }
+    }
+  }
+
+  /**
    * 筋肉部位クリック処理
    * @param {string} muscle - 筋肉部位ID
    */
-    handleMusclePartClick(muscle) {
-        const muscleGroup = MUSCLE_GROUPS.find((group) => group.id === muscle);
-        if (muscleGroup) {
-            this.showMuscleDetails(muscle);
-        }
+  handleMusclePartClick(muscle) {
+    const muscleGroup = MUSCLE_GROUPS.find((group) => group.id === muscle);
+    if (muscleGroup) {
+      this.showMuscleDetails(muscle);
     }
+  }
 
-    /**
+  /**
    * 推奨詳細を表示
    * @param {number} index - 推奨事項のインデックス
    */
-    showRecommendationDetails(index) {
-        const recommendation = this.recommendations[index];
-        if (!recommendation || !recommendation.muscleId) {
-            return;
-        }
+  showRecommendationDetails(index) {
+    const recommendation = this.recommendations[index];
+    if (!recommendation || !recommendation.muscleId) {
+      return;
+    }
 
-        const details = recommendationService.getRecommendationDetails(
-            recommendation.muscleId
-        );
-        if (!details) {
-            return;
-        }
+    const details = recommendationService.getRecommendationDetails(
+      recommendation.muscleId
+    );
+    if (!details) {
+      return;
+    }
 
-        const modalContent = `
+    const modalContent = `
             <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" 
                  onclick="this.remove()">
                 <div class="bg-white rounded-lg p-6 max-w-md mx-4" onclick="event.stopPropagation()">
@@ -380,20 +380,20 @@ class DashboardPage {
             </div>
         `;
 
-        document.body.insertAdjacentHTML('beforeend', modalContent);
-    }
+    document.body.insertAdjacentHTML('beforeend', modalContent);
+  }
 
-    /**
+  /**
    * 筋肉詳細を表示
    * @param {string} muscleId - 筋肉部位ID
    */
-    showMuscleDetails(muscleId) {
-        const muscleData = this.muscleRecoveryData.find((m) => m.id === muscleId);
-        if (!muscleData) {
-            return;
-        }
+  showMuscleDetails(muscleId) {
+    const muscleData = this.muscleRecoveryData.find((m) => m.id === muscleId);
+    if (!muscleData) {
+      return;
+    }
 
-        const modalContent = `
+    const modalContent = `
             <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" 
                  onclick="this.remove()">
                 <div class="bg-white rounded-lg p-6 max-w-md mx-4" onclick="event.stopPropagation()">
@@ -432,8 +432,8 @@ class DashboardPage {
                         </div>
                         
                         ${
-    muscleData.recoveryFactors
-        ? `
+                          muscleData.recoveryFactors
+                            ? `
                             <div class="bg-gray-50 p-3 rounded-lg">
                                 <h4 class="font-medium text-gray-700 mb-2">回復計算詳細</h4>
                                 <ul class="text-xs text-gray-600 space-y-1">
@@ -444,25 +444,25 @@ class DashboardPage {
                                 </ul>
                             </div>
                         `
-        : ''
-}
+                            : ''
+                        }
                         
                         <div class="flex space-x-2">
                             ${
-    muscleData.isReady
-        ? `
+                              muscleData.isReady
+                                ? `
                                 <button onclick="this.closest('.fixed').remove(); window.pageManager?.showPage('workout')" 
                                         class="flex-1 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
                                     トレーニング開始
                                 </button>
                             `
-        : `
+                                : `
                                 <button disabled 
                                         class="flex-1 bg-gray-300 text-gray-500 px-4 py-2 rounded-lg cursor-not-allowed">
                                     回復中（${muscleData.hoursUntilRecovery}時間後）
                                 </button>
                             `
-}
+                            }
                             <button onclick="this.closest('.fixed').remove()" 
                                     class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                                 閉じる
@@ -473,112 +473,112 @@ class DashboardPage {
             </div>
         `;
 
-        document.body.insertAdjacentHTML('beforeend', modalContent);
-    }
+    document.body.insertAdjacentHTML('beforeend', modalContent);
+  }
 
-    /**
+  /**
    * 体力レベル名を取得
    * @param {string} level - 体力レベル
    * @returns {string} 日本語名
    */
-    getFitnessLevelName(level) {
-        const levelNames = {
-            beginner: '初心者',
-            intermediate: '中級者',
-            advanced: '上級者',
-            expert: 'エキスパート'
-        };
-        return levelNames[level] || '中級者';
-    }
+  getFitnessLevelName(level) {
+    const levelNames = {
+      beginner: '初心者',
+      intermediate: '中級者',
+      advanced: '上級者',
+      expert: 'エキスパート',
+    };
+    return levelNames[level] || '中級者';
+  }
 
-    /**
+  /**
    * 推奨事項を読み込み
    */
-    async loadRecommendations() {
-        const container = document.getElementById('today-recommendations');
-        if (!container) {
-            return;
-        }
+  async loadRecommendations() {
+    const container = document.getElementById('today-recommendations');
+    if (!container) {
+      return;
+    }
 
-        try {
-            this.recommendations = await this.getRecommendations();
+    try {
+      this.recommendations = await this.getRecommendations();
 
-            if (this.recommendations.length === 0) {
-                container.innerHTML = `
+      if (this.recommendations.length === 0) {
+        container.innerHTML = `
                     <div class="text-center text-gray-500 py-4">
                         <i class="fas fa-info-circle text-xl mb-2"></i>
                         <p>今日の推奨事項はありません</p>
                     </div>
                 `;
-                return;
-            }
+        return;
+      }
 
-            container.innerHTML = this.recommendations
-                .map(
-                    (rec, index) => `
+      container.innerHTML = this.recommendations
+        .map(
+          (rec, index) => `
                 <div class="flex items-center space-x-3 p-3 ${rec.bgColor || 'bg-blue-50'} rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
                      onclick="window.dashboardPage?.showRecommendationDetails(${index})">
                     <div class="w-3 h-3 ${rec.dotColor || 'bg-blue-500'} rounded-full"></div>
                     <div class="flex-1">
                         <span class="${rec.textColor || 'text-blue-700'}">${rec.message}</span>
                         ${
-    rec.scientificBasis
-        ? `
+                          rec.scientificBasis
+                            ? `
                             <div class="text-xs ${rec.textColor || 'text-blue-600'} opacity-75 mt-1">
                                 <i class="fas fa-info-circle mr-1"></i>
                                 科学的根拠: ${rec.scientificBasis}
                             </div>
                         `
-        : ''
-}
+                            : ''
+                        }
                     </div>
                     ${
-    rec.type === 'primary' || rec.type === 'secondary'
-        ? `
+                      rec.type === 'primary' || rec.type === 'secondary'
+                        ? `
                         <i class="fas fa-chevron-right ${rec.textColor || 'text-blue-600'} opacity-50"></i>
                     `
-        : ''
-}
+                        : ''
+                    }
                 </div>
             `
-                )
-                .join('');
-        } catch (error) {
-            console.error('Error loading recommendations:', error);
-            container.innerHTML = `
+        )
+        .join('');
+    } catch (error) {
+      console.error('Error loading recommendations:', error);
+      container.innerHTML = `
                 <div class="text-center text-gray-500 py-4">
                     <i class="fas fa-exclamation-triangle text-xl mb-2"></i>
                     <p>推奨事項の読み込みに失敗しました</p>
                 </div>
             `;
-        }
     }
+  }
 
-    /**
+  /**
    * 筋肉回復データを読み込み
    */
-    async loadMuscleRecoveryData() {
-        const container = document.getElementById('muscle-recovery-grid');
-        if (!container) {
-            return;
-        }
+  async loadMuscleRecoveryData() {
+    const container = document.getElementById('muscle-recovery-grid');
+    if (!container) {
+      return;
+    }
 
-        try {
-            this.muscleRecoveryData = await this.getMuscleRecoveryData();
+    try {
+      this.muscleRecoveryData = await this.getMuscleRecoveryData();
 
-            if (this.muscleRecoveryData.length === 0) {
-                container.innerHTML = `
+      if (this.muscleRecoveryData.length === 0) {
+        container.innerHTML = `
                     <div class="text-center text-gray-500 py-4">
                         <i class="fas fa-info-circle text-xl mb-2"></i>
                         <p>回復度データがありません</p>
                     </div>
                 `;
-                return;
-            }
+        return;
+      }
 
-            container.innerHTML = this.muscleRecoveryData
-                .map(
-                    (muscle) => `
+      container.innerHTML = this.muscleRecoveryData
+        .map(
+          (muscle) => `
                 <div class="muscle-card muscle-part rounded-lg p-6 bg-white shadow-sm border cursor-pointer hover:shadow-md transition-shadow" data-muscle="${muscle.id}">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-semibold text-gray-800">
@@ -604,47 +604,47 @@ class DashboardPage {
                     </div>
                 </div>
             `
-                )
-                .join('');
+        )
+        .join('');
 
-            // 再度筋肉部位ハンドラーを設定
-            this.setupMusclePartHandlers();
-        } catch (error) {
-            console.error('Error loading muscle recovery data:', error);
-            container.innerHTML = `
+      // 再度筋肉部位ハンドラーを設定
+      this.setupMusclePartHandlers();
+    } catch (error) {
+      console.error('Error loading muscle recovery data:', error);
+      container.innerHTML = `
                 <div class="text-center text-gray-500 py-4">
                     <i class="fas fa-exclamation-triangle text-xl mb-2"></i>
                     <p>回復度データの読み込みに失敗しました</p>
                 </div>
             `;
-        }
     }
+  }
 
-    /**
+  /**
    * 最近のワークアウトを読み込み
    */
-    async loadRecentWorkouts() {
-        const container = document.getElementById('recent-workouts');
-        if (!container) {
-            return;
-        }
+  async loadRecentWorkouts() {
+    const container = document.getElementById('recent-workouts');
+    if (!container) {
+      return;
+    }
 
-        try {
-            const workouts = await this.getRecentWorkouts();
+    try {
+      const workouts = await this.getRecentWorkouts();
 
-            if (workouts.length === 0) {
-                container.innerHTML = `
+      if (workouts.length === 0) {
+        container.innerHTML = `
                     <div class="text-center text-gray-500 py-4">
                         <i class="fas fa-info-circle text-xl mb-2"></i>
                         <p>まだワークアウトが記録されていません</p>
                     </div>
                 `;
-                return;
-            }
+        return;
+      }
 
-            container.innerHTML = workouts
-                .map(
-                    (workout) => `
+      container.innerHTML = workouts
+        .map(
+          (workout) => `
                 <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg 
                      hover:bg-gray-100 transition-colors">
                     <div class="flex items-center space-x-3 flex-1">
@@ -672,204 +672,204 @@ class DashboardPage {
                     </div>
                 </div>
             `
-                )
-                .join('');
-        } catch (error) {
-            console.error('Error loading recent workouts:', error);
-            container.innerHTML = createErrorHTML(
-                '最近のワークアウトの読み込みに失敗しました'
-            );
-        }
+        )
+        .join('');
+    } catch (error) {
+      console.error('Error loading recent workouts:', error);
+      container.innerHTML = createErrorHTML(
+        '最近のワークアウトの読み込みに失敗しました'
+      );
     }
+  }
 
-    /**
+  /**
    * 推奨事項を取得（科学的根拠に基づく）
    * @returns {Promise<Array>} 推奨事項配列
    */
-    async getRecommendations() {
-        try {
-            const recommendations = await recommendationService.getRecommendations();
-            console.log('Recommendations loaded:', recommendations);
-            return recommendations;
-        } catch (error) {
-            console.error('推奨事項の取得に失敗:', error);
-            return recommendationService.getFallbackRecommendations();
-        }
+  async getRecommendations() {
+    try {
+      const recommendations = await recommendationService.getRecommendations();
+      console.log('Recommendations loaded:', recommendations);
+      return recommendations;
+    } catch (error) {
+      console.error('推奨事項の取得に失敗:', error);
+      return recommendationService.getFallbackRecommendations();
     }
+  }
 
-    /**
+  /**
    * 筋肉回復データを取得（科学的根拠に基づく）
    * @returns {Promise<Array>} 筋肉回復データ配列
    */
-    async getMuscleRecoveryData() {
-        try {
-            const recoveryData = await recommendationService.getMuscleRecoveryData();
-            console.log('Muscle recovery data loaded:', recoveryData);
-            return recoveryData;
-        } catch (error) {
-            console.error('筋肉回復データの取得に失敗:', error);
-            // フォールバック: 基本的なモックデータを返す
-            return MUSCLE_GROUPS.map((muscle, index) => {
-                const recovery = Math.floor(Math.random() * 100);
-                const recoveryColor =
+  async getMuscleRecoveryData() {
+    try {
+      const recoveryData = await recommendationService.getMuscleRecoveryData();
+      console.log('Muscle recovery data loaded:', recoveryData);
+      return recoveryData;
+    } catch (error) {
+      console.error('筋肉回復データの取得に失敗:', error);
+      // フォールバック: 基本的なモックデータを返す
+      return MUSCLE_GROUPS.map((muscle, index) => {
+        const recovery = Math.floor(Math.random() * 100);
+        const recoveryColor =
           recovery >= 80
-              ? 'text-green-600'
-              : recovery >= 50
-                  ? 'text-yellow-600'
-                  : 'text-red-600';
-                const recoveryClass =
+            ? 'text-green-600'
+            : recovery >= 50
+              ? 'text-yellow-600'
+              : 'text-red-600';
+        const recoveryClass =
           recovery >= 80
-              ? 'bg-green-500'
-              : recovery >= 50
-                  ? 'bg-yellow-500'
-                  : 'bg-red-500';
+            ? 'bg-green-500'
+            : recovery >= 50
+              ? 'bg-yellow-500'
+              : 'bg-red-500';
 
-                return {
-                    ...muscle,
-                    lastTrained: `${index + 1}日前`,
-                    recovery,
-                    recoveryColor,
-                    recoveryClass,
-                    nextRecommended: recovery >= 80 ? '今すぐ' : '明日'
-                };
-            });
-        }
+        return {
+          ...muscle,
+          lastTrained: `${index + 1}日前`,
+          recovery,
+          recoveryColor,
+          recoveryClass,
+          nextRecommended: recovery >= 80 ? '今すぐ' : '明日',
+        };
+      });
     }
+  }
 
-    /**
+  /**
    * 最近のワークアウトを取得
    * @returns {Promise<Array>} ワークアウト配列
    */
-    async getRecentWorkouts() {
-        if (!supabaseService.isAvailable() || !supabaseService.getCurrentUser()) {
-            return [];
-        }
+  async getRecentWorkouts() {
+    if (!supabaseService.isAvailable() || !supabaseService.getCurrentUser()) {
+      return [];
+    }
 
-        try {
-            const data = await supabaseService.getWorkouts(5);
+    try {
+      const data = await supabaseService.getWorkouts(5);
 
-            // データが配列でない場合は空配列を返す
-            if (!Array.isArray(data)) {
-                console.warn('getWorkouts returned non-array data:', data);
-                return [];
-            }
+      // データが配列でない場合は空配列を返す
+      if (!Array.isArray(data)) {
+        console.warn('getWorkouts returned non-array data:', data);
+        return [];
+      }
 
-            return data.map((workout) => {
-                const exercises = parseExercises(
-                    workout.exercises || workout.training_logs
-                );
-                const color = getWorkoutColor(workout.name || workout.session_name);
+      return data.map((workout) => {
+        const exercises = parseExercises(
+          workout.exercises || workout.training_logs
+        );
+        const color = getWorkoutColor(workout.name || workout.session_name);
 
-                return {
-                    id: workout.id,
-                    name: workout.name || workout.session_name,
-                    exercises: Array.isArray(exercises)
-                        ? exercises.join(', ')
-                        : exercises,
-                    date: workout.date || workout.workout_date,
-                    color,
-                    duration: workout.duration || workout.total_duration_minutes || '0分',
-                    totalSets:
+        return {
+          id: workout.id,
+          name: workout.name || workout.session_name,
+          exercises: Array.isArray(exercises)
+            ? exercises.join(', ')
+            : exercises,
+          date: workout.date || workout.workout_date,
+          color,
+          duration: workout.duration || workout.total_duration_minutes || '0分',
+          totalSets:
             workout.total_sets ||
             (workout.training_logs ? workout.training_logs.length : 0),
-                    maxWeight: workout.max_weight || '0kg'
-                };
-            });
-        } catch (error) {
-            console.error('Error fetching recent workouts:', error);
-            showNotification('最近のワークアウトの取得に失敗しました', 'error');
-            return [];
-        }
+          maxWeight: workout.max_weight || '0kg',
+        };
+      });
+    } catch (error) {
+      console.error('Error fetching recent workouts:', error);
+      showNotification('最近のワークアウトの取得に失敗しました', 'error');
+      return [];
     }
+  }
 
-    /**
+  /**
    * ツールチップを設定
    */
-    setupTooltips() {
-        try {
-            console.log('Setting up tooltips for dashboard page');
+  setupTooltips() {
+    try {
+      console.log('Setting up tooltips for dashboard page');
 
-            // 統計カードのツールチップ
-            tooltipManager.addTooltip(
-                '#total-workouts',
-                'これまでに完了したワークアウトの総数です。',
-                {
-                    position: 'top'
-                }
-            );
-
-            tooltipManager.addTooltip(
-                '#total-exercises',
-                'これまでに実行したエクササイズの総数です。',
-                {
-                    position: 'top'
-                }
-            );
-
-            tooltipManager.addTooltip(
-                '#total-time',
-                'これまでのワークアウト時間の合計です。',
-                {
-                    position: 'top'
-                }
-            );
-
-            tooltipManager.addTooltip(
-                '#current-streak',
-                '連続してワークアウトを行っている日数です。',
-                {
-                    position: 'top'
-                }
-            );
-
-            // 筋肉回復状況のツールチップ
-            tooltipManager.addTooltip(
-                '.muscle-recovery-card',
-                '各筋肉部位の回復状況を表示します。緑：完全回復、黄：回復中、赤：疲労状態',
-                {
-                    position: 'top'
-                }
-            );
-
-            // 推奨ワークアウトのツールチップ
-            tooltipManager.addTooltip(
-                '.recommendation-card',
-                'AIが分析した推奨ワークアウトです。あなたのトレーニング履歴と回復状況に基づいています。',
-                {
-                    position: 'top'
-                }
-            );
-
-            // クイックアクションボタンのツールチップ
-            tooltipManager.addTooltip(
-                '#quick-start-workout',
-                '推奨される筋肉部位のエクササイズを自動選択してワークアウトを開始します。',
-                {
-                    position: 'top'
-                }
-            );
-
-            tooltipManager.addTooltip(
-                '#view-calendar',
-                'カレンダーで過去のワークアウト履歴を確認できます。',
-                {
-                    position: 'top'
-                }
-            );
-
-            tooltipManager.addTooltip(
-                '#view-progress',
-                '詳細な進捗分析とグラフを表示します。',
-                {
-                    position: 'top'
-                }
-            );
-
-            console.log('✅ Tooltips setup complete for dashboard page');
-        } catch (error) {
-            console.error('❌ Failed to setup tooltips:', error);
+      // 統計カードのツールチップ
+      tooltipManager.addTooltip(
+        '#total-workouts',
+        'これまでに完了したワークアウトの総数です。',
+        {
+          position: 'top',
         }
+      );
+
+      tooltipManager.addTooltip(
+        '#total-exercises',
+        'これまでに実行したエクササイズの総数です。',
+        {
+          position: 'top',
+        }
+      );
+
+      tooltipManager.addTooltip(
+        '#total-time',
+        'これまでのワークアウト時間の合計です。',
+        {
+          position: 'top',
+        }
+      );
+
+      tooltipManager.addTooltip(
+        '#current-streak',
+        '連続してワークアウトを行っている日数です。',
+        {
+          position: 'top',
+        }
+      );
+
+      // 筋肉回復状況のツールチップ
+      tooltipManager.addTooltip(
+        '.muscle-recovery-card',
+        '各筋肉部位の回復状況を表示します。緑：完全回復、黄：回復中、赤：疲労状態',
+        {
+          position: 'top',
+        }
+      );
+
+      // 推奨ワークアウトのツールチップ
+      tooltipManager.addTooltip(
+        '.recommendation-card',
+        'AIが分析した推奨ワークアウトです。あなたのトレーニング履歴と回復状況に基づいています。',
+        {
+          position: 'top',
+        }
+      );
+
+      // クイックアクションボタンのツールチップ
+      tooltipManager.addTooltip(
+        '#quick-start-workout',
+        '推奨される筋肉部位のエクササイズを自動選択してワークアウトを開始します。',
+        {
+          position: 'top',
+        }
+      );
+
+      tooltipManager.addTooltip(
+        '#view-calendar',
+        'カレンダーで過去のワークアウト履歴を確認できます。',
+        {
+          position: 'top',
+        }
+      );
+
+      tooltipManager.addTooltip(
+        '#view-progress',
+        '詳細な進捗分析とグラフを表示します。',
+        {
+          position: 'top',
+        }
+      );
+
+      console.log('✅ Tooltips setup complete for dashboard page');
+    } catch (error) {
+      console.error('❌ Failed to setup tooltips:', error);
     }
+  }
 }
 
 // デフォルトエクスポート
@@ -880,7 +880,7 @@ window.dashboardPage = dashboardPage;
 
 // ページが読み込まれた時に自動初期化
 document.addEventListener('DOMContentLoaded', async () => {
-    await dashboardPage.initialize();
+  await dashboardPage.initialize();
 });
 
 export default dashboardPage;

@@ -12,45 +12,45 @@ import { safeGetElement, safeGetElements } from '../utils/helpers.js';
 import { tooltipManager } from '../utils/TooltipManager.js';
 
 class ProgressPage {
-    constructor() {
-        this.currentUser = null;
-        this.selectedExercise = null;
-        this.progressData = [];
-        this.goalsData = [];
-        this.isInitialized = false;
-    }
+  constructor() {
+    this.currentUser = null;
+    this.selectedExercise = null;
+    this.progressData = [];
+    this.goalsData = [];
+    this.isInitialized = false;
+  }
 
-    /**
+  /**
    * ページを初期化
    */
-    async init() {
-        try {
-            // 認証チェックをスキップしてプログレスページを表示
-            console.log('Progress page initializing without auth check');
+  async init() {
+    try {
+      // 認証チェックをスキップしてプログレスページを表示
+      console.log('Progress page initializing without auth check');
 
-            // ツールチップ機能を初期化
-            tooltipManager.initialize();
+      // ツールチップ機能を初期化
+      tooltipManager.initialize();
 
-            await this.render();
-            await this.bindEvents();
-            await this.loadExercises();
-            this.setupTooltips();
-            this.isInitialized = true;
-        } catch (error) {
-            handleError(error, 'ProgressPage.init');
-        }
+      await this.render();
+      await this.bindEvents();
+      await this.loadExercises();
+      this.setupTooltips();
+      this.isInitialized = true;
+    } catch (error) {
+      handleError(error, 'ProgressPage.init');
     }
+  }
 
-    /**
+  /**
    * ページをレンダリング
    */
-    async render() {
-        const main = safeGetElement('main');
-        if (!main) {
-            return;
-        }
+  async render() {
+    const main = safeGetElement('main');
+    if (!main) {
+      return;
+    }
 
-        main.innerHTML = `
+    main.innerHTML = `
             <div class="max-w-7xl mx-auto">
                 <!-- ヘッダー -->
                 <div class="mb-8">
@@ -419,449 +419,449 @@ class ProgressPage {
                 </div>
             </div>
         `;
-    }
+  }
 
-    /**
+  /**
    * イベントリスナーをバインド
    */
-    async bindEvents() {
-        try {
-            // 筋肉部位選択
-            const muscleGroupSelect = safeGetElement('muscle-group-select');
-            if (muscleGroupSelect) {
-                muscleGroupSelect.addEventListener('change', (e) => {
-                    this.handleMuscleGroupChange(e.target.value);
-                });
-            }
+  async bindEvents() {
+    try {
+      // 筋肉部位選択
+      const muscleGroupSelect = safeGetElement('muscle-group-select');
+      if (muscleGroupSelect) {
+        muscleGroupSelect.addEventListener('change', (e) => {
+          this.handleMuscleGroupChange(e.target.value);
+        });
+      }
 
-            // エクササイズ選択
-            const exerciseSelect = safeGetElement('exercise-select');
-            if (exerciseSelect) {
-                exerciseSelect.addEventListener('change', (e) => {
-                    this.handleExerciseChange(e.target.value);
-                });
-            }
+      // エクササイズ選択
+      const exerciseSelect = safeGetElement('exercise-select');
+      if (exerciseSelect) {
+        exerciseSelect.addEventListener('change', (e) => {
+          this.handleExerciseChange(e.target.value);
+        });
+      }
 
-            // チャート切り替えボタン
-            const chart1RMBtn = safeGetElement('chart-1rm-btn');
-            const chartWeightBtn = safeGetElement('chart-weight-btn');
-            const chartVolumeBtn = safeGetElement('chart-volume-btn');
+      // チャート切り替えボタン
+      const chart1RMBtn = safeGetElement('chart-1rm-btn');
+      const chartWeightBtn = safeGetElement('chart-weight-btn');
+      const chartVolumeBtn = safeGetElement('chart-volume-btn');
 
-            if (chart1RMBtn) {
-                chart1RMBtn.addEventListener('click', () => this.switchChart('1rm'));
-            }
-            if (chartWeightBtn) {
-                chartWeightBtn.addEventListener('click', () =>
-                    this.switchChart('weight')
-                );
-            }
-            if (chartVolumeBtn) {
-                chartVolumeBtn.addEventListener('click', () =>
-                    this.switchChart('volume')
-                );
-            }
+      if (chart1RMBtn) {
+        chart1RMBtn.addEventListener('click', () => this.switchChart('1rm'));
+      }
+      if (chartWeightBtn) {
+        chartWeightBtn.addEventListener('click', () =>
+          this.switchChart('weight')
+        );
+      }
+      if (chartVolumeBtn) {
+        chartVolumeBtn.addEventListener('click', () =>
+          this.switchChart('volume')
+        );
+      }
 
-            // 目標設定関連
-            const addGoalBtn = safeGetElement('add-goal-btn');
-            const closeGoalModal = safeGetElement('close-goal-modal');
-            const cancelGoal = safeGetElement('cancel-goal');
-            const goalForm = safeGetElement('goal-form');
+      // 目標設定関連
+      const addGoalBtn = safeGetElement('add-goal-btn');
+      const closeGoalModal = safeGetElement('close-goal-modal');
+      const cancelGoal = safeGetElement('cancel-goal');
+      const goalForm = safeGetElement('goal-form');
 
-            if (addGoalBtn) {
-                addGoalBtn.addEventListener('click', () => this.showGoalModal());
-            }
-            if (closeGoalModal) {
-                closeGoalModal.addEventListener('click', () => this.hideGoalModal());
-            }
-            if (cancelGoal) {
-                cancelGoal.addEventListener('click', () => this.hideGoalModal());
-            }
-            if (goalForm) {
-                goalForm.addEventListener('submit', (e) => this.handleGoalSubmit(e));
-            }
+      if (addGoalBtn) {
+        addGoalBtn.addEventListener('click', () => this.showGoalModal());
+      }
+      if (closeGoalModal) {
+        closeGoalModal.addEventListener('click', () => this.hideGoalModal());
+      }
+      if (cancelGoal) {
+        cancelGoal.addEventListener('click', () => this.hideGoalModal());
+      }
+      if (goalForm) {
+        goalForm.addEventListener('submit', (e) => this.handleGoalSubmit(e));
+      }
 
-            // レポート出力
-            const exportReportBtn = safeGetElement('export-report-btn');
-            const exportPdfBtn = safeGetElement('export-pdf-btn');
-            const exportCsvBtn = safeGetElement('export-csv-btn');
+      // レポート出力
+      const exportReportBtn = safeGetElement('export-report-btn');
+      const exportPdfBtn = safeGetElement('export-pdf-btn');
+      const exportCsvBtn = safeGetElement('export-csv-btn');
 
-            if (exportReportBtn) {
-                exportReportBtn.addEventListener('click', () => this.exportReport());
-            }
-            if (exportPdfBtn) {
-                exportPdfBtn.addEventListener('click', () => this.exportToPDF());
-            }
-            if (exportCsvBtn) {
-                exportCsvBtn.addEventListener('click', () => this.exportToCSV());
-            }
+      if (exportReportBtn) {
+        exportReportBtn.addEventListener('click', () => this.exportReport());
+      }
+      if (exportPdfBtn) {
+        exportPdfBtn.addEventListener('click', () => this.exportToPDF());
+      }
+      if (exportCsvBtn) {
+        exportCsvBtn.addEventListener('click', () => this.exportToCSV());
+      }
 
-            // ワークアウト開始
-            const startWorkoutBtn = safeGetElement('start-workout-btn');
-            if (startWorkoutBtn) {
-                startWorkoutBtn.addEventListener('click', () => this.startWorkout());
-            }
-        } catch (error) {
-            handleError(error, 'ProgressPage.bindEvents');
-        }
+      // ワークアウト開始
+      const startWorkoutBtn = safeGetElement('start-workout-btn');
+      if (startWorkoutBtn) {
+        startWorkoutBtn.addEventListener('click', () => this.startWorkout());
+      }
+    } catch (error) {
+      handleError(error, 'ProgressPage.bindEvents');
     }
+  }
 
-    /**
+  /**
    * エクササイズリストを読み込み
    */
-    async loadExercises() {
-        try {
-            // 筋肉部位を読み込み（認証なしでも動作）
-            const muscleGroups = [
-                { id: 'chest', name: 'Chest', name_ja: '胸' },
-                { id: 'back', name: 'Back', name_ja: '背中' },
-                { id: 'shoulders', name: 'Shoulders', name_ja: '肩' },
-                { id: 'arms', name: 'Arms', name_ja: '腕' },
-                { id: 'legs', name: 'Legs', name_ja: '脚' },
-                { id: 'core', name: 'Core', name_ja: '腹筋' }
-            ];
+  async loadExercises() {
+    try {
+      // 筋肉部位を読み込み（認証なしでも動作）
+      const muscleGroups = [
+        { id: 'chest', name: 'Chest', name_ja: '胸' },
+        { id: 'back', name: 'Back', name_ja: '背中' },
+        { id: 'shoulders', name: 'Shoulders', name_ja: '肩' },
+        { id: 'arms', name: 'Arms', name_ja: '腕' },
+        { id: 'legs', name: 'Legs', name_ja: '脚' },
+        { id: 'core', name: 'Core', name_ja: '腹筋' },
+      ];
 
-            const muscleGroupSelect = safeGetElement('muscle-group-select');
-            if (muscleGroupSelect && muscleGroups) {
-                muscleGroups.forEach((group) => {
-                    const option = document.createElement('option');
-                    option.value = group.id;
-                    option.textContent = group.name_ja;
-                    muscleGroupSelect.appendChild(option);
-                });
-            }
-        } catch (error) {
-            handleError(error, 'ProgressPage.loadExercises');
-        }
+      const muscleGroupSelect = safeGetElement('muscle-group-select');
+      if (muscleGroupSelect && muscleGroups) {
+        muscleGroups.forEach((group) => {
+          const option = document.createElement('option');
+          option.value = group.id;
+          option.textContent = group.name_ja;
+          muscleGroupSelect.appendChild(option);
+        });
+      }
+    } catch (error) {
+      handleError(error, 'ProgressPage.loadExercises');
     }
+  }
 
-    /**
+  /**
    * 筋肉部位別のエクササイズを取得
    */
-    getExercisesByMuscleGroup(muscleGroupId) {
-        const exercises = {
-            chest: [
-                { id: 'bench-press', name: 'ベンチプレス', name_ja: 'ベンチプレス' },
-                { id: 'push-ups', name: 'プッシュアップ', name_ja: 'プッシュアップ' },
-                {
-                    id: 'dumbbell-press',
-                    name: 'ダンベルプレス',
-                    name_ja: 'ダンベルプレス'
-                }
-            ],
-            back: [
-                { id: 'pull-ups', name: 'プルアップ', name_ja: 'プルアップ' },
-                { id: 'rows', name: 'ロウイング', name_ja: 'ロウイング' },
-                {
-                    id: 'lat-pulldown',
-                    name: 'ラットプルダウン',
-                    name_ja: 'ラットプルダウン'
-                }
-            ],
-            shoulders: [
-                {
-                    id: 'overhead-press',
-                    name: 'オーバーヘッドプレス',
-                    name_ja: 'オーバーヘッドプレス'
-                },
-                { id: 'lateral-raises', name: 'サイドレイズ', name_ja: 'サイドレイズ' },
-                {
-                    id: 'rear-delt-fly',
-                    name: 'リアデルトフライ',
-                    name_ja: 'リアデルトフライ'
-                }
-            ],
-            arms: [
-                {
-                    id: 'bicep-curls',
-                    name: 'バイセップカール',
-                    name_ja: 'バイセップカール'
-                },
-                {
-                    id: 'tricep-dips',
-                    name: 'トライセップディップス',
-                    name_ja: 'トライセップディップス'
-                },
-                {
-                    id: 'hammer-curls',
-                    name: 'ハンマーカール',
-                    name_ja: 'ハンマーカール'
-                }
-            ],
-            legs: [
-                { id: 'squats', name: 'スクワット', name_ja: 'スクワット' },
-                { id: 'deadlifts', name: 'デッドリフト', name_ja: 'デッドリフト' },
-                { id: 'lunges', name: 'ランジ', name_ja: 'ランジ' }
-            ],
-            core: [
-                { id: 'plank', name: 'プランク', name_ja: 'プランク' },
-                { id: 'crunches', name: 'クランチ', name_ja: 'クランチ' },
-                {
-                    id: 'russian-twists',
-                    name: 'ロシアンツイスト',
-                    name_ja: 'ロシアンツイスト'
-                }
-            ]
-        };
+  getExercisesByMuscleGroup(muscleGroupId) {
+    const exercises = {
+      chest: [
+        { id: 'bench-press', name: 'ベンチプレス', name_ja: 'ベンチプレス' },
+        { id: 'push-ups', name: 'プッシュアップ', name_ja: 'プッシュアップ' },
+        {
+          id: 'dumbbell-press',
+          name: 'ダンベルプレス',
+          name_ja: 'ダンベルプレス',
+        },
+      ],
+      back: [
+        { id: 'pull-ups', name: 'プルアップ', name_ja: 'プルアップ' },
+        { id: 'rows', name: 'ロウイング', name_ja: 'ロウイング' },
+        {
+          id: 'lat-pulldown',
+          name: 'ラットプルダウン',
+          name_ja: 'ラットプルダウン',
+        },
+      ],
+      shoulders: [
+        {
+          id: 'overhead-press',
+          name: 'オーバーヘッドプレス',
+          name_ja: 'オーバーヘッドプレス',
+        },
+        { id: 'lateral-raises', name: 'サイドレイズ', name_ja: 'サイドレイズ' },
+        {
+          id: 'rear-delt-fly',
+          name: 'リアデルトフライ',
+          name_ja: 'リアデルトフライ',
+        },
+      ],
+      arms: [
+        {
+          id: 'bicep-curls',
+          name: 'バイセップカール',
+          name_ja: 'バイセップカール',
+        },
+        {
+          id: 'tricep-dips',
+          name: 'トライセップディップス',
+          name_ja: 'トライセップディップス',
+        },
+        {
+          id: 'hammer-curls',
+          name: 'ハンマーカール',
+          name_ja: 'ハンマーカール',
+        },
+      ],
+      legs: [
+        { id: 'squats', name: 'スクワット', name_ja: 'スクワット' },
+        { id: 'deadlifts', name: 'デッドリフト', name_ja: 'デッドリフト' },
+        { id: 'lunges', name: 'ランジ', name_ja: 'ランジ' },
+      ],
+      core: [
+        { id: 'plank', name: 'プランク', name_ja: 'プランク' },
+        { id: 'crunches', name: 'クランチ', name_ja: 'クランチ' },
+        {
+          id: 'russian-twists',
+          name: 'ロシアンツイスト',
+          name_ja: 'ロシアンツイスト',
+        },
+      ],
+    };
 
-        return exercises[muscleGroupId] || [];
-    }
+    return exercises[muscleGroupId] || [];
+  }
 
-    /**
+  /**
    * 筋肉部位変更ハンドラー
    */
-    async handleMuscleGroupChange(muscleGroupId) {
-        try {
-            const exerciseSelect = safeGetElement('exercise-select');
-            if (!exerciseSelect) {
-                return;
-            }
+  async handleMuscleGroupChange(muscleGroupId) {
+    try {
+      const exerciseSelect = safeGetElement('exercise-select');
+      if (!exerciseSelect) {
+        return;
+      }
 
-            // エクササイズ選択をリセット
-            exerciseSelect.innerHTML = '<option value="">エクササイズを選択</option>';
-            exerciseSelect.disabled = !muscleGroupId;
+      // エクササイズ選択をリセット
+      exerciseSelect.innerHTML = '<option value="">エクササイズを選択</option>';
+      exerciseSelect.disabled = !muscleGroupId;
 
-            if (!muscleGroupId) {
-                this.hideMainContent();
-                return;
-            }
+      if (!muscleGroupId) {
+        this.hideMainContent();
+        return;
+      }
 
-            // 選択された筋肉部位のエクササイズを読み込み（認証なしでも動作）
-            const exercises = this.getExercisesByMuscleGroup(muscleGroupId);
+      // 選択された筋肉部位のエクササイズを読み込み（認証なしでも動作）
+      const exercises = this.getExercisesByMuscleGroup(muscleGroupId);
 
-            if (exercises && exercises.length > 0) {
-                exercises.forEach((exercise) => {
-                    const option = document.createElement('option');
-                    option.value = exercise.id;
-                    option.textContent = exercise.name_ja;
-                    exerciseSelect.appendChild(option);
-                });
-                exerciseSelect.disabled = false;
-            }
-        } catch (error) {
-            handleError(error, 'ProgressPage.handleMuscleGroupChange');
-        }
+      if (exercises && exercises.length > 0) {
+        exercises.forEach((exercise) => {
+          const option = document.createElement('option');
+          option.value = exercise.id;
+          option.textContent = exercise.name_ja;
+          exerciseSelect.appendChild(option);
+        });
+        exerciseSelect.disabled = false;
+      }
+    } catch (error) {
+      handleError(error, 'ProgressPage.handleMuscleGroupChange');
     }
+  }
 
-    /**
+  /**
    * エクササイズ変更ハンドラー
    */
-    async handleExerciseChange(exerciseId) {
-        try {
-            if (!exerciseId) {
-                this.hideMainContent();
-                return;
-            }
+  async handleExerciseChange(exerciseId) {
+    try {
+      if (!exerciseId) {
+        this.hideMainContent();
+        return;
+      }
 
-            this.selectedExercise = exerciseId;
-            await this.loadProgressData();
+      this.selectedExercise = exerciseId;
+      await this.loadProgressData();
 
-            // プログレッシブ・オーバーロード分析を表示
-            await this.displayProgressiveOverloadAnalysis(exerciseId);
-        } catch (error) {
-            handleError(error, 'ProgressPage.handleExerciseChange');
-        }
+      // プログレッシブ・オーバーロード分析を表示
+      await this.displayProgressiveOverloadAnalysis(exerciseId);
+    } catch (error) {
+      handleError(error, 'ProgressPage.handleExerciseChange');
     }
+  }
 
-    /**
+  /**
    * サンプル進捗データを生成
    */
-    generateSampleProgressData(exerciseId) {
-        const today = new Date();
-        const sampleData = [];
+  generateSampleProgressData(exerciseId) {
+    const today = new Date();
+    const sampleData = [];
 
-        // 過去90日分のサンプルデータを生成
-        for (let i = 0; i < 90; i++) {
-            const date = new Date(today);
-            date.setDate(date.getDate() - i);
+    // 過去90日分のサンプルデータを生成
+    for (let i = 0; i < 90; i++) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
 
-            // 3-4日に1回の頻度でワークアウトを生成
-            if (i % 3 === 0 || i % 4 === 0) {
-                // 重量の進歩をシミュレート
-                const baseWeight = 80;
-                const progressFactor = Math.max(0, (90 - i) / 90); // 時間とともに重量が増加
-                const weight = Math.floor(baseWeight + progressFactor * 20);
+      // 3-4日に1回の頻度でワークアウトを生成
+      if (i % 3 === 0 || i % 4 === 0) {
+        // 重量の進歩をシミュレート
+        const baseWeight = 80;
+        const progressFactor = Math.max(0, (90 - i) / 90); // 時間とともに重量が増加
+        const weight = Math.floor(baseWeight + progressFactor * 20);
 
-                // セット数と回数も進歩をシミュレート
-                const sets = 3 + Math.floor(progressFactor * 2); // 3-5セット
-                const reps = 8 + Math.floor(progressFactor * 4); // 8-12回
+        // セット数と回数も進歩をシミュレート
+        const sets = 3 + Math.floor(progressFactor * 2); // 3-5セット
+        const reps = 8 + Math.floor(progressFactor * 4); // 8-12回
 
-                sampleData.push({
-                    id: `sample-${i}`,
-                    date: date.toISOString().split('T')[0],
-                    exercise_id: exerciseId,
-                    weight,
-                    reps,
-                    sets,
-                    volume: weight * reps * sets,
-                    one_rm: Math.round(weight * (1 + reps / 30)), // 簡易1RM計算
-                    notes: 'サンプルデータ'
-                });
-            }
-        }
-
-        return sampleData;
+        sampleData.push({
+          id: `sample-${i}`,
+          date: date.toISOString().split('T')[0],
+          exercise_id: exerciseId,
+          weight,
+          reps,
+          sets,
+          volume: weight * reps * sets,
+          one_rm: Math.round(weight * (1 + reps / 30)), // 簡易1RM計算
+          notes: 'サンプルデータ',
+        });
+      }
     }
 
-    /**
+    return sampleData;
+  }
+
+  /**
    * 進捗データを読み込み
    */
-    async loadProgressData() {
-        try {
-            if (!this.selectedExercise) {
-                return;
-            }
+  async loadProgressData() {
+    try {
+      if (!this.selectedExercise) {
+        return;
+      }
 
-            // ローカルストレージから進捗データを読み込み（認証なしでも動作）
-            this.progressData = JSON.parse(
-                localStorage.getItem(`progress_${this.selectedExercise}`) || '[]'
-            );
+      // ローカルストレージから進捗データを読み込み（認証なしでも動作）
+      this.progressData = JSON.parse(
+        localStorage.getItem(`progress_${this.selectedExercise}`) || '[]'
+      );
 
-            // サンプルデータを追加（デモ用）
-            if (this.progressData.length === 0) {
-                this.progressData = this.generateSampleProgressData(
-                    this.selectedExercise
-                );
-            }
+      // サンプルデータを追加（デモ用）
+      if (this.progressData.length === 0) {
+        this.progressData = this.generateSampleProgressData(
+          this.selectedExercise
+        );
+      }
 
-            if (this.progressData.length === 0) {
-                this.showNoDataMessage();
-                return;
-            }
+      if (this.progressData.length === 0) {
+        this.showNoDataMessage();
+        return;
+      }
 
-            // 目標データを取得（ローカルストレージから）
-            this.goalsData = JSON.parse(
-                localStorage.getItem(`goals_${this.selectedExercise}`) || '[]'
-            );
+      // 目標データを取得（ローカルストレージから）
+      this.goalsData = JSON.parse(
+        localStorage.getItem(`goals_${this.selectedExercise}`) || '[]'
+      );
 
-            // 統計を更新
-            await this.updateStatsSummary();
+      // 統計を更新
+      await this.updateStatsSummary();
 
-            // グラフを表示
-            this.switchChart('1rm');
+      // グラフを表示
+      this.switchChart('1rm');
 
-            // 目標達成度を表示
-            this.updateGoalsDisplay();
+      // 目標達成度を表示
+      this.updateGoalsDisplay();
 
-            // 週間分析を表示
-            await this.updateWeeklyAnalysis();
+      // 週間分析を表示
+      await this.updateWeeklyAnalysis();
 
-            // 詳細分析を表示
-            await this.updateDetailedAnalysis();
+      // 詳細分析を表示
+      await this.updateDetailedAnalysis();
 
-            this.showMainContent();
-        } catch (error) {
-            handleError(error, 'ProgressPage.loadProgressData');
-        }
+      this.showMainContent();
+    } catch (error) {
+      handleError(error, 'ProgressPage.loadProgressData');
     }
+  }
 
-    /**
+  /**
    * 統計サマリーを更新
    */
-    async updateStatsSummary() {
-        try {
-            if (this.progressData.length === 0) {
-                return;
-            }
+  async updateStatsSummary() {
+    try {
+      if (this.progressData.length === 0) {
+        return;
+      }
 
-            const latestRecord = this.progressData[this.progressData.length - 1];
-            const stats = progressTrackingService.calculateStats(this.progressData);
+      const latestRecord = this.progressData[this.progressData.length - 1];
+      const stats = progressTrackingService.calculateStats(this.progressData);
 
-            // 現在の1RM
-            const current1RMEl = safeGetElement('current-1rm');
-            if (current1RMEl) {
-                current1RMEl.textContent = `${latestRecord.one_rm.toFixed(1)} kg`;
-            }
+      // 現在の1RM
+      const current1RMEl = safeGetElement('current-1rm');
+      if (current1RMEl) {
+        current1RMEl.textContent = `${latestRecord.one_rm.toFixed(1)} kg`;
+      }
 
-            // 最大重量
-            const maxWeightEl = safeGetElement('max-weight');
-            if (maxWeightEl) {
-                maxWeightEl.textContent = `${stats.maxWeight.toFixed(1)} kg`;
-            }
+      // 最大重量
+      const maxWeightEl = safeGetElement('max-weight');
+      if (maxWeightEl) {
+        maxWeightEl.textContent = `${stats.maxWeight.toFixed(1)} kg`;
+      }
 
-            // 進歩率
-            const improvementRateEl = safeGetElement('improvement-rate');
-            if (improvementRateEl) {
-                const rate =
+      // 進歩率
+      const improvementRateEl = safeGetElement('improvement-rate');
+      if (improvementRateEl) {
+        const rate =
           stats.improvement > 0
-              ? `+${stats.improvement.toFixed(1)}%`
-              : `${stats.improvement.toFixed(1)}%`;
-                improvementRateEl.textContent = rate;
-            }
+            ? `+${stats.improvement.toFixed(1)}%`
+            : `${stats.improvement.toFixed(1)}%`;
+        improvementRateEl.textContent = rate;
+      }
 
-            // セッション数
-            const totalSessionsEl = safeGetElement('total-sessions');
-            if (totalSessionsEl) {
-                totalSessionsEl.textContent = this.progressData.length.toString();
-            }
+      // セッション数
+      const totalSessionsEl = safeGetElement('total-sessions');
+      if (totalSessionsEl) {
+        totalSessionsEl.textContent = this.progressData.length.toString();
+      }
 
-            // サマリーを表示
-            const statsSummary = safeGetElement('stats-summary');
-            if (statsSummary) {
-                statsSummary.style.display = 'grid';
-            }
-        } catch (error) {
-            handleError(error, 'ProgressPage.updateStatsSummary');
-        }
+      // サマリーを表示
+      const statsSummary = safeGetElement('stats-summary');
+      if (statsSummary) {
+        statsSummary.style.display = 'grid';
+      }
+    } catch (error) {
+      handleError(error, 'ProgressPage.updateStatsSummary');
     }
+  }
 
-    /**
+  /**
    * チャートを切り替え
    */
-    switchChart(chartType) {
-        try {
-            if (this.progressData.length === 0) {
-                return;
-            }
+  switchChart(chartType) {
+    try {
+      if (this.progressData.length === 0) {
+        return;
+      }
 
-            // ボタンのアクティブ状態を更新
-            const buttons = safeGetElements('[id$="-btn"]');
-            buttons.forEach((btn) => {
-                btn.classList.remove('bg-blue-500', 'text-white');
-                btn.classList.add('bg-gray-200', 'text-gray-700');
-            });
+      // ボタンのアクティブ状態を更新
+      const buttons = safeGetElements('[id$="-btn"]');
+      buttons.forEach((btn) => {
+        btn.classList.remove('bg-blue-500', 'text-white');
+        btn.classList.add('bg-gray-200', 'text-gray-700');
+      });
 
-            const activeBtn = safeGetElement(`chart-${chartType}-btn`);
-            if (activeBtn) {
-                activeBtn.classList.remove('bg-gray-200', 'text-gray-700');
-                activeBtn.classList.add('bg-blue-500', 'text-white');
-            }
+      const activeBtn = safeGetElement(`chart-${chartType}-btn`);
+      if (activeBtn) {
+        activeBtn.classList.remove('bg-gray-200', 'text-gray-700');
+        activeBtn.classList.add('bg-blue-500', 'text-white');
+      }
 
-            // チャートを作成
-            switch (chartType) {
-                case '1rm':
-                    chartService.createOneRMChart('progress-chart', this.progressData);
-                    break;
-                case 'weight':
-                    chartService.createWeightChart('progress-chart', this.progressData);
-                    break;
-                case 'volume':
-                    chartService.createVolumeChart('progress-chart', this.progressData);
-                    break;
-            }
-        } catch (error) {
-            handleError(error, 'ProgressPage.switchChart');
-        }
+      // チャートを作成
+      switch (chartType) {
+        case '1rm':
+          chartService.createOneRMChart('progress-chart', this.progressData);
+          break;
+        case 'weight':
+          chartService.createWeightChart('progress-chart', this.progressData);
+          break;
+        case 'volume':
+          chartService.createVolumeChart('progress-chart', this.progressData);
+          break;
+      }
+    } catch (error) {
+      handleError(error, 'ProgressPage.switchChart');
     }
+  }
 
-    /**
+  /**
    * 目標達成度表示を更新
    */
-    updateGoalsDisplay() {
-        try {
-            const goalsList = safeGetElement('goals-list');
-            if (!goalsList) {
-                return;
-            }
+  updateGoalsDisplay() {
+    try {
+      const goalsList = safeGetElement('goals-list');
+      if (!goalsList) {
+        return;
+      }
 
-            if (this.goalsData.length === 0) {
-                goalsList.innerHTML =
+      if (this.goalsData.length === 0) {
+        goalsList.innerHTML =
           '<p class="text-gray-500 text-center py-4">目標が設定されていません</p>';
-                return;
-            }
+        return;
+      }
 
-            goalsList.innerHTML = this.goalsData
-                .map(
-                    (goal) => `
+      goalsList.innerHTML = this.goalsData
+        .map(
+          (goal) => `
                 <div class="mb-4 p-4 border border-gray-200 rounded-lg">
                     <div class="flex justify-between items-center mb-2">
                         <h4 class="font-medium text-gray-800">${goal.description || `${goal.goal_type}目標`}</h4>
@@ -878,50 +878,50 @@ class ProgressPage {
                     ${goal.is_achieved ? '<span class="inline-block mt-2 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">達成済み</span>' : ''}
                 </div>
             `
-                )
-                .join('');
-        } catch (error) {
-            handleError(error, 'ProgressPage.updateGoalsDisplay');
-        }
+        )
+        .join('');
+    } catch (error) {
+      handleError(error, 'ProgressPage.updateGoalsDisplay');
     }
+  }
 
-    /**
+  /**
    * 週間分析を更新
    */
-    async updateWeeklyAnalysis() {
-        try {
-            const analysis = await progressTrackingService.generateMonthlyAnalysis(
-                this.currentUser.id,
-                this.selectedExercise
-            );
+  async updateWeeklyAnalysis() {
+    try {
+      const analysis = await progressTrackingService.generateMonthlyAnalysis(
+        this.currentUser.id,
+        this.selectedExercise
+      );
 
-            if (analysis.hasData && analysis.weeklyData.length > 0) {
-                chartService.createWeeklyComparisonChart(
-                    'weekly-chart',
-                    analysis.weeklyData
-                );
-            }
-        } catch (error) {
-            handleError(error, 'ProgressPage.updateWeeklyAnalysis');
-        }
+      if (analysis.hasData && analysis.weeklyData.length > 0) {
+        chartService.createWeeklyComparisonChart(
+          'weekly-chart',
+          analysis.weeklyData
+        );
+      }
+    } catch (error) {
+      handleError(error, 'ProgressPage.updateWeeklyAnalysis');
     }
+  }
 
-    /**
+  /**
    * 詳細分析を更新
    */
-    async updateDetailedAnalysis() {
-        try {
-            const analysis = await progressTrackingService.generateMonthlyAnalysis(
-                this.currentUser.id,
-                this.selectedExercise
-            );
+  async updateDetailedAnalysis() {
+    try {
+      const analysis = await progressTrackingService.generateMonthlyAnalysis(
+        this.currentUser.id,
+        this.selectedExercise
+      );
 
-            const analysisReport = safeGetElement('analysis-report');
-            if (!analysisReport || !analysis.hasData) {
-                return;
-            }
+      const analysisReport = safeGetElement('analysis-report');
+      if (!analysisReport || !analysis.hasData) {
+        return;
+      }
 
-            analysisReport.innerHTML = `
+      analysisReport.innerHTML = `
                 <div class="bg-gray-50 p-4 rounded-lg">
                     <h4 class="font-semibold text-gray-800 mb-3">パフォーマンス統計</h4>
                     <div class="space-y-2 text-sm">
@@ -969,782 +969,782 @@ class ProgressPage {
                     </div>
                 </div>
             `;
-        } catch (error) {
-            handleError(error, 'ProgressPage.updateDetailedAnalysis');
-        }
+    } catch (error) {
+      handleError(error, 'ProgressPage.updateDetailedAnalysis');
     }
+  }
 
-    /**
+  /**
    * 目標設定モーダルを表示
    */
-    showGoalModal() {
-        const modal = safeGetElement('goal-modal');
-        if (modal) {
-            modal.classList.remove('hidden');
+  showGoalModal() {
+    const modal = safeGetElement('goal-modal');
+    if (modal) {
+      modal.classList.remove('hidden');
 
-            // 目標達成日のデフォルト値を8週間後に設定
-            const targetDate = safeGetElement('target-date');
-            if (targetDate) {
-                const date = new Date();
-                date.setDate(date.getDate() + 56); // 8週間
-                targetDate.value = date.toISOString().split('T')[0];
-            }
+      // 目標達成日のデフォルト値を8週間後に設定
+      const targetDate = safeGetElement('target-date');
+      if (targetDate) {
+        const date = new Date();
+        date.setDate(date.getDate() + 56); // 8週間
+        targetDate.value = date.toISOString().split('T')[0];
+      }
 
-            // 目標タイプ変更時の現在値自動設定
-            const goalType = safeGetElement('goal-type');
-            const currentValue = safeGetElement('current-value');
-            const targetValue = safeGetElement('target-value');
+      // 目標タイプ変更時の現在値自動設定
+      const goalType = safeGetElement('goal-type');
+      const currentValue = safeGetElement('current-value');
+      const targetValue = safeGetElement('target-value');
 
-            if (goalType && currentValue && targetValue) {
-                goalType.addEventListener('change', () => {
-                    this.updateCurrentValue(goalType.value, currentValue, targetValue);
-                });
-            }
-        }
+      if (goalType && currentValue && targetValue) {
+        goalType.addEventListener('change', () => {
+          this.updateCurrentValue(goalType.value, currentValue, targetValue);
+        });
+      }
     }
+  }
 
-    /**
+  /**
    * 現在の値を更新
    * @param {string} goalType - 目標タイプ
    * @param {HTMLElement} currentValueEl - 現在値要素
    * @param {HTMLElement} targetValueEl - 目標値要素
    */
-    updateCurrentValue(goalType, currentValueEl, targetValueEl) {
-        try {
-            if (!goalType || this.progressData.length === 0) {
-                currentValueEl.value = '';
-                targetValueEl.value = '';
-                return;
-            }
+  updateCurrentValue(goalType, currentValueEl, targetValueEl) {
+    try {
+      if (!goalType || this.progressData.length === 0) {
+        currentValueEl.value = '';
+        targetValueEl.value = '';
+        return;
+      }
 
-            const latestRecord = this.progressData[this.progressData.length - 1];
-            let currentVal = 0;
+      const latestRecord = this.progressData[this.progressData.length - 1];
+      let currentVal = 0;
 
-            switch (goalType) {
-                case 'weight':
-                    currentVal = Math.max(...latestRecord.weights);
-                    break;
-                case 'reps':
-                    currentVal = Math.max(...latestRecord.reps);
-                    break;
-                case 'one_rm':
-                    currentVal = latestRecord.one_rm;
-                    break;
-            }
+      switch (goalType) {
+        case 'weight':
+          currentVal = Math.max(...latestRecord.weights);
+          break;
+        case 'reps':
+          currentVal = Math.max(...latestRecord.reps);
+          break;
+        case 'one_rm':
+          currentVal = latestRecord.one_rm;
+          break;
+      }
 
-            currentValueEl.value = currentVal.toFixed(1);
+      currentValueEl.value = currentVal.toFixed(1);
 
-            // 推奨目標値を設定（現在値の5-15%増加）
-            const recommendedIncrease = currentVal * 0.1; // 10%増加
-            const suggestedTarget = currentVal + recommendedIncrease;
-            targetValueEl.value = suggestedTarget.toFixed(1);
-            targetValueEl.placeholder = `推奨: ${suggestedTarget.toFixed(1)}`;
-        } catch (error) {
-            handleError(error, 'ProgressPage.updateCurrentValue');
-        }
+      // 推奨目標値を設定（現在値の5-15%増加）
+      const recommendedIncrease = currentVal * 0.1; // 10%増加
+      const suggestedTarget = currentVal + recommendedIncrease;
+      targetValueEl.value = suggestedTarget.toFixed(1);
+      targetValueEl.placeholder = `推奨: ${suggestedTarget.toFixed(1)}`;
+    } catch (error) {
+      handleError(error, 'ProgressPage.updateCurrentValue');
     }
+  }
 
-    /**
+  /**
    * 目標設定モーダルを非表示
    */
-    hideGoalModal() {
-        const modal = safeGetElement('goal-modal');
-        if (modal) {
-            modal.classList.add('hidden');
+  hideGoalModal() {
+    const modal = safeGetElement('goal-modal');
+    if (modal) {
+      modal.classList.add('hidden');
 
-            // フォームをリセット
-            const form = safeGetElement('goal-form');
-            if (form) {
-                form.reset();
-            }
-        }
+      // フォームをリセット
+      const form = safeGetElement('goal-form');
+      if (form) {
+        form.reset();
+      }
     }
+  }
 
-    /**
+  /**
    * 目標設定フォーム送信ハンドラー
    */
-    async handleGoalSubmit(event) {
-        try {
-            event.preventDefault();
+  async handleGoalSubmit(event) {
+    try {
+      event.preventDefault();
 
-            if (!this.selectedExercise || !this.currentUser) {
-                return;
-            }
+      if (!this.selectedExercise || !this.currentUser) {
+        return;
+      }
 
-            const goalType = safeGetElement('goal-type')?.value;
-            const targetValue = parseFloat(
-                safeGetElement('target-value')?.value || '0'
-            );
-            const currentValue = parseFloat(
-                safeGetElement('current-value')?.value || '0'
-            );
-            const targetDate = safeGetElement('target-date')?.value;
-            const priority = safeGetElement('goal-priority')?.value || 'medium';
-            const strategy = safeGetElement('goal-strategy')?.value;
-            const description = safeGetElement('goal-description')?.value;
+      const goalType = safeGetElement('goal-type')?.value;
+      const targetValue = parseFloat(
+        safeGetElement('target-value')?.value || '0'
+      );
+      const currentValue = parseFloat(
+        safeGetElement('current-value')?.value || '0'
+      );
+      const targetDate = safeGetElement('target-date')?.value;
+      const priority = safeGetElement('goal-priority')?.value || 'medium';
+      const strategy = safeGetElement('goal-strategy')?.value;
+      const description = safeGetElement('goal-description')?.value;
 
-            // 通知設定
-            const notifyProgress =
+      // 通知設定
+      const notifyProgress =
         safeGetElement('notify-progress')?.checked || false;
-            const notifyMilestone =
+      const notifyMilestone =
         safeGetElement('notify-milestone')?.checked || false;
-            const notifyDeadline =
+      const notifyDeadline =
         safeGetElement('notify-deadline')?.checked || false;
 
-            // バリデーション
-            const errors = [];
-            if (!goalType) {
-                errors.push('目標タイプ');
-            }
-            if (!targetValue) {
-                errors.push('目標値');
-            }
-            if (!targetDate) {
-                errors.push('目標達成日');
-            }
+      // バリデーション
+      const errors = [];
+      if (!goalType) {
+        errors.push('目標タイプ');
+      }
+      if (!targetValue) {
+        errors.push('目標値');
+      }
+      if (!targetDate) {
+        errors.push('目標達成日');
+      }
 
-            if (errors.length > 0) {
-                throw new Error(`以下の項目を入力してください: ${errors.join(', ')}`);
-            }
+      if (errors.length > 0) {
+        throw new Error(`以下の項目を入力してください: ${errors.join(', ')}`);
+      }
 
-            if (targetValue <= currentValue) {
-                throw new Error('目標値は現在の値より大きく設定してください');
-            }
+      if (targetValue <= currentValue) {
+        throw new Error('目標値は現在の値より大きく設定してください');
+      }
 
-            const targetDateObj = new Date(targetDate);
-            const today = new Date();
-            if (targetDateObj <= today) {
-                throw new Error('目標達成日は今日より後の日付を設定してください');
-            }
+      const targetDateObj = new Date(targetDate);
+      const today = new Date();
+      if (targetDateObj <= today) {
+        throw new Error('目標達成日は今日より後の日付を設定してください');
+      }
 
-            // 達成可能性チェック（現在値の50%以上の増加は警告）
-            const increasePercentage =
+      // 達成可能性チェック（現在値の50%以上の増加は警告）
+      const increasePercentage =
         ((targetValue - currentValue) / currentValue) * 100;
-            if (increasePercentage > 50) {
-                const confirmMessage = `目標値が現在値より${increasePercentage.toFixed(1)}%高く設定されています。達成可能な目標ですか？`;
-                // eslint-disable-next-line no-alert
-                if (!window.confirm(confirmMessage)) {
-                    return;
-                }
-            }
+      if (increasePercentage > 50) {
+        const confirmMessage = `目標値が現在値より${increasePercentage.toFixed(1)}%高く設定されています。達成可能な目標ですか？`;
+        // eslint-disable-next-line no-alert
+        if (!window.confirm(confirmMessage)) {
+          return;
+        }
+      }
 
-            const goalData = {
-                userId: this.currentUser.id,
-                exerciseId: this.selectedExercise,
-                goalType,
-                targetValue,
-                currentValue,
-                targetDate,
-                priority,
-                strategy,
-                description:
+      const goalData = {
+        userId: this.currentUser.id,
+        exerciseId: this.selectedExercise,
+        goalType,
+        targetValue,
+        currentValue,
+        targetDate,
+        priority,
+        strategy,
+        description:
           description ||
           this.generateGoalDescription(goalType, targetValue, targetDate),
-                notifications: {
-                    progress: notifyProgress,
-                    milestone: notifyMilestone,
-                    deadline: notifyDeadline
-                }
-            };
+        notifications: {
+          progress: notifyProgress,
+          milestone: notifyMilestone,
+          deadline: notifyDeadline,
+        },
+      };
 
-            const result = await progressTrackingService.setGoal(goalData);
+      const result = await progressTrackingService.setGoal(goalData);
 
-            if (result.success) {
-                this.hideGoalModal();
-                await this.loadProgressData(); // データを再読み込み
+      if (result.success) {
+        this.hideGoalModal();
+        await this.loadProgressData(); // データを再読み込み
 
-                // 成功通知
-                this.showNotification('SMART目標が設定されました！', 'success');
+        // 成功通知
+        this.showNotification('SMART目標が設定されました！', 'success');
 
-                // 目標達成のヒントを表示
-                this.showGoalTips(goalType, increasePercentage);
-            } else {
-                throw new Error(result.error || '目標設定に失敗しました');
-            }
-        } catch (error) {
-            handleError(error, 'ProgressPage.handleGoalSubmit');
-            this.showNotification(error.message, 'error');
-        }
+        // 目標達成のヒントを表示
+        this.showGoalTips(goalType, increasePercentage);
+      } else {
+        throw new Error(result.error || '目標設定に失敗しました');
+      }
+    } catch (error) {
+      handleError(error, 'ProgressPage.handleGoalSubmit');
+      this.showNotification(error.message, 'error');
     }
+  }
 
-    /**
+  /**
    * 目標の説明文を自動生成
    * @param {string} goalType - 目標タイプ
    * @param {number} targetValue - 目標値
    * @param {string} targetDate - 目標日
    * @returns {string} 説明文
    */
-    generateGoalDescription(goalType, targetValue, targetDate) {
-        const typeNames = {
-            weight: '最大重量',
-            reps: '最大回数',
-            one_rm: '1RM'
-        };
+  generateGoalDescription(goalType, targetValue, targetDate) {
+    const typeNames = {
+      weight: '最大重量',
+      reps: '最大回数',
+      one_rm: '1RM',
+    };
 
-        const units = {
-            weight: 'kg',
-            reps: '回',
-            one_rm: 'kg'
-        };
+    const units = {
+      weight: 'kg',
+      reps: '回',
+      one_rm: 'kg',
+    };
 
-        const typeName = typeNames[goalType] || goalType;
-        const unit = units[goalType] || '';
-        const date = new Date(targetDate).toLocaleDateString('ja-JP');
+    const typeName = typeNames[goalType] || goalType;
+    const unit = units[goalType] || '';
+    const date = new Date(targetDate).toLocaleDateString('ja-JP');
 
-        return `${date}までに${typeName}${targetValue}${unit}を達成する`;
-    }
+    return `${date}までに${typeName}${targetValue}${unit}を達成する`;
+  }
 
-    /**
+  /**
    * 目標達成のヒントを表示
    * @param {string} goalType - 目標タイプ
    * @param {number} increasePercentage - 増加率
    */
-    showGoalTips(goalType, increasePercentage) {
-        const tips = [];
+  showGoalTips(goalType, increasePercentage) {
+    const tips = [];
 
-        if (increasePercentage > 25) {
-            tips.push('大きな目標です！段階的な中間目標を設定することをお勧めします');
-        }
-
-        switch (goalType) {
-            case 'weight':
-                tips.push('重量増加には適切なフォームの維持が重要です');
-                tips.push(
-                    '週2-3回の頻度でプログレッシブオーバーロードを適用しましょう'
-                );
-                break;
-            case 'reps':
-                tips.push('回数増加には筋持久力の向上が必要です');
-                tips.push('セット間の休息時間を調整してみてください');
-                break;
-            case 'one_rm':
-                tips.push('1RM向上には重量とフォームのバランスが重要です');
-                tips.push('定期的な1RMテストで進捗を確認しましょう');
-                break;
-        }
-
-        if (tips.length > 0) {
-            const tipMessage = tips.join('\n• ');
-            setTimeout(() => {
-                this.showNotification(`💡 目標達成のヒント:\n• ${tipMessage}`, 'info');
-            }, 2000);
-        }
+    if (increasePercentage > 25) {
+      tips.push('大きな目標です！段階的な中間目標を設定することをお勧めします');
     }
 
-    /**
+    switch (goalType) {
+      case 'weight':
+        tips.push('重量増加には適切なフォームの維持が重要です');
+        tips.push(
+          '週2-3回の頻度でプログレッシブオーバーロードを適用しましょう'
+        );
+        break;
+      case 'reps':
+        tips.push('回数増加には筋持久力の向上が必要です');
+        tips.push('セット間の休息時間を調整してみてください');
+        break;
+      case 'one_rm':
+        tips.push('1RM向上には重量とフォームのバランスが重要です');
+        tips.push('定期的な1RMテストで進捗を確認しましょう');
+        break;
+    }
+
+    if (tips.length > 0) {
+      const tipMessage = tips.join('\n• ');
+      setTimeout(() => {
+        this.showNotification(`💡 目標達成のヒント:\n• ${tipMessage}`, 'info');
+      }, 2000);
+    }
+  }
+
+  /**
    * JSONレポートを出力
    */
-    async exportReport() {
-        try {
-            if (
-                !this.selectedExercise ||
+  async exportReport() {
+    try {
+      if (
+        !this.selectedExercise ||
         !this.currentUser ||
         this.progressData.length === 0
-            ) {
-                this.showNotification('出力するデータがありません', 'warning');
-                return;
-            }
+      ) {
+        this.showNotification('出力するデータがありません', 'warning');
+        return;
+      }
 
-            const analysis = await progressTrackingService.generateMonthlyAnalysis(
-                this.currentUser.id,
-                this.selectedExercise
-            );
+      const analysis = await progressTrackingService.generateMonthlyAnalysis(
+        this.currentUser.id,
+        this.selectedExercise
+      );
 
-            const reportData = {
-                exercise: this.selectedExercise,
-                dateRange: analysis.dateRange,
-                stats: analysis.stats,
-                trend: analysis.trend,
-                goals: this.goalsData,
-                progressData: this.progressData
-            };
+      const reportData = {
+        exercise: this.selectedExercise,
+        dateRange: analysis.dateRange,
+        stats: analysis.stats,
+        trend: analysis.trend,
+        goals: this.goalsData,
+        progressData: this.progressData,
+      };
 
-            // JSON形式でダウンロード
-            const blob = new Blob([JSON.stringify(reportData, null, 2)], {
-                type: 'application/json'
-            });
-            const filename = `progress-report-${new Date().toISOString().split('T')[0]}.json`;
-            reportService.downloadFile(blob, filename);
+      // JSON形式でダウンロード
+      const blob = new Blob([JSON.stringify(reportData, null, 2)], {
+        type: 'application/json',
+      });
+      const filename = `progress-report-${new Date().toISOString().split('T')[0]}.json`;
+      reportService.downloadFile(blob, filename);
 
-            this.showNotification('JSONレポートをダウンロードしました', 'success');
-        } catch (error) {
-            handleError(error, 'ProgressPage.exportReport');
-            this.showNotification('レポート出力に失敗しました', 'error');
-        }
+      this.showNotification('JSONレポートをダウンロードしました', 'success');
+    } catch (error) {
+      handleError(error, 'ProgressPage.exportReport');
+      this.showNotification('レポート出力に失敗しました', 'error');
     }
+  }
 
-    /**
+  /**
    * PDFレポートを出力
    */
-    async exportToPDF() {
-        try {
-            if (
-                !this.selectedExercise ||
+  async exportToPDF() {
+    try {
+      if (
+        !this.selectedExercise ||
         !this.currentUser ||
         this.progressData.length === 0
-            ) {
-                this.showNotification('出力するデータがありません', 'warning');
-                return;
-            }
+      ) {
+        this.showNotification('出力するデータがありません', 'warning');
+        return;
+      }
 
-            // ローディング表示
-            this.showNotification('PDFを生成中...', 'info');
+      // ローディング表示
+      this.showNotification('PDFを生成中...', 'info');
 
-            const analysis = await progressTrackingService.generateMonthlyAnalysis(
-                this.currentUser.id,
-                this.selectedExercise
-            );
+      const analysis = await progressTrackingService.generateMonthlyAnalysis(
+        this.currentUser.id,
+        this.selectedExercise
+      );
 
-            // エクササイズ名を取得
-            const exerciseName = await this.getExerciseName(this.selectedExercise);
+      // エクササイズ名を取得
+      const exerciseName = await this.getExerciseName(this.selectedExercise);
 
-            const reportData = {
-                dateRange: analysis.dateRange,
-                stats: analysis.stats,
-                trend: analysis.trend,
-                goals: this.goalsData,
-                progressData: this.progressData
-            };
+      const reportData = {
+        dateRange: analysis.dateRange,
+        stats: analysis.stats,
+        trend: analysis.trend,
+        goals: this.goalsData,
+        progressData: this.progressData,
+      };
 
-            const pdfBlob = await reportService.generateProgressReportPDF(
-                reportData,
-                exerciseName
-            );
-            const filename = `progress-report-${exerciseName}-${new Date().toISOString().split('T')[0]}.pdf`;
-            reportService.downloadFile(pdfBlob, filename);
+      const pdfBlob = await reportService.generateProgressReportPDF(
+        reportData,
+        exerciseName
+      );
+      const filename = `progress-report-${exerciseName}-${new Date().toISOString().split('T')[0]}.pdf`;
+      reportService.downloadFile(pdfBlob, filename);
 
-            this.showNotification('PDFレポートをダウンロードしました', 'success');
-        } catch (error) {
-            handleError(error, 'ProgressPage.exportToPDF');
-            this.showNotification('PDF出力に失敗しました', 'error');
-        }
+      this.showNotification('PDFレポートをダウンロードしました', 'success');
+    } catch (error) {
+      handleError(error, 'ProgressPage.exportToPDF');
+      this.showNotification('PDF出力に失敗しました', 'error');
     }
+  }
 
-    /**
+  /**
    * CSVデータを出力
    */
-    async exportToCSV() {
-        try {
-            if (
-                !this.selectedExercise ||
+  async exportToCSV() {
+    try {
+      if (
+        !this.selectedExercise ||
         !this.currentUser ||
         this.progressData.length === 0
-            ) {
-                this.showNotification('出力するデータがありません', 'warning');
-                return;
-            }
+      ) {
+        this.showNotification('出力するデータがありません', 'warning');
+        return;
+      }
 
-            // エクササイズ名を取得
-            const exerciseName = await this.getExerciseName(this.selectedExercise);
+      // エクササイズ名を取得
+      const exerciseName = await this.getExerciseName(this.selectedExercise);
 
-            const csvBlob = reportService.exportToCSV(
-                this.progressData,
-                exerciseName
-            );
-            const filename = `progress-data-${exerciseName}-${new Date().toISOString().split('T')[0]}.csv`;
-            reportService.downloadFile(csvBlob, filename);
+      const csvBlob = reportService.exportToCSV(
+        this.progressData,
+        exerciseName
+      );
+      const filename = `progress-data-${exerciseName}-${new Date().toISOString().split('T')[0]}.csv`;
+      reportService.downloadFile(csvBlob, filename);
 
-            this.showNotification('CSVデータをダウンロードしました', 'success');
-        } catch (error) {
-            handleError(error, 'ProgressPage.exportToCSV');
-            this.showNotification('CSV出力に失敗しました', 'error');
-        }
+      this.showNotification('CSVデータをダウンロードしました', 'success');
+    } catch (error) {
+      handleError(error, 'ProgressPage.exportToCSV');
+      this.showNotification('CSV出力に失敗しました', 'error');
     }
+  }
 
-    /**
+  /**
    * エクササイズ名を取得
    * @param {string} exerciseId - エクササイズID
    * @returns {Promise<string>} エクササイズ名
    */
-    async getExerciseName(exerciseId) {
-        try {
-            const { data, error } = await supabaseService
-                .getClient()
-                .from('exercises')
-                .select('name_ja')
-                .eq('id', exerciseId)
-                .single();
+  async getExerciseName(exerciseId) {
+    try {
+      const { data, error } = await supabaseService
+        .getClient()
+        .from('exercises')
+        .select('name_ja')
+        .eq('id', exerciseId)
+        .single();
 
-            if (error) {
-                throw error;
-            }
-            return data?.name_ja || 'Unknown Exercise';
-        } catch (error) {
-            handleError(error, 'ProgressPage.getExerciseName');
-            return 'Unknown Exercise';
-        }
+      if (error) {
+        throw error;
+      }
+      return data?.name_ja || 'Unknown Exercise';
+    } catch (error) {
+      handleError(error, 'ProgressPage.getExerciseName');
+      return 'Unknown Exercise';
     }
+  }
 
-    /**
+  /**
    * ワークアウトを開始
    */
-    startWorkout() {
+  startWorkout() {
     // ワークアウトページに遷移
-        window.dispatchEvent(
-            new CustomEvent('navigate', { detail: { page: 'workout' } })
-        );
-    }
+    window.dispatchEvent(
+      new CustomEvent('navigate', { detail: { page: 'workout' } })
+    );
+  }
 
-    /**
+  /**
    * メインコンテンツを表示
    */
-    showMainContent() {
-        const mainContent = safeGetElement('main-content');
-        const noDataMessage = safeGetElement('no-data-message');
+  showMainContent() {
+    const mainContent = safeGetElement('main-content');
+    const noDataMessage = safeGetElement('no-data-message');
 
-        if (mainContent) {
-            mainContent.style.display = 'block';
-        }
-        if (noDataMessage) {
-            noDataMessage.style.display = 'none';
-        }
+    if (mainContent) {
+      mainContent.style.display = 'block';
     }
+    if (noDataMessage) {
+      noDataMessage.style.display = 'none';
+    }
+  }
 
-    /**
+  /**
    * メインコンテンツを非表示
    */
-    hideMainContent() {
-        const mainContent = safeGetElement('main-content');
-        const statsSummary = safeGetElement('stats-summary');
-        const noDataMessage = safeGetElement('no-data-message');
+  hideMainContent() {
+    const mainContent = safeGetElement('main-content');
+    const statsSummary = safeGetElement('stats-summary');
+    const noDataMessage = safeGetElement('no-data-message');
 
-        if (mainContent) {
-            mainContent.style.display = 'none';
-        }
-        if (statsSummary) {
-            statsSummary.style.display = 'none';
-        }
-        if (noDataMessage) {
-            noDataMessage.style.display = 'none';
-        }
+    if (mainContent) {
+      mainContent.style.display = 'none';
     }
+    if (statsSummary) {
+      statsSummary.style.display = 'none';
+    }
+    if (noDataMessage) {
+      noDataMessage.style.display = 'none';
+    }
+  }
 
-    /**
+  /**
    * データなしメッセージを表示
    */
-    showNoDataMessage() {
-        const mainContent = safeGetElement('main-content');
-        const statsSummary = safeGetElement('stats-summary');
-        const noDataMessage = safeGetElement('no-data-message');
+  showNoDataMessage() {
+    const mainContent = safeGetElement('main-content');
+    const statsSummary = safeGetElement('stats-summary');
+    const noDataMessage = safeGetElement('no-data-message');
 
-        if (mainContent) {
-            mainContent.style.display = 'none';
-        }
-        if (statsSummary) {
-            statsSummary.style.display = 'none';
-        }
-        if (noDataMessage) {
-            noDataMessage.style.display = 'block';
-        }
+    if (mainContent) {
+      mainContent.style.display = 'none';
     }
+    if (statsSummary) {
+      statsSummary.style.display = 'none';
+    }
+    if (noDataMessage) {
+      noDataMessage.style.display = 'block';
+    }
+  }
 
-    /**
+  /**
    * 通知を表示
    */
-    showNotification(message, type = 'info') {
+  showNotification(message, type = 'info') {
     // 通知システムの実装（既存の通知システムを使用）
-        window.dispatchEvent(
-            new CustomEvent('showNotification', {
-                detail: { message, type }
-            })
-        );
-    }
+    window.dispatchEvent(
+      new CustomEvent('showNotification', {
+        detail: { message, type },
+      })
+    );
+  }
 
-    /**
+  /**
    * プログレッシブ・オーバーロードの計算
    * @param {Array} progressData - 進捗データ
    * @param {string} exerciseId - エクササイズID
    * @returns {Object} プログレッシブ・オーバーロード分析結果
    */
-    calculateProgressiveOverload(progressData, exerciseId) {
-        try {
-            if (!progressData || progressData.length < 2) {
-                return {
-                    isProgressive: false,
-                    overloadRate: 0,
-                    trend: 'insufficient_data',
-                    recommendations: ['より多くのデータが必要です']
-                };
-            }
+  calculateProgressiveOverload(progressData, exerciseId) {
+    try {
+      if (!progressData || progressData.length < 2) {
+        return {
+          isProgressive: false,
+          overloadRate: 0,
+          trend: 'insufficient_data',
+          recommendations: ['より多くのデータが必要です'],
+        };
+      }
 
-            // エクササイズ別のデータをフィルタリング
-            const exerciseData = progressData.filter(
-                (item) => item.exercise_id === exerciseId
-            );
+      // エクササイズ別のデータをフィルタリング
+      const exerciseData = progressData.filter(
+        (item) => item.exercise_id === exerciseId
+      );
 
-            if (exerciseData.length < 2) {
-                return {
-                    isProgressive: false,
-                    overloadRate: 0,
-                    trend: 'insufficient_data',
-                    recommendations: ['このエクササイズのデータが不足しています']
-                };
-            }
+      if (exerciseData.length < 2) {
+        return {
+          isProgressive: false,
+          overloadRate: 0,
+          trend: 'insufficient_data',
+          recommendations: ['このエクササイズのデータが不足しています'],
+        };
+      }
 
-            // 日付順にソート
-            exerciseData.sort(
-                (a, b) => new Date(a.workout_date) - new Date(b.workout_date)
-            );
+      // 日付順にソート
+      exerciseData.sort(
+        (a, b) => new Date(a.workout_date) - new Date(b.workout_date)
+      );
 
-            // 1RMの推移を計算
-            const oneRMHistory = exerciseData.map((item) =>
-                this.calculateOneRM(item.weight, item.reps)
-            );
+      // 1RMの推移を計算
+      const oneRMHistory = exerciseData.map((item) =>
+        this.calculateOneRM(item.weight, item.reps)
+      );
 
-            // プログレッシブ・オーバーロード率を計算
-            const overloadRate = this.calculateOverloadRate(oneRMHistory);
+      // プログレッシブ・オーバーロード率を計算
+      const overloadRate = this.calculateOverloadRate(oneRMHistory);
 
-            // トレンドを分析
-            const trend = this.analyzeTrend(oneRMHistory);
+      // トレンドを分析
+      const trend = this.analyzeTrend(oneRMHistory);
 
-            // 推奨事項を生成
-            const recommendations = this.generateRecommendations(
-                overloadRate,
-                trend,
-                oneRMHistory
-            );
+      // 推奨事項を生成
+      const recommendations = this.generateRecommendations(
+        overloadRate,
+        trend,
+        oneRMHistory
+      );
 
-            return {
-                isProgressive: overloadRate > 0,
-                overloadRate,
-                trend,
-                recommendations,
-                oneRMHistory,
-                lastOneRM: oneRMHistory[oneRMHistory.length - 1],
-                firstOneRM: oneRMHistory[0],
-                improvement: oneRMHistory[oneRMHistory.length - 1] - oneRMHistory[0]
-            };
-        } catch (error) {
-            handleError(error, 'ProgressPage.calculateProgressiveOverload');
-            return {
-                isProgressive: false,
-                overloadRate: 0,
-                trend: 'error',
-                recommendations: ['計算中にエラーが発生しました']
-            };
-        }
+      return {
+        isProgressive: overloadRate > 0,
+        overloadRate,
+        trend,
+        recommendations,
+        oneRMHistory,
+        lastOneRM: oneRMHistory[oneRMHistory.length - 1],
+        firstOneRM: oneRMHistory[0],
+        improvement: oneRMHistory[oneRMHistory.length - 1] - oneRMHistory[0],
+      };
+    } catch (error) {
+      handleError(error, 'ProgressPage.calculateProgressiveOverload');
+      return {
+        isProgressive: false,
+        overloadRate: 0,
+        trend: 'error',
+        recommendations: ['計算中にエラーが発生しました'],
+      };
     }
+  }
 
-    /**
+  /**
    * 1RMを計算（Epley公式）
    * @param {number} weight - 重量
    * @param {number} reps - 回数
    * @returns {number} 推定1RM
    */
-    calculateOneRM(weight, reps) {
-        if (reps <= 0 || weight <= 0) {
-            return 0;
-        }
-        if (reps === 1) {
-            return weight;
-        }
-
-        // Epley公式: 1RM = weight * (1 + reps / 30)
-        return Math.round(weight * (1 + reps / 30) * 100) / 100;
+  calculateOneRM(weight, reps) {
+    if (reps <= 0 || weight <= 0) {
+      return 0;
+    }
+    if (reps === 1) {
+      return weight;
     }
 
-    /**
+    // Epley公式: 1RM = weight * (1 + reps / 30)
+    return Math.round(weight * (1 + reps / 30) * 100) / 100;
+  }
+
+  /**
    * プログレッシブ・オーバーロード率を計算
    * @param {Array} oneRMHistory - 1RM履歴
    * @returns {number} オーバーロード率（%）
    */
-    calculateOverloadRate(oneRMHistory) {
-        if (oneRMHistory.length < 2) {
-            return 0;
-        }
-
-        const firstRM = oneRMHistory[0];
-        const lastRM = oneRMHistory[oneRMHistory.length - 1];
-
-        if (firstRM === 0) {
-            return 0;
-        }
-
-        return Math.round(((lastRM - firstRM) / firstRM) * 100 * 100) / 100;
+  calculateOverloadRate(oneRMHistory) {
+    if (oneRMHistory.length < 2) {
+      return 0;
     }
 
-    /**
+    const firstRM = oneRMHistory[0];
+    const lastRM = oneRMHistory[oneRMHistory.length - 1];
+
+    if (firstRM === 0) {
+      return 0;
+    }
+
+    return Math.round(((lastRM - firstRM) / firstRM) * 100 * 100) / 100;
+  }
+
+  /**
    * トレンドを分析
    * @param {Array} oneRMHistory - 1RM履歴
    * @returns {string} トレンド（'improving', 'plateau', 'declining'）
    */
-    analyzeTrend(oneRMHistory) {
-        if (oneRMHistory.length < 3) {
-            return 'insufficient_data';
-        }
-
-        // 最近の3回のデータでトレンドを判断
-        const recent = oneRMHistory.slice(-3);
-        const first = recent[0];
-        const last = recent[recent.length - 1];
-
-        const change = ((last - first) / first) * 100;
-
-        if (change > 5) {
-            return 'improving';
-        }
-        if (change < -5) {
-            return 'declining';
-        }
-        return 'plateau';
+  analyzeTrend(oneRMHistory) {
+    if (oneRMHistory.length < 3) {
+      return 'insufficient_data';
     }
 
-    /**
+    // 最近の3回のデータでトレンドを判断
+    const recent = oneRMHistory.slice(-3);
+    const first = recent[0];
+    const last = recent[recent.length - 1];
+
+    const change = ((last - first) / first) * 100;
+
+    if (change > 5) {
+      return 'improving';
+    }
+    if (change < -5) {
+      return 'declining';
+    }
+    return 'plateau';
+  }
+
+  /**
    * 推奨事項を生成
    * @param {number} overloadRate - オーバーロード率
    * @param {string} trend - トレンド
    * @param {Array} oneRMHistory - 1RM履歴
    * @returns {Array} 推奨事項の配列
    */
-    generateRecommendations(overloadRate, trend, oneRMHistory) {
-        const recommendations = [];
+  generateRecommendations(overloadRate, trend, oneRMHistory) {
+    const recommendations = [];
 
-        if (overloadRate > 10) {
-            recommendations.push(
-                '素晴らしい進歩です！現在のトレーニングを継続してください。'
-            );
-        } else if (overloadRate > 0) {
-            recommendations.push(
-                '着実に進歩しています。もう少し強度を上げてみてください。'
-            );
-        } else if (overloadRate === 0) {
-            recommendations.push(
-                'プラトー状態です。トレーニング方法を見直してみてください。'
-            );
-        } else {
-            recommendations.push(
-                'パフォーマンスが低下しています。休息を取るか、トレーニング強度を調整してください。'
-            );
-        }
-
-        if (trend === 'plateau') {
-            recommendations.push(
-                'プラトーを打破するために、新しいエクササイズやトレーニング方法を試してみてください。'
-            );
-        } else if (trend === 'declining') {
-            recommendations.push(
-                'オーバートレーニングの可能性があります。休息日を増やしてください。'
-            );
-        }
-
-        // 具体的な数値目標を提案
-        const lastOneRM = oneRMHistory[oneRMHistory.length - 1];
-        if (lastOneRM > 0) {
-            const nextTarget = Math.round(lastOneRM * 1.05 * 100) / 100;
-            recommendations.push(`次の目標: ${nextTarget}kg（現在の1RMの5%増）`);
-        }
-
-        return recommendations;
+    if (overloadRate > 10) {
+      recommendations.push(
+        '素晴らしい進歩です！現在のトレーニングを継続してください。'
+      );
+    } else if (overloadRate > 0) {
+      recommendations.push(
+        '着実に進歩しています。もう少し強度を上げてみてください。'
+      );
+    } else if (overloadRate === 0) {
+      recommendations.push(
+        'プラトー状態です。トレーニング方法を見直してみてください。'
+      );
+    } else {
+      recommendations.push(
+        'パフォーマンスが低下しています。休息を取るか、トレーニング強度を調整してください。'
+      );
     }
 
-    /**
+    if (trend === 'plateau') {
+      recommendations.push(
+        'プラトーを打破するために、新しいエクササイズやトレーニング方法を試してみてください。'
+      );
+    } else if (trend === 'declining') {
+      recommendations.push(
+        'オーバートレーニングの可能性があります。休息日を増やしてください。'
+      );
+    }
+
+    // 具体的な数値目標を提案
+    const lastOneRM = oneRMHistory[oneRMHistory.length - 1];
+    if (lastOneRM > 0) {
+      const nextTarget = Math.round(lastOneRM * 1.05 * 100) / 100;
+      recommendations.push(`次の目標: ${nextTarget}kg（現在の1RMの5%増）`);
+    }
+
+    return recommendations;
+  }
+
+  /**
    * プログレッシブ・オーバーロード分析を表示
    * @param {string} exerciseId - エクササイズID
    */
-    async displayProgressiveOverloadAnalysis(exerciseId) {
-        try {
-            if (!exerciseId || !this.progressData.length) {
-                return;
-            }
+  async displayProgressiveOverloadAnalysis(exerciseId) {
+    try {
+      if (!exerciseId || !this.progressData.length) {
+        return;
+      }
 
-            // プログレッシブ・オーバーロードを計算
-            const analysis = this.calculateProgressiveOverload(
-                this.progressData,
-                exerciseId
-            );
+      // プログレッシブ・オーバーロードを計算
+      const analysis = this.calculateProgressiveOverload(
+        this.progressData,
+        exerciseId
+      );
 
-            // 分析結果を表示
-            const analysisSection = safeGetElement('#progressive-overload-analysis');
-            if (analysisSection) {
-                analysisSection.style.display = 'block';
-            }
+      // 分析結果を表示
+      const analysisSection = safeGetElement('#progressive-overload-analysis');
+      if (analysisSection) {
+        analysisSection.style.display = 'block';
+      }
 
-            // オーバーロード率を表示
-            const overloadRateElement = safeGetElement('#overload-rate');
-            if (overloadRateElement) {
-                const rate = analysis.overloadRate;
-                overloadRateElement.textContent = `${rate > 0 ? '+' : ''}${rate}%`;
-                overloadRateElement.className = `text-2xl font-bold ${rate > 0 ? 'text-green-300' : rate < 0 ? 'text-red-300' : 'text-yellow-300'}`;
-            }
+      // オーバーロード率を表示
+      const overloadRateElement = safeGetElement('#overload-rate');
+      if (overloadRateElement) {
+        const rate = analysis.overloadRate;
+        overloadRateElement.textContent = `${rate > 0 ? '+' : ''}${rate}%`;
+        overloadRateElement.className = `text-2xl font-bold ${rate > 0 ? 'text-green-300' : rate < 0 ? 'text-red-300' : 'text-yellow-300'}`;
+      }
 
-            // トレンドを表示
-            const trendElement = safeGetElement('#trend-status');
-            if (trendElement) {
-                const trendText = this.getTrendText(analysis.trend);
-                const trendIcon = this.getTrendIcon(analysis.trend);
-                trendElement.innerHTML = `${trendIcon} ${trendText}`;
-            }
+      // トレンドを表示
+      const trendElement = safeGetElement('#trend-status');
+      if (trendElement) {
+        const trendText = this.getTrendText(analysis.trend);
+        const trendIcon = this.getTrendIcon(analysis.trend);
+        trendElement.innerHTML = `${trendIcon} ${trendText}`;
+      }
 
-            // 改善幅を表示
-            const improvementElement = safeGetElement('#improvement-amount');
-            if (improvementElement) {
-                const improvement = analysis.improvement || 0;
-                improvementElement.textContent = `${improvement > 0 ? '+' : ''}${improvement} kg`;
-                improvementElement.className = `text-2xl font-bold ${improvement > 0 ? 'text-purple-300' : improvement < 0 ? 'text-red-300' : 'text-yellow-300'}`;
-            }
+      // 改善幅を表示
+      const improvementElement = safeGetElement('#improvement-amount');
+      if (improvementElement) {
+        const improvement = analysis.improvement || 0;
+        improvementElement.textContent = `${improvement > 0 ? '+' : ''}${improvement} kg`;
+        improvementElement.className = `text-2xl font-bold ${improvement > 0 ? 'text-purple-300' : improvement < 0 ? 'text-red-300' : 'text-yellow-300'}`;
+      }
 
-            // 推奨事項を表示
-            this.displayRecommendations(analysis.recommendations);
-        } catch (error) {
-            handleError(error, 'ProgressPage.displayProgressiveOverloadAnalysis');
-        }
+      // 推奨事項を表示
+      this.displayRecommendations(analysis.recommendations);
+    } catch (error) {
+      handleError(error, 'ProgressPage.displayProgressiveOverloadAnalysis');
     }
+  }
 
-    /**
+  /**
    * トレンドテキストを取得
    * @param {string} trend - トレンド
    * @returns {string} トレンドテキスト
    */
-    getTrendText(trend) {
-        const trendMap = {
-            improving: '改善中',
-            plateau: 'プラトー',
-            declining: '低下中',
-            insufficient_data: 'データ不足',
-            error: 'エラー'
-        };
-        return trendMap[trend] || '不明';
-    }
+  getTrendText(trend) {
+    const trendMap = {
+      improving: '改善中',
+      plateau: 'プラトー',
+      declining: '低下中',
+      insufficient_data: 'データ不足',
+      error: 'エラー',
+    };
+    return trendMap[trend] || '不明';
+  }
 
-    /**
+  /**
    * トレンドアイコンを取得
    * @param {string} trend - トレンド
    * @returns {string} トレンドアイコン
    */
-    getTrendIcon(trend) {
-        const iconMap = {
-            improving: '<i class="fas fa-arrow-up text-green-300"></i>',
-            plateau: '<i class="fas fa-minus text-yellow-300"></i>',
-            declining: '<i class="fas fa-arrow-down text-red-300"></i>',
-            insufficient_data: '<i class="fas fa-question text-gray-300"></i>',
-            error: '<i class="fas fa-exclamation-triangle text-red-300"></i>'
-        };
-        return iconMap[trend] || '<i class="fas fa-question text-gray-300"></i>';
-    }
+  getTrendIcon(trend) {
+    const iconMap = {
+      improving: '<i class="fas fa-arrow-up text-green-300"></i>',
+      plateau: '<i class="fas fa-minus text-yellow-300"></i>',
+      declining: '<i class="fas fa-arrow-down text-red-300"></i>',
+      insufficient_data: '<i class="fas fa-question text-gray-300"></i>',
+      error: '<i class="fas fa-exclamation-triangle text-red-300"></i>',
+    };
+    return iconMap[trend] || '<i class="fas fa-question text-gray-300"></i>';
+  }
 
-    /**
+  /**
    * 推奨事項を表示
    * @param {Array} recommendations - 推奨事項の配列
    */
-    displayRecommendations(recommendations) {
-        const recommendationsList = safeGetElement('#recommendations-list');
-        if (!recommendationsList) {
-            return;
-        }
+  displayRecommendations(recommendations) {
+    const recommendationsList = safeGetElement('#recommendations-list');
+    if (!recommendationsList) {
+      return;
+    }
 
-        recommendationsList.innerHTML = '';
+    recommendationsList.innerHTML = '';
 
-        if (!recommendations || recommendations.length === 0) {
-            recommendationsList.innerHTML =
+    if (!recommendations || recommendations.length === 0) {
+      recommendationsList.innerHTML =
         '<p class="text-gray-500">推奨事項はありません。</p>';
-            return;
-        }
+      return;
+    }
 
-        recommendations.forEach((recommendation, index) => {
-            const recommendationElement = document.createElement('div');
-            recommendationElement.className =
+    recommendations.forEach((recommendation, index) => {
+      const recommendationElement = document.createElement('div');
+      recommendationElement.className =
         'flex items-start space-x-3 p-3 bg-gray-50 rounded-lg';
-            recommendationElement.innerHTML = `
+      recommendationElement.innerHTML = `
                 <div class="flex-shrink-0">
                     <i class="fas fa-lightbulb text-yellow-500 mt-1"></i>
                 </div>
@@ -1752,73 +1752,73 @@ class ProgressPage {
                     <p class="text-sm text-gray-700">${recommendation}</p>
                 </div>
             `;
-            recommendationsList.appendChild(recommendationElement);
-        });
-    }
+      recommendationsList.appendChild(recommendationElement);
+    });
+  }
 
-    /**
+  /**
    * ツールチップを設定
    */
-    setupTooltips() {
-        try {
-            console.log('Setting up tooltips for progress page');
+  setupTooltips() {
+    try {
+      console.log('Setting up tooltips for progress page');
 
-            // 1RM計算のツールチップ
-            tooltipManager.addTooltip('#one-rm-calculator', {
-                content:
+      // 1RM計算のツールチップ
+      tooltipManager.addTooltip('#one-rm-calculator', {
+        content:
           'Epley公式を使用して1RM（1回最大重量）を計算します。重量と回数を入力してください。',
-                position: 'top'
-            });
+        position: 'top',
+      });
 
-            // プログレッシブ・オーバーロードのツールチップ
-            tooltipManager.addTooltip('#progressive-overload-card', {
-                content:
+      // プログレッシブ・オーバーロードのツールチップ
+      tooltipManager.addTooltip('#progressive-overload-card', {
+        content:
           'プログレッシブ・オーバーロードは、時間の経過とともにトレーニング強度を徐々に増加させる原則です。',
-                position: 'top'
-            });
+        position: 'top',
+      });
 
-            // 進捗グラフのツールチップ
-            tooltipManager.addTooltip('#progress-chart', {
-                content:
+      // 進捗グラフのツールチップ
+      tooltipManager.addTooltip('#progress-chart', {
+        content:
           '選択したエクササイズの1RM推移を表示します。上昇トレンドが理想です。',
-                position: 'top'
-            });
+        position: 'top',
+      });
 
-            // 目標設定のツールチップ
-            tooltipManager.addTooltip('#goal-setting', {
-                content: '具体的な数値目標を設定して、モチベーションを維持しましょう。',
-                position: 'top'
-            });
+      // 目標設定のツールチップ
+      tooltipManager.addTooltip('#goal-setting', {
+        content: '具体的な数値目標を設定して、モチベーションを維持しましょう。',
+        position: 'top',
+      });
 
-            // 推奨事項のツールチップ
-            tooltipManager.addTooltip('#recommendations', {
-                content: 'あなたの進捗データに基づいた個別の推奨事項です。',
-                position: 'top'
-            });
+      // 推奨事項のツールチップ
+      tooltipManager.addTooltip('#recommendations', {
+        content: 'あなたの進捗データに基づいた個別の推奨事項です。',
+        position: 'top',
+      });
 
-            console.log('✅ Tooltips setup complete for progress page');
-        } catch (error) {
-            console.error('❌ Failed to setup tooltips:', error);
-        }
+      console.log('✅ Tooltips setup complete for progress page');
+    } catch (error) {
+      console.error('❌ Failed to setup tooltips:', error);
     }
+  }
 
-    /**
+  /**
    * ページをクリーンアップ
    */
-    cleanup() {
-        try {
-            // チャートを破棄
-            chartService.destroyAllCharts();
+  cleanup() {
+    try {
+      // チャートを破棄
+      chartService.destroyAllCharts();
 
-            // データをリセット
-            this.progressData = [];
-            this.goalsData = [];
-            this.selectedExercise = null;
-            this.isInitialized = false;
-        } catch (error) {
-            handleError(error, 'ProgressPage.cleanup');
-        }
+      // データをリセット
+      this.progressData = [];
+      this.goalsData = [];
+      this.selectedExercise = null;
+      this.isInitialized = false;
+    } catch (error) {
+      handleError(error, 'ProgressPage.cleanup');
     }
+  }
 }
 
 // シングルトンインスタンスをエクスポート
