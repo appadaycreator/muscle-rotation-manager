@@ -1028,11 +1028,21 @@ class AnalysisPage {
     });
 
     this.workoutData.forEach((workout) => {
-      const workoutDate = new Date(workout.date || workout.startTime)
-        .toISOString()
-        .split('T')[0];
-      if (Object.prototype.hasOwnProperty.call(frequencyMap, workoutDate)) {
-        frequencyMap[workoutDate]++;
+      const workoutDateStr = workout.date || workout.startTime;
+      if (!workoutDateStr) {
+        console.warn('Workout missing date:', workout);
+        return;
+      }
+      
+      const workoutDate = new Date(workoutDateStr);
+      if (isNaN(workoutDate.getTime())) {
+        console.warn('Invalid workout date:', workoutDateStr, workout);
+        return;
+      }
+      
+      const workoutDateISO = workoutDate.toISOString().split('T')[0];
+      if (Object.prototype.hasOwnProperty.call(frequencyMap, workoutDateISO)) {
+        frequencyMap[workoutDateISO]++;
       }
     });
 

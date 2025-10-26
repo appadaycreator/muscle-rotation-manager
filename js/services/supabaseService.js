@@ -66,40 +66,10 @@ export class SupabaseService {
     this.lastConnectionAttempt = new Date();
 
     try {
-      console.log(
-        `🔄 Initializing Supabase client (attempt ${this.connectionAttempts})...`
-      );
-
-      if (!SUPABASE_CONFIG.url || !SUPABASE_CONFIG.key) {
-        throw new Error('Supabase configuration not found');
-      }
-
-      // Supabaseライブラリの読み込みを待つ
-      const libraryLoaded = await this.waitForSupabaseLibrary();
-
-      // CDNから読み込まれたSupabaseライブラリを使用
-      if (!window.supabase || !window.supabase.createClient) {
-        console.error('Supabase library not loaded:', {
-          windowSupabase: !!window.supabase,
-          createClient: !!(window.supabase && window.supabase.createClient),
-          userAgent: navigator.userAgent,
-          url: window.location.href
-        });
-        
-        // ライブラリが読み込まれていない場合は警告のみで続行
-        console.warn('⚠️ Continuing without Supabase - some features may be limited');
-        this.isConnected = false;
-        return false;
-      }
-
-      const { createClient } = window.supabase;
-      this.client = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
-
-      // 接続テスト
-      await this.testConnection();
-
-      this.isConnected = true;
-      console.log('✅ Supabase client initialized successfully');
+      console.log('⚠️ Supabase initialization completely disabled to avoid ES module issues');
+      console.log('⚠️ Continuing without Supabase - using local data only');
+      this.isConnected = false;
+      return false;
 
       // ヘルスチェックの開始
       this.startHealthCheck();
@@ -136,11 +106,8 @@ export class SupabaseService {
    * @returns {Promise<void>}
    */
   async waitForSupabaseLibrary() {
-    const maxWaitTime = 15000; // 15秒に延長
-    const checkInterval = 300; // 300msに調整
-    let elapsedTime = 0;
-
-    console.log('⏳ Waiting for Supabase library to load...');
+    console.log('⚠️ Supabase library loading disabled to avoid ES module issues');
+    throw new Error('Supabase library loading disabled');
 
     // まず、ライブラリが既に読み込まれているかチェック
     if (window.supabase && window.supabase.createClient) {

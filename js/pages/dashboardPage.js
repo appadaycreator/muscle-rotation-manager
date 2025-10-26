@@ -272,6 +272,18 @@ class DashboardPage {
    */
   async loadStats() {
     try {
+      // Supabaseが利用可能かチェック
+      if (!supabaseService.isAvailable() || !supabaseService.client) {
+        console.log('Supabase not available, showing default stats');
+        this.updateStatsDisplay({
+          totalWorkouts: 0,
+          currentStreak: 0,
+          weeklyProgress: 0,
+          lastWorkout: null,
+        });
+        return;
+      }
+
       // 認証状態をチェック
       const { data: { session } } = await supabaseService.client.auth.getSession();
       if (!session || !session.user) {
@@ -285,9 +297,20 @@ class DashboardPage {
         return;
       }
 
-      const stats = await supabaseService.getUserStats();
-      console.log('Loaded stats:', stats);
-      this.updateStatsDisplay(stats);
+      try {
+        const stats = await supabaseService.getUserStats();
+        console.log('Loaded stats:', stats);
+        this.updateStatsDisplay(stats);
+      } catch (statsError) {
+        console.warn('Failed to load stats from Supabase:', statsError);
+        // フォールバック: デフォルト値を表示
+        this.updateStatsDisplay({
+          totalWorkouts: 0,
+          currentStreak: 0,
+          weeklyProgress: 0,
+          lastWorkout: null,
+        });
+      }
     } catch (error) {
       console.error('Error loading stats:', error);
       // フォールバック: デフォルト値を表示

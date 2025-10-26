@@ -180,9 +180,19 @@ class MPAInitializer {
 
       // authManagerが初期化されているかチェック
       if (!authManager || typeof authManager.isAuthenticated !== 'function') {
-        console.error('❌ AuthManager is not properly initialized');
-        this.showLoginPrompt();
-        return false;
+        console.warn('⚠️ AuthManager is not properly initialized, attempting to initialize...');
+        try {
+          await authManager.initialize();
+          if (typeof authManager.isAuthenticated !== 'function') {
+            console.error('❌ AuthManager initialization failed');
+            this.showLoginPrompt();
+            return false;
+          }
+        } catch (error) {
+          console.error('❌ AuthManager initialization failed:', error);
+          this.showLoginPrompt();
+          return false;
+        }
       }
 
       const isAuthenticated = await authManager.isAuthenticated();

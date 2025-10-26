@@ -225,20 +225,18 @@ export class WorkoutDataService {
     try {
       const { limit = 100, startDate, endDate } = options;
 
-      const result = await supabaseService.getWorkouts(
-        limit,
-        startDate,
-        endDate
-      );
-
-      if (result.success) {
-        return result.data || [];
-      } else {
-        throw new Error(result.error || 'Failed to load from Supabase');
+      // Supabaseが利用可能かチェック
+      if (!supabaseService.isAvailable()) {
+        console.warn('Supabase is not available, skipping cloud sync');
+        return [];
       }
+
+      const data = await supabaseService.getWorkouts(limit);
+      return data || [];
     } catch (error) {
       console.error('Error loading from Supabase:', error);
-      throw error;
+      // Supabaseエラーの場合は空配列を返してローカルデータにフォールバック
+      return [];
     }
   }
 
