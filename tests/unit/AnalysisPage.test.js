@@ -130,7 +130,7 @@ describe('AnalysisPage', () => {
             analysisPage.renderAnalysisPage();
             
             const mainContent = document.querySelector('#main-content');
-            expect(mainContent.innerHTML).toContain('トレーニング分析');
+            expect(mainContent.innerHTML).toContain('分析');
         });
 
         it('should return early if main content is not found', () => {

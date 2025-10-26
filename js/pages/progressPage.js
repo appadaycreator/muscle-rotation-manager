@@ -504,14 +504,15 @@ class ProgressPage {
      */
     async loadExercises() {
         try {
-            // 筋肉部位を読み込み
-            const { data: muscleGroups, error } = await supabaseService.getClient()
-                .from('muscle_groups')
-                .select('id, name, name_ja')
-                .eq('is_active', true)
-                .order('display_order');
-
-            if (error) {throw error;}
+            // 筋肉部位を読み込み（認証なしでも動作）
+            const muscleGroups = [
+                { id: 'chest', name: 'Chest', name_ja: '胸' },
+                { id: 'back', name: 'Back', name_ja: '背中' },
+                { id: 'shoulders', name: 'Shoulders', name_ja: '肩' },
+                { id: 'arms', name: 'Arms', name_ja: '腕' },
+                { id: 'legs', name: 'Legs', name_ja: '脚' },
+                { id: 'core', name: 'Core', name_ja: '腹筋' }
+            ];
 
             const muscleGroupSelect = safeGetElement('muscle-group-select');
             if (muscleGroupSelect && muscleGroups) {
@@ -525,6 +526,46 @@ class ProgressPage {
         } catch (error) {
             handleError(error, 'ProgressPage.loadExercises');
         }
+    }
+
+    /**
+     * 筋肉部位別のエクササイズを取得
+     */
+    getExercisesByMuscleGroup(muscleGroupId) {
+        const exercises = {
+            'chest': [
+                { id: 'bench-press', name: 'ベンチプレス', name_ja: 'ベンチプレス' },
+                { id: 'push-ups', name: 'プッシュアップ', name_ja: 'プッシュアップ' },
+                { id: 'dumbbell-press', name: 'ダンベルプレス', name_ja: 'ダンベルプレス' }
+            ],
+            'back': [
+                { id: 'pull-ups', name: 'プルアップ', name_ja: 'プルアップ' },
+                { id: 'rows', name: 'ロウイング', name_ja: 'ロウイング' },
+                { id: 'lat-pulldown', name: 'ラットプルダウン', name_ja: 'ラットプルダウン' }
+            ],
+            'shoulders': [
+                { id: 'overhead-press', name: 'オーバーヘッドプレス', name_ja: 'オーバーヘッドプレス' },
+                { id: 'lateral-raises', name: 'サイドレイズ', name_ja: 'サイドレイズ' },
+                { id: 'rear-delt-fly', name: 'リアデルトフライ', name_ja: 'リアデルトフライ' }
+            ],
+            'arms': [
+                { id: 'bicep-curls', name: 'バイセップカール', name_ja: 'バイセップカール' },
+                { id: 'tricep-dips', name: 'トライセップディップス', name_ja: 'トライセップディップス' },
+                { id: 'hammer-curls', name: 'ハンマーカール', name_ja: 'ハンマーカール' }
+            ],
+            'legs': [
+                { id: 'squats', name: 'スクワット', name_ja: 'スクワット' },
+                { id: 'deadlifts', name: 'デッドリフト', name_ja: 'デッドリフト' },
+                { id: 'lunges', name: 'ランジ', name_ja: 'ランジ' }
+            ],
+            'core': [
+                { id: 'plank', name: 'プランク', name_ja: 'プランク' },
+                { id: 'crunches', name: 'クランチ', name_ja: 'クランチ' },
+                { id: 'russian-twists', name: 'ロシアンツイスト', name_ja: 'ロシアンツイスト' }
+            ]
+        };
+        
+        return exercises[muscleGroupId] || [];
     }
 
     /**
@@ -544,14 +585,8 @@ class ProgressPage {
                 return;
             }
 
-            // 選択された筋肉部位のエクササイズを読み込み
-            const { data: exercises, error } = await supabaseService.getClient()
-                .from('exercises')
-                .select('id, name, name_ja')
-                .eq('muscle_group_id', muscleGroupId)
-                .order('name_ja');
-
-            if (error) {throw error;}
+            // 選択された筋肉部位のエクササイズを読み込み（認証なしでも動作）
+            const exercises = this.getExercisesByMuscleGroup(muscleGroupId);
 
             if (exercises && exercises.length > 0) {
                 exercises.forEach(exercise => {
@@ -588,30 +623,67 @@ class ProgressPage {
     }
 
     /**
+     * サンプル進捗データを生成
+     */
+    generateSampleProgressData(exerciseId) {
+        const today = new Date();
+        const sampleData = [];
+        
+        // 過去90日分のサンプルデータを生成
+        for (let i = 0; i < 90; i++) {
+            const date = new Date(today);
+            date.setDate(date.getDate() - i);
+            
+            // 3-4日に1回の頻度でワークアウトを生成
+            if (i % 3 === 0 || i % 4 === 0) {
+                // 重量の進歩をシミュレート
+                const baseWeight = 80;
+                const progressFactor = Math.max(0, (90 - i) / 90); // 時間とともに重量が増加
+                const weight = Math.floor(baseWeight + (progressFactor * 20));
+                
+                // セット数と回数も進歩をシミュレート
+                const sets = 3 + Math.floor(progressFactor * 2); // 3-5セット
+                const reps = 8 + Math.floor(progressFactor * 4); // 8-12回
+                
+                sampleData.push({
+                    id: `sample-${i}`,
+                    date: date.toISOString().split('T')[0],
+                    exercise_id: exerciseId,
+                    weight: weight,
+                    reps: reps,
+                    sets: sets,
+                    volume: weight * reps * sets,
+                    one_rm: Math.round(weight * (1 + reps / 30)), // 簡易1RM計算
+                    notes: 'サンプルデータ'
+                });
+            }
+        }
+        
+        return sampleData;
+    }
+
+    /**
      * 進捗データを読み込み
      */
     async loadProgressData() {
         try {
-            if (!this.selectedExercise || !this.currentUser) {return;}
+            if (!this.selectedExercise) {return;}
 
-            // 進捗履歴を取得
-            this.progressData = await progressTrackingService.getProgressHistory(
-                this.currentUser.id,
-                this.selectedExercise,
-                90
-            );
+            // ローカルストレージから進捗データを読み込み（認証なしでも動作）
+            this.progressData = JSON.parse(localStorage.getItem(`progress_${this.selectedExercise}`) || '[]');
+
+            // サンプルデータを追加（デモ用）
+            if (this.progressData.length === 0) {
+                this.progressData = this.generateSampleProgressData(this.selectedExercise);
+            }
 
             if (this.progressData.length === 0) {
                 this.showNoDataMessage();
                 return;
             }
 
-            // 目標データを取得
-            const goalProgress = await progressTrackingService.calculateGoalProgress(
-                this.currentUser.id,
-                this.selectedExercise
-            );
-            this.goalsData = goalProgress.progress || [];
+            // 目標データを取得（ローカルストレージから）
+            this.goalsData = JSON.parse(localStorage.getItem(`goals_${this.selectedExercise}`) || '[]');
 
             // 統計を更新
             await this.updateStatsSummary();
