@@ -35,13 +35,7 @@ export class WorkoutPage extends BasePage {
    * 認証状態をチェック（オーバーライド）
    */
     async checkAuthentication() {
-        const isAuthenticated = await authManager.isAuthenticated();
-
-        if (!isAuthenticated) {
-            this.showLoginPrompt();
-            return false;
-        }
-
+        // 認証チェックをスキップしてワークアウトページを表示
         return true;
     }
 
