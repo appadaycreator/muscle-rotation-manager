@@ -600,6 +600,39 @@ class ProgressPage extends BasePage {
   }
 
   /**
+   * 筋肉部位の統計データを計算
+   */
+  calculateMuscleGroupAnalysis(muscleData) {
+    if (!muscleData || muscleData.length === 0) {
+      return {
+        totalSessions: 0,
+        totalVolume: 0,
+        averageVolumePerSession: 0,
+        totalDuration: 0
+      };
+    }
+
+    let totalVolume = 0;
+    let totalDuration = 0;
+
+    muscleData.forEach(workout => {
+      if (workout.exercises && workout.exercises.length > 0) {
+        workout.exercises.forEach(exercise => {
+          totalVolume += (exercise.weight || 0) * (exercise.reps || 0) * (exercise.sets || 0);
+        });
+      }
+      totalDuration += workout.duration || 0;
+    });
+
+    return {
+      totalSessions: muscleData.length,
+      totalVolume,
+      averageVolumePerSession: muscleData.length > 0 ? Math.round(totalVolume / muscleData.length) : 0,
+      totalDuration
+    };
+  }
+
+  /**
    * エクササイズの統計データを計算
    */
   calculateExerciseStats(exerciseData, exerciseName) {
@@ -1059,4 +1092,4 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.progressPageInstance = progressPage;
 });
 
-export default new ProgressPage();
+export default ProgressPage;
