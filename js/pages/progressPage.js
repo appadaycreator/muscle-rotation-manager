@@ -689,7 +689,7 @@ class ProgressPage extends BasePage {
       // 日付順にソート
       exerciseSessions.sort((a, b) => a.date - b.date);
 
-      const chart = new Chart(canvas, {
+      new Chart(canvas, {
         type: 'line',
         data: {
           labels: exerciseSessions.map(s => s.date.toLocaleDateString()),
@@ -767,7 +767,7 @@ class ProgressPage extends BasePage {
       exerciseSelector.addEventListener('change', async (event) => {
         this.selectedExercise = event.target.value;
         if (this.selectedExercise) {
-          await this.renderExerciseAnalysis(this.selectedExercise);
+          await this.renderExerciseAnalysisFromService(this.selectedExercise);
         }
       });
     }
@@ -785,9 +785,9 @@ class ProgressPage extends BasePage {
   }
 
   /**
-   * エクササイズ分析をレンダリング
+   * エクササイズ分析をレンダリング（プログレッシブ・オーバーロードサービス使用）
    */
-  async renderExerciseAnalysis(exerciseName) {
+  async renderExerciseAnalysisFromService(exerciseName) {
     const container = safeGetElement('#exercise-analysis');
     if (!container) return;
 
