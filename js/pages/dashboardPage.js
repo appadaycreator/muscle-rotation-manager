@@ -542,7 +542,9 @@ class DashboardPage {
                 return;
             }
 
-            container.innerHTML = this.muscleRecoveryData.map(muscle => `
+            container.innerHTML = this.muscleRecoveryData.map(muscle => {
+                console.log(`Rendering muscle card for ${muscle.id}:`, muscle);
+                return `
                 <div class="muscle-card muscle-part rounded-lg p-6 bg-white shadow-sm border cursor-pointer hover:shadow-md transition-shadow" data-muscle="${muscle.id}">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-semibold text-gray-800">
@@ -567,7 +569,8 @@ class DashboardPage {
                         次回推奨: ${muscle.nextRecommended || '未設定'}
                     </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
 
             // 再度筋肉部位ハンドラーを設定
             this.setupMusclePartHandlers();
@@ -661,6 +664,7 @@ class DashboardPage {
         try {
             const recoveryData = await recommendationService.getMuscleRecoveryData();
             console.log('Muscle recovery data loaded:', recoveryData);
+            console.log('Arm data specifically:', recoveryData.find(m => m.id === 'arm'));
             return recoveryData;
         } catch (error) {
             console.error('筋肉回復データの取得に失敗:', error);
