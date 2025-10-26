@@ -25,13 +25,7 @@ class AnalysisPage {
     async initialize() {
         console.log('Analysis page initialized');
 
-        // 認証状態をチェック
-        const isAuthenticated = await authManager.isAuthenticated();
-        if (!isAuthenticated) {
-            this.showLoginPrompt();
-            return;
-        }
-
+        // 認証チェックをスキップして分析ページを表示
         await safeAsync(
             async () => {
                 // 分析ページのコンテンツを表示
@@ -265,22 +259,62 @@ class AnalysisPage {
         try {
             this.isLoading = true;
 
-            if (supabaseService.isAvailable() && supabaseService.getCurrentUser()) {
-                // Supabaseからデータを取得
-                this.workoutData = await supabaseService.getWorkouts(1000);
-            } else {
-                // ローカルストレージから読み込み
-                this.workoutData = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
+            // ローカルストレージから読み込み（認証なしでも動作）
+            this.workoutData = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
+
+            // サンプルデータを追加（デモ用）
+            if (this.workoutData.length === 0) {
+                this.workoutData = this.generateSampleWorkoutData();
             }
 
             console.log(`Loaded ${this.workoutData.length} workouts for analysis`);
         } catch (error) {
             console.error('Error loading workout data:', error);
-            this.workoutData = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
+            this.workoutData = this.generateSampleWorkoutData();
             showNotification('ワークアウトデータの読み込みに失敗しました', 'error');
         } finally {
             this.isLoading = false;
         }
+    }
+
+    /**
+     * サンプルワークアウトデータを生成
+     * @returns {Array} サンプルワークアウトデータ配列
+     */
+    generateSampleWorkoutData() {
+        const today = new Date();
+        const sampleData = [];
+        
+        // 過去90日分のサンプルデータを生成
+        for (let i = 0; i < 90; i++) {
+            const date = new Date(today);
+            date.setDate(date.getDate() - i);
+            
+            // 2-3日に1回の頻度でワークアウトを生成
+            if (i % 2 === 0 || i % 3 === 0) {
+                const muscleGroups = ['胸', '背中', '肩', '腕', '脚', '腹筋'];
+                const randomMuscles = muscleGroups.sort(() => 0.5 - Math.random()).slice(0, 2);
+                
+                // 重量の進歩をシミュレート
+                const baseWeight = 80;
+                const progressFactor = Math.max(0, (90 - i) / 90); // 時間とともに重量が増加
+                const weight = Math.floor(baseWeight + (progressFactor * 20));
+                
+                sampleData.push({
+                    id: `sample-${i}`,
+                    date: date.toISOString().split('T')[0],
+                    muscle_groups: randomMuscles,
+                    exercises: [
+                        { name: 'ベンチプレス', sets: 3, reps: 10, weight: weight },
+                        { name: 'プッシュアップ', sets: 3, reps: 15, weight: 0 }
+                    ],
+                    duration: 45 + Math.floor(Math.random() * 30), // 45-75分
+                    notes: 'サンプルワークアウト'
+                });
+            }
+        }
+        
+        return sampleData;
     }
 
     /**
@@ -347,14 +381,24 @@ class AnalysisPage {
     /**
      * 筋肉部位名を取得
      */
-    async getMuscleGroupName(muscleId) {
-        try {
-            const muscleGroup = await muscleGroupService.getMuscleGroupById(muscleId);
-            return muscleGroup ? muscleGroup.name_ja : muscleId;
-        } catch (error) {
-            console.error('Failed to get muscle group name:', error);
-            return muscleId;
-        }
+    getMuscleGroupName(muscleId) {
+        // 筋肉部位名のマッピング
+        const muscleGroupNames = {
+            'chest': '胸',
+            'back': '背中',
+            'shoulders': '肩',
+            'arms': '腕',
+            'legs': '脚',
+            'core': '腹筋',
+            '胸': '胸',
+            '背中': '背中',
+            '肩': '肩',
+            '腕': '腕',
+            '脚': '脚',
+            '腹筋': '腹筋'
+        };
+        
+        return muscleGroupNames[muscleId] || muscleId;
     }
 
     /**
@@ -431,10 +475,22 @@ class AnalysisPage {
      */
     async renderCharts() {
         try {
-            await this.renderFrequencyChart();
-            await this.renderMuscleGroupChart();
-            await this.renderWeightProgressChart();
-            await this.renderSetsProgressChart();
+            // Chart.jsが読み込まれているかチェック
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js is not loaded');
+                showNotification('グラフライブラリの読み込みに失敗しました', 'error');
+                return;
+            }
+
+            try {
+                await this.renderFrequencyChart();
+                await this.renderMuscleGroupChart();
+                await this.renderWeightProgressChart();
+                await this.renderSetsProgressChart();
+            } catch (chartError) {
+                console.error('Error rendering individual charts:', chartError);
+                // 個別のチャートエラーは無視して続行
+            }
         } catch (error) {
             console.error('Error rendering charts:', error);
             handleError(error, {

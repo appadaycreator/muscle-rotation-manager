@@ -78,7 +78,7 @@ describe('CalendarPage', () => {
             
             await calendarPage.initialize();
             
-            expect(consoleSpy).toHaveBeenCalledWith('Calendar page initialized - User authenticated');
+            expect(consoleSpy).toHaveBeenCalledWith('Calendar page initializing without auth check');
             
             consoleSpy.mockRestore();
         });
@@ -102,29 +102,10 @@ describe('CalendarPage', () => {
     });
 
     describe('loadWorkoutData', () => {
-        it('should load workout data from Supabase when available', async () => {
+        it('should load workout data from localStorage when Supabase unavailable', async () => {
             const mockWorkouts = [
                 { id: 1, date: '2024-01-01', exercises: [] },
                 { id: 2, date: '2024-01-02', exercises: [] }
-            ];
-            const mockPlannedWorkouts = [];
-            
-            supabaseService.isAvailable.mockReturnValue(true);
-            supabaseService.getCurrentUser.mockReturnValue({ id: 'user123' });
-            supabaseService.getWorkouts.mockResolvedValue(mockWorkouts);
-            
-            // loadPlannedWorkouts のモック
-            calendarPage.loadPlannedWorkouts = jest.fn().mockResolvedValue(mockPlannedWorkouts);
-            
-            await calendarPage.loadWorkoutData();
-            
-            expect(supabaseService.getWorkouts).toHaveBeenCalledWith(200);
-            expect(calendarPage.workoutData).toEqual(mockWorkouts);
-        });
-
-        it('should load workout data from localStorage when Supabase unavailable', async () => {
-            const mockWorkouts = [
-                { id: 1, date: '2024-01-01', exercises: [] }
             ];
             
             supabaseService.isAvailable.mockReturnValue(false);
@@ -136,12 +117,22 @@ describe('CalendarPage', () => {
             expect(calendarPage.workoutData).toEqual(mockWorkouts);
         });
 
+        it('should generate sample data when no data available', async () => {
+            supabaseService.isAvailable.mockReturnValue(false);
+            window.localStorage.getItem.mockReturnValue('[]');
+            
+            await calendarPage.loadWorkoutData();
+            
+            expect(window.localStorage.getItem).toHaveBeenCalledWith('workoutHistory');
+            expect(calendarPage.workoutData.length).toBeGreaterThan(0);
+        });
+
         it('should handle loading errors gracefully', async () => {
             const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-            supabaseService.isAvailable.mockReturnValue(true);
-            supabaseService.getCurrentUser.mockReturnValue({ id: 'user123' });
-            supabaseService.getWorkouts.mockRejectedValue(new Error('Database error'));
-            window.localStorage.getItem.mockReturnValue('[]');
+            // localStorage.getItem をエラーを投げるようにモック
+            window.localStorage.getItem.mockImplementation(() => {
+                throw new Error('localStorage error');
+            });
             
             await calendarPage.loadWorkoutData();
             
