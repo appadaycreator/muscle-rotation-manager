@@ -3,6 +3,7 @@
 import { BasePage } from '../core/BasePage.js';
 import { Navigation } from '../components/Navigation.js';
 import { supabaseService } from '../services/supabaseService.js';
+import { workoutDataService } from '../services/workoutDataService.js';
 import { authManager } from '../modules/authManager.js';
 import { showNotification } from '../utils/helpers.js';
 import { tooltipManager } from '../utils/TooltipManager.js';
@@ -151,17 +152,12 @@ export class WorkoutPage extends BasePage {
    */
   async loadWorkoutHistory() {
     try {
-      let workoutHistory = [];
-
-      if (supabaseService.isAvailable()) {
-        console.log('Loading workout history from Supabase...');
-        workoutHistory = await supabaseService.getWorkoutHistory();
-        console.log('Workout history loaded from Supabase:', workoutHistory);
-      } else {
-        console.log('Supabase not available, showing empty history');
-        workoutHistory = [];
-      }
-
+      console.log('Loading workout history...');
+      
+      // ワークアウトデータサービスから履歴を読み込み
+      const workoutHistory = await workoutDataService.loadWorkouts({ limit: 50 });
+      
+      console.log('Workout history loaded:', workoutHistory.length, 'workouts');
       this.updateWorkoutHistory(workoutHistory);
     } catch (error) {
       console.error('Failed to load workout history:', error);
@@ -720,35 +716,22 @@ export class WorkoutPage extends BasePage {
       updated_at: new Date().toISOString(),
     };
 
-    console.log('Saving workout to Supabase:', workoutData);
+    console.log('Saving workout data:', workoutData);
 
     try {
-      if (supabaseService.isAvailable()) {
-        // Supabaseに保存
-        await supabaseService.saveWorkout(workoutData);
-        console.log('Workout saved to Supabase successfully');
-
+      // ワークアウトデータサービスを使用して保存
+      const success = await workoutDataService.saveWorkout(workoutData);
+      
+      if (success) {
+        this.currentWorkout.saved = true;
+        showNotification('ワークアウトが保存されました', 'success');
+        console.log('Workout saved successfully');
+        
         // 履歴を再読み込み
         await this.loadWorkoutHistory();
       } else {
-        console.log(
-          'Supabase not available, saving to localStorage as fallback'
-        );
-        // フォールバック: ローカルストレージに保存
-        const history = JSON.parse(
-          localStorage.getItem('workoutHistory') || '[]'
-        );
-        history.push({
-          ...workoutData,
-          endTime,
-          duration,
-        });
-        localStorage.setItem('workoutHistory', JSON.stringify(history));
-        this.updateWorkoutHistory(history);
+        throw new Error('Failed to save workout');
       }
-
-      // 現在のワークアウトに保存済みフラグを設定
-      this.currentWorkout.saved = true;
     } catch (error) {
       console.error('Failed to save workout:', error);
       showNotification('ワークアウトの保存に失敗しました', 'error');

@@ -129,8 +129,16 @@ export class Navigation {
    */
   getCurrentPage() {
     const path = window.location.pathname;
-    const page = path.split('/').pop().replace('.html', '');
-    return page || 'index';
+    
+    // GitHub Pagesのパス（/muscle-rotation-manager/）を考慮
+    const pathParts = path.split('/');
+    const fileName = pathParts[pathParts.length - 1];
+    
+    // ファイル名から拡張子を除去
+    const pageName = fileName.replace('.html', '');
+    
+    // 空文字列の場合はindexを返す
+    return pageName || 'index';
   }
 
   /**
@@ -370,18 +378,23 @@ export class Navigation {
     // モバイルサイドバーを閉じる
     this.closeMobileSidebar();
 
-    // 相対パスの場合は直接遷移を許可
-    if (!href.startsWith('/') && !href.startsWith('http')) {
-      console.log('Navigation allowed, proceeding to:', href);
-      // デフォルトのブラウザナビゲーションを使用
-      return;
-    }
-
     // 絶対パスの場合は相対パスに変換
     if (href.startsWith('/')) {
       const relativeHref = href.substring(1); // 先頭の'/'を削除
       console.log('Converting absolute path to relative:', relativeHref);
       navLink.href = relativeHref;
+      // 絶対パスの場合はpreventDefaultを呼んで、hrefを変更してから遷移
+      event.preventDefault();
+      // 新しいhrefで遷移
+      window.location.href = relativeHref;
+      return;
+    }
+
+    // 相対パスの場合は直接遷移を許可（preventDefaultは呼ばない）
+    if (!href.startsWith('http')) {
+      console.log('Navigation allowed, proceeding to:', href);
+      // デフォルトのブラウザナビゲーションを使用
+      return;
     }
 
     console.log('Navigation allowed, proceeding to:', href);

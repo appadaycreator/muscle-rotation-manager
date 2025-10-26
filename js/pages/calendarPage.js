@@ -1,7 +1,7 @@
 // calendarPage.js - カレンダーページの機能
 
 import { BasePage } from '../core/BasePage.js';
-// import { supabaseService } from '../services/supabaseService.js';
+import { workoutDataService } from '../services/workoutDataService.js';
 import {
   showNotification,
   getMuscleColor,
@@ -42,13 +42,13 @@ class CalendarPage extends BasePage {
     this.setupCalendarInterface();
 
     // データを読み込み
-    this.loadWorkoutData();
+    await this.loadWorkoutData();
 
     // イベントリスナーを設定
     this.setupEventListeners();
 
     // カレンダーをレンダリング
-    this.renderCalendar();
+    await this.renderCalendar();
   }
 
   /**
@@ -66,18 +66,18 @@ class CalendarPage extends BasePage {
     }
 
     // 少し遅延してからカレンダーインターフェースを設定
-    setTimeout(() => {
+    setTimeout(async () => {
       this.setupCalendarInterface();
 
       // データを読み込み
-      this.loadWorkoutData();
+      await this.loadWorkoutData();
 
       // イベントリスナーを設定
       this.setupEventListeners();
       this.setupAuthButton();
 
       // カレンダーをレンダリング
-      this.renderCalendar();
+      await this.renderCalendar();
     }, 100);
   }
 
@@ -88,17 +88,23 @@ class CalendarPage extends BasePage {
     try {
       this.isLoading = true;
 
-      // ローカルストレージから読み込み（認証なしでも動作）
-      this.workoutData = JSON.parse(
-        localStorage.getItem('workoutHistory') || '[]'
-      );
+      // ワークアウトデータサービスから読み込み
+      this.workoutData = await workoutDataService.loadWorkouts({ limit: 1000 });
+      
+      // 予定されたワークアウトを読み込み
       this.plannedWorkouts = JSON.parse(
         localStorage.getItem('plannedWorkouts') || '[]'
       );
 
-      // サンプルデータを追加（デモ用）
+      // データが無い場合はサンプルデータを生成
       if (this.workoutData.length === 0) {
+        console.log('No workout data found, generating sample data...');
         this.workoutData = this.generateSampleWorkoutData();
+        
+        // サンプルデータを保存
+        for (const workout of this.workoutData) {
+          await workoutDataService.saveWorkout(workout);
+        }
       }
 
       console.log(
@@ -326,16 +332,18 @@ class CalendarPage extends BasePage {
     const nextBtn = document.getElementById('next-month');
 
     if (prevBtn) {
-      prevBtn.addEventListener('click', () => {
+      prevBtn.addEventListener('click', async () => {
         this.currentDate.setMonth(this.currentDate.getMonth() - 1);
-        this.renderCalendar();
+        console.log('Previous month clicked');
+        await this.renderCalendar();
       });
     }
 
     if (nextBtn) {
-      nextBtn.addEventListener('click', () => {
+      nextBtn.addEventListener('click', async () => {
         this.currentDate.setMonth(this.currentDate.getMonth() + 1);
-        this.renderCalendar();
+        console.log('Next month clicked');
+        await this.renderCalendar();
       });
     }
   }
@@ -343,11 +351,16 @@ class CalendarPage extends BasePage {
   /**
    * カレンダーをレンダリング
    */
-  renderCalendar() {
+  async renderCalendar() {
+    console.log('Rendering calendar...');
     this.updateMonthDisplay();
     this.renderCalendarDates();
-    this.renderMonthlyStats();
-    this.renderMuscleStats();
+    
+    // 統計の表示を少し遅延させて確実に実行
+    setTimeout(async () => {
+      await this.renderMonthlyStats();
+      await this.renderMuscleStats();
+    }, 100);
   }
 
   /**
@@ -450,7 +463,7 @@ class CalendarPage extends BasePage {
             return muscles
               .map((muscle) => {
                 const color = getMuscleColor(muscle);
-                return `<div class="workout-dot ${color}" title="${muscle}"></div>`;
+                return `<div class="workout-dot ${color}" title="${muscle} - ${workout.exercises?.length || 0}種目"></div>`;
               })
               .join('');
           })
@@ -512,6 +525,11 @@ class CalendarPage extends BasePage {
                     `
                         : ''
                     }
+                    ${dateInfo.workouts.length > 0 ? `
+                        <div class="text-xs text-gray-400 mt-1">
+                            ${Math.floor(dateInfo.workouts.reduce((sum, w) => sum + (w.duration || 0), 0) / 60)}分
+                        </div>
+                    ` : ''}
                 </div>
             `;
       })
@@ -607,103 +625,125 @@ class CalendarPage extends BasePage {
   /**
    * 月間統計をレンダリング
    */
-  renderMonthlyStats() {
+  async renderMonthlyStats() {
     const statsContainer = document.getElementById('monthly-stats');
     if (!statsContainer) {
+      console.log('Monthly stats container not found');
       return;
     }
 
     const year = this.currentDate.getFullYear();
     const month = this.currentDate.getMonth();
 
-    const monthWorkouts = this.workoutData.filter((workout) => {
-      const workoutDate = new Date(workout.date || workout.startTime);
-      return (
-        workoutDate.getFullYear() === year && workoutDate.getMonth() === month
-      );
-    });
+    try {
+      console.log(`Calculating stats for ${year}-${month + 1}`);
+      
+      // ワークアウトデータサービスから統計を取得
+      const stats = await workoutDataService.getMonthlyStats(year, month);
+      
+      console.log('Monthly stats:', stats);
 
-    const totalWorkouts = monthWorkouts.length;
-    const totalDuration = monthWorkouts.reduce(
-      (sum, workout) => sum + (workout.duration || 0),
-      0
-    );
-    const avgDuration =
-      totalWorkouts > 0 ? Math.floor(totalDuration / totalWorkouts / 60) : 0;
-    const workoutDays = new Set(
-      monthWorkouts.map((workout) =>
-        this.formatDateString(new Date(workout.date || workout.startTime))
-      )
-    ).size;
-
-    statsContainer.innerHTML = `
-            <div class="text-center">
-                <div class="text-2xl font-bold text-blue-600">${totalWorkouts}</div>
-                <div class="text-sm text-gray-600">総ワークアウト数</div>
-            </div>
-            <div class="text-center">
-                <div class="text-2xl font-bold text-green-600">${workoutDays}</div>
-                <div class="text-sm text-gray-600">トレーニング日数</div>
-            </div>
-            <div class="text-center">
-                <div class="text-2xl font-bold text-purple-600">
-                    ${Math.floor(totalDuration / 3600)}
+      // データが無い場合の表示
+      if (stats.totalWorkouts === 0) {
+        statsContainer.innerHTML = `
+            <div class="text-center col-span-4">
+                <div class="text-gray-500">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    この月のワークアウトデータがありません
                 </div>
-                <div class="text-sm text-gray-600">総時間（時間）</div>
-            </div>
-            <div class="text-center">
-                <div class="text-2xl font-bold text-orange-600">${avgDuration}</div>
-                <div class="text-sm text-gray-600">平均時間（分）</div>
             </div>
         `;
+        return;
+      }
+
+      statsContainer.innerHTML = `
+            <div class="text-center p-4 bg-blue-50 rounded-lg">
+                <div class="text-2xl font-bold text-blue-600">${stats.totalWorkouts}</div>
+                <div class="text-sm text-gray-600">総ワークアウト数</div>
+            </div>
+            <div class="text-center p-4 bg-green-50 rounded-lg">
+                <div class="text-2xl font-bold text-green-600">${stats.workoutDaysCount}</div>
+                <div class="text-sm text-gray-600">トレーニング日数</div>
+            </div>
+            <div class="text-center p-4 bg-purple-50 rounded-lg">
+                <div class="text-2xl font-bold text-purple-600">
+                    ${Math.floor(stats.totalDuration / 3600)}h ${Math.floor((stats.totalDuration % 3600) / 60)}m
+                </div>
+                <div class="text-sm text-gray-600">総時間</div>
+            </div>
+            <div class="text-center p-4 bg-orange-50 rounded-lg">
+                <div class="text-2xl font-bold text-orange-600">${Math.floor(stats.averageDuration / 60)}分</div>
+                <div class="text-sm text-gray-600">平均時間</div>
+            </div>
+        `;
+    } catch (error) {
+      console.error('Error rendering monthly stats:', error);
+      statsContainer.innerHTML = `
+            <div class="text-center col-span-4">
+                <div class="text-red-500">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    統計データの読み込みに失敗しました
+                </div>
+            </div>
+        `;
+    }
   }
 
   /**
    * 部位別統計をレンダリング
    */
-  renderMuscleStats() {
+  async renderMuscleStats() {
     const statsContainer = document.getElementById('muscle-stats');
     if (!statsContainer) {
+      console.log('Muscle stats container not found');
       return;
     }
 
     const year = this.currentDate.getFullYear();
     const month = this.currentDate.getMonth();
 
-    const monthWorkouts = this.workoutData.filter((workout) => {
-      const workoutDate = new Date(workout.date || workout.startTime);
-      return (
-        workoutDate.getFullYear() === year && workoutDate.getMonth() === month
-      );
-    });
+    try {
+      console.log(`Calculating muscle stats for ${year}-${month + 1}`);
+      
+      // ワークアウトデータサービスから部位別統計を取得
+      const muscleStats = await workoutDataService.getMuscleGroupStats(year, month);
+      
+      console.log('Muscle stats:', muscleStats);
 
-    // 部位別カウント
-    const muscleCount = {};
-    MUSCLE_GROUPS.forEach((group) => {
-      muscleCount[group.id] = 0;
-    });
-
-    monthWorkouts.forEach((workout) => {
-      const muscles = workout.muscle_groups || [];
-      muscles.forEach((muscle) => {
-        if (Object.prototype.hasOwnProperty.call(muscleCount, muscle)) {
-          muscleCount[muscle]++;
-        }
-      });
-    });
-
-    statsContainer.innerHTML = MUSCLE_GROUPS.map(
-      (group) => `
-            <div class="text-center p-3 ${group.bgColor} rounded-lg">
+      // MUSCLE_GROUPSの順序で表示
+      statsContainer.innerHTML = MUSCLE_GROUPS.map((group) => {
+        const stats = muscleStats[group.id] || { count: 0, totalDuration: 0, exercises: [] };
+        return `
+            <div class="text-center p-3 ${group.bgColor} rounded-lg hover:shadow-md transition-shadow">
                 <div class="text-xl font-bold ${group.textColor}">
-                    ${muscleCount[group.id]}
+                    ${stats.count}
                 </div>
-                <div class="text-sm ${group.textColor}">
+                <div class="text-sm ${group.textColor} font-medium">
                     ${group.name}
                 </div>
+                ${stats.count > 0 ? `
+                    <div class="text-xs ${group.textColor} opacity-75 mt-1">
+                        ${Math.floor(stats.totalDuration / 60)}分
+                    </div>
+                ` : `
+                    <div class="text-xs ${group.textColor} opacity-50 mt-1">
+                        未実施
+                    </div>
+                `}
             </div>
-        `
-    ).join('');
+        `;
+      }).join('');
+    } catch (error) {
+      console.error('Error rendering muscle stats:', error);
+      statsContainer.innerHTML = `
+            <div class="text-center col-span-6">
+                <div class="text-red-500">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    部位別統計の読み込みに失敗しました
+                </div>
+            </div>
+        `;
+    }
   }
 
   /**
@@ -824,6 +864,7 @@ window.addPlannedWorkout = async function (dateStr) {
 
 // ページが読み込まれた時に自動初期化
 document.addEventListener('DOMContentLoaded', async () => {
+  console.log('Calendar page DOM loaded');
   const calendarPage = new CalendarPage();
   await calendarPage.initialize();
   window.calendarPageInstance = calendarPage;
