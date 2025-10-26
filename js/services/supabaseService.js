@@ -985,11 +985,10 @@ export class SupabaseService {
     }
 
     try {
-      const {
-        data: { user },
-      } = await this.client.auth.getUser();
-      if (!user) {
-        console.warn('No authenticated user found');
+      // 認証状態をチェック
+      const { data: { session } } = await this.client.auth.getSession();
+      if (!session || !session.user) {
+        console.warn('No authenticated session found');
         return {
           totalWorkouts: 0,
           currentStreak: 0,
@@ -997,6 +996,8 @@ export class SupabaseService {
           lastWorkout: null,
         };
       }
+
+      const user = session.user;
 
       // ワークアウト履歴を取得して統計を計算
       const { data: workouts, error: workoutsError } = await this.client
@@ -1089,13 +1090,14 @@ export class SupabaseService {
     }
 
     try {
-      const {
-        data: { user },
-      } = await this.client.auth.getUser();
-      if (!user) {
-        console.warn('No authenticated user found');
+      // 認証状態をチェック
+      const { data: { session } } = await this.client.auth.getSession();
+      if (!session || !session.user) {
+        console.warn('No authenticated session found');
         return false;
       }
+
+      const user = session.user;
 
       // user_profilesテーブルに存在するカラムのみをフィルタリング
       const allowedColumns = [
@@ -1189,13 +1191,14 @@ export class SupabaseService {
     }
 
     try {
-      const {
-        data: { user },
-      } = await this.client.auth.getUser();
-      if (!user) {
-        console.warn('No authenticated user found');
+      // 認証状態をチェック
+      const { data: { session } } = await this.client.auth.getSession();
+      if (!session || !session.user) {
+        console.warn('No authenticated session found');
         return null;
       }
+
+      const user = session.user;
 
       // Supabaseデータベースからプロフィールを取得
       const { data, error } = await this.client
@@ -1232,12 +1235,13 @@ export class SupabaseService {
     }
 
     try {
-      const {
-        data: { user },
-      } = await this.client.auth.getUser();
-      if (!user) {
-        throw new Error('No authenticated user found');
+      // 認証状態をチェック
+      const { data: { session } } = await this.client.auth.getSession();
+      if (!session || !session.user) {
+        throw new Error('No authenticated session found');
       }
+
+      const user = session.user;
 
       // ファイル名を生成（ユーザーIDをフォルダ名として使用）
       const fileExt = file.name.split('.').pop();

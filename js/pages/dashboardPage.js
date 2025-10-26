@@ -67,6 +67,12 @@ class DashboardPage {
       // ツールチップを設定
       this.setupTooltips();
 
+      // 認証ボタンを設定
+      this.setupAuthButton();
+
+      // 認証状態の変更を監視
+      this.setupAuthStateListener();
+
       // 筋肉部位クリックハンドラーを設定
       this.setupMusclePartHandlers();
     } catch (error) {
@@ -247,10 +253,38 @@ class DashboardPage {
   }
 
   /**
+   * 認証状態の変更を監視
+   */
+  setupAuthStateListener() {
+    if (supabaseService.isAvailable()) {
+      supabaseService.onAuthStateChange((event, session) => {
+        console.log('Auth state changed:', event, session);
+        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+          // 認証状態が変更されたら統計を再読み込み
+          this.loadStats();
+        }
+      });
+    }
+  }
+
+  /**
    * 統計データを読み込み
    */
   async loadStats() {
     try {
+      // 認証状態をチェック
+      const { data: { session } } = await supabaseService.client.auth.getSession();
+      if (!session || !session.user) {
+        console.log('User not authenticated, showing default stats');
+        this.updateStatsDisplay({
+          totalWorkouts: 0,
+          currentStreak: 0,
+          weeklyProgress: 0,
+          lastWorkout: null,
+        });
+        return;
+      }
+
       const stats = await supabaseService.getUserStats();
       console.log('Loaded stats:', stats);
       this.updateStatsDisplay(stats);

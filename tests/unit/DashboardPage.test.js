@@ -50,7 +50,7 @@ describe('DashboardPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     document.body.innerHTML = '<div id="main-content"></div>';
-    safeGetElement.mockReturnValue(document.querySelector('#main-content'));
+    safeGetElement.mockReturnValue(document.getElementById('main-content'));
   });
 
   describe('constructor', () => {
@@ -117,25 +117,28 @@ describe('DashboardPage', () => {
 
   describe('renderDashboard', () => {
     it('should render dashboard content', async () => {
-      authManager.isAuthenticated.mockResolvedValue(true);
-      safeAsync.mockImplementation(async (fn) => await fn());
+      // authManagerの初期化をモック
+      authManager.isInitialized = true;
+      authManager.initialize = jest.fn().mockResolvedValue();
+      
+      // dashboardPageのrenderDashboardメソッドを直接呼び出し
+      dashboardPage.renderDashboard();
 
-      await dashboardPage.initialize();
-
-      const mainContent = document.querySelector('#main-content');
+      const mainContent = document.getElementById('main-content');
       expect(mainContent.innerHTML).toContain('ダッシュボード');
     });
   });
 
   describe('setupTooltips', () => {
     it('should setup tooltips', async () => {
-      authManager.isAuthenticated.mockResolvedValue(true);
-      safeAsync.mockImplementation(async (fn) => await fn());
+      // authManagerの初期化をモック
+      authManager.isInitialized = true;
+      authManager.initialize = jest.fn().mockResolvedValue();
+      
+      // dashboardPageのsetupTooltipsメソッドを直接呼び出し
+      dashboardPage.setupTooltips();
 
-      await dashboardPage.initialize();
-
-      expect(tooltipManager.initialize).toHaveBeenCalled();
-      expect(dashboardPage.initialize).toBeDefined();
+      expect(tooltipManager.addTooltip).toHaveBeenCalled();
     });
   });
 
@@ -158,7 +161,9 @@ describe('DashboardPage', () => {
         recommendations: [],
       };
 
-      authManager.isAuthenticated.mockResolvedValue(true);
+      // authManagerの初期化をモック
+      authManager.isInitialized = true;
+      authManager.initialize = jest.fn().mockResolvedValue();
       supabaseService.loadData.mockResolvedValue(mockData);
       safeAsync.mockImplementation(async (fn) => await fn());
 
