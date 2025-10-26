@@ -343,11 +343,13 @@ export class TooltipManager {
 
         const container = document.getElementById('tooltip-container');
         if (!container) {
+            this.activeTooltip = null;
             return;
         }
 
         const tooltip = container.querySelector('.tooltip');
         if (!tooltip) {
+            this.activeTooltip = null;
             return;
         }
 
@@ -687,6 +689,7 @@ export class TooltipManager {
 
         if (this.hoverTimeout) {
             clearTimeout(this.hoverTimeout);
+            this.hoverTimeout = null;
         }
 
         this.observers.forEach((observer) => observer.disconnect());
@@ -697,6 +700,7 @@ export class TooltipManager {
             container.remove();
         }
 
+        this.activeTooltip = null;
         this.isInitialized = false;
     }
 }

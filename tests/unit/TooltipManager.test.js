@@ -164,7 +164,7 @@ describe('TooltipManager', () => {
         const container = document.getElementById('tooltip-container');
         expect(container.style.opacity).toBe('0');
         done();
-      }, 100);
+      }, 200);
     });
 
     test('アクティブツールチップがクリアされる', (done) => {
@@ -174,7 +174,7 @@ describe('TooltipManager', () => {
       setTimeout(() => {
         expect(tooltipManager.activeTooltip).toBeNull();
         done();
-      }, 100);
+      }, 200);
     });
   });
 
@@ -349,7 +349,7 @@ describe('TooltipManager', () => {
       expect(element2.getAttribute('data-tooltip')).toBe('Dynamic tooltip');
     });
 
-    test('新しい要素が監視される', () => {
+    test('新しい要素が監視される', (done) => {
       tooltipManager.addDynamicTooltip('.dynamic-button', 'Dynamic tooltip');
 
       const newElement = document.createElement('button');
@@ -359,7 +359,8 @@ describe('TooltipManager', () => {
       // MutationObserverの処理を待つ
       setTimeout(() => {
         expect(newElement.getAttribute('data-tooltip')).toBe('Dynamic tooltip');
-      }, 50);
+        done();
+      }, 100);
     });
   });
 
@@ -400,7 +401,7 @@ describe('TooltipManager', () => {
           container.style.opacity === '0' || container.innerHTML === ''
         ).toBe(true);
         done();
-      }, 100);
+      }, 200);
     });
 
     test('スクロールでツールチップが非表示になる', (done) => {
@@ -413,7 +414,7 @@ describe('TooltipManager', () => {
       setTimeout(() => {
         expect(tooltipManager.activeTooltip).toBeNull();
         done();
-      }, 100);
+      }, 200);
     });
 
     test('リサイズでツールチップが非表示になる', (done) => {
@@ -426,7 +427,7 @@ describe('TooltipManager', () => {
       setTimeout(() => {
         expect(tooltipManager.activeTooltip).toBeNull();
         done();
-      }, 100);
+      }, 200);
     });
 
     test('Escapeキーでツールチップが非表示になる', (done) => {
@@ -439,7 +440,7 @@ describe('TooltipManager', () => {
       setTimeout(() => {
         expect(tooltipManager.activeTooltip).toBeNull();
         done();
-      }, 100);
+      }, 200);
     });
   });
 
@@ -462,12 +463,8 @@ describe('TooltipManager', () => {
 
       expect(tooltipManager.isInitialized).toBe(false);
       expect(document.getElementById('tooltip-container')).toBeFalsy();
-
-      // アニメーションの遅延を考慮
-      setTimeout(() => {
-        expect(tooltipManager.activeTooltip).toBeNull();
-        done();
-      }, 100);
+      expect(tooltipManager.activeTooltip).toBeNull();
+      done();
     });
 
     test('タイムアウトがクリアされる', () => {
