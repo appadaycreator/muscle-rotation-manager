@@ -41,7 +41,7 @@ class MPAInitializer {
     const path = window.location.pathname;
     const pageMap = {
       '/': 'dashboard',
-      '/dashboard.html': 'dashboard',
+      '/index.html': 'dashboard',
       '/workout.html': 'workout',
       '/calendar.html': 'calendar',
       '/analysis.html': 'analysis',
@@ -50,6 +50,17 @@ class MPAInitializer {
       '/settings.html': 'settings',
       '/help.html': 'help',
       '/privacy.html': 'privacy',
+      // GitHub Pages用のパス
+      '/muscle-rotation-manager/': 'dashboard',
+      '/muscle-rotation-manager/index.html': 'dashboard',
+      '/muscle-rotation-manager/workout.html': 'workout',
+      '/muscle-rotation-manager/calendar.html': 'calendar',
+      '/muscle-rotation-manager/analysis.html': 'analysis',
+      '/muscle-rotation-manager/progress.html': 'progress',
+      '/muscle-rotation-manager/exercises.html': 'exercises',
+      '/muscle-rotation-manager/settings.html': 'settings',
+      '/muscle-rotation-manager/help.html': 'help',
+      '/muscle-rotation-manager/privacy.html': 'privacy',
     };
     return pageMap[path] || 'dashboard';
   }
@@ -190,7 +201,7 @@ class MPAInitializer {
                         </div>
                         <div class="mt-8 space-y-6">
                             <div class="space-y-4">
-                                <button onclick="window.location.href='/'"
+                                <button onclick="window.location.href='index.html'"
                                         class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                     <i class="fas fa-home mr-2"></i>
                                     ホームに戻る

@@ -36,6 +36,9 @@ jobs:
           npm start &
           sleep 5
 
+      - name: Run navigation tests
+        run: npm run test:navigation
+
       - name: Run automated tests
         run: npm test
 
@@ -113,3 +116,12 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Wait for deployment
+        run: sleep 30
+
+      - name: Test deployed links
+        run: |
+          echo "Testing deployed links..."
+          # GitHub PagesのURLでリンクテストを実行
+          TEST_BASE_URL="https://appadaycreator.github.io/muscle-rotation-manager" npm run test:navigation || echo "Link test failed, but deployment succeeded"

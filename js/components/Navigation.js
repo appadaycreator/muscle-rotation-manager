@@ -19,63 +19,63 @@ export class Navigation {
         id: 'dashboard',
         name: 'ダッシュボード',
         icon: 'fas fa-tachometer-alt',
-        href: '/index.html',
+        href: 'index.html',
         requiresAuth: true,
       },
       {
         id: 'workout',
         name: 'ワークアウト',
         icon: 'fas fa-dumbbell',
-        href: '/workout.html',
+        href: 'workout.html',
         requiresAuth: true,
       },
       {
         id: 'calendar',
         name: 'カレンダー',
         icon: 'fas fa-calendar-alt',
-        href: '/calendar.html',
+        href: 'calendar.html',
         requiresAuth: true,
       },
       {
         id: 'analysis',
         name: '分析',
         icon: 'fas fa-chart-line',
-        href: '/analysis.html',
+        href: 'analysis.html',
         requiresAuth: true,
       },
       {
         id: 'progress',
         name: 'プログレッシブ・オーバーロード',
         icon: 'fas fa-trophy',
-        href: '/progress.html',
+        href: 'progress.html',
         requiresAuth: true,
       },
       {
         id: 'exercises',
         name: 'エクササイズデータベース',
         icon: 'fas fa-database',
-        href: '/exercises.html',
+        href: 'exercises.html',
         requiresAuth: true,
       },
       {
         id: 'settings',
         name: '設定',
         icon: 'fas fa-cog',
-        href: '/settings.html',
+        href: 'settings.html',
         requiresAuth: true,
       },
       {
         id: 'help',
         name: '使い方',
         icon: 'fas fa-question-circle',
-        href: '/help.html',
+        href: 'help.html',
         requiresAuth: false,
       },
       {
         id: 'privacy',
         name: 'プライバシーポリシー',
         icon: 'fas fa-shield-alt',
-        href: '/privacy.html',
+        href: 'privacy.html',
         requiresAuth: false,
       },
     ];
@@ -192,7 +192,7 @@ export class Navigation {
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div class="flex justify-between items-center h-16">
             <div class="flex items-center">
-              <a href="/index.html" class="flex items-center">
+              <a href="index.html" class="flex items-center">
                 <i class="fas fa-dumbbell text-2xl text-blue-600 mr-2"></i>
                 <span class="text-xl font-bold text-gray-800">MuscleRotationManager</span>
               </a>
@@ -370,18 +370,18 @@ export class Navigation {
     // モバイルサイドバーを閉じる
     this.closeMobileSidebar();
 
-    // 絶対パスの場合は直接遷移を許可
-    if (href.startsWith('/')) {
+    // 相対パスの場合は直接遷移を許可
+    if (!href.startsWith('/') && !href.startsWith('http')) {
       console.log('Navigation allowed, proceeding to:', href);
       // デフォルトのブラウザナビゲーションを使用
       return;
     }
 
-    // 相対パスの場合は絶対パスに変換
-    if (href.startsWith('./')) {
-      const absoluteHref = href.replace('./', '/');
-      console.log('Converting relative path to absolute:', absoluteHref);
-      navLink.href = absoluteHref;
+    // 絶対パスの場合は相対パスに変換
+    if (href.startsWith('/')) {
+      const relativeHref = href.substring(1); // 先頭の'/'を削除
+      console.log('Converting absolute path to relative:', relativeHref);
+      navLink.href = relativeHref;
     }
 
     console.log('Navigation allowed, proceeding to:', href);
@@ -409,12 +409,12 @@ export class Navigation {
         }
 
         try {
-          window.location.href = '/index.html';
+          window.location.href = 'index.html';
         } catch (error) {
           // JSDOM環境ではlocation.hrefの直接設定が失敗する可能性がある
           // その場合はassignメソッドを使用
           if (window.location.assign) {
-            window.location.assign('/index.html');
+            window.location.assign('index.html');
           } else {
             console.warn('Navigation not available in test environment');
           }

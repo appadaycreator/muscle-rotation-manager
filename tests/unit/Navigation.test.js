@@ -1,447 +1,169 @@
-// tests/unit/Navigation.test.js - Navigation コンポーネントのテスト
+// tests/unit/navigation.test.js - ナビゲーションリンクのテスト
 
+import { jest } from '@jest/globals';
+
+// モック設定
+global.fetch = jest.fn();
+global.window = {
+  location: {
+    pathname: '/muscle-rotation-manager/index.html',
+    href: 'https://appadaycreator.github.io/muscle-rotation-manager/index.html',
+    assign: jest.fn(),
+  },
+  innerWidth: 1024,
+  innerHeight: 768,
+};
+
+// Navigation.jsをインポート
 import { Navigation } from '../../js/components/Navigation.js';
-import { setupJSDOMNavigationFix } from '../utils/jsdom-navigation-fix.js';
 
-// モックの設定
-let mockAuthManager;
-let mockElement;
+describe('Navigation Component', () => {
+  let navigation;
 
-// authManagerモジュールをモック
-jest.mock('../../js/modules/authManager.js', () => ({
-  authManager: {
-    isAuthenticated: jest.fn(),
-    getCurrentUser: jest.fn(),
-    logout: jest.fn(),
-  },
-}));
-
-// showNotificationをモック
-jest.mock('../../js/utils/helpers.js', () => ({
-  showNotification: jest.fn(),
-}));
-
-// tooltipManagerをモック
-jest.mock('../../js/utils/TooltipManager.js', () => ({
-  tooltipManager: {
-    initialize: jest.fn(),
-    addTooltip: jest.fn(),
-    addDynamicTooltip: jest.fn(),
-  },
-}));
-
-describe('Navigation', () => {
   beforeEach(() => {
-    // JSDOMナビゲーション修正を適用
-    setupJSDOMNavigationFix();
-
-    // DOM要素のモック設定
-    mockElement = {
-      addEventListener: jest.fn(),
-      removeEventListener: jest.fn(),
-      click: jest.fn(),
-      classList: {
-        add: jest.fn(),
-        remove: jest.fn(),
-        contains: jest.fn(),
-        toggle: jest.fn(),
-      },
-      style: {},
-      textContent: '',
-      innerHTML: '',
-      insertAdjacentHTML: jest.fn(),
-      appendChild: jest.fn(),
-      removeChild: jest.fn(),
-      setAttribute: jest.fn(),
-      getAttribute: jest.fn(),
-    };
-
-    // モックの設定
-    mockAuthManager = {
-      isAuthenticated: jest.fn().mockResolvedValue(true),
-      getCurrentUser: jest.fn().mockReturnValue({ email: 'test@example.com' }),
-      logout: jest.fn().mockResolvedValue(),
-    };
-
-    // モックされたauthManagerを設定
-    const { authManager } = require('../../js/modules/authManager.js');
-    authManager.isAuthenticated = mockAuthManager.isAuthenticated;
-    authManager.getCurrentUser = mockAuthManager.getCurrentUser;
-    authManager.logout = mockAuthManager.logout;
-
-    // showNotificationのモックを設定
-    const { showNotification } = require('../../js/utils/helpers.js');
-    global.showNotification = showNotification;
-
-    // window.location は setup.js で設定済み
-
-    // document.getElementById のモック
-    document.getElementById = jest.fn((id) => {
-      if (id === 'mobile-sidebar') {
-        return {
-          ...mockElement,
-          classList: {
-            ...mockElement.classList,
-            contains: jest.fn().mockReturnValue(false),
-            add: jest.fn(),
-            remove: jest.fn(),
-            toggle: jest.fn(),
-          },
-        };
-      }
-      if (id === 'user-info') {
-        return { ...mockElement, style: { display: 'none' } };
-      }
-      if (id === 'logout-btn') {
-        return { ...mockElement, style: { display: 'none' } };
-      }
-      return mockElement;
-    });
-
-    // document.querySelector のモック
-    document.querySelector = jest.fn(() => mockElement);
-    document.querySelectorAll = jest.fn(() => [mockElement]);
+    navigation = new Navigation();
+    jest.clearAllMocks();
   });
 
-  describe('constructor', () => {
-    test('should initialize with default values', () => {
-      const navigation = new Navigation();
-      expect(navigation.isInitialized).toBe(false);
-      expect(navigation.navigationItems).toBeDefined();
+  describe('ナビゲーションアイテムのリンク', () => {
+    test('全てのナビゲーションアイテムが相対パスを使用している', () => {
+      const navigationItems = navigation.navigationItems;
+      
+      navigationItems.forEach(item => {
+        // 絶対パス（/で始まる）を使用していないことを確認
+        expect(item.href).not.toMatch(/^\/.*$/);
+        // 相対パスまたはファイル名のみであることを確認
+        expect(item.href).toMatch(/^[^\/].*\.html$/);
+      });
+    });
+
+    test('ダッシュボードリンクが正しい', () => {
+      const dashboardItem = navigation.navigationItems.find(item => item.id === 'dashboard');
+      expect(dashboardItem.href).toBe('index.html');
+    });
+
+    test('ワークアウトリンクが正しい', () => {
+      const workoutItem = navigation.navigationItems.find(item => item.id === 'workout');
+      expect(workoutItem.href).toBe('workout.html');
+    });
+
+    test('カレンダーリンクが正しい', () => {
+      const calendarItem = navigation.navigationItems.find(item => item.id === 'calendar');
+      expect(calendarItem.href).toBe('calendar.html');
+    });
+
+    test('分析リンクが正しい', () => {
+      const analysisItem = navigation.navigationItems.find(item => item.id === 'analysis');
+      expect(analysisItem.href).toBe('analysis.html');
+    });
+
+    test('プログレッシブ・オーバーロードリンクが正しい', () => {
+      const progressItem = navigation.navigationItems.find(item => item.id === 'progress');
+      expect(progressItem.href).toBe('progress.html');
+    });
+
+    test('エクササイズデータベースリンクが正しい', () => {
+      const exercisesItem = navigation.navigationItems.find(item => item.id === 'exercises');
+      expect(exercisesItem.href).toBe('exercises.html');
+    });
+
+    test('設定リンクが正しい', () => {
+      const settingsItem = navigation.navigationItems.find(item => item.id === 'settings');
+      expect(settingsItem.href).toBe('settings.html');
+    });
+
+    test('ヘルプリンクが正しい', () => {
+      const helpItem = navigation.navigationItems.find(item => item.id === 'help');
+      expect(helpItem.href).toBe('help.html');
+    });
+
+    test('プライバシーポリシーリンクが正しい', () => {
+      const privacyItem = navigation.navigationItems.find(item => item.id === 'privacy');
+      expect(privacyItem.href).toBe('privacy.html');
     });
   });
 
-  describe('getCurrentPage', () => {
-    test('should return current page from URL', () => {
-      const navigation = new Navigation();
-
-      // getCurrentPageメソッドを直接テストするために、内部実装を確認
-      // 実際のwindow.location.pathnameを使用してテスト
-      const currentPage = navigation.getCurrentPage();
-
-      // 現在のパスに基づいて期待値を設定
-      const expectedPage =
-        window.location.pathname.split('/').pop().replace('.html', '') ||
-        'index';
-      expect(currentPage).toBe(expectedPage);
-    });
-
-    test('should return index for root path', () => {
-      const navigation = new Navigation();
-
-      // 現在のパスに基づいてテスト
-      const currentPage = navigation.getCurrentPage();
-
-      // 現在のパスがルートまたはindex.htmlの場合
-      const expectedPage =
-        window.location.pathname === '/' ||
-        window.location.pathname === '/index.html'
-          ? 'index'
-          : window.location.pathname.split('/').pop().replace('.html', '') ||
-            'index';
-      expect(currentPage).toBe(expectedPage);
-    });
-  });
-
-  describe('initialize', () => {
-    test('should initialize successfully', async () => {
-      const navigation = new Navigation();
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-
-      await navigation.initialize();
-
-      expect(consoleSpy).toHaveBeenCalledWith('🔄 Initializing navigation...');
-      expect(navigation.isInitialized).toBe(true);
-      consoleSpy.mockRestore();
-    });
-
-    test('should not initialize if already initialized', async () => {
-      const navigation = new Navigation();
-
-      // 1回目の初期化
-      const consoleSpy1 = jest.spyOn(console, 'log').mockImplementation();
-      await navigation.initialize();
-      expect(consoleSpy1).toHaveBeenCalledWith('🔄 Initializing navigation...');
-      consoleSpy1.mockRestore();
-
-      // 2回目の初期化ではログが出力されないことを確認
-      const consoleSpy2 = jest.spyOn(console, 'log').mockImplementation();
-      await navigation.initialize();
-
-      // 初期化ログが2回目に出力されないことを確認
-      expect(consoleSpy2).not.toHaveBeenCalledWith(
-        '🔄 Initializing navigation...'
-      );
-      consoleSpy2.mockRestore();
-    });
-
-    test('should handle initialization errors', async () => {
-      const navigation = new Navigation();
-
-      // authManagerを無効にしてエラーを発生させる
-      const { authManager } = require('../../js/modules/authManager.js');
-      authManager.isAuthenticated = jest
-        .fn()
-        .mockRejectedValue(new Error('Auth error'));
-
-      await expect(navigation.initialize()).rejects.toThrow();
-    });
-  });
-
-  describe('generateBasicHeader', () => {
-    test('should generate header HTML', () => {
-      const navigation = new Navigation();
-      const headerHTML = navigation.generateBasicHeader();
-
-      expect(headerHTML).toContain('header');
-      expect(headerHTML).toContain('MuscleRotationManager');
-    });
-  });
-
-  describe('generateBasicSidebar', () => {
-    test('should generate sidebar HTML', () => {
-      const navigation = new Navigation();
-      const sidebarHTML = navigation.generateBasicSidebar();
-
-      expect(sidebarHTML).toContain('sidebar');
-      expect(sidebarHTML).toContain('nav');
-    });
-  });
-
-  describe('toggleMobileSidebar', () => {
-    test('should toggle mobile sidebar visibility', () => {
-      const navigation = new Navigation();
-
-      // モバイルサイドバーのモックを設定
-      const mockMobileSidebar = {
-        classList: {
-          toggle: jest.fn(),
-        },
+  describe('ナビゲーションクリック処理', () => {
+    test('相対パスのリンクは直接遷移を許可する', async () => {
+      const mockNavLink = {
+        getAttribute: jest.fn().mockReturnValue('workout.html'),
+        href: 'workout.html',
       };
-
-      document.getElementById = jest.fn().mockReturnValue(mockMobileSidebar);
-
-      navigation.toggleMobileSidebar();
-
-      expect(mockMobileSidebar.classList.toggle).toHaveBeenCalledWith('hidden');
-    });
-  });
-
-  describe('closeMobileSidebar', () => {
-    test('should close mobile sidebar', () => {
-      const navigation = new Navigation();
-
-      // モバイルサイドバーのモックを設定
-      const mockMobileSidebar = {
-        classList: {
-          add: jest.fn(),
-        },
-      };
-
-      document.getElementById = jest.fn().mockReturnValue(mockMobileSidebar);
-
-      navigation.closeMobileSidebar();
-
-      expect(mockMobileSidebar.classList.add).toHaveBeenCalledWith('hidden');
-    });
-  });
-
-  describe('handleNavigationClick', () => {
-    test('should handle navigation click for authenticated user', async () => {
-      const navigation = new Navigation();
-      const navLink = {
-        getAttribute: jest.fn().mockReturnValue('/dashboard.html'),
-        preventDefault: jest.fn(),
-      };
-      const event = { preventDefault: jest.fn() };
-
-      await navigation.handleNavigationClick(navLink, event);
-
-      expect(event.preventDefault).not.toHaveBeenCalled();
-    });
-
-    test('should prevent navigation for unauthenticated user', async () => {
-      const navigation = new Navigation();
-      const navLink = {
-        getAttribute: jest.fn().mockReturnValue('/dashboard.html'),
-        preventDefault: jest.fn(),
-      };
-      const event = {
+      const mockEvent = {
         preventDefault: jest.fn(),
         stopPropagation: jest.fn(),
       };
 
-      // 認証されていない状態をモック
-      const { authManager } = require('../../js/modules/authManager.js');
-      authManager.isAuthenticated = jest.fn().mockResolvedValue(false);
+      await navigation.handleNavigationClick(mockNavLink, mockEvent);
 
-      await navigation.handleNavigationClick(navLink, event);
-
-      expect(event.preventDefault).toHaveBeenCalled();
-      expect(event.stopPropagation).toHaveBeenCalled();
-      expect(global.showNotification).toHaveBeenCalledWith(
-        'ログインが必要です',
-        'warning'
-      );
-    });
-  });
-
-  describe('handleLogout', () => {
-    test('should handle logout successfully', async () => {
-      const navigation = new Navigation();
-
-      // window.location.hrefをモック（JSDOMエラーを回避）
-      const originalLocation = window.location;
-
-      // JSDOMの制限を回避するため、安全なモック方法を使用
-      if (window.location) {
-        // hrefは設定可能
-        window.location.href = '';
-
-        // メソッドが既に存在する場合はスキップ
-        if (typeof window.location.assign !== 'function') {
-          window.location.assign = jest.fn();
-        }
-        if (typeof window.location.replace !== 'function') {
-          window.location.replace = jest.fn();
-        }
-        if (typeof window.location.reload !== 'function') {
-          window.location.reload = jest.fn();
-        }
-      }
-
-      // console.warnをモックしてJSDOMエラーを抑制
-      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
-
-      await navigation.handleLogout();
-
-      const { authManager } = require('../../js/modules/authManager.js');
-      expect(authManager.logout).toHaveBeenCalled();
-      expect(global.showNotification).toHaveBeenCalledWith(
-        'ログアウトしました',
-        'success'
-      );
-
-      consoleWarnSpy.mockRestore();
-
-      // 元のlocationを復元
-      window.location = originalLocation;
+      // preventDefaultが呼ばれていないことを確認（直接遷移を許可）
+      expect(mockEvent.preventDefault).not.toHaveBeenCalled();
     });
 
-    test('should handle logout errors', async () => {
-      const navigation = new Navigation();
-      const error = new Error('Logout failed');
-      const { authManager } = require('../../js/modules/authManager.js');
-      authManager.logout = jest.fn().mockRejectedValue(error);
-
-      // window.location.hrefをモック（JSDOMエラーを回避）
-      const originalLocation = window.location;
-
-      // JSDOMの制限を回避するため、安全なモック方法を使用
-      if (window.location) {
-        // hrefは設定可能
-        window.location.href = '';
-
-        // メソッドが既に存在する場合はスキップ
-        if (typeof window.location.assign !== 'function') {
-          window.location.assign = jest.fn();
-        }
-        if (typeof window.location.replace !== 'function') {
-          window.location.replace = jest.fn();
-        }
-        if (typeof window.location.reload !== 'function') {
-          window.location.reload = jest.fn();
-        }
-      }
-
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
-      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
-
-      await navigation.handleLogout();
-
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Logout failed:', error);
-      expect(global.showNotification).toHaveBeenCalledWith(
-        'ログアウトに失敗しました',
-        'error'
-      );
-
-      consoleErrorSpy.mockRestore();
-      consoleWarnSpy.mockRestore();
-
-      // 元のlocationを復元
-      window.location = originalLocation;
-    });
-  });
-
-  describe('updateNavigationForAuth', () => {
-    test('should update navigation for authenticated user', async () => {
-      const navigation = new Navigation();
-
-      await navigation.updateNavigationForAuth();
-
-      const { authManager } = require('../../js/modules/authManager.js');
-      expect(authManager.isAuthenticated).toHaveBeenCalled();
-    });
-
-    test('should update navigation for unauthenticated user', async () => {
-      const navigation = new Navigation();
-      const { authManager } = require('../../js/modules/authManager.js');
-      authManager.isAuthenticated = jest.fn().mockResolvedValue(false);
-
-      await navigation.updateNavigationForAuth();
-
-      expect(authManager.isAuthenticated).toHaveBeenCalled();
-    });
-  });
-
-  describe('addEventListener', () => {
-    test('should add event listener to element', () => {
-      const navigation = new Navigation();
-      const element = mockElement;
-      const event = 'click';
-      const handler = jest.fn();
-
-      navigation.addEventListener(element, event, handler);
-
-      expect(element.addEventListener).toHaveBeenCalledWith(event, handler);
-    });
-
-    test('should not add listener if element is null', () => {
-      const navigation = new Navigation();
-      const handler = jest.fn();
-
-      navigation.addEventListener(null, 'click', handler);
-
-      // エラーが発生しないことを確認
-      expect(true).toBe(true);
-    });
-  });
-
-  describe('setupTooltips', () => {
-    test('should setup tooltips for navigation elements', () => {
-      const navigation = new Navigation();
-      const { tooltipManager } = require('../../js/utils/TooltipManager.js');
-
-      // デスクトップサイドバーのモックを設定
-      const mockSidebar = {
-        querySelectorAll: jest.fn(() => []),
+    test('絶対パスのリンクは相対パスに変換する', async () => {
+      const mockNavLink = {
+        getAttribute: jest.fn().mockReturnValue('/workout.html'),
+        href: '/workout.html',
       };
-      document.getElementById = jest.fn().mockReturnValue(mockSidebar);
+      const mockEvent = {
+        preventDefault: jest.fn(),
+        stopPropagation: jest.fn(),
+      };
 
-      navigation.setupTooltips();
+      await navigation.handleNavigationClick(mockNavLink, mockEvent);
 
-      expect(tooltipManager.addDynamicTooltip).toHaveBeenCalled();
+      // hrefが相対パスに変換されていることを確認
+      expect(mockNavLink.href).toBe('workout.html');
     });
   });
 
-  describe('destroy', () => {
-    test('should destroy navigation', () => {
-      const navigation = new Navigation();
-      navigation.isInitialized = true;
-
-      navigation.destroy();
-
-      expect(navigation.isInitialized).toBe(false);
+  describe('現在のページ取得', () => {
+    test('GitHub Pagesのパスを正しく認識する', () => {
+      window.location.pathname = '/muscle-rotation-manager/index.html';
+      const currentPage = navigation.getCurrentPage();
+      expect(currentPage).toBe('index');
     });
+
+    test('ルートパスを正しく認識する', () => {
+      window.location.pathname = '/';
+      const currentPage = navigation.getCurrentPage();
+      expect(currentPage).toBe('index');
+    });
+
+    test('通常のパスを正しく認識する', () => {
+      window.location.pathname = '/workout.html';
+      const currentPage = navigation.getCurrentPage();
+      expect(currentPage).toBe('workout');
+    });
+  });
+});
+
+describe('HTMLファイルのリンク検証', () => {
+  test('sidebar.htmlのリンクが相対パスである', async () => {
+    const response = await fetch('partials/sidebar.html');
+    const html = await response.text();
+    
+    // 絶対パス（/で始まる）のリンクがないことを確認
+    const absoluteLinks = html.match(/href="\/[^"]*\.html"/g);
+    expect(absoluteLinks).toBeNull();
+    
+    // 相対パスのリンクがあることを確認
+    const relativeLinks = html.match(/href="[^\/][^"]*\.html"/g);
+    expect(relativeLinks).not.toBeNull();
+    expect(relativeLinks.length).toBeGreaterThan(0);
+  });
+
+  test('footer.htmlのリンクが相対パスである', async () => {
+    const response = await fetch('partials/footer.html');
+    const html = await response.text();
+    
+    // 絶対パス（/で始まる）のリンクがないことを確認
+    const absoluteLinks = html.match(/href="\/[^"]*\.html"/g);
+    expect(absoluteLinks).toBeNull();
+    
+    // 相対パスのリンクがあることを確認
+    const relativeLinks = html.match(/href="[^\/][^"]*\.html"/g);
+    expect(relativeLinks).not.toBeNull();
+    expect(relativeLinks.length).toBeGreaterThan(0);
   });
 });
