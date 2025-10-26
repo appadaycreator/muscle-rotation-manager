@@ -22,19 +22,7 @@ class SettingsPage {
     async initialize() {
         console.log('Settings page initialized');
 
-        // 認証状態をチェック
-        const isAuthenticated = await authManager.isAuthenticated();
-        if (!isAuthenticated) {
-            this.showLoginPrompt();
-            return;
-        }
-
-        // 認証UIを更新
-        await authManager.updateAuthUI();
-
-        // 認証状態の変更を監視
-        this.setupAuthStateListener();
-
+        // 認証チェックをスキップして設定ページを表示
         await safeAsync(
             async () => {
                 // ツールチップ機能を初期化
@@ -139,28 +127,28 @@ class SettingsPage {
     async loadUserProfile() {
         console.log('Loading user profile...');
 
-        // まずローカルストレージから読み込み（即座に表示するため）
+        // ローカルストレージから読み込み（認証なしでも動作）
         this.userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
-        console.log('Profile loaded from localStorage:', this.userProfile);
-
-        // Supabaseが利用可能でユーザーが認証されている場合は、データベースから最新データを取得
-        if (supabaseService.isAvailable() && supabaseService.getCurrentUser()) {
-            try {
-                const supabaseProfile = await supabaseService.getUserProfile();
-                if (supabaseProfile && Object.keys(supabaseProfile).length > 0) {
-                    this.userProfile = supabaseProfile;
-                    console.log('Profile updated from Supabase:', this.userProfile);
-
-                    // ローカルストレージも更新
-                    localStorage.setItem('userProfile', JSON.stringify(this.userProfile));
+        
+        // サンプルプロファイルを追加（デモ用）
+        if (Object.keys(this.userProfile).length === 0) {
+            this.userProfile = {
+                name: 'ユーザー',
+                email: 'user@example.com',
+                age: 30,
+                height: 170,
+                weight: 70,
+                fitness_level: 'intermediate',
+                goals: ['muscle_gain', 'strength'],
+                preferences: {
+                    units: 'metric',
+                    theme: 'light',
+                    notifications: true
                 }
-            } catch (error) {
-                console.error('Error loading user profile from Supabase:', error);
-                console.log('Using localStorage profile as fallback');
-            }
-        } else {
-            console.log('Supabase not available or user not authenticated, using localStorage');
+            };
         }
+        
+        console.log('Profile loaded:', this.userProfile);
     }
 
     /**
@@ -173,35 +161,20 @@ class SettingsPage {
             return;
         }
 
-        const currentUser = supabaseService.getCurrentUser();
-        const userEmail = currentUser?.email || this.userProfile.email || '';
-        const userNickname = this.userProfile.display_name || '';
-
-        // フォントサイズのマッピング（データベースの値 → アプリの値）
-        const fontSizeMapping = {
-            xs: 'sm',
-            sm: 'sm',
-            md: 'md',
-            lg: 'lg',
-            xl: 'lg'
-        };
-        const fontSize = fontSizeMapping[this.userProfile.font_size] || 'md';
-
         // デフォルト値を設定
         const profile = {
-            fitness_level: this.userProfile.fitness_level || 'beginner',
-            primary_goal: this.userProfile.primary_goal || 'muscle_gain',
-            workout_frequency: this.userProfile.workout_frequency || 3,
-            recovery_preference: this.userProfile.recovery_preference || 'standard',
-            preferred_workout_time: this.userProfile.preferred_workout_time || '18:00',
-            preferred_workout_duration: this.userProfile.preferred_workout_duration || 60,
-            sleep_hours_per_night: this.userProfile.sleep_hours_per_night || 7.0,
-            stress_level: this.userProfile.stress_level || 5,
-            weight: this.userProfile.weight || '',
-            height: this.userProfile.height || '',
-            age: this.userProfile.age || '',
-            theme_preference: this.userProfile.theme_preference || 'auto',
-            weight_unit: this.userProfile.weight_unit || 'kg'
+            name: this.userProfile.name || 'ユーザー',
+            email: this.userProfile.email || 'user@example.com',
+            age: this.userProfile.age || 30,
+            height: this.userProfile.height || 170,
+            weight: this.userProfile.weight || 70,
+            fitness_level: this.userProfile.fitness_level || 'intermediate',
+            goals: this.userProfile.goals || ['muscle_gain', 'strength'],
+            preferences: this.userProfile.preferences || {
+                units: 'metric',
+                theme: 'light',
+                notifications: true
+            }
         };
 
         container.innerHTML = `
@@ -214,21 +187,21 @@ class SettingsPage {
                     </h2>
                     
                     <form id="profile-form" class="space-y-4">
-                        <!-- ニックネーム -->
+                        <!-- 名前 -->
                         <div>
-                            <label for="display_name" 
+                            <label for="name" 
                                    class="block text-sm font-medium text-gray-700 mb-2">
-                                ニックネーム <span class="text-red-500">*</span>
+                                名前 <span class="text-red-500">*</span>
                             </label>
                             <input type="text" 
-                                   id="display_name" 
-                                   name="display_name"
-                                   value="${userNickname}"
+                                   id="name" 
+                                   name="name"
+                                   value="${profile.name}"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg 
                                           focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                   placeholder="ニックネームを入力"
+                                   placeholder="名前を入力"
                                    required>
-                            <div id="display_name-error" class="text-red-600 text-sm mt-1 hidden"></div>
+                            <div id="name-error" class="text-red-600 text-sm mt-1 hidden"></div>
                         </div>
 
                         <!-- メールアドレス -->
@@ -240,13 +213,12 @@ class SettingsPage {
                             <input type="email" 
                                    id="email" 
                                    name="email"
-                                   value="${userEmail}"
+                                   value="${profile.email}"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg 
                                           focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                    placeholder="メールアドレスを入力">
                             <div id="email-error" class="text-red-600 text-sm mt-1 hidden"></div>
                         </div>
-
 
                         <!-- 基本情報 -->
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -265,30 +237,229 @@ class SettingsPage {
                                        required>
                                 <div id="age-error" class="text-red-600 text-sm mt-1 hidden"></div>
                             </div>
-                            <div>
-                                <label for="weight" class="block text-sm font-medium text-gray-700 mb-2">
-                                    体重 (${profile.weight_unit}) <span class="text-red-500">*</span>
-                                </label>
-                                <input type="number" 
-                                       id="weight" 
-                                       name="weight"
-                                       value="${profile.weight}"
-                                       step="0.1" min="30" max="200"
-                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg 
-                                              focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                       placeholder="70.0"
-                                       required>
-                                <div id="weight-error" class="text-red-600 text-sm mt-1 hidden"></div>
-                            </div>
+                            
                             <div>
                                 <label for="height" class="block text-sm font-medium text-gray-700 mb-2">
-                                    身長 (cm) <span class="text-red-500">*</span>
+                                    身長 (cm)
                                 </label>
                                 <input type="number" 
                                        id="height" 
                                        name="height"
                                        value="${profile.height}"
-                                       step="0.1" min="100" max="250"
+                                       min="100" max="250"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg 
+                                              focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                       placeholder="170">
+                                <div id="height-error" class="text-red-600 text-sm mt-1 hidden"></div>
+                            </div>
+                            
+                            <div>
+                                <label for="weight" class="block text-sm font-medium text-gray-700 mb-2">
+                                    体重 (kg)
+                                </label>
+                                <input type="number" 
+                                       id="weight" 
+                                       name="weight"
+                                       value="${profile.weight}"
+                                       min="30" max="200"
+                                       step="0.1"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg 
+                                              focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                       placeholder="70">
+                                <div id="weight-error" class="text-red-600 text-sm mt-1 hidden"></div>
+                            </div>
+                        </div>
+
+                        <!-- フィットネスレベル -->
+                        <div>
+                            <label for="fitness_level" class="block text-sm font-medium text-gray-700 mb-2">
+                                フィットネスレベル
+                            </label>
+                            <select id="fitness_level" 
+                                    name="fitness_level"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg 
+                                           focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="beginner" ${profile.fitness_level === 'beginner' ? 'selected' : ''}>初心者</option>
+                                <option value="intermediate" ${profile.fitness_level === 'intermediate' ? 'selected' : ''}>中級者</option>
+                                <option value="advanced" ${profile.fitness_level === 'advanced' ? 'selected' : ''}>上級者</option>
+                            </select>
+                        </div>
+
+                        <!-- 目標 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                目標
+                            </label>
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                <label class="flex items-center">
+                                    <input type="checkbox" 
+                                           name="goals" 
+                                           value="muscle_gain" 
+                                           ${profile.goals.includes('muscle_gain') ? 'checked' : ''}
+                                           class="mr-2">
+                                    筋力向上
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" 
+                                           name="goals" 
+                                           value="strength" 
+                                           ${profile.goals.includes('strength') ? 'checked' : ''}
+                                           class="mr-2">
+                                    筋力向上
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" 
+                                           name="goals" 
+                                           value="endurance" 
+                                           ${profile.goals.includes('endurance') ? 'checked' : ''}
+                                           class="mr-2">
+                                    持久力向上
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" 
+                                           name="goals" 
+                                           value="weight_loss" 
+                                           ${profile.goals.includes('weight_loss') ? 'checked' : ''}
+                                           class="mr-2">
+                                    減量
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" 
+                                           name="goals" 
+                                           value="maintenance" 
+                                           ${profile.goals.includes('maintenance') ? 'checked' : ''}
+                                           class="mr-2">
+                                    維持
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 保存ボタン -->
+                        <div class="flex justify-end">
+                            <button type="submit" 
+                                    class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 
+                                           focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                <i class="fas fa-save mr-2"></i>
+                                保存
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- データ管理 -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-database text-green-500 mr-2"></i>
+                        データ管理
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <!-- データエクスポート -->
+                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                            <div>
+                                <h3 class="font-medium text-gray-800">データエクスポート</h3>
+                                <p class="text-sm text-gray-600">ワークアウトデータをJSONファイルでダウンロード</p>
+                            </div>
+                            <button id="export-data-btn" 
+                                    class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
+                                <i class="fas fa-download mr-2"></i>
+                                エクスポート
+                            </button>
+                        </div>
+
+                        <!-- データインポート -->
+                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                            <div>
+                                <h3 class="font-medium text-gray-800">データインポート</h3>
+                                <p class="text-sm text-gray-600">JSONファイルからワークアウトデータを読み込み</p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <input type="file" 
+                                       id="import-file" 
+                                       accept=".json" 
+                                       class="hidden">
+                                <button id="import-data-btn" 
+                                        class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                                    <i class="fas fa-upload mr-2"></i>
+                                    インポート
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- データクリア -->
+                        <div class="flex items-center justify-between p-4 bg-red-50 rounded-lg">
+                            <div>
+                                <h3 class="font-medium text-red-800">データクリア</h3>
+                                <p class="text-sm text-red-600">すべてのワークアウトデータを削除（復元不可）</p>
+                            </div>
+                            <button id="clear-data-btn" 
+                                    class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+                                <i class="fas fa-trash mr-2"></i>
+                                クリア
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- アプリケーション設定 -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-cog text-purple-500 mr-2"></i>
+                        アプリケーション設定
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <!-- 単位設定 -->
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-medium text-gray-800">単位</h3>
+                                <p class="text-sm text-gray-600">重量の表示単位</p>
+                            </div>
+                            <select id="units-select" 
+                                    class="px-3 py-2 border border-gray-300 rounded-lg 
+                                           focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="metric" ${profile.preferences.units === 'metric' ? 'selected' : ''}>kg</option>
+                                <option value="imperial" ${profile.preferences.units === 'imperial' ? 'selected' : ''}>lbs</option>
+                            </select>
+                        </div>
+
+                        <!-- テーマ設定 -->
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-medium text-gray-800">テーマ</h3>
+                                <p class="text-sm text-gray-600">アプリケーションの外観</p>
+                            </div>
+                            <select id="theme-select" 
+                                    class="px-3 py-2 border border-gray-300 rounded-lg 
+                                           focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="light" ${profile.preferences.theme === 'light' ? 'selected' : ''}>ライト</option>
+                                <option value="dark" ${profile.preferences.theme === 'dark' ? 'selected' : ''}>ダーク</option>
+                                <option value="auto" ${profile.preferences.theme === 'auto' ? 'selected' : ''}>自動</option>
+                            </select>
+                        </div>
+
+                        <!-- 通知設定 -->
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-medium text-gray-800">通知</h3>
+                                <p class="text-sm text-gray-600">ワークアウトリマインダー</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" 
+                                       id="notifications-toggle" 
+                                       ${profile.preferences.notifications ? 'checked' : ''}
+                                       class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 
+                                          peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full 
+                                          peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] 
+                                          after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full 
+                                          after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg 
                                               focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                        placeholder="170.0"

@@ -8,13 +8,12 @@ const DYNAMIC_CACHE = `muscle-rotation-dynamic-v${CACHE_VERSION}`;
 const IMAGE_CACHE = `muscle-rotation-images-v${CACHE_VERSION}`;
 const API_CACHE = `muscle-rotation-api-v${CACHE_VERSION}`;
 
-// 最適化されたキャッシュリスト - 優先度別に分類
+// 最適化されたキャッシュリスト - 優先度別に分類（デプロイ最適化版）
 const CRITICAL_FILES = [
     '/',
     '/index.html',
     '/manifest.json',
-    '/style.css',
-    '/app-refactored.js'
+    '/style.css'
 ];
 
 const STATIC_FILES = [
