@@ -426,7 +426,7 @@ class OfflineManager {
     for (let i = 0; i < this.syncQueue.length; i += concurrency) {
       const batch = this.syncQueue.slice(i, i + concurrency);
 
-      const batchPromises = batch.map(async (item, index) => {
+      const batchPromises = batch.map(async (item) => {
         try {
           await this.syncItem(item);
           results.success++;

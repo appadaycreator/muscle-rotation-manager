@@ -1,6 +1,9 @@
 // onboardingManager.test.js - OnboardingManagerクラスのテスト
 
-import { OnboardingManager, onboardingManager } from '../../js/utils/onboardingManager.js';
+import {
+  OnboardingManager,
+  onboardingManager,
+} from '../../js/utils/onboardingManager.js';
 
 // モックの設定
 jest.mock('../../js/utils/helpers.js', () => ({
@@ -88,7 +91,7 @@ describe('OnboardingManager', () => {
 
     test('should not start onboarding for returning users', () => {
       localStorage.setItem('muscleRotationOnboarding_completed', 'true');
-      
+
       const createOverlaySpy = jest.spyOn(manager, 'createOverlay');
       const showStepSpy = jest.spyOn(manager, 'showStep');
 
@@ -157,7 +160,7 @@ describe('OnboardingManager', () => {
 
     test('should complete onboarding when all steps shown', () => {
       const completeOnboardingSpy = jest.spyOn(manager, 'completeOnboarding');
-      
+
       manager.currentStep = manager.steps.length;
       manager.showStep(manager.steps.length);
 
@@ -180,12 +183,12 @@ describe('OnboardingManager', () => {
     test('should add event listeners to buttons', () => {
       const step = manager.steps[0];
       const nextStepSpy = jest.spyOn(manager, 'nextStep');
-      
+
       manager.createTooltip(step);
 
       const nextBtn = document.getElementById('onboarding-next');
       expect(nextBtn).toBeDefined();
-      
+
       nextBtn.click();
       expect(nextStepSpy).toHaveBeenCalled();
     });
@@ -193,7 +196,7 @@ describe('OnboardingManager', () => {
     test('should show previous button for steps after first', () => {
       const step = manager.steps[1];
       manager.currentStep = 1;
-      
+
       manager.createTooltip(step);
 
       const prevBtn = document.getElementById('onboarding-prev');
@@ -237,13 +240,20 @@ describe('OnboardingManager', () => {
 
       manager.completeOnboarding();
 
-      expect(localStorage.getItem('muscleRotationOnboarding_completed')).toBe('true');
-      expect(localStorage.getItem('muscleRotationOnboarding_completedAt')).toBeDefined();
+      expect(localStorage.getItem('muscleRotationOnboarding_completed')).toBe(
+        'true'
+      );
+      expect(
+        localStorage.getItem('muscleRotationOnboarding_completedAt')
+      ).toBeDefined();
       expect(manager.isActive).toBe(false);
       expect(removeOverlaySpy).toHaveBeenCalled();
       expect(removeTooltipSpy).toHaveBeenCalled();
       expect(removeHighlightSpy).toHaveBeenCalled();
-      expect(mockShowNotification).toHaveBeenCalledWith('オンボーディングが完了しました！', 'success');
+      expect(mockShowNotification).toHaveBeenCalledWith(
+        'オンボーディングが完了しました！',
+        'success'
+      );
     });
 
     test('should handle localStorage errors gracefully', () => {
@@ -265,12 +275,19 @@ describe('OnboardingManager', () => {
   describe('resetOnboarding', () => {
     test('should remove onboarding completion data', () => {
       localStorage.setItem('muscleRotationOnboarding_completed', 'true');
-      localStorage.setItem('muscleRotationOnboarding_completedAt', '2023-01-01');
+      localStorage.setItem(
+        'muscleRotationOnboarding_completedAt',
+        '2023-01-01'
+      );
 
       manager.resetOnboarding();
 
-      expect(localStorage.getItem('muscleRotationOnboarding_completed')).toBeNull();
-      expect(localStorage.getItem('muscleRotationOnboarding_completedAt')).toBeNull();
+      expect(
+        localStorage.getItem('muscleRotationOnboarding_completed')
+      ).toBeNull();
+      expect(
+        localStorage.getItem('muscleRotationOnboarding_completedAt')
+      ).toBeNull();
     });
 
     test('should handle localStorage errors gracefully', () => {

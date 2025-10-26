@@ -166,7 +166,7 @@ class MPAInitializer {
       } catch (error) {
         console.warn('Failed to check guest mode:', error);
       }
-      
+
       if (isGuestMode) {
         console.log('🔐 Guest mode is enabled, skipping authentication check');
         return true;
@@ -244,7 +244,7 @@ class MPAInitializer {
           </div>
         </div>
       `;
-      
+
       // イベントリスナーを設定
       this.setupLoginPromptListeners();
     }
@@ -283,20 +283,19 @@ class MPAInitializer {
       // ゲストモードフラグを設定
       localStorage.setItem('guestMode', 'true');
       localStorage.setItem('guestModeEnabledAt', new Date().toISOString());
-      
+
       // サンプルデータを設定
       this.setupGuestData();
-      
+
       // 通知を表示
       if (typeof showNotification === 'function') {
         showNotification('ゲストモードが有効になりました', 'success');
       }
-      
+
       // ページをリロードしてゲストモードを反映
       setTimeout(() => {
         window.location.reload();
       }, 1000);
-      
     } catch (error) {
       console.error('Failed to enable guest mode:', error);
       if (typeof showNotification === 'function') {
@@ -320,7 +319,7 @@ class MPAInitializer {
           difficulty: 3,
           equipment: 'barbell',
           type: 'compound',
-          description: '胸筋を鍛える基本的なエクササイズ'
+          description: '胸筋を鍛える基本的なエクササイズ',
         },
         {
           id: 'squat',
@@ -330,7 +329,7 @@ class MPAInitializer {
           difficulty: 2,
           equipment: 'bodyweight',
           type: 'compound',
-          description: '脚の筋肉を鍛える基本的なエクササイズ'
+          description: '脚の筋肉を鍛える基本的なエクササイズ',
         },
         {
           id: 'deadlift',
@@ -340,8 +339,8 @@ class MPAInitializer {
           difficulty: 5,
           equipment: 'barbell',
           type: 'compound',
-          description: '全身の筋肉を鍛えるエクササイズ'
-        }
+          description: '全身の筋肉を鍛えるエクササイズ',
+        },
       ];
 
       // サンプルワークアウトデータ
@@ -354,11 +353,11 @@ class MPAInitializer {
               name: 'ベンチプレス',
               sets: 3,
               reps: 10,
-              weight: 80
-            }
+              weight: 80,
+            },
           ],
           duration: 45,
-          notes: '胸の日'
+          notes: '胸の日',
         },
         {
           id: 'workout-2',
@@ -368,22 +367,25 @@ class MPAInitializer {
               name: 'スクワット',
               sets: 3,
               reps: 12,
-              weight: 100
-            }
+              weight: 100,
+            },
           ],
           duration: 30,
-          notes: '脚の日'
-        }
+          notes: '脚の日',
+        },
       ];
 
       // ローカルストレージに保存
       localStorage.setItem('exercises', JSON.stringify(sampleExercises));
       localStorage.setItem('workouts', JSON.stringify(sampleWorkouts));
-      localStorage.setItem('guestModeData', JSON.stringify({
-        exercises: sampleExercises,
-        workouts: sampleWorkouts,
-        createdAt: new Date().toISOString()
-      }));
+      localStorage.setItem(
+        'guestModeData',
+        JSON.stringify({
+          exercises: sampleExercises,
+          workouts: sampleWorkouts,
+          createdAt: new Date().toISOString(),
+        })
+      );
 
       console.log('Guest mode data setup completed');
     } catch (error) {
@@ -670,7 +672,8 @@ class MPAInitializer {
   /**
    * 初期化エラーを処理
    */
-  handleInitializationError(_error) {
+  handleInitializationError(error) {
+    console.error('Initialization error:', error);
     const mainContent = document.getElementById('main-content');
     if (mainContent) {
       mainContent.innerHTML = `
@@ -780,10 +783,12 @@ class MPAInitializer {
       }
 
       // 初回アクセスかチェック
-      const isFirstVisit = !localStorage.getItem('muscleRotationOnboarding_completed');
+      const isFirstVisit = !localStorage.getItem(
+        'muscleRotationOnboarding_completed'
+      );
       if (isFirstVisit) {
         console.log('🎯 First visit detected, starting onboarding');
-        
+
         // 少し遅延してからオンボーディングを開始（ページ読み込み完了後）
         setTimeout(() => {
           onboardingManager.startOnboarding();

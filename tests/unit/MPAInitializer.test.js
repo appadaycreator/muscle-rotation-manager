@@ -330,7 +330,9 @@ describe('MPAInitializer', () => {
       // サンプルデータが設定されているかチェック
       const exercises = JSON.parse(localStorage.getItem('exercises') || '[]');
       const workouts = JSON.parse(localStorage.getItem('workouts') || '[]');
-      const guestData = JSON.parse(localStorage.getItem('guestModeData') || '{}');
+      const guestData = JSON.parse(
+        localStorage.getItem('guestModeData') || '{}'
+      );
 
       expect(exercises.length).toBeGreaterThan(0);
       expect(workouts.length).toBeGreaterThan(0);
@@ -410,7 +412,9 @@ describe('MPAInitializer', () => {
     test('should return true when user is authenticated', async () => {
       mockSupabaseService.isAvailable.mockReturnValue(true);
       mockAuthManager.isAuthenticated.mockResolvedValue(true);
-      mockAuthManager.getCurrentUser.mockResolvedValue({ email: 'test@example.com' });
+      mockAuthManager.getCurrentUser.mockResolvedValue({
+        email: 'test@example.com',
+      });
 
       const result = await mpaInitializer.checkAuthentication();
 
@@ -432,7 +436,9 @@ describe('MPAInitializer', () => {
 
     test('should handle authentication check errors', async () => {
       mockSupabaseService.isAvailable.mockReturnValue(true);
-      mockAuthManager.isAuthenticated.mockRejectedValue(new Error('Auth error'));
+      mockAuthManager.isAuthenticated.mockRejectedValue(
+        new Error('Auth error')
+      );
 
       const showLoginPromptSpy = jest.spyOn(mpaInitializer, 'showLoginPrompt');
 

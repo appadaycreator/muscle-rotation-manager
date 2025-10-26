@@ -224,6 +224,7 @@ async function cacheFirst(request, startTime) {
 }
 
 // Network First Strategy (for API requests)
+// eslint-disable-next-line no-unused-vars
 async function networkFirst(request) {
   try {
     const networkResponse = await fetch(request);

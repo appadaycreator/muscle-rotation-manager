@@ -229,7 +229,7 @@ class AccessibilityManager {
   optimizeTabOrder() {
     const focusableElements = this.getFocusableElements();
 
-    focusableElements.forEach((element, _index) => {
+    focusableElements.forEach((element) => {
       // 論理的な順序でtabindexを設定
       if (!element.hasAttribute('tabindex')) {
         element.setAttribute('tabindex', '0');
@@ -366,7 +366,7 @@ class AccessibilityManager {
    * キーボードナビゲーション処理
    */
   handleKeyboardNavigation(event) {
-    const { key, ctrlKey, altKey, shiftKey } = event;
+    const { key, ctrlKey, altKey } = event;
 
     // Escapeキーでモーダルを閉じる
     if (key === 'Escape') {
@@ -484,7 +484,6 @@ class AccessibilityManager {
    * 矢印キーナビゲーション
    */
   handleArrowNavigation(event) {
-    const { key } = event;
     const currentElement = document.activeElement;
 
     // グリッドレイアウトでの矢印キーナビゲーション

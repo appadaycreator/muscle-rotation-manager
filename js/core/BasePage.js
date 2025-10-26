@@ -116,9 +116,11 @@ export class BasePage {
       } catch (error) {
         console.warn('Failed to check guest mode:', error);
       }
-      
+
       if (isGuestMode) {
-        console.log(`🔐 Guest mode is enabled for ${this.pageName} page - skipping auth check`);
+        console.log(
+          `🔐 Guest mode is enabled for ${this.pageName} page - skipping auth check`
+        );
         return true;
       }
 

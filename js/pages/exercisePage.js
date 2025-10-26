@@ -338,15 +338,17 @@ class ExercisePage {
 
     try {
       console.log('Loading exercises...');
-      
+
       const searchTerm =
         document.getElementById('exercise-search')?.value || '';
       const filters = this.getCurrentFilters();
 
       // ローカルストレージからエクササイズデータを読み込み（認証なしでも動作）
       this.currentExercises = this.getLocalExercises();
-      
-      console.log(`Loaded ${this.currentExercises.length} exercises from local storage`);
+
+      console.log(
+        `Loaded ${this.currentExercises.length} exercises from local storage`
+      );
 
       // 検索・フィルタリングを適用
       if (searchTerm || this.hasActiveFilters()) {
@@ -364,26 +366,28 @@ class ExercisePage {
       if (typeof this.updateExerciseCount === 'function') {
         this.updateExerciseCount();
       } else {
-        console.warn('updateExerciseCount method not found, skipping count update');
+        console.warn(
+          'updateExerciseCount method not found, skipping count update'
+        );
       }
-      
+
       console.log('Exercises loaded successfully');
     } catch (error) {
       console.error('Error loading exercises:', error);
-      
+
       // エラー詳細を表示
       const errorMessage = error.message || '予期しないエラーが発生しました';
       const errorDetails = error.stack || 'スタックトレースが利用できません';
-      
+
       console.error('Error details:', {
         message: errorMessage,
         details: errorDetails,
-        exercises: this.currentExercises?.length || 0
+        exercises: this.currentExercises?.length || 0,
       });
-      
+
       // ユーザーフレンドリーなエラーメッセージを表示
       this.showErrorState(errorMessage);
-      
+
       handleError(error, {
         context: 'エクササイズ読み込み',
         showNotification: true,
@@ -707,75 +711,6 @@ class ExercisePage {
   }
 
   /**
-   * エクササイズをフィルタリング
-   */
-  filterExercises(exercises, searchTerm, filters) {
-    return exercises.filter((exercise) => {
-      // 検索語でフィルタリング
-      if (searchTerm) {
-        const searchLower = searchTerm.toLowerCase();
-        const nameMatch =
-          exercise.name_ja?.toLowerCase().includes(searchLower) ||
-          exercise.name?.toLowerCase().includes(searchLower);
-        if (!nameMatch) {
-          return false;
-        }
-      }
-
-      // 筋肉部位でフィルタリング
-      if (
-        filters.muscleGroupId &&
-        exercise.muscle_group !== filters.muscleGroupId
-      ) {
-        return false;
-      }
-
-      // 難易度でフィルタリング
-      if (
-        filters.difficulty &&
-        exercise.difficulty !== parseInt(filters.difficulty)
-      ) {
-        return false;
-      }
-
-      // 器具でフィルタリング
-      if (filters.equipment && exercise.equipment !== filters.equipment) {
-        return false;
-      }
-
-      // タイプでフィルタリング
-      if (filters.type && exercise.type !== filters.type) {
-        return false;
-      }
-
-      // ボディウェイトフィルター
-      if (filters.bodyweight && exercise.equipment !== 'bodyweight') {
-        return false;
-      }
-
-      // コンパウンドフィルター
-      if (filters.compound && exercise.type !== 'compound') {
-        return false;
-      }
-
-      // 初心者フィルター
-      if (filters.beginner && exercise.difficulty > 2) {
-        return false;
-      }
-
-      // お気に入りフィルター
-      if (
-        filters.showFavoritesOnly &&
-        !this.favoriteExercises.has(exercise.id)
-      ) {
-        return false;
-      }
-
-      return true;
-    });
-  }
-
-  /**
    * 現在のフィルター条件を取得
    * @returns {Object} フィルター条件
    */
@@ -843,7 +778,7 @@ class ExercisePage {
   async performSearch(searchTerm) {
     try {
       console.log('Performing search:', searchTerm);
-      
+
       if (!searchTerm.trim()) {
         // 検索語が空の場合は全件表示
         await this.loadExercises();
@@ -864,7 +799,9 @@ class ExercisePage {
       this.renderExercises();
       this.updateExerciseCount();
 
-      console.log(`Search completed: ${filteredExercises.length} exercises found`);
+      console.log(
+        `Search completed: ${filteredExercises.length} exercises found`
+      );
     } catch (error) {
       console.error('Search failed:', error);
       handleError(error, {
@@ -890,7 +827,7 @@ class ExercisePage {
       // 検索語によるフィルタリング
       if (searchTerm.trim()) {
         const searchLower = searchTerm.toLowerCase();
-        filtered = filtered.filter(exercise => {
+        filtered = filtered.filter((exercise) => {
           return (
             exercise.name?.toLowerCase().includes(searchLower) ||
             exercise.name_ja?.toLowerCase().includes(searchLower) ||
@@ -902,51 +839,47 @@ class ExercisePage {
 
       // 筋肉部位フィルター
       if (filters.muscleGroup) {
-        filtered = filtered.filter(exercise => 
-          exercise.muscle_group === filters.muscleGroup
+        filtered = filtered.filter(
+          (exercise) => exercise.muscle_group === filters.muscleGroup
         );
       }
 
       // 器具フィルター
       if (filters.equipment) {
-        filtered = filtered.filter(exercise => 
-          exercise.equipment === filters.equipment
+        filtered = filtered.filter(
+          (exercise) => exercise.equipment === filters.equipment
         );
       }
 
       // 難易度フィルター
       if (filters.difficulty) {
-        filtered = filtered.filter(exercise => 
-          exercise.difficulty === parseInt(filters.difficulty)
+        filtered = filtered.filter(
+          (exercise) => exercise.difficulty === parseInt(filters.difficulty)
         );
       }
 
       // エクササイズタイプフィルター
       if (filters.exerciseType) {
-        filtered = filtered.filter(exercise => 
-          exercise.type === filters.exerciseType
+        filtered = filtered.filter(
+          (exercise) => exercise.type === filters.exerciseType
         );
       }
 
       // ボディウェイトフィルター
       if (filters.bodyweight) {
-        filtered = filtered.filter(exercise => 
-          exercise.equipment === 'bodyweight'
+        filtered = filtered.filter(
+          (exercise) => exercise.equipment === 'bodyweight'
         );
       }
 
       // コンパウンドフィルター
       if (filters.compound) {
-        filtered = filtered.filter(exercise => 
-          exercise.type === 'compound'
-        );
+        filtered = filtered.filter((exercise) => exercise.type === 'compound');
       }
 
       // 初心者フィルター
       if (filters.beginner) {
-        filtered = filtered.filter(exercise => 
-          exercise.difficulty <= 2
-        );
+        filtered = filtered.filter((exercise) => exercise.difficulty <= 2);
       }
 
       // ソート適用
@@ -973,17 +906,29 @@ class ExercisePage {
 
       switch (sortType) {
         case 'name_asc':
-          return sorted.sort((a, b) => (a.name_ja || a.name || '').localeCompare(b.name_ja || b.name || ''));
+          return sorted.sort((a, b) =>
+            (a.name_ja || a.name || '').localeCompare(b.name_ja || b.name || '')
+          );
         case 'name_desc':
-          return sorted.sort((a, b) => (b.name_ja || b.name || '').localeCompare(a.name_ja || a.name || ''));
+          return sorted.sort((a, b) =>
+            (b.name_ja || b.name || '').localeCompare(a.name_ja || a.name || '')
+          );
         case 'difficulty_asc':
-          return sorted.sort((a, b) => (a.difficulty || 0) - (b.difficulty || 0));
+          return sorted.sort(
+            (a, b) => (a.difficulty || 0) - (b.difficulty || 0)
+          );
         case 'difficulty_desc':
-          return sorted.sort((a, b) => (b.difficulty || 0) - (a.difficulty || 0));
+          return sorted.sort(
+            (a, b) => (b.difficulty || 0) - (a.difficulty || 0)
+          );
         case 'muscle_group':
-          return sorted.sort((a, b) => (a.muscle_group || '').localeCompare(b.muscle_group || ''));
+          return sorted.sort((a, b) =>
+            (a.muscle_group || '').localeCompare(b.muscle_group || '')
+          );
         case 'equipment':
-          return sorted.sort((a, b) => (a.equipment || '').localeCompare(b.equipment || ''));
+          return sorted.sort((a, b) =>
+            (a.equipment || '').localeCompare(b.equipment || '')
+          );
         default:
           return sorted;
       }

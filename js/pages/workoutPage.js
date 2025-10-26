@@ -320,8 +320,6 @@ export class WorkoutPage extends BasePage {
     const container = document.getElementById('current-workout');
     if (!container) return;
 
-    const selectedMuscles = this.currentWorkout.muscleGroups;
-    
     container.innerHTML = `
       <!-- ワークアウトヘッダー -->
       <div class="bg-white rounded-lg shadow-md p-6 mb-6">
@@ -453,19 +451,23 @@ export class WorkoutPage extends BasePage {
     this.currentExercise = {
       name: exerciseName,
       sets: [],
-      startTime: new Date()
+      startTime: new Date(),
     };
     this.currentSet = 0;
     this.setData = [];
 
     // 現在のエクササイズセクションを表示
-    const currentExerciseSection = document.getElementById('current-exercise-section');
+    const currentExerciseSection = document.getElementById(
+      'current-exercise-section'
+    );
     if (currentExerciseSection) {
       currentExerciseSection.classList.remove('hidden');
     }
 
     // エクササイズ名を更新
-    const exerciseNameElement = document.getElementById('current-exercise-name');
+    const exerciseNameElement = document.getElementById(
+      'current-exercise-name'
+    );
     if (exerciseNameElement) {
       exerciseNameElement.textContent = exerciseName;
     }
@@ -494,7 +496,7 @@ export class WorkoutPage extends BasePage {
       setNumber: this.currentSet + 1,
       reps: reps,
       weight: weight,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
     this.setData.push(setData);
@@ -520,7 +522,9 @@ export class WorkoutPage extends BasePage {
     const setsHistory = document.getElementById('sets-history');
     if (!setsHistory) return;
 
-    setsHistory.innerHTML = this.setData.map(set => `
+    setsHistory.innerHTML = this.setData
+      .map(
+        (set) => `
       <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
         <div class="flex items-center space-x-4">
           <span class="text-sm font-medium text-gray-700">セット ${set.setNumber}</span>
@@ -531,20 +535,36 @@ export class WorkoutPage extends BasePage {
           ${set.timestamp.toLocaleTimeString('ja-JP')}
         </div>
       </div>
-    `).join('');
+    `
+      )
+      .join('');
   }
 
   /**
    * ワークアウト統計を更新
    */
   updateWorkoutStats() {
-    const totalSets = this.currentWorkout.exercises.reduce((sum, exercise) => sum + exercise.sets.length, 0) + this.setData.length;
-    const totalReps = this.currentWorkout.exercises.reduce((sum, exercise) => 
-      sum + exercise.sets.reduce((setSum, set) => setSum + set.reps, 0), 0) + 
-      this.setData.reduce((sum, set) => sum + set.reps, 0);
-    const totalWeight = this.currentWorkout.exercises.reduce((sum, exercise) => 
-      sum + exercise.sets.reduce((setSum, set) => setSum + (set.weight * set.reps), 0), 0) + 
-      this.setData.reduce((sum, set) => sum + (set.weight * set.reps), 0);
+    const totalSets =
+      this.currentWorkout.exercises.reduce(
+        (sum, exercise) => sum + exercise.sets.length,
+        0
+      ) + this.setData.length;
+    const totalReps =
+      this.currentWorkout.exercises.reduce(
+        (sum, exercise) =>
+          sum + exercise.sets.reduce((setSum, set) => setSum + set.reps, 0),
+        0
+      ) + this.setData.reduce((sum, set) => sum + set.reps, 0);
+    const totalWeight =
+      this.currentWorkout.exercises.reduce(
+        (sum, exercise) =>
+          sum +
+          exercise.sets.reduce(
+            (setSum, set) => setSum + set.weight * set.reps,
+            0
+          ),
+        0
+      ) + this.setData.reduce((sum, set) => sum + set.weight * set.reps, 0);
 
     // 統計を更新
     const totalSetsElement = document.getElementById('total-sets');
@@ -572,10 +592,12 @@ export class WorkoutPage extends BasePage {
       (this.currentExercise.endTime - this.currentExercise.startTime) / 60000
     );
 
-    this.currentWorkout.exercises.push({...this.currentExercise});
+    this.currentWorkout.exercises.push({ ...this.currentExercise });
 
     // 現在のエクササイズセクションを非表示
-    const currentExerciseSection = document.getElementById('current-exercise-section');
+    const currentExerciseSection = document.getElementById(
+      'current-exercise-section'
+    );
     if (currentExerciseSection) {
       currentExerciseSection.classList.add('hidden');
     }
@@ -633,7 +655,7 @@ export class WorkoutPage extends BasePage {
     }
 
     // ページをリロード
-    location.reload();
+    window.location.reload();
   }
 
   /**

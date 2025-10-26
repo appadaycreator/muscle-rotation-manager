@@ -147,6 +147,7 @@ class SecurityManager {
    */
   setupGlobalErrorHandling() {
     // グローバルエラーハンドラー
+    // eslint-disable-next-line no-unused-vars
     window.onerror = (message, source, lineno, colno, error) => {
       if (
         source &&
@@ -944,12 +945,6 @@ class SecurityManager {
    * セキュリティヘッダーチェック
    */
   async checkSecurityHeaders(results) {
-    const requiredHeaders = [
-      'X-Content-Type-Options',
-      'X-Frame-Options',
-      'X-XSS-Protection',
-    ];
-
     // ヘッダーの存在チェック（実際の実装ではサーバーサイドで確認）
     results.recommendations.push({
       type: 'Security Headers',

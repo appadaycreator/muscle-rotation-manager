@@ -419,8 +419,6 @@ export class ProgressiveOverloadService {
         : 0;
 
     const lastWorkout = sessions[sessions.length - 1].date;
-    const _daysSinceLastWorkout =
-      (new Date() - lastWorkout) / (1000 * 60 * 60 * 24);
 
     // 頻度スコア（理想的には2-3日間隔）
     const idealInterval = 2.5;
@@ -462,10 +460,14 @@ export class ProgressiveOverloadService {
       }
 
       // データの検証とクリーニング
-      const validWorkouts = workouts.filter(workout => {
-        return workout && 
-               typeof workout === 'object' && 
-               (workout.exercises || workout.muscle_groups || workout.duration !== undefined);
+      const validWorkouts = workouts.filter((workout) => {
+        return (
+          workout &&
+          typeof workout === 'object' &&
+          (workout.exercises ||
+            workout.muscle_groups ||
+            workout.duration !== undefined)
+        );
       });
 
       if (validWorkouts.length === 0) {
@@ -484,39 +486,40 @@ export class ProgressiveOverloadService {
           return sum;
         }
 
-        return sum + workout.exercises.reduce((exerciseSum, exercise) => {
-          if (!exercise || typeof exercise !== 'object') {
-            return exerciseSum;
-          }
+        return (
+          sum +
+          workout.exercises.reduce((exerciseSum, exercise) => {
+            if (!exercise || typeof exercise !== 'object') {
+              return exerciseSum;
+            }
 
-          const weight = Number(exercise.weight) || 0;
-          const reps = Number(exercise.reps) || 0;
-          const sets = Number(exercise.sets) || 0;
+            const weight = Number(exercise.weight) || 0;
+            const reps = Number(exercise.reps) || 0;
+            const sets = Number(exercise.sets) || 0;
 
-          // 異常値のチェック（重量1000kg以上、回数100回以上、セット数20以上は除外）
-          if (weight > 1000 || reps > 100 || sets > 20) {
-            console.warn('Suspicious exercise data detected:', exercise);
-            return exerciseSum;
-          }
+            // 異常値のチェック（重量1000kg以上、回数100回以上、セット数20以上は除外）
+            if (weight > 1000 || reps > 100 || sets > 20) {
+              console.warn('Suspicious exercise data detected:', exercise);
+              return exerciseSum;
+            }
 
-          return exerciseSum + (weight * reps * sets);
-        }, 0);
+            return exerciseSum + weight * reps * sets;
+          }, 0)
+        );
       }, 0);
 
-      const totalDuration = validWorkouts.reduce(
-        (sum, workout) => {
-          const duration = Number(workout.duration) || 0;
-          // 異常値のチェック（5時間以上は除外）
-          if (duration > 300) {
-            console.warn('Suspicious duration detected:', duration);
-            return sum;
-          }
-          return sum + duration;
-        },
-        0
-      );
+      const totalDuration = validWorkouts.reduce((sum, workout) => {
+        const duration = Number(workout.duration) || 0;
+        // 異常値のチェック（5時間以上は除外）
+        if (duration > 300) {
+          console.warn('Suspicious duration detected:', duration);
+          return sum;
+        }
+        return sum + duration;
+      }, 0);
 
-      const averageDuration = validWorkouts.length > 0 ? totalDuration / validWorkouts.length : 0;
+      const averageDuration =
+        validWorkouts.length > 0 ? totalDuration / validWorkouts.length : 0;
 
       const muscleGroupCounts = {};
       validWorkouts.forEach((workout) => {
@@ -536,7 +539,9 @@ export class ProgressiveOverloadService {
         muscleGroupDistribution: muscleGroupCounts,
         totalWorkouts: validWorkouts.length,
         averageVolumePerWorkout:
-          validWorkouts.length > 0 ? Math.round(totalVolume / validWorkouts.length) : 0,
+          validWorkouts.length > 0
+            ? Math.round(totalVolume / validWorkouts.length)
+            : 0,
       };
 
       console.log('Overall metrics calculated:', result);

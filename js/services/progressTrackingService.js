@@ -301,6 +301,7 @@ class ProgressTrackingService {
    * @param {string} exerciseId - エクササイズID
    * @param {Object} _newRecord - 新しい記録（将来の拡張用）
    */
+  // eslint-disable-next-line no-unused-vars
   async checkGoalProgress(userId, exerciseId, _newRecord) {
     try {
       const goalProgress = await this.calculateGoalProgress(userId, exerciseId);

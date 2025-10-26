@@ -237,7 +237,7 @@ describe('ExercisePage', () => {
 
     it('should show error state with specific error message', () => {
       const errorMessage = 'データベース接続エラー';
-      
+
       exercisePage.showErrorState(errorMessage);
 
       const exercisesList = document.getElementById('exercises-list');
@@ -257,7 +257,7 @@ describe('ExercisePage', () => {
 
       expect(Array.isArray(exercises)).toBe(true);
       expect(exercises.length).toBeGreaterThan(0);
-      
+
       // サンプルデータの構造をチェック
       const firstExercise = exercises[0];
       expect(firstExercise).toHaveProperty('id');
@@ -267,9 +267,9 @@ describe('ExercisePage', () => {
 
     it('should load exercises from localStorage when available', () => {
       const mockExercises = [
-        { id: 'custom-1', name: 'カスタムエクササイズ', muscle_group: 'chest' }
+        { id: 'custom-1', name: 'カスタムエクササイズ', muscle_group: 'chest' },
       ];
-      
+
       localStorage.setItem('exercises', JSON.stringify(mockExercises));
 
       const exercises = exercisePage.getLocalExercises();
@@ -302,11 +302,13 @@ describe('ExercisePage', () => {
     it('should load exercises successfully', async () => {
       const mockExercises = [
         { id: 1, name: 'ベンチプレス', muscle_group: 'chest' },
-        { id: 2, name: 'スクワット', muscle_group: 'legs' }
+        { id: 2, name: 'スクワット', muscle_group: 'legs' },
       ];
 
       // getLocalExercisesをモック
-      jest.spyOn(exercisePage, 'getLocalExercises').mockReturnValue(mockExercises);
+      jest
+        .spyOn(exercisePage, 'getLocalExercises')
+        .mockReturnValue(mockExercises);
 
       await exercisePage.loadExercises();
 
@@ -316,14 +318,18 @@ describe('ExercisePage', () => {
     it('should apply search filter', async () => {
       const mockExercises = [
         { id: 1, name: 'ベンチプレス', muscle_group: 'chest' },
-        { id: 2, name: 'スクワット', muscle_group: 'legs' }
+        { id: 2, name: 'スクワット', muscle_group: 'legs' },
       ];
 
       // 検索語を設定
       document.getElementById('exercise-search').value = 'ベンチ';
 
-      jest.spyOn(exercisePage, 'getLocalExercises').mockReturnValue(mockExercises);
-      jest.spyOn(exercisePage, 'filterExercises').mockReturnValue([mockExercises[0]]);
+      jest
+        .spyOn(exercisePage, 'getLocalExercises')
+        .mockReturnValue(mockExercises);
+      jest
+        .spyOn(exercisePage, 'filterExercises')
+        .mockReturnValue([mockExercises[0]]);
 
       await exercisePage.loadExercises();
 
@@ -332,7 +338,7 @@ describe('ExercisePage', () => {
 
     it('should update exercise count after loading', async () => {
       const mockExercises = [
-        { id: 1, name: 'ベンチプレス', muscle_group: 'chest' }
+        { id: 1, name: 'ベンチプレス', muscle_group: 'chest' },
       ];
 
       // DOMをセットアップ
@@ -345,7 +351,9 @@ describe('ExercisePage', () => {
         <div id="exercise-count"></div>
       `;
 
-      jest.spyOn(exercisePage, 'getLocalExercises').mockReturnValue(mockExercises);
+      jest
+        .spyOn(exercisePage, 'getLocalExercises')
+        .mockReturnValue(mockExercises);
       jest.spyOn(exercisePage, 'renderExercises').mockImplementation();
       jest.spyOn(exercisePage, 'updateExerciseCount').mockImplementation();
 

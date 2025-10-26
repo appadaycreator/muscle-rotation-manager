@@ -49,6 +49,7 @@ class LazyLoader {
    * @param {string} moduleKey - モジュールキー
    * @returns {Promise<Object>}
    */
+  // eslint-disable-next-line no-unused-vars
   async createPageLoadPromise(pageName, moduleKey) {
     console.log(`🔄 遅延ロード開始: ${pageName}`);
     const startTime = performance.now();
@@ -140,6 +141,7 @@ class LazyLoader {
    * @param {string} moduleKey - モジュールキー
    * @returns {Promise<Object>}
    */
+  // eslint-disable-next-line no-unused-vars
   async createServiceLoadPromise(serviceName, moduleKey) {
     console.log(`🔄 サービス遅延ロード開始: ${serviceName}`);
     const startTime = performance.now();

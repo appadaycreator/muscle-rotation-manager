@@ -408,6 +408,7 @@ class ResourceOptimizer {
 
     // FID (First Input Delay) - 代替としてイベントリスナーの遅延を測定
     let firstInputTime = null;
+    // eslint-disable-next-line no-unused-vars
     const measureFID = (event) => {
       if (firstInputTime === null) {
         firstInputTime = performance.now();

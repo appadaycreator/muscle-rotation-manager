@@ -320,7 +320,7 @@ class PerformanceOptimizer {
    */
   cleanupMemory() {
     // 未使用のオブザーバーを削除
-    this.observers.forEach((observer, key) => {
+    this.observers.forEach((observer) => {
       if (observer && typeof observer.disconnect === 'function') {
         observer.disconnect();
       }
@@ -408,7 +408,7 @@ class PerformanceOptimizer {
     // イベントリスナーの適切な削除を保証
     this.cleanupEventListeners = () => {
       if (this.eventListeners) {
-        for (const [key, listeners] of this.eventListeners) {
+        for (const [, listeners] of this.eventListeners) {
           listeners.forEach(({ element, event, handler }) => {
             if (element && typeof element.removeEventListener === 'function') {
               element.removeEventListener(event, handler);

@@ -93,9 +93,15 @@ describe('ProgressiveOverloadService', () => {
       };
 
       // キャッシュにデータを設定
-      serviceInstance.setCachedAnalysis('exercise_ベンチプレス_90', mockAnalysis);
+      serviceInstance.setCachedAnalysis(
+        'exercise_ベンチプレス_90',
+        mockAnalysis
+      );
 
-      const result = await serviceInstance.getExerciseProgress('ベンチプレス', 90);
+      const result = await serviceInstance.getExerciseProgress(
+        'ベンチプレス',
+        90
+      );
 
       expect(result).toEqual(mockAnalysis);
       expect(mockWorkoutDataService.loadWorkouts).not.toHaveBeenCalled();
@@ -105,8 +111,9 @@ describe('ProgressiveOverloadService', () => {
       const error = new Error('Analysis failed');
       mockWorkoutDataService.loadWorkouts.mockRejectedValue(error);
 
-      await expect(serviceInstance.getExerciseProgress('ベンチプレス', 90))
-        .rejects.toThrow('Analysis failed');
+      await expect(
+        serviceInstance.getExerciseProgress('ベンチプレス', 90)
+      ).rejects.toThrow('Analysis failed');
     });
   });
 
@@ -156,25 +163,25 @@ describe('ProgressiveOverloadService', () => {
     test('should filter workouts by exercise name', () => {
       const now = new Date();
       const recentDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000); // 7日前
-      
+
       const mockWorkouts = [
         {
           id: '1',
           date: recentDate.toISOString(),
-          exercises: [
-            { name: 'ベンチプレス', sets: 3, reps: 10, weight: 80 },
-          ],
+          exercises: [{ name: 'ベンチプレス', sets: 3, reps: 10, weight: 80 }],
         },
         {
           id: '2',
           date: recentDate.toISOString(),
-          exercises: [
-            { name: 'スクワット', sets: 3, reps: 12, weight: 100 },
-          ],
+          exercises: [{ name: 'スクワット', sets: 3, reps: 12, weight: 100 }],
         },
       ];
 
-      const result = serviceInstance.filterExerciseData(mockWorkouts, 'ベンチプレス', 90);
+      const result = serviceInstance.filterExerciseData(
+        mockWorkouts,
+        'ベンチプレス',
+        90
+      );
 
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe('1');
@@ -194,18 +201,14 @@ describe('ProgressiveOverloadService', () => {
       const now = new Date();
       const recentDate1 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000); // 7日前
       const recentDate2 = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000); // 14日前
-      
+
       const mockExerciseData = [
         {
-          exerciseData: [
-            { weight: 80, reps: 10, sets: 3 },
-          ],
+          exerciseData: [{ weight: 80, reps: 10, sets: 3 }],
           date: recentDate1.toISOString(),
         },
         {
-          exerciseData: [
-            { weight: 85, reps: 10, sets: 3 },
-          ],
+          exerciseData: [{ weight: 85, reps: 10, sets: 3 }],
           date: recentDate2.toISOString(),
         },
       ];
@@ -238,23 +241,20 @@ describe('ProgressiveOverloadService', () => {
       const now = new Date();
       const recentDate1 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000); // 7日前
       const recentDate2 = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000); // 14日前
-      
+
       const mockExerciseData = [
         {
-          exerciseData: [
-            { weight: 80, reps: 10, sets: 3 },
-          ],
+          exerciseData: [{ weight: 80, reps: 10, sets: 3 }],
           date: recentDate1.toISOString(),
         },
         {
-          exerciseData: [
-            { weight: 85, reps: 10, sets: 3 },
-          ],
+          exerciseData: [{ weight: 85, reps: 10, sets: 3 }],
           date: recentDate2.toISOString(),
         },
       ];
 
-      const result = serviceInstance.calculateVolumeProgression(mockExerciseData);
+      const result =
+        serviceInstance.calculateVolumeProgression(mockExerciseData);
 
       expect(Array.isArray(result)).toBe(true);
       expect(result.length).toBeGreaterThan(0);
@@ -263,17 +263,16 @@ describe('ProgressiveOverloadService', () => {
     test('should handle single session', () => {
       const now = new Date();
       const recentDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000); // 7日前
-      
+
       const mockExerciseData = [
         {
-          exerciseData: [
-            { weight: 80, reps: 10, sets: 3 },
-          ],
+          exerciseData: [{ weight: 80, reps: 10, sets: 3 }],
           date: recentDate.toISOString(),
         },
       ];
 
-      const result = serviceInstance.calculateVolumeProgression(mockExerciseData);
+      const result =
+        serviceInstance.calculateVolumeProgression(mockExerciseData);
 
       expect(Array.isArray(result)).toBe(true);
       expect(result.length).toBe(1);
@@ -285,23 +284,20 @@ describe('ProgressiveOverloadService', () => {
       const now = new Date();
       const recentDate1 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000); // 7日前
       const recentDate2 = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000); // 14日前
-      
+
       const mockExerciseData = [
         {
-          exerciseData: [
-            { weight: 80, reps: 10, sets: 3 },
-          ],
+          exerciseData: [{ weight: 80, reps: 10, sets: 3 }],
           date: recentDate1.toISOString(),
         },
         {
-          exerciseData: [
-            { weight: 85, reps: 10, sets: 3 },
-          ],
+          exerciseData: [{ weight: 85, reps: 10, sets: 3 }],
           date: recentDate2.toISOString(),
         },
       ];
 
-      const result = serviceInstance.calculateIntensityProgression(mockExerciseData);
+      const result =
+        serviceInstance.calculateIntensityProgression(mockExerciseData);
 
       expect(Array.isArray(result)).toBe(true);
       expect(result.length).toBeGreaterThan(0);
@@ -312,12 +308,10 @@ describe('ProgressiveOverloadService', () => {
     test('should generate recommendations based on exercise data', () => {
       const now = new Date();
       const recentDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000); // 7日前
-      
+
       const mockExerciseData = [
         {
-          exerciseData: [
-            { weight: 80, reps: 10, sets: 3 },
-          ],
+          exerciseData: [{ weight: 80, reps: 10, sets: 3 }],
           date: recentDate.toISOString(),
         },
       ];
@@ -325,7 +319,7 @@ describe('ProgressiveOverloadService', () => {
       const result = serviceInstance.generateRecommendations(mockExerciseData);
 
       expect(Array.isArray(result)).toBe(true);
-      result.forEach(rec => {
+      result.forEach((rec) => {
         expect(rec).toHaveProperty('message');
         expect(rec).toHaveProperty('action');
         expect(rec).toHaveProperty('priority');
@@ -338,18 +332,14 @@ describe('ProgressiveOverloadService', () => {
       const now = new Date();
       const recentDate1 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000); // 7日前
       const recentDate2 = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000); // 14日前
-      
+
       const mockExerciseData = [
         {
-          exerciseData: [
-            { weight: 80, reps: 10, sets: 3 },
-          ],
+          exerciseData: [{ weight: 80, reps: 10, sets: 3 }],
           date: recentDate1.toISOString(),
         },
         {
-          exerciseData: [
-            { weight: 85, reps: 10, sets: 3 },
-          ],
+          exerciseData: [{ weight: 85, reps: 10, sets: 3 }],
           date: recentDate2.toISOString(),
         },
       ];
@@ -374,9 +364,7 @@ describe('ProgressiveOverloadService', () => {
           muscle_groups: ['chest', 'shoulders'],
         },
         {
-          exercises: [
-            { weight: 100, reps: 8, sets: 3 },
-          ],
+          exercises: [{ weight: 100, reps: 8, sets: 3 }],
           duration: 30,
           muscle_groups: ['legs'],
         },

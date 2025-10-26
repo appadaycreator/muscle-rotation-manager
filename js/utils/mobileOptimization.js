@@ -180,6 +180,7 @@ class MobileOptimizationManager {
   /**
    * タッチ終了処理
    */
+  // eslint-disable-next-line no-unused-vars
   handleTouchEnd(event) {
     // 長押しタイマーをクリア
     if (this.longPressTimer) {

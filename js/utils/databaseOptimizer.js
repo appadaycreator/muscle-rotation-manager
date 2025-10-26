@@ -634,6 +634,7 @@ class DatabaseOptimizer {
   /**
    * バッチクエリ実行
    */
+  // eslint-disable-next-line no-unused-vars
   async executeBatchQueries(queries, options = {}) {
     const startTime = performance.now();
 

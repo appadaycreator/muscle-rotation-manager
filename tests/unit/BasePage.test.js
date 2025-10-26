@@ -289,7 +289,9 @@ describe('BasePage', () => {
   describe('Error Handling', () => {
     test('should handle authentication check errors gracefully', async () => {
       mockSupabaseService.isAvailable.mockReturnValue(true);
-      mockAuthManager.isAuthenticated.mockRejectedValue(new Error('Auth error'));
+      mockAuthManager.isAuthenticated.mockRejectedValue(
+        new Error('Auth error')
+      );
 
       const result = await basePage.checkAuthentication();
 

@@ -16,43 +16,44 @@ export class OnboardingManager {
         title: 'MuscleRotationManagerへようこそ！',
         content: 'このアプリで筋トレの記録と分析を効率的に行いましょう。',
         target: null,
-        position: 'center'
+        position: 'center',
       },
       {
         id: 'dashboard',
         title: 'ダッシュボード',
         content: 'ここで全体の進捗と統計を確認できます。',
         target: '#dashboard-link',
-        position: 'bottom'
+        position: 'bottom',
       },
       {
         id: 'workout',
         title: 'ワークアウト記録',
         content: '新しいワークアウトを記録して進捗を追跡しましょう。',
         target: '#workout-link',
-        position: 'bottom'
+        position: 'bottom',
       },
       {
         id: 'exercises',
         title: 'エクササイズデータベース',
-        content: '豊富なエクササイズから選択して、カスタムエクササイズも追加できます。',
+        content:
+          '豊富なエクササイズから選択して、カスタムエクササイズも追加できます。',
         target: '#exercises-link',
-        position: 'bottom'
+        position: 'bottom',
       },
       {
         id: 'analysis',
         title: '分析・レポート',
         content: '詳細な分析とレポートでトレーニングの効果を確認できます。',
         target: '#analysis-link',
-        position: 'bottom'
+        position: 'bottom',
       },
       {
         id: 'calendar',
         title: 'カレンダー',
         content: 'トレーニング履歴をカレンダー形式で確認できます。',
         target: '#calendar-link',
-        position: 'bottom'
-      }
+        position: 'bottom',
+      },
     ];
     this.isActive = false;
     this.overlay = null;
@@ -74,7 +75,7 @@ export class OnboardingManager {
       this.currentStep = 0;
       this.createOverlay();
       this.showStep(this.currentStep);
-      
+
       console.log('Onboarding started');
     } catch (error) {
       console.error('Failed to start onboarding:', error);
@@ -170,7 +171,9 @@ export class OnboardingManager {
           ${this.currentStep + 1} / ${this.steps.length}
         </div>
         <div>
-          ${this.currentStep > 0 ? `
+          ${
+            this.currentStep > 0
+              ? `
             <button id="onboarding-prev" style="
               background: #f3f4f6;
               border: none;
@@ -180,7 +183,9 @@ export class OnboardingManager {
               cursor: pointer;
               font-size: 14px;
             ">前へ</button>
-          ` : ''}
+          `
+              : ''
+          }
           <button id="onboarding-next" style="
             background: #3b82f6;
             color: white;
@@ -247,8 +252,14 @@ export class OnboardingManager {
         }
 
         // 画面外に出ないように調整
-        top = Math.max(10, Math.min(top, window.innerHeight - tooltipRect.height - 10));
-        left = Math.max(10, Math.min(left, window.innerWidth - tooltipRect.width - 10));
+        top = Math.max(
+          10,
+          Math.min(top, window.innerHeight - tooltipRect.height - 10)
+        );
+        left = Math.max(
+          10,
+          Math.min(left, window.innerWidth - tooltipRect.width - 10)
+        );
 
         this.tooltip.style.top = `${top}px`;
         this.tooltip.style.left = `${left}px`;
@@ -282,8 +293,10 @@ export class OnboardingManager {
    * ハイライトを削除
    */
   removeHighlight() {
-    const highlightedElements = document.querySelectorAll('[style*="outline: 2px solid #3b82f6"]');
-    highlightedElements.forEach(element => {
+    const highlightedElements = document.querySelectorAll(
+      '[style*="outline: 2px solid #3b82f6"]'
+    );
+    highlightedElements.forEach((element) => {
       element.style.outline = '';
       element.style.outlineOffset = '';
       element.style.borderRadius = '';
@@ -323,14 +336,17 @@ export class OnboardingManager {
   completeOnboarding() {
     try {
       localStorage.setItem(`${this.storageKey}_completed`, 'true');
-      localStorage.setItem(`${this.storageKey}_completedAt`, new Date().toISOString());
-      
+      localStorage.setItem(
+        `${this.storageKey}_completedAt`,
+        new Date().toISOString()
+      );
+
       this.removeOverlay();
       this.removeTooltip();
       this.removeHighlight();
-      
+
       this.isActive = false;
-      
+
       showNotification('オンボーディングが完了しました！', 'success');
       console.log('Onboarding completed');
     } catch (error) {
@@ -378,14 +394,16 @@ export class OnboardingManager {
   getOnboardingStatus() {
     try {
       const completed = this.hasCompletedOnboarding();
-      const completedAt = localStorage.getItem(`${this.storageKey}_completedAt`);
-      
+      const completedAt = localStorage.getItem(
+        `${this.storageKey}_completedAt`
+      );
+
       return {
         completed,
         completedAt: completedAt ? new Date(completedAt) : null,
         isActive: this.isActive,
         currentStep: this.currentStep,
-        totalSteps: this.steps.length
+        totalSteps: this.steps.length,
       };
     } catch (error) {
       console.error('Failed to get onboarding status:', error);
@@ -394,7 +412,7 @@ export class OnboardingManager {
         completedAt: null,
         isActive: false,
         currentStep: 0,
-        totalSteps: this.steps.length
+        totalSteps: this.steps.length,
       };
     }
   }
