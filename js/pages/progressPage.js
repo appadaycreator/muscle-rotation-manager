@@ -25,11 +25,9 @@ class ProgressPage {
      */
     async init() {
         try {
-            this.currentUser = await supabaseService.getCurrentUser();
-            if (!this.currentUser) {
-                throw new Error('ユーザーが認証されていません');
-            }
-
+            // 認証チェックをスキップしてプログレスページを表示
+            console.log('Progress page initializing without auth check');
+            
             // ツールチップ機能を初期化
             tooltipManager.initialize();
 

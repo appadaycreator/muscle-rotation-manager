@@ -482,15 +482,13 @@ class AnalysisPage {
                 return;
             }
 
-            try {
-                await this.renderFrequencyChart();
-                await this.renderMuscleGroupChart();
-                await this.renderWeightProgressChart();
-                await this.renderSetsProgressChart();
-            } catch (chartError) {
-                console.error('Error rendering individual charts:', chartError);
-                // 個別のチャートエラーは無視して続行
-            }
+            // チャートの描画を順次実行
+            await this.renderFrequencyChart();
+            await this.renderMuscleGroupChart();
+            await this.renderWeightProgressChart();
+            await this.renderSetsProgressChart();
+            
+            console.log('All charts rendered successfully');
         } catch (error) {
             console.error('Error rendering charts:', error);
             handleError(error, {
@@ -504,153 +502,185 @@ class AnalysisPage {
      * トレーニング頻度チャートをレンダリング
      */
     async renderFrequencyChart() {
-        const canvas = safeGetElement('#frequency-chart');
-        if (!canvas) {return;}
+        try {
+            const canvas = safeGetElement('#frequency-chart');
+            if (!canvas) {
+                console.warn('Frequency chart canvas not found');
+                return;
+            }
 
-        const frequencyData = this.calculateFrequencyData();
+            const frequencyData = this.calculateFrequencyData();
 
-        this.charts.frequency = new Chart(canvas, {
-            type: 'line',
-            data: {
-                labels: frequencyData.labels,
-                datasets: [{
-                    label: 'トレーニング回数',
-                    data: frequencyData.data,
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
+            this.charts.frequency = new Chart(canvas, {
+                type: 'line',
+                data: {
+                    labels: frequencyData.labels,
+                    datasets: [{
+                        label: 'トレーニング回数',
+                        data: frequencyData.data,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4
+                    }]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
                         }
                     }
                 }
-            }
-        });
+            });
+            console.log('Frequency chart rendered successfully');
+        } catch (error) {
+            console.error('Error rendering frequency chart:', error);
+        }
     }
 
     /**
      * 部位別チャートをレンダリング
      */
     async renderMuscleGroupChart() {
-        const canvas = safeGetElement('#muscle-group-chart');
-        if (!canvas) {return;}
+        try {
+            const canvas = safeGetElement('#muscle-group-chart');
+            if (!canvas) {
+                console.warn('Muscle group chart canvas not found');
+                return;
+            }
 
-        const muscleGroupData = this.calculateMuscleGroupData();
+            const muscleGroupData = this.calculateMuscleGroupData();
 
-        this.charts.muscleGroup = new Chart(canvas, {
-            type: 'doughnut',
-            data: {
-                labels: muscleGroupData.labels,
-                datasets: [{
-                    data: muscleGroupData.data,
-                    backgroundColor: [
-                        '#ef4444', '#3b82f6', '#10b981',
-                        '#f59e0b', '#8b5cf6', '#ec4899'
-                    ]
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
+            this.charts.muscleGroup = new Chart(canvas, {
+                type: 'doughnut',
+                data: {
+                    labels: muscleGroupData.labels,
+                    datasets: [{
+                        data: muscleGroupData.data,
+                        backgroundColor: [
+                            '#ef4444', '#3b82f6', '#10b981',
+                            '#f59e0b', '#8b5cf6', '#ec4899'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
                     }
                 }
-            }
-        });
+            });
+            console.log('Muscle group chart rendered successfully');
+        } catch (error) {
+            console.error('Error rendering muscle group chart:', error);
+        }
     }
 
     /**
      * 重量推移チャートをレンダリング
      */
     async renderWeightProgressChart() {
-        const canvas = safeGetElement('#weight-progress-chart');
-        if (!canvas) {return;}
+        try {
+            const canvas = safeGetElement('#weight-progress-chart');
+            if (!canvas) {
+                console.warn('Weight progress chart canvas not found');
+                return;
+            }
 
-        const weightData = this.calculateWeightProgressData();
+            const weightData = this.calculateWeightProgressData();
 
-        this.charts.weightProgress = new Chart(canvas, {
-            type: 'line',
-            data: {
-                labels: weightData.labels,
-                datasets: [{
-                    label: '平均重量 (kg)',
-                    data: weightData.data,
-                    borderColor: '#f59e0b',
-                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
+            this.charts.weightProgress = new Chart(canvas, {
+                type: 'line',
+                data: {
+                    labels: weightData.labels,
+                    datasets: [{
+                        label: '平均重量 (kg)',
+                        data: weightData.data,
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        tension: 0.4
+                    }]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
                     }
                 }
-            }
-        });
+            });
+            console.log('Weight progress chart rendered successfully');
+        } catch (error) {
+            console.error('Error rendering weight progress chart:', error);
+        }
     }
 
     /**
      * セット数推移チャートをレンダリング
      */
     async renderSetsProgressChart() {
-        const canvas = safeGetElement('#sets-progress-chart');
-        if (!canvas) {return;}
+        try {
+            const canvas = safeGetElement('#sets-progress-chart');
+            if (!canvas) {
+                console.warn('Sets progress chart canvas not found');
+                return;
+            }
 
-        const setsData = this.calculateSetsProgressData();
+            const setsData = this.calculateSetsProgressData();
 
-        this.charts.setsProgress = new Chart(canvas, {
-            type: 'bar',
-            data: {
-                labels: setsData.labels,
-                datasets: [{
-                    label: 'セット数',
-                    data: setsData.data,
-                    backgroundColor: '#8b5cf6',
-                    borderColor: '#7c3aed',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
+            this.charts.setsProgress = new Chart(canvas, {
+                type: 'bar',
+                data: {
+                    labels: setsData.labels,
+                    datasets: [{
+                        label: 'セット数',
+                        data: setsData.data,
+                        backgroundColor: '#8b5cf6',
+                        borderColor: '#7c3aed',
+                        borderWidth: 1
+                    }]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
                         }
                     }
                 }
-            }
-        });
+            });
+            console.log('Sets progress chart rendered successfully');
+        } catch (error) {
+            console.error('Error rendering sets progress chart:', error);
+        }
     }
 
     /**

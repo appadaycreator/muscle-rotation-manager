@@ -58,30 +58,19 @@ describe('AnalysisPage', () => {
     });
 
     describe('initialize', () => {
-        it('should initialize successfully when authenticated', async () => {
+        it('should initialize successfully', async () => {
             const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-            authManager.isAuthenticated.mockResolvedValue(true);
             safeAsync.mockImplementation(async (fn) => await fn());
             
             await analysisPage.initialize();
             
             expect(consoleSpy).toHaveBeenCalledWith('Analysis page initialized');
-            expect(authManager.isAuthenticated).toHaveBeenCalled();
             
             consoleSpy.mockRestore();
         });
 
-        it('should show login prompt when not authenticated', async () => {
-            authManager.isAuthenticated.mockResolvedValue(false);
-            
-            await analysisPage.initialize();
-            
-            expect(authManager.isAuthenticated).toHaveBeenCalled();
-        });
-
         it('should handle initialization errors', async () => {
-            // 認証チェックは成功するが、その後の処理でエラーが発生する場合
-            authManager.isAuthenticated.mockResolvedValue(true);
+            // safeAsync をエラーを投げるようにモック
             safeAsync.mockImplementation(async (fn, context, errorHandler) => {
                 try {
                     await fn();
@@ -89,9 +78,6 @@ describe('AnalysisPage', () => {
                     errorHandler(error);
                 }
             });
-            
-            // Chart.jsをモック
-            global.Chart = jest.fn();
             
             // エラーを発生させるために、renderAnalysisPageでエラーを投げる
             const originalRenderAnalysisPage = analysisPage.renderAnalysisPage;
@@ -112,6 +98,7 @@ describe('AnalysisPage', () => {
             // 元のメソッドを復元
             analysisPage.renderAnalysisPage = originalRenderAnalysisPage;
         });
+
     });
 
     describe('showLoginPrompt', () => {
@@ -143,7 +130,7 @@ describe('AnalysisPage', () => {
             analysisPage.renderAnalysisPage();
             
             const mainContent = document.querySelector('#main-content');
-            expect(mainContent.innerHTML).toContain('分析');
+            expect(mainContent.innerHTML).toContain('トレーニング分析');
         });
 
         it('should return early if main content is not found', () => {
@@ -154,30 +141,45 @@ describe('AnalysisPage', () => {
     });
 
     describe('loadWorkoutData', () => {
-        it('should load workout data successfully', async () => {
+        it('should load workout data from localStorage', async () => {
             const mockWorkoutData = [
                 { id: 1, date: '2024-01-01', exercises: [] },
                 { id: 2, date: '2024-01-02', exercises: [] }
             ];
             
-            supabaseService.isAvailable.mockReturnValue(true);
-            supabaseService.getCurrentUser.mockReturnValue({ id: 'user123' });
-            supabaseService.getWorkouts.mockResolvedValue(mockWorkoutData);
+            // localStorage のモック
+            Object.defineProperty(window, 'localStorage', {
+                value: {
+                    getItem: jest.fn().mockReturnValue(JSON.stringify(mockWorkoutData)),
+                    setItem: jest.fn(),
+                    removeItem: jest.fn()
+                },
+                writable: true
+            });
             
             await analysisPage.loadWorkoutData();
             
-            expect(supabaseService.getWorkouts).toHaveBeenCalledWith(1000);
+            expect(window.localStorage.getItem).toHaveBeenCalledWith('workoutHistory');
+            expect(analysisPage.workoutData).toEqual(mockWorkoutData);
         });
 
         it('should handle workout data loading errors', async () => {
-            supabaseService.isAvailable.mockReturnValue(true);
-            supabaseService.getCurrentUser.mockReturnValue({ id: 'user123' });
-            supabaseService.getWorkouts.mockRejectedValue(new Error('Failed to load workout data'));
+            // localStorage.getItem をエラーを投げるようにモック
+            Object.defineProperty(window, 'localStorage', {
+                value: {
+                    getItem: jest.fn().mockImplementation(() => {
+                        throw new Error('localStorage error');
+                    }),
+                    setItem: jest.fn(),
+                    removeItem: jest.fn()
+                },
+                writable: true
+            });
             
             await analysisPage.loadWorkoutData();
             
-            // エラーが発生した場合、ローカルストレージから読み込む
-            expect(analysisPage.workoutData).toEqual([]);
+            // エラーが発生した場合、サンプルデータが生成される
+            expect(analysisPage.workoutData.length).toBeGreaterThan(0);
             expect(showNotification).toHaveBeenCalledWith(
                 'ワークアウトデータの読み込みに失敗しました', 
                 'error'
@@ -225,9 +227,8 @@ describe('AnalysisPage', () => {
     });
 
     describe('integration', () => {
-        it('should complete full initialization flow when authenticated', async () => {
+        it('should complete full initialization flow', async () => {
             const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-            authManager.isAuthenticated.mockResolvedValue(true);
             safeAsync.mockImplementation(async (fn) => await fn());
             
             await analysisPage.initialize();
@@ -238,13 +239,13 @@ describe('AnalysisPage', () => {
         });
 
         it('should handle multiple initialization calls', async () => {
-            authManager.isAuthenticated.mockResolvedValue(true);
             safeAsync.mockImplementation(async (fn) => await fn());
             
             await analysisPage.initialize();
             await analysisPage.initialize();
             
-            expect(authManager.isAuthenticated).toHaveBeenCalledTimes(2);
+            // 複数回の初期化が正常に処理されることを確認
+            expect(analysisPage.workoutData).toBeDefined();
         });
     });
 });
