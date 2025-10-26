@@ -36,19 +36,12 @@ class Router {
     }
 
     /**
-     * ナビゲーションリンクのクリックイベントを設定
+     * ナビゲーションリンクのクリックイベントを設定（MPA用）
      */
     setupNavigationLinks() {
-        // ナビゲーションリンクのクリックイベントを設定
-        document.addEventListener('click', (e) => {
-            const navLink = e.target.closest('a[href]');
-            if (navLink && navLink.getAttribute('href').startsWith('/')) {
-                e.preventDefault();
-                const href = navLink.getAttribute('href');
-                console.log('🔗 ナビゲーションリンククリック:', href);
-                this.navigateTo(href);
-            }
-        });
+        // MPAではデフォルトのナビゲーションを使用
+        // SPA的なルーティングは無効化
+        console.log('🔄 MPA navigation: Using default browser navigation');
     }
 
     /**

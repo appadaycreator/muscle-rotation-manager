@@ -222,16 +222,21 @@ class ExercisePage {
         select.innerHTML = '<option value="">すべての部位</option>';
 
         try {
-            // 筋肉部位サービスから筋肉部位を取得
-            const muscleGroups = await muscleGroupService.getMuscleGroups();
-            console.log('Loaded muscle groups for filter:', muscleGroups);
+            // 筋肉部位データを取得（認証なしでも動作）
+            const muscleGroups = [
+                { id: 'chest', name: 'Chest', name_ja: '胸' },
+                { id: 'back', name: 'Back', name_ja: '背中' },
+                { id: 'shoulders', name: 'Shoulders', name_ja: '肩' },
+                { id: 'arms', name: 'Arms', name_ja: '腕' },
+                { id: 'legs', name: 'Legs', name_ja: '脚' },
+                { id: 'core', name: 'Core', name_ja: '腹筋' }
+            ];
 
             muscleGroups.forEach(group => {
                 const option = document.createElement('option');
                 option.value = group.id;
-                option.textContent = group.name_ja || group.name_en;
+                option.textContent = group.name_ja;
                 select.appendChild(option);
-                console.log('Added filter option:', { id: group.id, name_ja: group.name_ja, name_en: group.name_en });
             });
 
             console.log('Muscle group filter setup complete. Total options:', select.options.length);
@@ -249,7 +254,16 @@ class ExercisePage {
         if (!select) {return;}
 
         try {
-            const equipment = await exerciseService.getAvailableEquipment();
+            // 器具データを取得（認証なしでも動作）
+            const equipment = [
+                'bodyweight',
+                'barbell',
+                'dumbbell',
+                'machine',
+                'cable',
+                'kettlebell',
+                'resistance-band'
+            ];
 
             // デフォルトオプションをクリア
             select.innerHTML = '<option value="">すべての器具</option>';
@@ -271,8 +285,8 @@ class ExercisePage {
      */
     async loadTotalExerciseCount() {
         try {
-            // フィルターなしで全エクササイズを取得して件数をカウント
-            const allExercises = await exerciseService.searchExercises('', {});
+            // ローカルエクササイズデータから件数をカウント（認証なしでも動作）
+            const allExercises = this.getLocalExercises();
             this.totalExercises = allExercises.length;
         } catch (error) {
             console.warn('Failed to load total exercise count:', error);
@@ -309,11 +323,12 @@ class ExercisePage {
             const searchTerm = document.getElementById('exercise-search')?.value || '';
             const filters = this.getCurrentFilters();
 
-            // 検索語が空でフィルターが適用されていない場合は全エクササイズを表示
-            if (!searchTerm && !this.hasActiveFilters()) {
-                this.currentExercises = await exerciseService.getAllExercises();
-            } else {
-                this.currentExercises = await exerciseService.searchExercises(searchTerm, filters);
+            // ローカルストレージからエクササイズデータを読み込み（認証なしでも動作）
+            this.currentExercises = this.getLocalExercises();
+
+            // 検索・フィルタリングを適用
+            if (searchTerm || this.hasActiveFilters()) {
+                this.currentExercises = this.filterExercises(this.currentExercises, searchTerm, filters);
             }
             
             this.renderExercises();
@@ -333,6 +348,122 @@ class ExercisePage {
         } finally {
             this.showLoading(false);
         }
+    }
+
+    /**
+     * ローカルエクササイズデータを取得
+     */
+    getLocalExercises() {
+        // ローカルストレージからエクササイズデータを読み込み
+        const localExercises = JSON.parse(localStorage.getItem('exercises') || '[]');
+        
+        // サンプルデータを追加（デモ用）
+        if (localExercises.length === 0) {
+            return this.getSampleExercises();
+        }
+        
+        return localExercises;
+    }
+
+    /**
+     * サンプルエクササイズデータを取得
+     */
+    getSampleExercises() {
+        return [
+            // 胸のエクササイズ
+            { id: 'bench-press', name: 'ベンチプレス', name_ja: 'ベンチプレス', muscle_group: 'chest', difficulty: 3, equipment: 'barbell', type: 'compound' },
+            { id: 'push-ups', name: 'プッシュアップ', name_ja: 'プッシュアップ', muscle_group: 'chest', difficulty: 2, equipment: 'bodyweight', type: 'compound' },
+            { id: 'dumbbell-press', name: 'ダンベルプレス', name_ja: 'ダンベルプレス', muscle_group: 'chest', difficulty: 2, equipment: 'dumbbell', type: 'compound' },
+            { id: 'incline-press', name: 'インクラインプレス', name_ja: 'インクラインプレス', muscle_group: 'chest', difficulty: 3, equipment: 'barbell', type: 'compound' },
+            { id: 'decline-press', name: 'デクラインプレス', name_ja: 'デクラインプレス', muscle_group: 'chest', difficulty: 3, equipment: 'barbell', type: 'compound' },
+            
+            // 背中のエクササイズ
+            { id: 'pull-ups', name: 'プルアップ', name_ja: 'プルアップ', muscle_group: 'back', difficulty: 4, equipment: 'bodyweight', type: 'compound' },
+            { id: 'rows', name: 'ロウイング', name_ja: 'ロウイング', muscle_group: 'back', difficulty: 3, equipment: 'barbell', type: 'compound' },
+            { id: 'lat-pulldown', name: 'ラットプルダウン', name_ja: 'ラットプルダウン', muscle_group: 'back', difficulty: 2, equipment: 'machine', type: 'compound' },
+            { id: 'deadlift', name: 'デッドリフト', name_ja: 'デッドリフト', muscle_group: 'back', difficulty: 5, equipment: 'barbell', type: 'compound' },
+            { id: 'bent-over-row', name: 'ベントオーバーロウ', name_ja: 'ベントオーバーロウ', muscle_group: 'back', difficulty: 3, equipment: 'barbell', type: 'compound' },
+            
+            // 肩のエクササイズ
+            { id: 'overhead-press', name: 'オーバーヘッドプレス', name_ja: 'オーバーヘッドプレス', muscle_group: 'shoulders', difficulty: 4, equipment: 'barbell', type: 'compound' },
+            { id: 'lateral-raises', name: 'サイドレイズ', name_ja: 'サイドレイズ', muscle_group: 'shoulders', difficulty: 2, equipment: 'dumbbell', type: 'isolation' },
+            { id: 'rear-delt-fly', name: 'リアデルトフライ', name_ja: 'リアデルトフライ', muscle_group: 'shoulders', difficulty: 2, equipment: 'dumbbell', type: 'isolation' },
+            { id: 'front-raises', name: 'フロントレイズ', name_ja: 'フロントレイズ', muscle_group: 'shoulders', difficulty: 2, equipment: 'dumbbell', type: 'isolation' },
+            { id: 'arnold-press', name: 'アーノルドプレス', name_ja: 'アーノルドプレス', muscle_group: 'shoulders', difficulty: 3, equipment: 'dumbbell', type: 'compound' },
+            
+            // 腕のエクササイズ
+            { id: 'bicep-curls', name: 'バイセップカール', name_ja: 'バイセップカール', muscle_group: 'arms', difficulty: 2, equipment: 'dumbbell', type: 'isolation' },
+            { id: 'tricep-dips', name: 'トライセップディップス', name_ja: 'トライセップディップス', muscle_group: 'arms', difficulty: 3, equipment: 'bodyweight', type: 'compound' },
+            { id: 'hammer-curls', name: 'ハンマーカール', name_ja: 'ハンマーカール', muscle_group: 'arms', difficulty: 2, equipment: 'dumbbell', type: 'isolation' },
+            { id: 'close-grip-press', name: 'クローズグリッププレス', name_ja: 'クローズグリッププレス', muscle_group: 'arms', difficulty: 3, equipment: 'barbell', type: 'compound' },
+            { id: 'preacher-curls', name: 'プリーチャーカール', name_ja: 'プリーチャーカール', muscle_group: 'arms', difficulty: 2, equipment: 'barbell', type: 'isolation' },
+            
+            // 脚のエクササイズ
+            { id: 'squats', name: 'スクワット', name_ja: 'スクワット', muscle_group: 'legs', difficulty: 3, equipment: 'barbell', type: 'compound' },
+            { id: 'lunges', name: 'ランジ', name_ja: 'ランジ', muscle_group: 'legs', difficulty: 3, equipment: 'bodyweight', type: 'compound' },
+            { id: 'leg-press', name: 'レッグプレス', name_ja: 'レッグプレス', muscle_group: 'legs', difficulty: 2, equipment: 'machine', type: 'compound' },
+            { id: 'bulgarian-squats', name: 'ブルガリアンスクワット', name_ja: 'ブルガリアンスクワット', muscle_group: 'legs', difficulty: 4, equipment: 'bodyweight', type: 'compound' },
+            { id: 'calf-raises', name: 'カーフレイズ', name_ja: 'カーフレイズ', muscle_group: 'legs', difficulty: 2, equipment: 'bodyweight', type: 'isolation' },
+            
+            // 腹筋のエクササイズ
+            { id: 'plank', name: 'プランク', name_ja: 'プランク', muscle_group: 'core', difficulty: 2, equipment: 'bodyweight', type: 'isolation' },
+            { id: 'crunches', name: 'クランチ', name_ja: 'クランチ', muscle_group: 'core', difficulty: 1, equipment: 'bodyweight', type: 'isolation' },
+            { id: 'russian-twists', name: 'ロシアンツイスト', name_ja: 'ロシアンツイスト', muscle_group: 'core', difficulty: 2, equipment: 'bodyweight', type: 'isolation' },
+            { id: 'mountain-climbers', name: 'マウンテンクライマー', name_ja: 'マウンテンクライマー', muscle_group: 'core', difficulty: 3, equipment: 'bodyweight', type: 'compound' },
+            { id: 'bicycle-crunches', name: 'バイシクルクランチ', name_ja: 'バイシクルクランチ', muscle_group: 'core', difficulty: 2, equipment: 'bodyweight', type: 'isolation' }
+        ];
+    }
+
+    /**
+     * エクササイズをフィルタリング
+     */
+    filterExercises(exercises, searchTerm, filters) {
+        return exercises.filter(exercise => {
+            // 検索語でフィルタリング
+            if (searchTerm) {
+                const searchLower = searchTerm.toLowerCase();
+                const nameMatch = exercise.name_ja?.toLowerCase().includes(searchLower) || 
+                                exercise.name?.toLowerCase().includes(searchLower);
+                if (!nameMatch) return false;
+            }
+
+            // 筋肉部位でフィルタリング
+            if (filters.muscleGroupId && exercise.muscle_group !== filters.muscleGroupId) {
+                return false;
+            }
+
+            // 難易度でフィルタリング
+            if (filters.difficulty && exercise.difficulty !== parseInt(filters.difficulty)) {
+                return false;
+            }
+
+            // 器具でフィルタリング
+            if (filters.equipment && exercise.equipment !== filters.equipment) {
+                return false;
+            }
+
+            // タイプでフィルタリング
+            if (filters.type && exercise.type !== filters.type) {
+                return false;
+            }
+
+            // ボディウェイトフィルター
+            if (filters.bodyweight && exercise.equipment !== 'bodyweight') {
+                return false;
+            }
+
+            // コンパウンドフィルター
+            if (filters.compound && exercise.type !== 'compound') {
+                return false;
+            }
+
+            // 初心者フィルター
+            if (filters.beginner && exercise.difficulty > 2) {
+                return false;
+            }
+
+            return true;
+        });
     }
 
     /**

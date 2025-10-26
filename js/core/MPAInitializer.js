@@ -378,14 +378,14 @@ class MPAInitializer {
     setupEventListeners() {
         console.log('🔄 Setting up event listeners...');
 
-        // ナビゲーションリンクのクリックイベント
+        // ナビゲーションリンクのクリックイベント（MPA用）
         document.addEventListener('click', (e) => {
             const navLink = e.target.closest('a[href]');
             if (navLink && navLink.getAttribute('href').startsWith('/')) {
-                e.preventDefault();
+                // MPAではデフォルトのナビゲーションを使用
                 const href = navLink.getAttribute('href');
                 console.log('🔗 Navigation link clicked:', href);
-                window.location.href = href;
+                // デフォルトのナビゲーションを許可（e.preventDefault()を削除）
             }
         });
 
