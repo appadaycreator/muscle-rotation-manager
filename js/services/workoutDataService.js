@@ -311,19 +311,26 @@ export class WorkoutDataService {
           workout.muscle_groups.forEach((muscle) => {
             // 部位別回数
             stats.muscleGroups[muscle] = (stats.muscleGroups[muscle] || 0) + 1;
-            
+
             // 部位別時間（ワークアウト時間を部位数で分割）
-            const durationPerMuscle = workoutDuration / workout.muscle_groups.length;
-            stats.muscleGroupDuration[muscle] = (stats.muscleGroupDuration[muscle] || 0) + durationPerMuscle;
-            
+            const durationPerMuscle =
+              workoutDuration / workout.muscle_groups.length;
+            stats.muscleGroupDuration[muscle] =
+              (stats.muscleGroupDuration[muscle] || 0) + durationPerMuscle;
+
             // 部位別セット数
             if (workout.exercises) {
-              const muscleExercises = workout.exercises.filter(exercise => 
-                exercise.muscle_group === muscle || 
-                (exercise.name && exercise.name.includes(muscle))
+              const muscleExercises = workout.exercises.filter(
+                (exercise) =>
+                  exercise.muscle_group === muscle ||
+                  (exercise.name && exercise.name.includes(muscle))
               );
-              const totalSets = muscleExercises.reduce((sum, exercise) => sum + (exercise.sets || 0), 0);
-              stats.muscleGroupSets[muscle] = (stats.muscleGroupSets[muscle] || 0) + totalSets;
+              const totalSets = muscleExercises.reduce(
+                (sum, exercise) => sum + (exercise.sets || 0),
+                0
+              );
+              stats.muscleGroupSets[muscle] =
+                (stats.muscleGroupSets[muscle] || 0) + totalSets;
             }
           });
         }

@@ -285,7 +285,9 @@ class DashboardPage {
       }
 
       // 認証状態をチェック
-      const { data: { session } } = await supabaseService.client.auth.getSession();
+      const {
+        data: { session },
+      } = await supabaseService.client.auth.getSession();
       if (!session || !session.user) {
         console.log('User not authenticated, showing default stats');
         this.updateStatsDisplay({

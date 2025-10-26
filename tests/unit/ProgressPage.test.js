@@ -17,17 +17,17 @@ jest.mock('../../js/services/progressiveOverloadService.js', () => ({
           averageVolumePerSession: 500,
           frequencyAnalysis: {
             frequencyScore: 80,
-            averageDaysBetween: 3
-          }
+            averageDaysBetween: 3,
+          },
         },
       },
       recommendations: [
         {
           priority: 'high',
           message: 'テスト推奨事項',
-          action: 'テストアクション'
-        }
-      ]
+          action: 'テストアクション',
+        },
+      ],
     }),
     getExerciseProgress: jest.fn().mockResolvedValue({
       progressMetrics: {
@@ -36,42 +36,42 @@ jest.mock('../../js/services/progressiveOverloadService.js', () => ({
         consistencyScore: 85,
         averageWeight: 60,
         averageReps: 10,
-        averageSets: 3
+        averageSets: 3,
       },
       recommendations: [
         {
           priority: 'medium',
           message: 'テスト推奨事項',
-          action: 'テストアクション'
-        }
-      ]
+          action: 'テストアクション',
+        },
+      ],
     }),
     getMuscleGroupProgress: jest.fn().mockResolvedValue({
       totalSessions: 5,
       frequencyAnalysis: {
         frequencyScore: 80,
-        averageDaysBetween: 3
+        averageDaysBetween: 3,
       },
       exercises: {
         exerciseCounts: {
-          'ベンチプレス': 3,
-          'プッシュアップ': 2
+          ベンチプレス: 3,
+          プッシュアップ: 2,
         },
         exerciseProgress: {
-          'ベンチプレス': {
-            weightProgress: 10
-          }
-        }
+          ベンチプレス: {
+            weightProgress: 10,
+          },
+        },
       },
       recommendations: [
         {
           priority: 'low',
           message: 'テスト推奨事項',
-          action: 'テストアクション'
-        }
-      ]
-    })
-  }
+          action: 'テストアクション',
+        },
+      ],
+    }),
+  },
 }));
 
 jest.mock('../../js/services/workoutDataService.js', () => ({
@@ -83,7 +83,12 @@ jest.mock('../../js/services/workoutDataService.js', () => ({
 
 jest.mock('../../js/utils/helpers.js', () => ({
   safeGetElement: jest.fn((id) => {
-    const mockElement = { id, innerHTML: '', appendChild: jest.fn(), removeChild: jest.fn() };
+    const mockElement = {
+      id,
+      innerHTML: '',
+      appendChild: jest.fn(),
+      removeChild: jest.fn(),
+    };
     return mockElement;
   }),
   showNotification: jest.fn(),
@@ -126,7 +131,7 @@ describe('ProgressPage', () => {
     // ProgressPageクラスを動的にインポート
     const module = await import('../../js/pages/progressPage.js');
     ProgressPage = module.default || module.ProgressPage;
-    
+
     // ProgressPageのインスタンスを作成
     progressPage = new ProgressPage();
   });
@@ -151,10 +156,10 @@ describe('ProgressPage', () => {
   describe('サンプルデータ生成', () => {
     test('should generate sample workout data', () => {
       const sampleData = progressPage.generateSampleWorkoutData();
-      
+
       expect(Array.isArray(sampleData)).toBe(true);
       expect(sampleData.length).toBeGreaterThan(0);
-      
+
       // サンプルデータの構造を確認
       const firstWorkout = sampleData[0];
       expect(firstWorkout).toHaveProperty('id');
@@ -166,10 +171,10 @@ describe('ProgressPage', () => {
 
     test('should generate realistic workout parameters', () => {
       const sampleData = progressPage.generateSampleWorkoutData();
-      
-      sampleData.forEach(workout => {
+
+      sampleData.forEach((workout) => {
         if (workout.exercises && workout.exercises.length > 0) {
-          workout.exercises.forEach(exercise => {
+          workout.exercises.forEach((exercise) => {
             expect(exercise.sets).toBeLessThanOrEqual(3); // セット数は3以下
             expect(exercise.reps).toBeLessThanOrEqual(15); // 回数は15以下
             expect(exercise.weight).toBeLessThanOrEqual(100); // 重量は100以下
@@ -182,9 +187,11 @@ describe('ProgressPage', () => {
   describe('プログレッシブ・オーバーロード分析', () => {
     test('should load progressive overload data', async () => {
       // モックが正しく設定されていることを確認
-      const { progressiveOverloadService } = require('../../js/services/progressiveOverloadService.js');
+      const {
+        progressiveOverloadService,
+      } = require('../../js/services/progressiveOverloadService.js');
       expect(progressiveOverloadService.getOverallProgress).toBeDefined();
-      
+
       // 直接データを設定してテスト
       progressPage.progressiveOverloadData = {
         totalWorkouts: 10,
@@ -200,33 +207,39 @@ describe('ProgressPage', () => {
             averageVolumePerSession: 500,
             frequencyAnalysis: {
               frequencyScore: 80,
-              averageDaysBetween: 3
-            }
+              averageDaysBetween: 3,
+            },
           },
         },
         recommendations: [
           {
             priority: 'high',
             message: 'テスト推奨事項',
-            action: 'テストアクション'
-          }
-        ]
+            action: 'テストアクション',
+          },
+        ],
       };
-      
+
       // データが設定されることを確認
       expect(progressPage.progressiveOverloadData).toBeDefined();
       expect(progressPage.progressiveOverloadData.totalWorkouts).toBe(10);
-      expect(progressPage.progressiveOverloadData.overallMetrics.totalVolume).toBe(5000);
+      expect(
+        progressPage.progressiveOverloadData.overallMetrics.totalVolume
+      ).toBe(5000);
     });
 
     test('should handle progressive overload data loading errors', async () => {
-      const { progressiveOverloadService } = require('../../js/services/progressiveOverloadService.js');
-      progressiveOverloadService.getOverallProgress.mockRejectedValueOnce(new Error('Test error'));
+      const {
+        progressiveOverloadService,
+      } = require('../../js/services/progressiveOverloadService.js');
+      progressiveOverloadService.getOverallProgress.mockRejectedValueOnce(
+        new Error('Test error')
+      );
 
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-      
+
       await progressPage.loadProgressiveOverloadData();
-      
+
       expect(consoleSpy).toHaveBeenCalled();
       consoleSpy.mockRestore();
     });
@@ -244,14 +257,15 @@ describe('ProgressPage', () => {
         },
         {
           date: '2024-01-02',
-          exercises: [
-            { name: 'ベンチプレス', weight: 65, reps: 10, sets: 3 },
-          ],
+          exercises: [{ name: 'ベンチプレス', weight: 65, reps: 10, sets: 3 }],
         },
       ];
 
-      const stats = progressPage.calculateExerciseStats(mockExerciseData, 'ベンチプレス');
-      
+      const stats = progressPage.calculateExerciseStats(
+        mockExerciseData,
+        'ベンチプレス'
+      );
+
       expect(stats.totalSessions).toBe(2);
       expect(stats.maxWeight).toBe(65);
       expect(stats.avgWeight).toBe(63); // (60 + 65) / 2 = 62.5, rounded to 63
@@ -261,7 +275,7 @@ describe('ProgressPage', () => {
 
     test('should handle empty exercise data', () => {
       const stats = progressPage.calculateExerciseStats([], 'ベンチプレス');
-      
+
       expect(stats.totalSessions).toBe(0);
       expect(stats.maxWeight).toBe(0);
       expect(stats.avgWeight).toBe(0);
@@ -276,23 +290,20 @@ describe('ProgressPage', () => {
         {
           date: '2024-01-01',
           muscle_groups: ['chest'],
-          exercises: [
-            { name: 'ベンチプレス', weight: 60, reps: 10, sets: 3 },
-          ],
+          exercises: [{ name: 'ベンチプレス', weight: 60, reps: 10, sets: 3 }],
           duration: 45,
         },
         {
           date: '2024-01-02',
           muscle_groups: ['chest'],
-          exercises: [
-            { name: 'プッシュアップ', weight: 0, reps: 15, sets: 2 },
-          ],
+          exercises: [{ name: 'プッシュアップ', weight: 0, reps: 15, sets: 2 }],
           duration: 30,
         },
       ];
 
-      const analysis = progressPage.calculateMuscleGroupAnalysis(mockMuscleData);
-      
+      const analysis =
+        progressPage.calculateMuscleGroupAnalysis(mockMuscleData);
+
       expect(analysis.totalSessions).toBe(2);
       expect(analysis.totalVolume).toBe(1800); // 60*10*3 + 0*15*2
       expect(analysis.averageVolumePerSession).toBe(900);
@@ -303,31 +314,45 @@ describe('ProgressPage', () => {
   describe('レンダリング', () => {
     test('should render exercise analysis', async () => {
       // モックが正しく設定されていることを確認
-      const { progressiveOverloadService } = require('../../js/services/progressiveOverloadService.js');
+      const {
+        progressiveOverloadService,
+      } = require('../../js/services/progressiveOverloadService.js');
       expect(progressiveOverloadService.getExerciseProgress).toBeDefined();
 
       // メソッドが呼び出されることを確認
-      await expect(progressPage.renderExerciseAnalysisFromService('ベンチプレス')).resolves.not.toThrow();
+      await expect(
+        progressPage.renderExerciseAnalysisFromService('ベンチプレス')
+      ).resolves.not.toThrow();
     });
 
     test('should render muscle group analysis', async () => {
       // モックが正しく設定されていることを確認
-      const { progressiveOverloadService } = require('../../js/services/progressiveOverloadService.js');
+      const {
+        progressiveOverloadService,
+      } = require('../../js/services/progressiveOverloadService.js');
       expect(progressiveOverloadService.getMuscleGroupProgress).toBeDefined();
 
       // メソッドが呼び出されることを確認
-      await expect(progressPage.renderMuscleGroupAnalysis('chest')).resolves.not.toThrow();
+      await expect(
+        progressPage.renderMuscleGroupAnalysis('chest')
+      ).resolves.not.toThrow();
     });
   });
 
   describe('エラーハンドリング', () => {
     test('should handle rendering errors gracefully', async () => {
       // モックサービスでエラーを発生させる
-      const { progressiveOverloadService } = require('../../js/services/progressiveOverloadService.js');
-      progressiveOverloadService.getExerciseProgress.mockRejectedValueOnce(new Error('Test error'));
+      const {
+        progressiveOverloadService,
+      } = require('../../js/services/progressiveOverloadService.js');
+      progressiveOverloadService.getExerciseProgress.mockRejectedValueOnce(
+        new Error('Test error')
+      );
 
       // エラーが発生しても例外が投げられないことを確認
-      await expect(progressPage.renderExerciseAnalysisFromService('ベンチプレス')).resolves.not.toThrow();
+      await expect(
+        progressPage.renderExerciseAnalysisFromService('ベンチプレス')
+      ).resolves.not.toThrow();
     });
   });
 });

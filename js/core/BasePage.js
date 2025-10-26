@@ -247,9 +247,16 @@ export class BasePage {
     if (shouldShowNotification) {
       let errorMessage = 'ページの読み込み中にエラーが発生しました';
       if (error.message) {
-        if (error.message.includes('network') || error.message.includes('fetch')) {
-          errorMessage = 'ネットワークエラーが発生しました。インターネット接続を確認してください。';
-        } else if (error.message.includes('permission') || error.message.includes('unauthorized')) {
+        if (
+          error.message.includes('network') ||
+          error.message.includes('fetch')
+        ) {
+          errorMessage =
+            'ネットワークエラーが発生しました。インターネット接続を確認してください。';
+        } else if (
+          error.message.includes('permission') ||
+          error.message.includes('unauthorized')
+        ) {
           errorMessage = 'アクセス権限がありません。ログインし直してください。';
         } else {
           errorMessage = error.message;

@@ -345,19 +345,21 @@ class ExercisePage {
   async filterByMuscleGroup(muscleGroup) {
     try {
       console.log('Filtering by muscle group:', muscleGroup);
-      
+
       // 筋肉部位フィルターを設定
       const muscleGroupFilter = document.getElementById('muscle-group-filter');
       if (muscleGroupFilter) {
         muscleGroupFilter.value = muscleGroup;
       }
-      
+
       // フィルターを適用
       await this.applyFilters();
-      
+
       // フィルター適用の通知
-      showNotification(`${this.getMuscleGroupDisplayName(muscleGroup)}のエクササイズを表示中`, 'info');
-      
+      showNotification(
+        `${this.getMuscleGroupDisplayName(muscleGroup)}のエクササイズを表示中`,
+        'info'
+      );
     } catch (error) {
       console.error('Error filtering by muscle group:', error);
       handleError(error, {
@@ -465,9 +467,16 @@ class ExercisePage {
       // より具体的なエラーメッセージを表示
       let errorMessage = 'エクササイズの読み込みに失敗しました';
       if (error.message) {
-        if (error.message.includes('network') || error.message.includes('fetch')) {
-          errorMessage = 'ネットワークエラーが発生しました。インターネット接続を確認してください。';
-        } else if (error.message.includes('permission') || error.message.includes('unauthorized')) {
+        if (
+          error.message.includes('network') ||
+          error.message.includes('fetch')
+        ) {
+          errorMessage =
+            'ネットワークエラーが発生しました。インターネット接続を確認してください。';
+        } else if (
+          error.message.includes('permission') ||
+          error.message.includes('unauthorized')
+        ) {
           errorMessage = 'アクセス権限がありません。ログインし直してください。';
         } else if (error.message.includes('not found')) {
           errorMessage = 'エクササイズデータが見つかりません。';
@@ -1188,11 +1197,12 @@ class ExercisePage {
 
     if (this.currentExercises.length === 0) {
       const hasActiveFilters = this.hasActiveFilters();
-      const searchTerm = document.getElementById('exercise-search')?.value || '';
-      
+      const searchTerm =
+        document.getElementById('exercise-search')?.value || '';
+
       let message = '';
       let suggestion = '';
-      
+
       if (hasActiveFilters || searchTerm.trim()) {
         message = '該当するエクササイズがありません';
         suggestion = '検索条件やフィルターを変更してお試しください';
@@ -1200,7 +1210,7 @@ class ExercisePage {
         message = 'エクササイズデータがありません';
         suggestion = 'エクササイズデータを読み込み中です...';
       }
-      
+
       container.innerHTML = `
                 <div class="text-center py-12">
                     <div class="text-gray-400 mb-4">
@@ -1208,12 +1218,16 @@ class ExercisePage {
                     </div>
                     <p class="text-gray-600">${message}</p>
                     <p class="text-sm text-gray-500 mt-2">${suggestion}</p>
-                    ${hasActiveFilters ? `
+                    ${
+                      hasActiveFilters
+                        ? `
                     <button onclick="exercisePage.resetFilters()" 
                             class="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
                         <i class="fas fa-refresh mr-2"></i>フィルターをリセット
                     </button>
-                    ` : ''}
+                    `
+                        : ''
+                    }
                 </div>
             `;
       return;

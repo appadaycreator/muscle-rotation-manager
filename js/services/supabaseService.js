@@ -44,7 +44,9 @@ export class SupabaseService {
           this.initialize();
         });
       } else {
-        console.log('📄 DOM already loaded, starting Supabase initialization...');
+        console.log(
+          '📄 DOM already loaded, starting Supabase initialization...'
+        );
         this.initialize();
       }
     }
@@ -66,7 +68,9 @@ export class SupabaseService {
     this.lastConnectionAttempt = new Date();
 
     try {
-      console.log('⚠️ Supabase initialization completely disabled to avoid ES module issues');
+      console.log(
+        '⚠️ Supabase initialization completely disabled to avoid ES module issues'
+      );
       console.log('⚠️ Continuing without Supabase - using local data only');
       this.isConnected = false;
       return false;
@@ -101,7 +105,9 @@ export class SupabaseService {
    * @returns {Promise<void>}
    */
   async waitForSupabaseLibrary() {
-    console.log('⚠️ Supabase library loading disabled to avoid ES module issues');
+    console.log(
+      '⚠️ Supabase library loading disabled to avoid ES module issues'
+    );
     throw new Error('Supabase library loading disabled');
   }
 
@@ -118,51 +124,61 @@ export class SupabaseService {
       }
 
       console.log('🔄 Loading Supabase from alternative CDNs...');
-      
+
       // 複数のCDNを順番に試す
       const cdnUrls = [
         'https://unpkg.com/@supabase/supabase-js@2.38.4/dist/index.min.js',
         'https://cdn.skypack.dev/@supabase/supabase-js@2.38.4',
-        'https://esm.sh/@supabase/supabase-js@2.38.4'
+        'https://esm.sh/@supabase/supabase-js@2.38.4',
       ];
-      
+
       let currentIndex = 0;
-      
+
       function tryNextCDN() {
         if (currentIndex >= cdnUrls.length) {
           console.error('❌ All alternative CDN attempts failed');
-          reject(new Error('Failed to load Supabase from all alternative CDNs'));
+          reject(
+            new Error('Failed to load Supabase from all alternative CDNs')
+          );
           return;
         }
-        
+
         const url = cdnUrls[currentIndex];
-        console.log(`🔄 Trying alternative CDN ${currentIndex + 1}/${cdnUrls.length}: ${url}`);
-        
+        console.log(
+          `🔄 Trying alternative CDN ${currentIndex + 1}/${cdnUrls.length}: ${url}`
+        );
+
         const script = document.createElement('script');
         script.src = url;
         script.onload = () => {
-          console.log(`✅ Supabase library loaded from alternative CDN ${currentIndex + 1}`);
+          console.log(
+            `✅ Supabase library loaded from alternative CDN ${currentIndex + 1}`
+          );
           resolve();
         };
         script.onerror = () => {
-          console.warn(`❌ Failed to load from alternative CDN ${currentIndex + 1}, trying next...`);
+          console.warn(
+            `❌ Failed to load from alternative CDN ${currentIndex + 1}, trying next...`
+          );
           currentIndex++;
           tryNextCDN();
         };
-        
+
         // タイムアウト設定（8秒）
         setTimeout(() => {
           if (script.parentNode) {
             script.parentNode.removeChild(script);
-            console.warn(`⏰ Timeout for alternative CDN ${currentIndex + 1}, trying next...`);
+            console.warn(
+              `⏰ Timeout for alternative CDN ${currentIndex + 1}, trying next...`
+            );
             currentIndex++;
             tryNextCDN();
           }
         }, 8000);
-        
+
         document.head.appendChild(script);
       }
-      
+
       tryNextCDN();
     });
   }
@@ -889,7 +905,9 @@ export class SupabaseService {
 
     try {
       // 認証状態をチェック
-      const { data: { session } } = await this.client.auth.getSession();
+      const {
+        data: { session },
+      } = await this.client.auth.getSession();
       if (!session || !session.user) {
         console.warn('No authenticated session found');
         return {
@@ -994,7 +1012,9 @@ export class SupabaseService {
 
     try {
       // 認証状態をチェック
-      const { data: { session } } = await this.client.auth.getSession();
+      const {
+        data: { session },
+      } = await this.client.auth.getSession();
       if (!session || !session.user) {
         console.warn('No authenticated session found');
         return false;
@@ -1095,7 +1115,9 @@ export class SupabaseService {
 
     try {
       // 認証状態をチェック
-      const { data: { session } } = await this.client.auth.getSession();
+      const {
+        data: { session },
+      } = await this.client.auth.getSession();
       if (!session || !session.user) {
         console.warn('No authenticated session found');
         return null;
@@ -1139,7 +1161,9 @@ export class SupabaseService {
 
     try {
       // 認証状態をチェック
-      const { data: { session } } = await this.client.auth.getSession();
+      const {
+        data: { session },
+      } = await this.client.auth.getSession();
       if (!session || !session.user) {
         throw new Error('No authenticated session found');
       }

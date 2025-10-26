@@ -4,8 +4,18 @@
 jest.mock('../../js/services/exerciseService.js', () => ({
   exerciseService: {
     getExercises: jest.fn().mockResolvedValue([
-      { id: '1', name: 'ベンチプレス', muscle_group: 'chest', equipment: 'barbell' },
-      { id: '2', name: 'スクワット', muscle_group: 'legs', equipment: 'barbell' },
+      {
+        id: '1',
+        name: 'ベンチプレス',
+        muscle_group: 'chest',
+        equipment: 'barbell',
+      },
+      {
+        id: '2',
+        name: 'スクワット',
+        muscle_group: 'legs',
+        equipment: 'barbell',
+      },
     ]),
   },
 }));
@@ -26,7 +36,12 @@ jest.mock('../../js/services/supabaseService.js', () => ({
 
 jest.mock('../../js/utils/helpers.js', () => ({
   safeGetElement: jest.fn((id) => {
-    const mockElement = { id, innerHTML: '', appendChild: jest.fn(), removeChild: jest.fn() };
+    const mockElement = {
+      id,
+      innerHTML: '',
+      appendChild: jest.fn(),
+      removeChild: jest.fn(),
+    };
     return mockElement;
   }),
   showNotification: jest.fn(),
@@ -41,11 +56,11 @@ Object.defineProperty(document, 'getElementById', {
     mockElement.classList = {
       add: jest.fn(),
       remove: jest.fn(),
-      contains: jest.fn()
+      contains: jest.fn(),
     };
     return mockElement;
   }),
-  writable: true
+  writable: true,
 });
 
 jest.mock('../../js/utils/errorHandler.js', () => ({
@@ -66,7 +81,7 @@ describe('WorkoutPage', () => {
     // WorkoutPageクラスを動的にインポート
     const module = await import('../../js/pages/workoutPage.js');
     WorkoutPageClass = module.default;
-    
+
     // WorkoutPageのインスタンスを作成
     workoutPage = new WorkoutPageClass();
   });
@@ -92,19 +107,21 @@ describe('WorkoutPage', () => {
   describe('エクササイズ読み込み', () => {
     test('should load exercises successfully', async () => {
       await workoutPage.loadExercises();
-      
+
       expect(workoutPage.exercises).toHaveLength(2);
       expect(workoutPage.exercises[0].name).toBe('ベンチプレス');
     });
 
     test('should handle exercise loading errors', async () => {
-      const { exerciseService } = require('../../js/services/exerciseService.js');
+      const {
+        exerciseService,
+      } = require('../../js/services/exerciseService.js');
       exerciseService.getExercises.mockRejectedValue(new Error('Test error'));
 
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-      
+
       await workoutPage.loadExercises();
-      
+
       expect(consoleSpy).toHaveBeenCalled();
       consoleSpy.mockRestore();
     });
@@ -142,18 +159,18 @@ describe('WorkoutPage', () => {
 
     test('should add exercise to workout', () => {
       const exercise = { id: '1', name: 'ベンチプレス', muscle_group: 'chest' };
-      
+
       workoutPage.addExerciseToWorkout(exercise);
-      
+
       expect(workoutPage.currentWorkout.exercises).toContain(exercise);
     });
 
     test('should remove exercise from workout', () => {
       const exercise = { id: '1', name: 'ベンチプレス', muscle_group: 'chest' };
-      
+
       workoutPage.addExerciseToWorkout(exercise);
       workoutPage.removeExerciseFromWorkout('1');
-      
+
       expect(workoutPage.currentWorkout.exercises).toHaveLength(0);
     });
   });
@@ -162,10 +179,12 @@ describe('WorkoutPage', () => {
     test('should add set to exercise', () => {
       const exercise = { id: '1', name: 'ベンチプレス', muscle_group: 'chest' };
       workoutPage.addExerciseToWorkout(exercise);
-      
+
       workoutPage.addSetToExercise('1', { weight: 60, reps: 10 });
-      
-      const exerciseInWorkout = workoutPage.currentWorkout.exercises.find(ex => ex.id === '1');
+
+      const exerciseInWorkout = workoutPage.currentWorkout.exercises.find(
+        (ex) => ex.id === '1'
+      );
       expect(exerciseInWorkout.sets).toHaveLength(1);
       expect(exerciseInWorkout.sets[0].weight).toBe(60);
       expect(exerciseInWorkout.sets[0].reps).toBe(10);
@@ -176,10 +195,12 @@ describe('WorkoutPage', () => {
       workoutPage.addExerciseToWorkout(exercise);
       workoutPage.addSetToExercise('1', { weight: 60, reps: 10 });
       workoutPage.addSetToExercise('1', { weight: 65, reps: 8 });
-      
+
       workoutPage.removeSetFromExercise('1', 0);
-      
-      const exerciseInWorkout = workoutPage.currentWorkout.exercises.find(ex => ex.id === '1');
+
+      const exerciseInWorkout = workoutPage.currentWorkout.exercises.find(
+        (ex) => ex.id === '1'
+      );
       expect(exerciseInWorkout.sets).toHaveLength(1);
       expect(exerciseInWorkout.sets[0].weight).toBe(65);
     });
@@ -188,10 +209,12 @@ describe('WorkoutPage', () => {
       const exercise = { id: '1', name: 'ベンチプレス', muscle_group: 'chest' };
       workoutPage.addExerciseToWorkout(exercise);
       workoutPage.addSetToExercise('1', { weight: 60, reps: 10 });
-      
+
       workoutPage.updateSetInExercise('1', 0, { weight: 65, reps: 8 });
-      
-      const exerciseInWorkout = workoutPage.currentWorkout.exercises.find(ex => ex.id === '1');
+
+      const exerciseInWorkout = workoutPage.currentWorkout.exercises.find(
+        (ex) => ex.id === '1'
+      );
       expect(exerciseInWorkout.sets[0].weight).toBe(65);
       expect(exerciseInWorkout.sets[0].reps).toBe(8);
     });
@@ -199,12 +222,16 @@ describe('WorkoutPage', () => {
 
   describe('ワークアウト保存', () => {
     test('should save workout successfully', async () => {
-      const { workoutDataService } = require('../../js/services/workoutDataService.js');
-      const { supabaseService } = require('../../js/services/supabaseService.js');
-      
+      const {
+        workoutDataService,
+      } = require('../../js/services/workoutDataService.js');
+      const {
+        supabaseService,
+      } = require('../../js/services/supabaseService.js');
+
       // 認証を有効にする
       supabaseService.isAuthenticated.mockReturnValue(true);
-      
+
       // DOM要素のエラーを無視してテスト
       try {
         workoutPage.startWorkout();
@@ -213,21 +240,27 @@ describe('WorkoutPage', () => {
           throw error;
         }
       }
-      
-      workoutPage.addExerciseToWorkout({ id: '1', name: 'ベンチプレス', muscle_group: 'chest' });
+
+      workoutPage.addExerciseToWorkout({
+        id: '1',
+        name: 'ベンチプレス',
+        muscle_group: 'chest',
+      });
       workoutPage.addSetToExercise('1', { weight: 60, reps: 10 });
-      
+
       await workoutPage.saveWorkout();
-      
+
       expect(workoutDataService.saveWorkout).toHaveBeenCalled();
     });
 
     test('should handle save workout errors', async () => {
-      const { workoutDataService } = require('../../js/services/workoutDataService.js');
+      const {
+        workoutDataService,
+      } = require('../../js/services/workoutDataService.js');
       workoutDataService.saveWorkout.mockRejectedValue(new Error('Save error'));
 
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-      
+
       // DOM要素のエラーを無視してテスト
       try {
         workoutPage.startWorkout();
@@ -236,19 +269,21 @@ describe('WorkoutPage', () => {
           throw error;
         }
       }
-      
+
       await workoutPage.saveWorkout();
-      
+
       expect(consoleSpy).toHaveBeenCalled();
       consoleSpy.mockRestore();
     });
 
     test('should require authentication for saving', async () => {
-      const { supabaseService } = require('../../js/services/supabaseService.js');
+      const {
+        supabaseService,
+      } = require('../../js/services/supabaseService.js');
       supabaseService.isAuthenticated.mockReturnValue(false);
 
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-      
+
       // DOM要素のエラーを無視してテスト
       try {
         workoutPage.startWorkout();
@@ -257,9 +292,9 @@ describe('WorkoutPage', () => {
           throw error;
         }
       }
-      
+
       await workoutPage.saveWorkout();
-      
+
       expect(consoleSpy).toHaveBeenCalled();
       consoleSpy.mockRestore();
     });
@@ -271,9 +306,9 @@ describe('WorkoutPage', () => {
       workoutPage.addExerciseToWorkout(exercise);
       workoutPage.addSetToExercise('1', { weight: 60, reps: 10 });
       workoutPage.addSetToExercise('1', { weight: 65, reps: 8 });
-      
+
       const stats = workoutPage.calculateWorkoutStats();
-      
+
       expect(stats.totalSets).toBe(2);
       expect(stats.totalVolume).toBe(600 + 520); // 60*10 + 65*8
       expect(stats.totalReps).toBe(18); // 10 + 8
@@ -284,9 +319,9 @@ describe('WorkoutPage', () => {
       workoutPage.addExerciseToWorkout(exercise);
       workoutPage.addSetToExercise('1', { weight: 60, reps: 10 });
       workoutPage.addSetToExercise('1', { weight: 65, reps: 8 });
-      
+
       const volume = workoutPage.calculateExerciseVolume('1');
-      
+
       expect(volume).toBe(600 + 520); // 60*10 + 65*8
     });
   });
@@ -299,7 +334,7 @@ describe('WorkoutPage', () => {
 
       // メソッドが呼び出されることを確認
       expect(() => workoutPage.renderWorkoutInterface()).not.toThrow();
-      
+
       document.body.removeChild(container);
     });
 
@@ -315,7 +350,7 @@ describe('WorkoutPage', () => {
 
       // メソッドが呼び出されることを確認
       expect(() => workoutPage.renderExerciseList()).not.toThrow();
-      
+
       document.body.removeChild(container);
     });
 
@@ -324,11 +359,15 @@ describe('WorkoutPage', () => {
       container.id = 'current-workout';
       document.body.appendChild(container);
 
-      workoutPage.addExerciseToWorkout({ id: '1', name: 'ベンチプレス', muscle_group: 'chest' });
+      workoutPage.addExerciseToWorkout({
+        id: '1',
+        name: 'ベンチプレス',
+        muscle_group: 'chest',
+      });
 
       // メソッドが呼び出されることを確認
       expect(() => workoutPage.renderCurrentWorkout()).not.toThrow();
-      
+
       document.body.removeChild(container);
     });
   });
@@ -344,8 +383,10 @@ describe('WorkoutPage', () => {
         throw new Error('Render error');
       });
 
-      expect(() => workoutPage.renderWorkoutInterface()).toThrow('Render error');
-      
+      expect(() => workoutPage.renderWorkoutInterface()).toThrow(
+        'Render error'
+      );
+
       document.body.removeChild(container);
     });
   });

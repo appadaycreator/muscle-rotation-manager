@@ -633,7 +633,11 @@ class CalendarPage extends BasePage {
    * @param {Object} muscleGroupSets - 部位別セット数データ
    * @returns {Object} 部位別統計データ
    */
-  calculateMuscleGroupStats(muscleGroups, muscleGroupDuration = {}, muscleGroupSets = {}) {
+  calculateMuscleGroupStats(
+    muscleGroups,
+    muscleGroupDuration = {},
+    muscleGroupSets = {}
+  ) {
     const muscleGroupNames = {
       chest: '胸',
       back: '背中',
@@ -648,7 +652,7 @@ class CalendarPage extends BasePage {
       const displayName = muscleGroupNames[muscleGroup] || muscleGroup;
       const duration = Math.round(muscleGroupDuration[muscleGroup] || 0);
       const sets = muscleGroupSets[muscleGroup] || 0;
-      
+
       stats[muscleGroup] = {
         name: displayName,
         count: count,

@@ -87,55 +87,71 @@
           }
 
           console.log('🔄 Loading Supabase library...');
-          
+
           // 複数のCDNを試してSupabaseライブラリを読み込み
           const cdnUrls = [
             'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/umd/supabase.min.js',
             'https://unpkg.com/@supabase/supabase-js@2.38.4/dist/umd/supabase.min.js',
-            'https://cdn.skypack.dev/@supabase/supabase-js@2.38.4/dist/umd/supabase.min.js'
+            'https://cdn.skypack.dev/@supabase/supabase-js@2.38.4/dist/umd/supabase.min.js',
           ];
-          
+
           for (let i = 0; i < cdnUrls.length; i++) {
             const url = cdnUrls[i];
             console.log(`🔄 Trying CDN ${i + 1}/${cdnUrls.length}: ${url}`);
-            
+
             try {
               await new Promise((resolve, reject) => {
                 const script = document.createElement('script');
                 script.src = url;
                 script.onload = async () => {
                   if (window.supabase && window.supabase.createClient) {
-                    console.log(`✅ Supabase library loaded successfully from CDN ${i + 1}`);
-                    
+                    console.log(
+                      `✅ Supabase library loaded successfully from CDN ${i + 1}`
+                    );
+
                     // SupabaseServiceの初期化を明示的に呼び出し
                     try {
-                      const { supabaseService } = await import('./js/services/supabaseService.js');
-                      const initialized = await supabaseService.initialize({ force: true });
+                      const { supabaseService } = await import(
+                        './js/services/supabaseService.js'
+                      );
+                      const initialized = await supabaseService.initialize({
+                        force: true,
+                      });
                       if (initialized) {
-                        console.log('✅ Supabase service initialized successfully');
+                        console.log(
+                          '✅ Supabase service initialized successfully'
+                        );
                       } else {
-                        console.warn('⚠️ Supabase service initialization failed');
+                        console.warn(
+                          '⚠️ Supabase service initialization failed'
+                        );
                       }
                     } catch (error) {
-                      console.warn('⚠️ Failed to initialize Supabase service:', error);
+                      console.warn(
+                        '⚠️ Failed to initialize Supabase service:',
+                        error
+                      );
                     }
-                    
+
                     resolve(true);
                   } else {
-                    console.warn(`❌ Supabase library loaded but not accessible from CDN ${i + 1}`);
+                    console.warn(
+                      `❌ Supabase library loaded but not accessible from CDN ${i + 1}`
+                    );
                     reject(new Error('Supabase not accessible'));
                   }
                 };
                 script.onerror = () => {
-                  console.warn(`❌ Failed to load Supabase library from CDN ${i + 1}`);
+                  console.warn(
+                    `❌ Failed to load Supabase library from CDN ${i + 1}`
+                  );
                   reject(new Error('Failed to load Supabase library'));
                 };
                 document.head.appendChild(script);
               });
-              
+
               // 成功した場合はループを抜ける
               return true;
-              
             } catch (error) {
               console.warn(`❌ CDN ${i + 1} failed:`, error.message);
               if (i === cdnUrls.length - 1) {
@@ -145,7 +161,6 @@
               continue;
             }
           }
-          
         } catch (error) {
           console.error('Supabase library loading failed:', error);
           return false;
@@ -153,14 +168,18 @@
       }
 
       // ページ読み込み時にSupabaseライブラリを読み込み
-      loadSupabaseLibrary().then(success => {
+      loadSupabaseLibrary().then((success) => {
         if (!success) {
-          console.warn('⚠️ Continuing without Supabase - some features may be limited');
-          
+          console.warn(
+            '⚠️ Continuing without Supabase - some features may be limited'
+          );
+
           // ゲストモードを有効にしてアプリケーションを動作させる
           if (typeof localStorage !== 'undefined') {
             localStorage.setItem('guestMode', 'true');
-            console.log('🎯 Guest mode enabled due to Supabase loading failure');
+            console.log(
+              '🎯 Guest mode enabled due to Supabase loading failure'
+            );
           }
         }
       });

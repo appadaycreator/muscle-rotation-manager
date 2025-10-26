@@ -49,6 +49,12 @@ export default [
     },
   },
   {
-    ignores: ['eslint.config.js', 'node_modules/**', 'tests/**', '*.min.js', 'lib/**'],
+    ignores: [
+      'eslint.config.js',
+      'node_modules/**',
+      'tests/**',
+      '*.min.js',
+      'lib/**',
+    ],
   },
 ];

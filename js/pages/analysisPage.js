@@ -372,18 +372,33 @@ class AnalysisPage {
           );
         } else if (randomMuscles.includes('背中')) {
           exercises.push(
-            { name: 'デッドリフト', sets: 2, reps: 5, weight: Math.floor(weight * 1.1) }, // セット数と重量倍率を減らす
+            {
+              name: 'デッドリフト',
+              sets: 2,
+              reps: 5,
+              weight: Math.floor(weight * 1.1),
+            }, // セット数と重量倍率を減らす
             { name: 'プルアップ', sets: 2, reps: 6, weight: 0 } // 回数を減らす
           );
         } else if (randomMuscles.includes('脚')) {
           exercises.push(
-            { name: 'スクワット', sets: 2, reps: 8, weight: Math.floor(weight * 0.7) }, // セット数と重量倍率を減らす
+            {
+              name: 'スクワット',
+              sets: 2,
+              reps: 8,
+              weight: Math.floor(weight * 0.7),
+            }, // セット数と重量倍率を減らす
             { name: 'ランジ', sets: 2, reps: 8, weight: 0 } // 回数を減らす
           );
         } else {
           // その他の部位
           exercises.push(
-            { name: 'ダンベルカール', sets: 2, reps: 8, weight: Math.floor(weight * 0.4) } // セット数と重量倍率を減らす
+            {
+              name: 'ダンベルカール',
+              sets: 2,
+              reps: 8,
+              weight: Math.floor(weight * 0.4),
+            } // セット数と重量倍率を減らす
           );
         }
 
@@ -760,10 +775,10 @@ class AnalysisPage {
       // Chart.jsが読み込まれているかチェック
       if (typeof Chart === 'undefined') {
         console.warn('Chart.js is not loaded, loading dynamically...');
-        
+
         // Chart.jsを動的に読み込み
         await this.loadChartJS();
-        
+
         // 再度チェック
         if (typeof Chart === 'undefined') {
           console.error('Chart.js loading failed');
@@ -1033,13 +1048,13 @@ class AnalysisPage {
         console.warn('Workout missing date:', workout);
         return;
       }
-      
+
       const workoutDate = new Date(workoutDateStr);
       if (isNaN(workoutDate.getTime())) {
         console.warn('Invalid workout date:', workoutDateStr, workout);
         return;
       }
-      
+
       const workoutDateISO = workoutDate.toISOString().split('T')[0];
       if (Object.prototype.hasOwnProperty.call(frequencyMap, workoutDateISO)) {
         frequencyMap[workoutDateISO]++;

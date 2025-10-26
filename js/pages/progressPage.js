@@ -271,18 +271,33 @@ class ProgressPage extends BasePage {
           );
         } else if (randomMuscles.includes('背中')) {
           exercises.push(
-            { name: 'デッドリフト', sets: 2, reps: 5, weight: Math.floor(weight * 1.1) }, // セット数と重量倍率を減らす
+            {
+              name: 'デッドリフト',
+              sets: 2,
+              reps: 5,
+              weight: Math.floor(weight * 1.1),
+            }, // セット数と重量倍率を減らす
             { name: 'プルアップ', sets: 2, reps: 6, weight: 0 } // 回数を減らす
           );
         } else if (randomMuscles.includes('脚')) {
           exercises.push(
-            { name: 'スクワット', sets: 2, reps: 8, weight: Math.floor(weight * 0.7) }, // セット数と重量倍率を減らす
+            {
+              name: 'スクワット',
+              sets: 2,
+              reps: 8,
+              weight: Math.floor(weight * 0.7),
+            }, // セット数と重量倍率を減らす
             { name: 'ランジ', sets: 2, reps: 8, weight: 0 } // 回数を減らす
           );
         } else {
           // その他の部位
           exercises.push(
-            { name: 'ダンベルカール', sets: 2, reps: 8, weight: Math.floor(weight * 0.4) } // セット数と重量倍率を減らす
+            {
+              name: 'ダンベルカール',
+              sets: 2,
+              reps: 8,
+              weight: Math.floor(weight * 0.4),
+            } // セット数と重量倍率を減らす
           );
         }
 
@@ -526,8 +541,10 @@ class ProgressPage extends BasePage {
 
     try {
       // 選択されたエクササイズのデータを取得
-      const exerciseData = this.workoutData.filter(workout => 
-        workout.exercises && workout.exercises.some(ex => ex.name === this.selectedExercise)
+      const exerciseData = this.workoutData.filter(
+        (workout) =>
+          workout.exercises &&
+          workout.exercises.some((ex) => ex.name === this.selectedExercise)
       );
 
       if (exerciseData.length === 0) {
@@ -541,8 +558,11 @@ class ProgressPage extends BasePage {
       }
 
       // 統計データを計算
-      const stats = this.calculateExerciseStats(exerciseData, this.selectedExercise);
-      
+      const stats = this.calculateExerciseStats(
+        exerciseData,
+        this.selectedExercise
+      );
+
       container.innerHTML = `
         <div class="bg-white rounded-lg p-6">
           <h3 class="text-xl font-semibold text-gray-800 mb-4">
@@ -586,8 +606,10 @@ class ProgressPage extends BasePage {
       `;
 
       // グラフを描画
-      await this.renderExerciseProgressChart(exerciseData, this.selectedExercise);
-
+      await this.renderExerciseProgressChart(
+        exerciseData,
+        this.selectedExercise
+      );
     } catch (error) {
       console.error('Error rendering exercise analysis:', error);
       container.innerHTML = `
@@ -608,17 +630,20 @@ class ProgressPage extends BasePage {
         totalSessions: 0,
         totalVolume: 0,
         averageVolumePerSession: 0,
-        totalDuration: 0
+        totalDuration: 0,
       };
     }
 
     let totalVolume = 0;
     let totalDuration = 0;
 
-    muscleData.forEach(workout => {
+    muscleData.forEach((workout) => {
       if (workout.exercises && workout.exercises.length > 0) {
-        workout.exercises.forEach(exercise => {
-          totalVolume += (exercise.weight || 0) * (exercise.reps || 0) * (exercise.sets || 0);
+        workout.exercises.forEach((exercise) => {
+          totalVolume +=
+            (exercise.weight || 0) *
+            (exercise.reps || 0) *
+            (exercise.sets || 0);
         });
       }
       totalDuration += workout.duration || 0;
@@ -627,8 +652,9 @@ class ProgressPage extends BasePage {
     return {
       totalSessions: muscleData.length,
       totalVolume,
-      averageVolumePerSession: muscleData.length > 0 ? Math.round(totalVolume / muscleData.length) : 0,
-      totalDuration
+      averageVolumePerSession:
+        muscleData.length > 0 ? Math.round(totalVolume / muscleData.length) : 0,
+      totalDuration,
     };
   }
 
@@ -637,16 +663,19 @@ class ProgressPage extends BasePage {
    */
   calculateExerciseStats(exerciseData, exerciseName) {
     const exerciseSessions = [];
-    
-    exerciseData.forEach(workout => {
-      const exercise = workout.exercises.find(ex => ex.name === exerciseName);
+
+    exerciseData.forEach((workout) => {
+      const exercise = workout.exercises.find((ex) => ex.name === exerciseName);
       if (exercise) {
         exerciseSessions.push({
           date: workout.date || workout.startTime,
           weight: exercise.weight || 0,
           reps: exercise.reps || 0,
           sets: exercise.sets || 0,
-          volume: (exercise.weight || 0) * (exercise.reps || 0) * (exercise.sets || 0)
+          volume:
+            (exercise.weight || 0) *
+            (exercise.reps || 0) *
+            (exercise.sets || 0),
         });
       }
     });
@@ -657,28 +686,34 @@ class ProgressPage extends BasePage {
         maxWeight: 0,
         avgWeight: 0,
         totalVolume: 0,
-        progressRate: 0
+        progressRate: 0,
       };
     }
 
-    const weights = exerciseSessions.map(s => s.weight).filter(w => w > 0);
-    const volumes = exerciseSessions.map(s => s.volume);
-    
+    const weights = exerciseSessions.map((s) => s.weight).filter((w) => w > 0);
+    const volumes = exerciseSessions.map((s) => s.volume);
+
     const maxWeight = Math.max(...weights);
-    const avgWeight = weights.length > 0 ? Math.round(weights.reduce((a, b) => a + b, 0) / weights.length) : 0;
+    const avgWeight =
+      weights.length > 0
+        ? Math.round(weights.reduce((a, b) => a + b, 0) / weights.length)
+        : 0;
     const totalVolume = volumes.reduce((a, b) => a + b, 0);
-    
+
     // 進歩率計算（最初と最後の重量を比較）
     const firstWeight = weights[0] || 0;
     const lastWeight = weights[weights.length - 1] || 0;
-    const progressRate = firstWeight > 0 ? Math.round(((lastWeight - firstWeight) / firstWeight) * 100) : 0;
+    const progressRate =
+      firstWeight > 0
+        ? Math.round(((lastWeight - firstWeight) / firstWeight) * 100)
+        : 0;
 
     return {
       totalSessions: exerciseSessions.length,
       maxWeight,
       avgWeight,
       totalVolume,
-      progressRate
+      progressRate,
     };
   }
 
@@ -699,12 +734,14 @@ class ProgressPage extends BasePage {
       }
 
       const exerciseSessions = [];
-      exerciseData.forEach(workout => {
-        const exercise = workout.exercises.find(ex => ex.name === exerciseName);
+      exerciseData.forEach((workout) => {
+        const exercise = workout.exercises.find(
+          (ex) => ex.name === exerciseName
+        );
         if (exercise && exercise.weight > 0) {
           exerciseSessions.push({
             date: new Date(workout.date || workout.startTime),
-            weight: exercise.weight
+            weight: exercise.weight,
           });
         }
       });
@@ -725,15 +762,17 @@ class ProgressPage extends BasePage {
       new Chart(canvas, {
         type: 'line',
         data: {
-          labels: exerciseSessions.map(s => s.date.toLocaleDateString()),
-          datasets: [{
-            label: '重量 (kg)',
-            data: exerciseSessions.map(s => s.weight),
-            borderColor: '#3B82F6',
-            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-            tension: 0.4,
-            fill: true
-          }]
+          labels: exerciseSessions.map((s) => s.date.toLocaleDateString()),
+          datasets: [
+            {
+              label: '重量 (kg)',
+              data: exerciseSessions.map((s) => s.weight),
+              borderColor: '#3B82F6',
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              tension: 0.4,
+              fill: true,
+            },
+          ],
         },
         options: {
           responsive: true,
@@ -743,25 +782,24 @@ class ProgressPage extends BasePage {
               beginAtZero: true,
               title: {
                 display: true,
-                text: '重量 (kg)'
-              }
+                text: '重量 (kg)',
+              },
             },
             x: {
               title: {
                 display: true,
-                text: '日付'
-              }
-            }
+                text: '日付',
+              },
+            },
           },
           plugins: {
             legend: {
               display: true,
-              position: 'top'
-            }
-          }
-        }
+              position: 'top',
+            },
+          },
+        },
       });
-
     } catch (error) {
       console.error('Error rendering exercise progress chart:', error);
     }

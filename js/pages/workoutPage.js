@@ -733,7 +733,9 @@ export class WorkoutPage extends BasePage {
    */
   async loadExercises() {
     try {
-      const { exerciseService } = await import('../services/exerciseService.js');
+      const { exerciseService } = await import(
+        '../services/exerciseService.js'
+      );
       this.exercises = await exerciseService.getExercises();
       console.log('Exercises loaded:', this.exercises);
     } catch (error) {
@@ -792,7 +794,7 @@ export class WorkoutPage extends BasePage {
       this.currentWorkout = { exercises: [] };
     }
     this.currentWorkout.exercises = this.currentWorkout.exercises.filter(
-      ex => ex.id !== exerciseId
+      (ex) => ex.id !== exerciseId
     );
   }
 
@@ -803,7 +805,9 @@ export class WorkoutPage extends BasePage {
     if (!this.currentWorkout) {
       this.currentWorkout = { exercises: [] };
     }
-    const exercise = this.currentWorkout.exercises.find(ex => ex.id === exerciseId);
+    const exercise = this.currentWorkout.exercises.find(
+      (ex) => ex.id === exerciseId
+    );
     if (exercise) {
       if (!exercise.sets) {
         exercise.sets = [];
@@ -819,7 +823,9 @@ export class WorkoutPage extends BasePage {
     if (!this.currentWorkout) {
       return;
     }
-    const exercise = this.currentWorkout.exercises.find(ex => ex.id === exerciseId);
+    const exercise = this.currentWorkout.exercises.find(
+      (ex) => ex.id === exerciseId
+    );
     if (exercise && exercise.sets) {
       exercise.sets.splice(setIndex, 1);
     }
@@ -832,7 +838,9 @@ export class WorkoutPage extends BasePage {
     if (!this.currentWorkout) {
       return;
     }
-    const exercise = this.currentWorkout.exercises.find(ex => ex.id === exerciseId);
+    const exercise = this.currentWorkout.exercises.find(
+      (ex) => ex.id === exerciseId
+    );
     if (exercise && exercise.sets && exercise.sets[setIndex]) {
       exercise.sets[setIndex] = setData;
     }
@@ -850,9 +858,9 @@ export class WorkoutPage extends BasePage {
     let totalSets = 0;
     let totalReps = 0;
 
-    this.currentWorkout.exercises.forEach(exercise => {
+    this.currentWorkout.exercises.forEach((exercise) => {
       if (exercise.sets) {
-        exercise.sets.forEach(set => {
+        exercise.sets.forEach((set) => {
           totalVolume += (set.weight || 0) * (set.reps || 0);
           totalSets += 1;
           totalReps += set.reps || 0;
@@ -870,7 +878,9 @@ export class WorkoutPage extends BasePage {
     if (!this.currentWorkout) {
       return 0;
     }
-    const exercise = this.currentWorkout.exercises.find(ex => ex.id === exerciseId);
+    const exercise = this.currentWorkout.exercises.find(
+      (ex) => ex.id === exerciseId
+    );
     if (!exercise || !exercise.sets) {
       return 0;
     }
@@ -902,9 +912,9 @@ export class WorkoutPage extends BasePage {
     const container = document.getElementById('exercise-list');
     if (!container) return;
 
-    container.innerHTML = this.exercises.map(exercise => 
-      `<div class="exercise-item">${exercise.name}</div>`
-    ).join('');
+    container.innerHTML = this.exercises
+      .map((exercise) => `<div class="exercise-item">${exercise.name}</div>`)
+      .join('');
   }
 
   /**
@@ -912,11 +922,15 @@ export class WorkoutPage extends BasePage {
    */
   renderCurrentWorkout() {
     const container = document.getElementById('current-workout');
-    if (!container || !this.currentWorkout || !this.currentWorkout.exercises) return;
+    if (!container || !this.currentWorkout || !this.currentWorkout.exercises)
+      return;
 
-    container.innerHTML = this.currentWorkout.exercises.map(exercise => 
-      `<div class="workout-exercise">${exercise.name || exercise}</div>`
-    ).join('');
+    container.innerHTML = this.currentWorkout.exercises
+      .map(
+        (exercise) =>
+          `<div class="workout-exercise">${exercise.name || exercise}</div>`
+      )
+      .join('');
   }
 
   /**
@@ -924,9 +938,13 @@ export class WorkoutPage extends BasePage {
    */
   async saveWorkout() {
     try {
-      const { supabaseService } = await import('../services/supabaseService.js');
-      const { workoutDataService } = await import('../services/workoutDataService.js');
-      
+      const { supabaseService } = await import(
+        '../services/supabaseService.js'
+      );
+      const { workoutDataService } = await import(
+        '../services/workoutDataService.js'
+      );
+
       // 認証チェック
       if (!supabaseService.isAuthenticated()) {
         console.error('User not authenticated');
@@ -941,7 +959,6 @@ export class WorkoutPage extends BasePage {
       // ワークアウトデータを保存
       await workoutDataService.saveWorkout(this.currentWorkout);
       showNotification('ワークアウトを保存しました', 'success');
-      
     } catch (error) {
       console.error('Error saving workout:', error);
       showNotification('ワークアウトの保存に失敗しました', 'error');

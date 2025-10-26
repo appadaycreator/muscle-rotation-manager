@@ -120,7 +120,7 @@ describe('DashboardPage', () => {
       // authManagerの初期化をモック
       authManager.isInitialized = true;
       authManager.initialize = jest.fn().mockResolvedValue();
-      
+
       // dashboardPageのrenderDashboardメソッドを直接呼び出し
       dashboardPage.renderDashboard();
 
@@ -134,7 +134,7 @@ describe('DashboardPage', () => {
       // authManagerの初期化をモック
       authManager.isInitialized = true;
       authManager.initialize = jest.fn().mockResolvedValue();
-      
+
       // dashboardPageのsetupTooltipsメソッドを直接呼び出し
       dashboardPage.setupTooltips();
 

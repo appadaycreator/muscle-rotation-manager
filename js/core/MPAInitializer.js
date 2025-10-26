@@ -180,7 +180,9 @@ class MPAInitializer {
 
       // authManagerが初期化されているかチェック
       if (!authManager || typeof authManager.isAuthenticated !== 'function') {
-        console.warn('⚠️ AuthManager is not properly initialized, attempting to initialize...');
+        console.warn(
+          '⚠️ AuthManager is not properly initialized, attempting to initialize...'
+        );
         try {
           await authManager.initialize();
           if (typeof authManager.isAuthenticated !== 'function') {
@@ -795,19 +797,19 @@ class MPAInitializer {
   async initializeAuthManager() {
     try {
       console.log('🔐 Initializing auth manager...');
-      
+
       // authManagerが存在するかチェック
       if (!authManager) {
         throw new Error('AuthManager instance is not available');
       }
-      
+
       await authManager.initialize();
-      
+
       // 初期化後にメソッドが利用可能かチェック
       if (typeof authManager.isAuthenticated !== 'function') {
         throw new Error('AuthManager.isAuthenticated method is not available');
       }
-      
+
       console.log('✅ Auth manager initialized successfully');
     } catch (error) {
       console.error('❌ Auth manager initialization failed:', error);
