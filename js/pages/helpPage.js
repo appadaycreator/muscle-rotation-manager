@@ -44,7 +44,7 @@ class HelpPage {
      */
     renderHelpPage() {
         const main = safeGetElement('main');
-        if (!main) return;
+        if (!main) {return;}
 
         main.innerHTML = `
             <div class="max-w-7xl mx-auto px-4 py-8">

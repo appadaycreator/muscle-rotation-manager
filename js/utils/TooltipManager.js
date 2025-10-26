@@ -24,11 +24,11 @@ export class TooltipManager {
             hideOnEscape: true,
             accessibility: true
         };
-        
+
         this.themes = new Map();
         this.animations = new Map();
         this.observers = new Map();
-        
+
         this.setupThemes();
         this.setupAnimations();
     }
@@ -129,8 +129,8 @@ export class TooltipManager {
      * 初期化
      */
     initialize() {
-        if (this.isInitialized) return;
-        
+        if (this.isInitialized) {return;}
+
         try {
             this.createContainer();
             this.setupEventListeners();
@@ -171,23 +171,23 @@ export class TooltipManager {
     setupEventListeners() {
         // マウスオーバー
         document.addEventListener('mouseover', this.handleMouseOver.bind(this), { passive: true });
-        
+
         // マウスアウト
         document.addEventListener('mouseout', this.handleMouseOut.bind(this), { passive: true });
-        
+
         // マウス移動
         document.addEventListener('mousemove', this.handleMouseMove.bind(this), { passive: true });
-        
+
         // スクロール
         if (this.config.hideOnScroll) {
             document.addEventListener('scroll', this.handleScroll.bind(this), { passive: true });
         }
-        
+
         // リサイズ
         if (this.config.hideOnResize) {
             window.addEventListener('resize', this.handleResize.bind(this), { passive: true });
         }
-        
+
         // エスケープキー
         if (this.config.hideOnEscape) {
             document.addEventListener('keydown', this.handleKeyDown.bind(this));
@@ -199,7 +199,7 @@ export class TooltipManager {
      */
     handleMouseOver(event) {
         const element = this.findClosestElement(event.target, '[data-tooltip]');
-        if (!element) return;
+        if (!element) {return;}
 
         // 既存のタイムアウトをクリア
         if (this.hoverTimeout) {
@@ -220,7 +220,7 @@ export class TooltipManager {
      */
     handleMouseOut(event) {
         const element = this.findClosestElement(event.target, '[data-tooltip]');
-        if (!element) return;
+        if (!element) {return;}
 
         // タイムアウトをクリア
         if (this.hoverTimeout) {
@@ -282,7 +282,7 @@ export class TooltipManager {
         if (element.closest) {
             return element.closest(selector);
         }
-        
+
         // フォールバック実装
         while (element && element.nodeType === Node.ELEMENT_NODE) {
             if (element.matches && element.matches(selector)) {
@@ -301,10 +301,10 @@ export class TooltipManager {
         this.hideTooltip();
 
         const tooltipText = element.getAttribute('data-tooltip');
-        if (!tooltipText) return;
+        if (!tooltipText) {return;}
 
         const config = this.getElementConfig(element);
-        
+
         try {
             this.createTooltip(tooltipText, config, event);
             this.activeTooltip = { element, config };
@@ -317,20 +317,20 @@ export class TooltipManager {
      * ツールチップ非表示
      */
     hideTooltip() {
-        if (!this.activeTooltip) return;
+        if (!this.activeTooltip) {return;}
 
         const container = document.getElementById('tooltip-container');
-        if (!container) return;
+        if (!container) {return;}
 
         const tooltip = container.querySelector('.tooltip');
-        if (!tooltip) return;
+        if (!tooltip) {return;}
 
         const config = this.activeTooltip.config;
         const animation = this.animations.get(config.animation);
 
         if (animation && animation.hide) {
             Object.assign(tooltip.style, animation.hide);
-            
+
             setTimeout(() => {
                 this.removeTooltip();
             }, 150);
@@ -348,7 +348,7 @@ export class TooltipManager {
             container.innerHTML = '';
             container.style.opacity = '0';
         }
-        
+
         this.activeTooltip = null;
     }
 
@@ -357,7 +357,7 @@ export class TooltipManager {
      */
     createTooltip(text, config, event) {
         const container = document.getElementById('tooltip-container');
-        if (!container) throw new Error('Tooltip container not found');
+        if (!container) {throw new Error('Tooltip container not found');}
 
         const tooltip = document.createElement('div');
         tooltip.className = 'tooltip';
@@ -421,7 +421,7 @@ export class TooltipManager {
         `;
 
         const theme = this.themes.get(config.theme) || this.themes.get('light');
-        
+
         switch (config.position) {
             case 'top':
                 arrow.style.bottom = '-10px';
@@ -490,10 +490,10 @@ export class TooltipManager {
         // 初期位置を設定（getBoundingClientRectが正しく動作するように）
         tooltip.style.left = `${x}px`;
         tooltip.style.top = `${y}px`;
-        
+
         // 実際のサイズを取得して再計算
         const actualRect = tooltip.getBoundingClientRect();
-        
+
         switch (config.position) {
             case 'top':
                 x = rect.left + (rect.width / 2) - (actualRect.width / 2);
@@ -525,10 +525,10 @@ export class TooltipManager {
      * 位置更新
      */
     updatePosition(event) {
-        if (!this.activeTooltip) return;
+        if (!this.activeTooltip) {return;}
 
         const tooltip = document.querySelector('.tooltip');
-        if (!tooltip) return;
+        if (!tooltip) {return;}
 
         const config = this.activeTooltip.config;
         this.calculatePosition(tooltip, event, config);
@@ -547,12 +547,12 @@ export class TooltipManager {
         const theme = element.getAttribute('data-tooltip-theme');
         const animation = element.getAttribute('data-tooltip-animation');
 
-        if (position) config.position = position;
-        if (delay) config.delay = parseInt(delay);
-        if (maxWidth) config.maxWidth = parseInt(maxWidth);
-        if (minWidth) config.minWidth = parseInt(minWidth);
-        if (theme) config.theme = theme;
-        if (animation) config.animation = animation;
+        if (position) {config.position = position;}
+        if (delay) {config.delay = parseInt(delay);}
+        if (maxWidth) {config.maxWidth = parseInt(maxWidth);}
+        if (minWidth) {config.minWidth = parseInt(minWidth);}
+        if (theme) {config.theme = theme;}
+        if (animation) {config.animation = animation;}
 
         return config;
     }
@@ -603,7 +603,7 @@ export class TooltipManager {
      * 新しい要素の監視
      */
     observeNewElements(selector, text, options) {
-        if (this.observers.has(selector)) return;
+        if (this.observers.has(selector)) {return;}
 
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
@@ -612,7 +612,7 @@ export class TooltipManager {
                         if (node.matches && node.matches(selector)) {
                             this.addTooltip(node, text, options);
                         }
-                        
+
                         const childElements = node.querySelectorAll && node.querySelectorAll(selector);
                         if (childElements) {
                             childElements.forEach(element => {
@@ -637,7 +637,7 @@ export class TooltipManager {
      */
     destroy() {
         this.hideTooltip();
-        
+
         if (this.hoverTimeout) {
             clearTimeout(this.hoverTimeout);
         }

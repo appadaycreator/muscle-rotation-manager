@@ -126,9 +126,9 @@ class AuthManager {
         }
 
         supabaseService.onAuthStateChange(async (event, session) => {
-            console.log('Auth state change detected:', { 
-                event, 
-                session: !!session, 
+            console.log('Auth state change detected:', {
+                event,
+                session: !!session,
                 user: !!session?.user,
                 userId: session?.user?.id,
                 userEmail: session?.user?.email
@@ -160,9 +160,9 @@ class AuthManager {
         const userEmail = document.getElementById('user-email');
         const userDisplayName = document.getElementById('user-display-name');
 
-        console.log('updateAuthUI called, elements found:', { 
-            loginBtn: !!loginBtn, 
-            userProfile: !!userProfile, 
+        console.log('updateAuthUI called, elements found:', {
+            loginBtn: !!loginBtn,
+            userProfile: !!userProfile,
             userAvatar: !!userAvatar,
             userDisplayName: !!userDisplayName
         });
@@ -173,29 +173,29 @@ class AuthManager {
 
             if (currentUser) {
                 console.log('User is logged in, showing user profile');
-                
+
                 // ログインボタンを非表示
                 if (loginBtn) {
                     loginBtn.classList.add('hidden');
                     console.log('Login button hidden');
                 }
-                
+
                 // ユーザープロフィールを表示
                 if (userProfile) {
                     userProfile.classList.remove('hidden');
                     console.log('User profile shown');
                 }
-                
+
                 // プロファイル情報を取得
                 console.log('Fetching user profile...');
                 const userProfileData = await this.getUserProfile();
                 console.log('User profile data:', userProfileData);
-                
+
                 // ユーザー情報を更新
                 if (userAvatar) {
                     // アバター画像を設定（プロファイル、user_metadata、デフォルトの順で確認）
                     let avatarUrl = 'assets/default-avatar.png';
-                    
+
                     if (userProfileData?.avatar_url) {
                         avatarUrl = userProfileData.avatar_url;
                         console.log('Using profile avatar:', avatarUrl);
@@ -205,26 +205,26 @@ class AuthManager {
                     } else {
                         console.log('Using default avatar');
                     }
-                    
+
                     userAvatar.src = avatarUrl;
                     userAvatar.alt = `${currentUser.email}のアバター`;
-                    
+
                     // アバター画像の読み込みエラーを処理
                     userAvatar.onerror = () => {
                         console.warn('Avatar image failed to load, using default:', avatarUrl);
                         userAvatar.src = 'assets/default-avatar.png';
                     };
-                    
+
                     // アバター画像の読み込み成功をログ
                     userAvatar.onload = () => {
                         console.log('Avatar image loaded successfully:', avatarUrl);
                     };
                 }
-                
+
                 if (userName) {
                     // ユーザー名を設定（プロファイル、user_metadata、emailの順で確認）
                     let displayName = 'ユーザー';
-                    
+
                     if (userProfileData?.display_name) {
                         displayName = userProfileData.display_name;
                         console.log('Using profile display name:', displayName);
@@ -238,14 +238,14 @@ class AuthManager {
                         displayName = currentUser.email.split('@')[0];
                         console.log('Using email prefix:', displayName);
                     }
-                    
+
                     userName.textContent = displayName;
                 }
-                
+
                 // ヘッダー表示用のユーザー名を設定
                 if (userDisplayName) {
                     let headerDisplayName = 'ユーザー';
-                    
+
                     if (userProfileData?.display_name) {
                         headerDisplayName = userProfileData.display_name;
                     } else if (currentUser.user_metadata?.display_name) {
@@ -255,27 +255,27 @@ class AuthManager {
                     } else if (currentUser.email) {
                         headerDisplayName = currentUser.email.split('@')[0];
                     }
-                    
+
                     userDisplayName.textContent = headerDisplayName;
                     console.log('Header display name set:', headerDisplayName);
                     console.log('UserDisplayName element:', userDisplayName);
                 } else {
                     console.warn('userDisplayName element not found!');
                 }
-                
+
                 if (userEmail) {
                     userEmail.textContent = currentUser.email || '';
                 }
-                
+
             } else {
                 console.log('User is not logged in, showing login button');
-                
+
                 // ログインボタンを表示
                 if (loginBtn) {
                     loginBtn.classList.remove('hidden');
                     console.log('Login button shown');
                 }
-                
+
                 // ユーザープロフィールを非表示
                 if (userProfile) {
                     userProfile.classList.add('hidden');
@@ -617,10 +617,10 @@ class AuthManager {
                 return null;
             }
 
-            console.log('User profile retrieved:', { 
-                id: data?.id, 
-                displayName: data?.display_name, 
-                avatarUrl: data?.avatar_url 
+            console.log('User profile retrieved:', {
+                id: data?.id,
+                displayName: data?.display_name,
+                avatarUrl: data?.avatar_url
             });
             return data;
         } catch (error) {
@@ -659,7 +659,7 @@ class AuthManager {
         try {
             // ドロップダウンを閉じる
             this.closeUserDropdown();
-            
+
             // 設定ページに遷移
             console.log('Navigating to settings page...');
             window.location.href = '/settings.html';

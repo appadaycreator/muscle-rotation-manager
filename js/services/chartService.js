@@ -739,7 +739,7 @@ class ChartService {
                         label: '進捗',
                         data: data.map(item => item.value),
                         borderColor: this.defaultColors.primary,
-                        backgroundColor: this.defaultColors.primary + '20',
+                        backgroundColor: `${this.defaultColors.primary}20`,
                         tension: 0.4
                     }]
                 },

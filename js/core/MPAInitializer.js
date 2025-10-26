@@ -237,7 +237,7 @@ class MPAInitializer {
             if (headerResult.status === 'fulfilled') {
                 console.log('🔄 Re-setting up auth event listeners after header load');
                 await authManager.setupEventListeners();
-                
+
                 // 認証UIを更新
                 console.log('🔄 Updating auth UI after header load');
                 await authManager.updateAuthUI();

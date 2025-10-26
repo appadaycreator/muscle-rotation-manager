@@ -295,7 +295,7 @@ class ExerciseService {
                 throw error;
             }
 
-            let result = data || [];
+            const result = data || [];
 
             // 検索キャッシュに保存
             this.searchCache.set(cacheKey, {

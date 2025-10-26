@@ -208,7 +208,7 @@ export class DevTools {
             timestamp: Date.now(),
             data: performanceData
         };
-        
+
         console.log('📊 Performance:', performanceData);
         this.storeLogEntry(logEntry);
     }
@@ -222,7 +222,7 @@ export class DevTools {
             timestamp: Date.now(),
             data: errorData
         };
-        
+
         console.error('❌ Error:', errorData);
         this.storeLogEntry(logEntry);
     }
@@ -236,7 +236,7 @@ export class DevTools {
             timestamp: Date.now(),
             data: networkData
         };
-        
+
         console.log('🌐 Network:', networkData);
         this.storeLogEntry(logEntry);
     }
@@ -250,7 +250,7 @@ export class DevTools {
             timestamp: Date.now(),
             data: memoryData
         };
-        
+
         console.log('💾 Memory:', memoryData);
         this.storeLogEntry(logEntry);
     }
@@ -289,7 +289,7 @@ export class DevTools {
             timestamp,
             message: args.join(' ')
         };
-        
+
         this.storeLogEntry(logEntry);
     }
 
@@ -302,7 +302,7 @@ export class DevTools {
             duration,
             timestamp: Date.now()
         };
-        
+
         this.storePerformanceIssue(issue);
     }
 
@@ -315,7 +315,7 @@ export class DevTools {
             loadComplete: entry.loadEventEnd - entry.navigationStart,
             firstPaint: entry.responseStart - entry.navigationStart
         };
-        
+
         this.logPerformance({
             name: 'navigation',
             timing

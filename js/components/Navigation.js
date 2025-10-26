@@ -281,7 +281,7 @@ export class Navigation {
             console.log('Page requires auth, checking authentication...');
             const isAuthenticated = await authManager.isAuthenticated();
             console.log('Authentication result:', isAuthenticated);
-            
+
             if (!isAuthenticated) {
                 event.preventDefault();
                 event.stopPropagation();
@@ -292,7 +292,7 @@ export class Navigation {
 
         // モバイルサイドバーを閉じる
         this.closeMobileSidebar();
-        
+
         console.log('Navigation allowed, proceeding to:', href);
     }
 
@@ -303,19 +303,19 @@ export class Navigation {
         try {
             await authManager.logout();
             showNotification('ログアウトしました', 'success');
-            
+
             // テスト環境ではナビゲーションをモック
             if (typeof window !== 'undefined' && window.location) {
                 // CI環境でのJSDOMナビゲーション制限を回避
-                const isTestEnvironment = typeof process !== 'undefined' && 
+                const isTestEnvironment = typeof process !== 'undefined' &&
                     (process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID);
-                
+
                 if (isTestEnvironment) {
                     // テスト環境ではナビゲーションをスキップ
                     console.log('Navigation skipped in test environment');
                     return;
                 }
-                
+
                 try {
                     window.location.href = '/index.html';
                 } catch (error) {
@@ -404,9 +404,9 @@ export class Navigation {
                 // より具体的なセレクターを使用
                 const elements = document.querySelectorAll(`a[href="/${item.id}.html"]`);
                 console.log(`🔍 Looking for elements with href="/${item.id}.html":`, elements.length);
-                
+
                 elements.forEach(element => {
-                    console.log(`📌 Adding tooltip to element:`, element);
+                    console.log('📌 Adding tooltip to element:', element);
                     tooltipManager.addTooltip(element, item.text, {
                         position: 'right',
                         maxWidth: 200,
@@ -454,7 +454,7 @@ export class Navigation {
         if (!desktopSidebar) {return;}
 
         // サイドバーにフォーカスが当たった時の処理
-        desktopSidebar.addEventListener('focusin', (e) => {
+        desktopSidebar.addEventListener('focusin', () => {
             console.log('🎯 Desktop sidebar focused');
             this.showDesktopSidebar();
         });
@@ -490,7 +490,7 @@ export class Navigation {
         if (!mobileSidebar) {return;}
 
         // モバイルサイドバーのフォーカス管理
-        mobileSidebar.addEventListener('focusin', (e) => {
+        mobileSidebar.addEventListener('focusin', () => {
             console.log('🎯 Mobile sidebar focused');
             this.showMobileSidebar();
         });
@@ -668,7 +668,7 @@ export class Navigation {
             // デバッグ: サイドバー要素の存在確認
             const sidebar = document.getElementById('desktop-sidebar');
             console.log('🔍 Desktop sidebar found:', !!sidebar);
-            
+
             if (sidebar) {
                 const navLinks = sidebar.querySelectorAll('a[href]');
                 console.log('🔗 Navigation links found:', navLinks.length);
@@ -691,7 +691,7 @@ export class Navigation {
             dashboardElements.forEach((el, index) => {
                 console.log(`Dashboard element ${index + 1}:`, el);
             });
-            
+
             tooltipManager.addDynamicTooltip('a[href="/dashboard.html"]', 'ダッシュボード：ワークアウトの統計情報と推奨事項を表示します。', {
                 position: 'right',
                 maxWidth: 350,

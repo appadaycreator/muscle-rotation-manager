@@ -100,13 +100,13 @@ export class BasePage {
     async checkAuthentication() {
         try {
             console.log(`🔐 Checking authentication for ${this.pageName} page (requiresAuth: ${this.requiresAuth})`);
-            
+
             // Supabaseが利用可能かチェック
             if (!supabaseService.isAvailable()) {
                 console.log(`🔐 Supabase not available for ${this.pageName} page - skipping auth check`);
                 return true; // Supabaseが利用できない場合は認証チェックをスキップ
             }
-            
+
             const isAuthenticated = await authManager.isAuthenticated();
             console.log(`🔐 Authentication result for ${this.pageName}:`, { isAuthenticated, requiresAuth: this.requiresAuth });
 
@@ -123,15 +123,15 @@ export class BasePage {
                 // テスト環境ではナビゲーションをモック
                 if (typeof window !== 'undefined' && window.location) {
                     // CI環境でのJSDOMナビゲーション制限を回避
-                    const isTestEnvironment = typeof process !== 'undefined' && 
+                    const isTestEnvironment = typeof process !== 'undefined' &&
                         (process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID);
-                    
+
                     if (isTestEnvironment) {
                         // テスト環境ではナビゲーションをスキップ
                         console.log('Navigation skipped in test environment');
                         return false;
                     }
-                    
+
                     try {
                         window.location.href = './index.html';
                     } catch (error) {

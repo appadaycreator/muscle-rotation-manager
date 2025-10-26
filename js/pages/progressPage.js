@@ -27,7 +27,7 @@ class ProgressPage {
         try {
             // 認証チェックをスキップしてプログレスページを表示
             console.log('Progress page initializing without auth check');
-            
+
             // ツールチップ機能を初期化
             tooltipManager.initialize();
 
@@ -533,38 +533,38 @@ class ProgressPage {
      */
     getExercisesByMuscleGroup(muscleGroupId) {
         const exercises = {
-            'chest': [
+            chest: [
                 { id: 'bench-press', name: 'ベンチプレス', name_ja: 'ベンチプレス' },
                 { id: 'push-ups', name: 'プッシュアップ', name_ja: 'プッシュアップ' },
                 { id: 'dumbbell-press', name: 'ダンベルプレス', name_ja: 'ダンベルプレス' }
             ],
-            'back': [
+            back: [
                 { id: 'pull-ups', name: 'プルアップ', name_ja: 'プルアップ' },
                 { id: 'rows', name: 'ロウイング', name_ja: 'ロウイング' },
                 { id: 'lat-pulldown', name: 'ラットプルダウン', name_ja: 'ラットプルダウン' }
             ],
-            'shoulders': [
+            shoulders: [
                 { id: 'overhead-press', name: 'オーバーヘッドプレス', name_ja: 'オーバーヘッドプレス' },
                 { id: 'lateral-raises', name: 'サイドレイズ', name_ja: 'サイドレイズ' },
                 { id: 'rear-delt-fly', name: 'リアデルトフライ', name_ja: 'リアデルトフライ' }
             ],
-            'arms': [
+            arms: [
                 { id: 'bicep-curls', name: 'バイセップカール', name_ja: 'バイセップカール' },
                 { id: 'tricep-dips', name: 'トライセップディップス', name_ja: 'トライセップディップス' },
                 { id: 'hammer-curls', name: 'ハンマーカール', name_ja: 'ハンマーカール' }
             ],
-            'legs': [
+            legs: [
                 { id: 'squats', name: 'スクワット', name_ja: 'スクワット' },
                 { id: 'deadlifts', name: 'デッドリフト', name_ja: 'デッドリフト' },
                 { id: 'lunges', name: 'ランジ', name_ja: 'ランジ' }
             ],
-            'core': [
+            core: [
                 { id: 'plank', name: 'プランク', name_ja: 'プランク' },
                 { id: 'crunches', name: 'クランチ', name_ja: 'クランチ' },
                 { id: 'russian-twists', name: 'ロシアンツイスト', name_ja: 'ロシアンツイスト' }
             ]
         };
-        
+
         return exercises[muscleGroupId] || [];
     }
 
@@ -614,7 +614,7 @@ class ProgressPage {
 
             this.selectedExercise = exerciseId;
             await this.loadProgressData();
-            
+
             // プログレッシブ・オーバーロード分析を表示
             await this.displayProgressiveOverloadAnalysis(exerciseId);
         } catch (error) {
@@ -628,37 +628,37 @@ class ProgressPage {
     generateSampleProgressData(exerciseId) {
         const today = new Date();
         const sampleData = [];
-        
+
         // 過去90日分のサンプルデータを生成
         for (let i = 0; i < 90; i++) {
             const date = new Date(today);
             date.setDate(date.getDate() - i);
-            
+
             // 3-4日に1回の頻度でワークアウトを生成
             if (i % 3 === 0 || i % 4 === 0) {
                 // 重量の進歩をシミュレート
                 const baseWeight = 80;
                 const progressFactor = Math.max(0, (90 - i) / 90); // 時間とともに重量が増加
                 const weight = Math.floor(baseWeight + (progressFactor * 20));
-                
+
                 // セット数と回数も進歩をシミュレート
                 const sets = 3 + Math.floor(progressFactor * 2); // 3-5セット
                 const reps = 8 + Math.floor(progressFactor * 4); // 8-12回
-                
+
                 sampleData.push({
                     id: `sample-${i}`,
                     date: date.toISOString().split('T')[0],
                     exercise_id: exerciseId,
-                    weight: weight,
-                    reps: reps,
-                    sets: sets,
+                    weight,
+                    reps,
+                    sets,
                     volume: weight * reps * sets,
                     one_rm: Math.round(weight * (1 + reps / 30)), // 簡易1RM計算
                     notes: 'サンプルデータ'
                 });
             }
         }
-        
+
         return sampleData;
     }
 
@@ -1340,7 +1340,7 @@ class ProgressPage {
 
             // エクササイズ別のデータをフィルタリング
             const exerciseData = progressData.filter(item => item.exercise_id === exerciseId);
-            
+
             if (exerciseData.length < 2) {
                 return {
                     isProgressive: false,
@@ -1355,22 +1355,22 @@ class ProgressPage {
 
             // 1RMの推移を計算
             const oneRMHistory = exerciseData.map(item => this.calculateOneRM(item.weight, item.reps));
-            
+
             // プログレッシブ・オーバーロード率を計算
             const overloadRate = this.calculateOverloadRate(oneRMHistory);
-            
+
             // トレンドを分析
             const trend = this.analyzeTrend(oneRMHistory);
-            
+
             // 推奨事項を生成
             const recommendations = this.generateRecommendations(overloadRate, trend, oneRMHistory);
 
             return {
                 isProgressive: overloadRate > 0,
-                overloadRate: overloadRate,
-                trend: trend,
-                recommendations: recommendations,
-                oneRMHistory: oneRMHistory,
+                overloadRate,
+                trend,
+                recommendations,
+                oneRMHistory,
                 lastOneRM: oneRMHistory[oneRMHistory.length - 1],
                 firstOneRM: oneRMHistory[0],
                 improvement: oneRMHistory[oneRMHistory.length - 1] - oneRMHistory[0]
@@ -1394,9 +1394,9 @@ class ProgressPage {
      * @returns {number} 推定1RM
      */
     calculateOneRM(weight, reps) {
-        if (reps <= 0 || weight <= 0) return 0;
-        if (reps === 1) return weight;
-        
+        if (reps <= 0 || weight <= 0) {return 0;}
+        if (reps === 1) {return weight;}
+
         // Epley公式: 1RM = weight * (1 + reps / 30)
         return Math.round(weight * (1 + reps / 30) * 100) / 100;
     }
@@ -1407,13 +1407,13 @@ class ProgressPage {
      * @returns {number} オーバーロード率（%）
      */
     calculateOverloadRate(oneRMHistory) {
-        if (oneRMHistory.length < 2) return 0;
+        if (oneRMHistory.length < 2) {return 0;}
 
         const firstRM = oneRMHistory[0];
         const lastRM = oneRMHistory[oneRMHistory.length - 1];
-        
-        if (firstRM === 0) return 0;
-        
+
+        if (firstRM === 0) {return 0;}
+
         return Math.round(((lastRM - firstRM) / firstRM) * 100 * 100) / 100;
     }
 
@@ -1423,17 +1423,17 @@ class ProgressPage {
      * @returns {string} トレンド（'improving', 'plateau', 'declining'）
      */
     analyzeTrend(oneRMHistory) {
-        if (oneRMHistory.length < 3) return 'insufficient_data';
+        if (oneRMHistory.length < 3) {return 'insufficient_data';}
 
         // 最近の3回のデータでトレンドを判断
         const recent = oneRMHistory.slice(-3);
         const first = recent[0];
         const last = recent[recent.length - 1];
-        
+
         const change = ((last - first) / first) * 100;
-        
-        if (change > 5) return 'improving';
-        if (change < -5) return 'declining';
+
+        if (change > 5) {return 'improving';}
+        if (change < -5) {return 'declining';}
         return 'plateau';
     }
 
@@ -1485,7 +1485,7 @@ class ProgressPage {
 
             // プログレッシブ・オーバーロードを計算
             const analysis = this.calculateProgressiveOverload(this.progressData, exerciseId);
-            
+
             // 分析結果を表示
             const analysisSection = safeGetElement('#progressive-overload-analysis');
             if (analysisSection) {
@@ -1531,11 +1531,11 @@ class ProgressPage {
      */
     getTrendText(trend) {
         const trendMap = {
-            'improving': '改善中',
-            'plateau': 'プラトー',
-            'declining': '低下中',
-            'insufficient_data': 'データ不足',
-            'error': 'エラー'
+            improving: '改善中',
+            plateau: 'プラトー',
+            declining: '低下中',
+            insufficient_data: 'データ不足',
+            error: 'エラー'
         };
         return trendMap[trend] || '不明';
     }
@@ -1547,11 +1547,11 @@ class ProgressPage {
      */
     getTrendIcon(trend) {
         const iconMap = {
-            'improving': '<i class="fas fa-arrow-up text-green-300"></i>',
-            'plateau': '<i class="fas fa-minus text-yellow-300"></i>',
-            'declining': '<i class="fas fa-arrow-down text-red-300"></i>',
-            'insufficient_data': '<i class="fas fa-question text-gray-300"></i>',
-            'error': '<i class="fas fa-exclamation-triangle text-red-300"></i>'
+            improving: '<i class="fas fa-arrow-up text-green-300"></i>',
+            plateau: '<i class="fas fa-minus text-yellow-300"></i>',
+            declining: '<i class="fas fa-arrow-down text-red-300"></i>',
+            insufficient_data: '<i class="fas fa-question text-gray-300"></i>',
+            error: '<i class="fas fa-exclamation-triangle text-red-300"></i>'
         };
         return iconMap[trend] || '<i class="fas fa-question text-gray-300"></i>';
     }
@@ -1562,7 +1562,7 @@ class ProgressPage {
      */
     displayRecommendations(recommendations) {
         const recommendationsList = safeGetElement('#recommendations-list');
-        if (!recommendationsList) return;
+        if (!recommendationsList) {return;}
 
         recommendationsList.innerHTML = '';
 

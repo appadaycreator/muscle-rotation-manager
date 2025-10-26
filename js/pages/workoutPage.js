@@ -26,7 +26,7 @@ export class WorkoutPage extends BasePage {
 
         console.log('WorkoutPage constructor called');
         console.log('Muscle groups initialized:', this.muscleGroups);
-        
+
         // 筋肉グループのキャッシュを初期化
         this.initializeMuscleGroupCache();
     }
@@ -60,7 +60,7 @@ export class WorkoutPage extends BasePage {
 
         // 筋肉グループボタンを生成
         this.loadMuscleGroups();
-        
+
         // エクササイズプリセットを初期化
         this.clearExercisePresets();
 
@@ -433,17 +433,17 @@ export class WorkoutPage extends BasePage {
 
         // 筋肉グループのアイコンと色を定義
         const muscleGroupConfig = {
-            '胸': { icon: 'fas fa-heart', color: 'text-red-500', bgColor: 'bg-red-50', hoverColor: 'hover:bg-red-100' },
-            '背中': { icon: 'fas fa-user', color: 'text-blue-500', bgColor: 'bg-blue-50', hoverColor: 'hover:bg-blue-100' },
-            '肩': { icon: 'fas fa-arrow-up', color: 'text-green-500', bgColor: 'bg-green-50', hoverColor: 'hover:bg-green-100' },
-            '腕': { icon: 'fas fa-hand-paper', color: 'text-purple-500', bgColor: 'bg-purple-50', hoverColor: 'hover:bg-purple-100' },
-            '脚': { icon: 'fas fa-running', color: 'text-orange-500', bgColor: 'bg-orange-50', hoverColor: 'hover:bg-orange-100' },
-            '腹筋': { icon: 'fas fa-dumbbell', color: 'text-yellow-500', bgColor: 'bg-yellow-50', hoverColor: 'hover:bg-yellow-100' }
+            胸: { icon: 'fas fa-heart', color: 'text-red-500', bgColor: 'bg-red-50', hoverColor: 'hover:bg-red-100' },
+            背中: { icon: 'fas fa-user', color: 'text-blue-500', bgColor: 'bg-blue-50', hoverColor: 'hover:bg-blue-100' },
+            肩: { icon: 'fas fa-arrow-up', color: 'text-green-500', bgColor: 'bg-green-50', hoverColor: 'hover:bg-green-100' },
+            腕: { icon: 'fas fa-hand-paper', color: 'text-purple-500', bgColor: 'bg-purple-50', hoverColor: 'hover:bg-purple-100' },
+            脚: { icon: 'fas fa-running', color: 'text-orange-500', bgColor: 'bg-orange-50', hoverColor: 'hover:bg-orange-100' },
+            腹筋: { icon: 'fas fa-dumbbell', color: 'text-yellow-500', bgColor: 'bg-yellow-50', hoverColor: 'hover:bg-yellow-100' }
         };
 
         container.innerHTML = this.muscleGroups.map(muscle => {
             const config = muscleGroupConfig[muscle] || { icon: 'fas fa-dumbbell', color: 'text-gray-500', bgColor: 'bg-gray-50', hoverColor: 'hover:bg-gray-100' };
-            
+
             return `
                 <button class="muscle-group-btn ${config.bgColor} ${config.hoverColor} border-2 border-gray-200 rounded-lg p-4 text-center transition-all duration-200 hover:shadow-md" 
                         data-muscle="${muscle}">
@@ -464,7 +464,7 @@ export class WorkoutPage extends BasePage {
     loadExercisesForSelectedMuscles() {
         const selectedMuscles = Array.from(document.querySelectorAll('.muscle-group-btn.selected'))
             .map(btn => btn.dataset.muscle);
-        
+
         if (selectedMuscles.length === 0) {
             this.clearExercisePresets();
             return;
@@ -477,7 +477,7 @@ export class WorkoutPage extends BasePage {
         }
 
         // 選択された筋肉グループのエクササイズを取得
-        const relevantExercises = this.getDefaultExercises().filter(exercise => 
+        const relevantExercises = this.getDefaultExercises().filter(exercise =>
             selectedMuscles.includes(exercise.muscle_group)
         );
 
@@ -574,7 +574,7 @@ export class WorkoutPage extends BasePage {
             }
 
             const muscleGroupUUIDs = [];
-            
+
             for (const muscleName of muscleGroupNames) {
                 // キャッシュから確認
                 if (this.muscleGroupCache.has(muscleName)) {

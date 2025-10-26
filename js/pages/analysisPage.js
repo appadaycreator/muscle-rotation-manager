@@ -1,7 +1,7 @@
 // analysisPage.js - 分析ページの機能
 
-import { supabaseService } from '../services/supabaseService.js';
-import { muscleGroupService } from '../services/muscleGroupService.js';
+// import { supabaseService } from '../services/supabaseService.js';
+// import { muscleGroupService } from '../services/muscleGroupService.js';
 import { authManager } from '../modules/authManager.js';
 // import { chartService } from '../services/chartService.js';
 import {
@@ -284,28 +284,28 @@ class AnalysisPage {
     generateSampleWorkoutData() {
         const today = new Date();
         const sampleData = [];
-        
+
         // 過去90日分のサンプルデータを生成
         for (let i = 0; i < 90; i++) {
             const date = new Date(today);
             date.setDate(date.getDate() - i);
-            
+
             // 2-3日に1回の頻度でワークアウトを生成
             if (i % 2 === 0 || i % 3 === 0) {
                 const muscleGroups = ['胸', '背中', '肩', '腕', '脚', '腹筋'];
                 const randomMuscles = muscleGroups.sort(() => 0.5 - Math.random()).slice(0, 2);
-                
+
                 // 重量の進歩をシミュレート
                 const baseWeight = 80;
                 const progressFactor = Math.max(0, (90 - i) / 90); // 時間とともに重量が増加
                 const weight = Math.floor(baseWeight + (progressFactor * 20));
-                
+
                 sampleData.push({
                     id: `sample-${i}`,
                     date: date.toISOString().split('T')[0],
                     muscle_groups: randomMuscles,
                     exercises: [
-                        { name: 'ベンチプレス', sets: 3, reps: 10, weight: weight },
+                        { name: 'ベンチプレス', sets: 3, reps: 10, weight },
                         { name: 'プッシュアップ', sets: 3, reps: 15, weight: 0 }
                     ],
                     duration: 45 + Math.floor(Math.random() * 30), // 45-75分
@@ -313,7 +313,7 @@ class AnalysisPage {
                 });
             }
         }
-        
+
         return sampleData;
     }
 
@@ -384,20 +384,20 @@ class AnalysisPage {
     getMuscleGroupName(muscleId) {
         // 筋肉部位名のマッピング
         const muscleGroupNames = {
-            'chest': '胸',
-            'back': '背中',
-            'shoulders': '肩',
-            'arms': '腕',
-            'legs': '脚',
-            'core': '腹筋',
-            '胸': '胸',
-            '背中': '背中',
-            '肩': '肩',
-            '腕': '腕',
-            '脚': '脚',
-            '腹筋': '腹筋'
+            chest: '胸',
+            back: '背中',
+            shoulders: '肩',
+            arms: '腕',
+            legs: '脚',
+            core: '腹筋',
+            胸: '胸',
+            背中: '背中',
+            肩: '肩',
+            腕: '腕',
+            脚: '脚',
+            腹筋: '腹筋'
         };
-        
+
         return muscleGroupNames[muscleId] || muscleId;
     }
 
@@ -487,7 +487,7 @@ class AnalysisPage {
             await this.renderMuscleGroupChart();
             await this.renderWeightProgressChart();
             await this.renderSetsProgressChart();
-            
+
             console.log('All charts rendered successfully');
         } catch (error) {
             console.error('Error rendering charts:', error);

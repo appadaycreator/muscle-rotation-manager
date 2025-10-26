@@ -660,13 +660,13 @@ class DashboardPage {
                 const recovery = Math.floor(Math.random() * 100);
                 const recoveryColor = recovery >= 80 ? 'text-green-600' : recovery >= 50 ? 'text-yellow-600' : 'text-red-600';
                 const recoveryClass = recovery >= 80 ? 'bg-green-500' : recovery >= 50 ? 'bg-yellow-500' : 'bg-red-500';
-                
+
                 return {
                     ...muscle,
                     lastTrained: `${index + 1}日前`,
-                    recovery: recovery,
-                    recoveryColor: recoveryColor,
-                    recoveryClass: recoveryClass,
+                    recovery,
+                    recoveryColor,
+                    recoveryClass,
                     nextRecommended: recovery >= 80 ? '今すぐ' : '明日'
                 };
             });

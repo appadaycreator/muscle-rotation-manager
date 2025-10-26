@@ -129,7 +129,7 @@ class SettingsPage {
 
         // ローカルストレージから読み込み（認証なしでも動作）
         this.userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
-        
+
         // サンプルプロファイルを追加（デモ用）
         if (Object.keys(this.userProfile).length === 0) {
             this.userProfile = {
@@ -147,7 +147,7 @@ class SettingsPage {
                 }
             };
         }
-        
+
         console.log('Profile loaded:', this.userProfile);
     }
 
@@ -1637,10 +1637,10 @@ class SettingsPage {
      */
     async handleLogout(e) {
         e.preventDefault();
-        
+
         try {
             console.log('Logout button clicked in settings page');
-            
+
             // 確認ダイアログを表示
             const confirmed = await this.showLogoutConfirmDialog();
             if (!confirmed) {
@@ -1649,12 +1649,12 @@ class SettingsPage {
 
             // ログアウト処理を実行
             await authManager.logout();
-            
+
             showNotification('ログアウトしました', 'success');
-            
+
             // ログイン画面にリダイレクト
             window.location.href = '/index.html';
-            
+
         } catch (error) {
             console.error('Logout error:', error);
             showNotification('ログアウトに失敗しました', 'error');

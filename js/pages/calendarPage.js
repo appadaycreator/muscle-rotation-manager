@@ -1,7 +1,7 @@
 // calendarPage.js - カレンダーページの機能
 
 import { BasePage } from '../core/BasePage.js';
-import { supabaseService } from '../services/supabaseService.js';
+// import { supabaseService } from '../services/supabaseService.js';
 import {
     showNotification,
     getMuscleColor,
@@ -30,7 +30,7 @@ class CalendarPage extends BasePage {
     async initialize() {
         // 認証チェックをスキップしてカレンダーを表示
         console.log('Calendar page initializing without auth check');
-        
+
         // DOMの読み込みを待つ
         if (document.readyState === 'loading') {
             await new Promise(resolve => {
@@ -40,13 +40,13 @@ class CalendarPage extends BasePage {
 
         // カレンダーインターフェースを設定
         this.setupCalendarInterface();
-        
+
         // データを読み込み
         this.loadWorkoutData();
-        
+
         // イベントリスナーを設定
         this.setupEventListeners();
-        
+
         // カレンダーをレンダリング
         this.renderCalendar();
     }
@@ -68,14 +68,14 @@ class CalendarPage extends BasePage {
         // 少し遅延してからカレンダーインターフェースを設定
         setTimeout(() => {
             this.setupCalendarInterface();
-            
+
             // データを読み込み
             this.loadWorkoutData();
-            
+
             // イベントリスナーを設定
             this.setupEventListeners();
             this.setupAuthButton();
-            
+
             // カレンダーをレンダリング
             this.renderCalendar();
         }, 100);
@@ -115,17 +115,17 @@ class CalendarPage extends BasePage {
     generateSampleWorkoutData() {
         const today = new Date();
         const sampleData = [];
-        
+
         // 過去30日分のサンプルデータを生成
         for (let i = 0; i < 30; i++) {
             const date = new Date(today);
             date.setDate(date.getDate() - i);
-            
+
             // 3日に1回の頻度でワークアウトを生成
             if (i % 3 === 0) {
                 const muscleGroups = ['胸', '背中', '肩', '腕', '脚', '腹筋'];
                 const randomMuscles = muscleGroups.sort(() => 0.5 - Math.random()).slice(0, 2);
-                
+
                 sampleData.push({
                     id: `sample-${i}`,
                     date: date.toISOString().split('T')[0],
@@ -139,7 +139,7 @@ class CalendarPage extends BasePage {
                 });
             }
         }
-        
+
         return sampleData;
     }
 

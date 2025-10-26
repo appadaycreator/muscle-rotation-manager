@@ -32,7 +32,7 @@ class ExercisePage {
     init() {
         // ツールチップ機能を初期化
         tooltipManager.initialize();
-        
+
         this.setupEventListeners();
         this.loadInitialData();
         this.setupTooltips();
@@ -330,7 +330,7 @@ class ExercisePage {
             if (searchTerm || this.hasActiveFilters()) {
                 this.currentExercises = this.filterExercises(this.currentExercises, searchTerm, filters);
             }
-            
+
             this.renderExercises();
 
             // updateExerciseCountメソッドが存在することを確認してから呼び出し
@@ -356,12 +356,12 @@ class ExercisePage {
     getLocalExercises() {
         // ローカルストレージからエクササイズデータを読み込み
         const localExercises = JSON.parse(localStorage.getItem('exercises') || '[]');
-        
+
         // サンプルデータを追加（デモ用）
         if (localExercises.length === 0) {
             return this.getSampleExercises();
         }
-        
+
         return localExercises;
     }
 
@@ -376,35 +376,35 @@ class ExercisePage {
             { id: 'dumbbell-press', name: 'ダンベルプレス', name_ja: 'ダンベルプレス', muscle_group: 'chest', difficulty: 2, equipment: 'dumbbell', type: 'compound' },
             { id: 'incline-press', name: 'インクラインプレス', name_ja: 'インクラインプレス', muscle_group: 'chest', difficulty: 3, equipment: 'barbell', type: 'compound' },
             { id: 'decline-press', name: 'デクラインプレス', name_ja: 'デクラインプレス', muscle_group: 'chest', difficulty: 3, equipment: 'barbell', type: 'compound' },
-            
+
             // 背中のエクササイズ
             { id: 'pull-ups', name: 'プルアップ', name_ja: 'プルアップ', muscle_group: 'back', difficulty: 4, equipment: 'bodyweight', type: 'compound' },
             { id: 'rows', name: 'ロウイング', name_ja: 'ロウイング', muscle_group: 'back', difficulty: 3, equipment: 'barbell', type: 'compound' },
             { id: 'lat-pulldown', name: 'ラットプルダウン', name_ja: 'ラットプルダウン', muscle_group: 'back', difficulty: 2, equipment: 'machine', type: 'compound' },
             { id: 'deadlift', name: 'デッドリフト', name_ja: 'デッドリフト', muscle_group: 'back', difficulty: 5, equipment: 'barbell', type: 'compound' },
             { id: 'bent-over-row', name: 'ベントオーバーロウ', name_ja: 'ベントオーバーロウ', muscle_group: 'back', difficulty: 3, equipment: 'barbell', type: 'compound' },
-            
+
             // 肩のエクササイズ
             { id: 'overhead-press', name: 'オーバーヘッドプレス', name_ja: 'オーバーヘッドプレス', muscle_group: 'shoulders', difficulty: 4, equipment: 'barbell', type: 'compound' },
             { id: 'lateral-raises', name: 'サイドレイズ', name_ja: 'サイドレイズ', muscle_group: 'shoulders', difficulty: 2, equipment: 'dumbbell', type: 'isolation' },
             { id: 'rear-delt-fly', name: 'リアデルトフライ', name_ja: 'リアデルトフライ', muscle_group: 'shoulders', difficulty: 2, equipment: 'dumbbell', type: 'isolation' },
             { id: 'front-raises', name: 'フロントレイズ', name_ja: 'フロントレイズ', muscle_group: 'shoulders', difficulty: 2, equipment: 'dumbbell', type: 'isolation' },
             { id: 'arnold-press', name: 'アーノルドプレス', name_ja: 'アーノルドプレス', muscle_group: 'shoulders', difficulty: 3, equipment: 'dumbbell', type: 'compound' },
-            
+
             // 腕のエクササイズ
             { id: 'bicep-curls', name: 'バイセップカール', name_ja: 'バイセップカール', muscle_group: 'arms', difficulty: 2, equipment: 'dumbbell', type: 'isolation' },
             { id: 'tricep-dips', name: 'トライセップディップス', name_ja: 'トライセップディップス', muscle_group: 'arms', difficulty: 3, equipment: 'bodyweight', type: 'compound' },
             { id: 'hammer-curls', name: 'ハンマーカール', name_ja: 'ハンマーカール', muscle_group: 'arms', difficulty: 2, equipment: 'dumbbell', type: 'isolation' },
             { id: 'close-grip-press', name: 'クローズグリッププレス', name_ja: 'クローズグリッププレス', muscle_group: 'arms', difficulty: 3, equipment: 'barbell', type: 'compound' },
             { id: 'preacher-curls', name: 'プリーチャーカール', name_ja: 'プリーチャーカール', muscle_group: 'arms', difficulty: 2, equipment: 'barbell', type: 'isolation' },
-            
+
             // 脚のエクササイズ
             { id: 'squats', name: 'スクワット', name_ja: 'スクワット', muscle_group: 'legs', difficulty: 3, equipment: 'barbell', type: 'compound' },
             { id: 'lunges', name: 'ランジ', name_ja: 'ランジ', muscle_group: 'legs', difficulty: 3, equipment: 'bodyweight', type: 'compound' },
             { id: 'leg-press', name: 'レッグプレス', name_ja: 'レッグプレス', muscle_group: 'legs', difficulty: 2, equipment: 'machine', type: 'compound' },
             { id: 'bulgarian-squats', name: 'ブルガリアンスクワット', name_ja: 'ブルガリアンスクワット', muscle_group: 'legs', difficulty: 4, equipment: 'bodyweight', type: 'compound' },
             { id: 'calf-raises', name: 'カーフレイズ', name_ja: 'カーフレイズ', muscle_group: 'legs', difficulty: 2, equipment: 'bodyweight', type: 'isolation' },
-            
+
             // 腹筋のエクササイズ
             { id: 'plank', name: 'プランク', name_ja: 'プランク', muscle_group: 'core', difficulty: 2, equipment: 'bodyweight', type: 'isolation' },
             { id: 'crunches', name: 'クランチ', name_ja: 'クランチ', muscle_group: 'core', difficulty: 1, equipment: 'bodyweight', type: 'isolation' },
@@ -422,9 +422,9 @@ class ExercisePage {
             // 検索語でフィルタリング
             if (searchTerm) {
                 const searchLower = searchTerm.toLowerCase();
-                const nameMatch = exercise.name_ja?.toLowerCase().includes(searchLower) || 
+                const nameMatch = exercise.name_ja?.toLowerCase().includes(searchLower) ||
                                 exercise.name?.toLowerCase().includes(searchLower);
-                if (!nameMatch) return false;
+                if (!nameMatch) {return false;}
             }
 
             // 筋肉部位でフィルタリング
