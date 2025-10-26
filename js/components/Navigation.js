@@ -15,15 +15,15 @@ export class Navigation {
         this.sidebarVisible = false;
         this.focusTimeout = null;
         this.navigationItems = [
-            { id: 'dashboard', name: 'ダッシュボード', icon: 'fas fa-tachometer-alt', href: '/dashboard.html', requiresAuth: true },
-            { id: 'workout', name: 'ワークアウト', icon: 'fas fa-dumbbell', href: '/workout.html', requiresAuth: true },
-            { id: 'calendar', name: 'カレンダー', icon: 'fas fa-calendar-alt', href: '/calendar.html', requiresAuth: true },
-            { id: 'analysis', name: '分析', icon: 'fas fa-chart-line', href: '/analysis.html', requiresAuth: true },
-            { id: 'progress', name: 'プログレッシブ・オーバーロード', icon: 'fas fa-trophy', href: '/progress.html', requiresAuth: true },
-            { id: 'exercises', name: 'エクササイズデータベース', icon: 'fas fa-database', href: '/exercises.html', requiresAuth: true },
-            { id: 'settings', name: '設定', icon: 'fas fa-cog', href: '/settings.html', requiresAuth: true },
-            { id: 'help', name: '使い方', icon: 'fas fa-question-circle', href: '/help.html', requiresAuth: false },
-            { id: 'privacy', name: 'プライバシーポリシー', icon: 'fas fa-shield-alt', href: '/privacy.html', requiresAuth: false }
+            { id: 'dashboard', name: 'ダッシュボード', icon: 'fas fa-tachometer-alt', href: './dashboard.html', requiresAuth: true },
+            { id: 'workout', name: 'ワークアウト', icon: 'fas fa-dumbbell', href: './workout.html', requiresAuth: true },
+            { id: 'calendar', name: 'カレンダー', icon: 'fas fa-calendar-alt', href: './calendar.html', requiresAuth: true },
+            { id: 'analysis', name: '分析', icon: 'fas fa-chart-line', href: './analysis.html', requiresAuth: true },
+            { id: 'progress', name: 'プログレッシブ・オーバーロード', icon: 'fas fa-trophy', href: './progress.html', requiresAuth: true },
+            { id: 'exercises', name: 'エクササイズデータベース', icon: 'fas fa-database', href: './exercises.html', requiresAuth: true },
+            { id: 'settings', name: '設定', icon: 'fas fa-cog', href: './settings.html', requiresAuth: true },
+            { id: 'help', name: '使い方', icon: 'fas fa-question-circle', href: './help.html', requiresAuth: false },
+            { id: 'privacy', name: 'プライバシーポリシー', icon: 'fas fa-shield-alt', href: './privacy.html', requiresAuth: false }
         ];
     }
 
@@ -91,7 +91,7 @@ export class Navigation {
         }
 
         try {
-            const response = await fetch('/partials/header.html');
+            const response = await fetch('./partials/header.html');
             if (response.ok) {
                 const html = await response.text();
                 headerContainer.innerHTML = html;
@@ -116,7 +116,7 @@ export class Navigation {
         }
 
         try {
-            const response = await fetch('/partials/sidebar.html');
+            const response = await fetch('./partials/sidebar.html');
             if (response.ok) {
                 const html = await response.text();
                 sidebarContainer.innerHTML = html;
@@ -240,7 +240,7 @@ export class Navigation {
         // ナビゲーションリンクのクリック
         this.addEventListener(document, 'click', (e) => {
             const navLink = e.target.closest('a[href]');
-            if (navLink && navLink.getAttribute('href').startsWith('/')) {
+            if (navLink && (navLink.getAttribute('href').startsWith('/') || navLink.getAttribute('href').startsWith('./'))) {
                 this.handleNavigationClick(navLink, e);
             }
         });

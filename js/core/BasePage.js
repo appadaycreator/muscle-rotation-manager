@@ -117,7 +117,7 @@ export class BasePage {
                 // リダイレクト前にイベントを発火
                 this.dispatchEvent('authRequired', {
                     pageName: this.pageName,
-                    redirectUrl: '/index.html'
+                    redirectUrl: './index.html'
                 });
 
                 // テスト環境ではナビゲーションをモック
@@ -133,12 +133,12 @@ export class BasePage {
                     }
                     
                     try {
-                        window.location.href = '/index.html';
+                        window.location.href = './index.html';
                     } catch (error) {
                         // JSDOM環境ではlocation.hrefの直接設定が失敗する可能性がある
                         // その場合はassignメソッドを使用
                         if (window.location.assign) {
-                            window.location.assign('/index.html');
+                            window.location.assign('./index.html');
                         } else {
                             console.warn('Navigation not available in test environment');
                         }
