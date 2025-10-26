@@ -178,6 +178,13 @@ class MPAInitializer {
         return true; // Supabaseが利用できない場合は認証チェックをスキップ
       }
 
+      // authManagerが初期化されているかチェック
+      if (!authManager || typeof authManager.isAuthenticated !== 'function') {
+        console.error('❌ AuthManager is not properly initialized');
+        this.showLoginPrompt();
+        return false;
+      }
+
       const isAuthenticated = await authManager.isAuthenticated();
       const currentUser = await authManager.getCurrentUser();
 
@@ -778,8 +785,20 @@ class MPAInitializer {
   async initializeAuthManager() {
     try {
       console.log('🔐 Initializing auth manager...');
+      
+      // authManagerが存在するかチェック
+      if (!authManager) {
+        throw new Error('AuthManager instance is not available');
+      }
+      
       await authManager.initialize();
-      console.log('✅ Auth manager initialized');
+      
+      // 初期化後にメソッドが利用可能かチェック
+      if (typeof authManager.isAuthenticated !== 'function') {
+        throw new Error('AuthManager.isAuthenticated method is not available');
+      }
+      
+      console.log('✅ Auth manager initialized successfully');
     } catch (error) {
       console.error('❌ Auth manager initialization failed:', error);
       throw error;
