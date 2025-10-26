@@ -24,6 +24,11 @@ export class WorkoutPage extends BasePage {
     this.selectedExercises = [];
     this.eventListenersSetup = false;
     this.muscleGroupCache = new Map(); // 筋肉グループ名からUUIDへのキャッシュ
+    this.currentExercise = null; // 現在のエクササイズ
+    this.currentSet = 0; // 現在のセット数
+    this.setData = []; // セットデータ
+    this.restTimer = null; // レストタイマー
+    this.restStartTime = null; // レスト開始時間
 
     console.log('WorkoutPage constructor called');
     console.log('Muscle groups initialized:', this.muscleGroups);
@@ -262,6 +267,10 @@ export class WorkoutPage extends BasePage {
       muscleGroups: selectedMuscles,
       startTime: new Date(),
       sessionName: `${selectedMuscles.join(', ')}のワークアウト - ${new Date().toLocaleDateString('ja-JP')}`,
+      exercises: [], // エクササイズデータ
+      totalSets: 0, // 総セット数
+      totalReps: 0, // 総レップ数
+      totalWeight: 0, // 総重量
     };
 
     // クイックスタートセクションを非表示にして、現在のワークアウトセクションを表示
@@ -273,6 +282,9 @@ export class WorkoutPage extends BasePage {
 
     // タイマーを開始
     this.startWorkoutTimer();
+
+    // エクササイズ選択セクションを表示
+    this.renderExerciseSelection();
 
     showNotification('ワークアウトを開始しました', 'success');
   }
@@ -302,33 +314,326 @@ export class WorkoutPage extends BasePage {
   }
 
   /**
-   * クイックスタートボタンの状態を更新
+   * エクササイズ選択セクションをレンダリング
    */
-  updateQuickStartButton() {
-    const selectedMuscles = document.querySelectorAll(
-      '.muscle-group-btn.selected'
-    );
-    const quickStartButton = document.getElementById('quick-start-workout');
+  renderExerciseSelection() {
+    const container = document.getElementById('current-workout');
+    if (!container) return;
 
-    console.log('Updating quick start button...');
-    console.log('Selected muscles count:', selectedMuscles.length);
-    console.log('Quick start button found:', quickStartButton);
+    const selectedMuscles = this.currentWorkout.muscleGroups;
+    
+    container.innerHTML = `
+      <!-- ワークアウトヘッダー -->
+      <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div class="flex justify-between items-center">
+          <div>
+            <h3 class="text-xl font-bold text-gray-800">${this.currentWorkout.sessionName}</h3>
+            <p class="text-gray-600">開始時刻: ${this.currentWorkout.startTime.toLocaleTimeString('ja-JP')}</p>
+          </div>
+          <div class="text-right">
+            <div class="text-2xl font-bold text-blue-600" id="workout-timer">00:00</div>
+            <div class="text-sm text-gray-500">経過時間</div>
+          </div>
+        </div>
+      </div>
 
-    if (quickStartButton) {
-      if (selectedMuscles.length > 0) {
-        quickStartButton.disabled = false;
-        quickStartButton.classList.remove('opacity-50', 'cursor-not-allowed');
-        quickStartButton.classList.add('hover:bg-blue-700');
-        console.log('Quick start button enabled');
-      } else {
-        quickStartButton.disabled = true;
-        quickStartButton.classList.add('opacity-50', 'cursor-not-allowed');
-        quickStartButton.classList.remove('hover:bg-blue-700');
-        console.log('Quick start button disabled');
-      }
-    } else {
-      console.error('Quick start button not found!');
+      <!-- エクササイズ選択 -->
+      <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h4 class="text-lg font-semibold text-gray-800 mb-4">
+          <i class="fas fa-dumbbell text-blue-500 mr-2"></i>
+          エクササイズを選択
+        </h4>
+        <div id="exercise-presets" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- エクササイズボタンがここに動的に追加される -->
+        </div>
+      </div>
+
+      <!-- 現在のエクササイズ -->
+      <div id="current-exercise-section" class="hidden">
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+          <div class="flex justify-between items-center mb-4">
+            <h4 class="text-lg font-semibold text-gray-800" id="current-exercise-name">
+              エクササイズ名
+            </h4>
+            <button id="finish-exercise-btn" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
+              <i class="fas fa-check mr-2"></i>エクササイズ完了
+            </button>
+          </div>
+          
+          <!-- セット記録 -->
+          <div class="mb-4">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-medium text-gray-700">セット ${this.currentSet + 1}</span>
+              <div class="flex items-center space-x-2">
+                <span class="text-sm text-gray-500">レップ数:</span>
+                <input type="number" id="reps-input" class="w-20 px-2 py-1 border border-gray-300 rounded text-center" min="1" max="100" value="10">
+                <span class="text-sm text-gray-500">重量(kg):</span>
+                <input type="number" id="weight-input" class="w-20 px-2 py-1 border border-gray-300 rounded text-center" min="0" step="0.5" value="0">
+              </div>
+            </div>
+            <button id="add-set-btn" class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors">
+              <i class="fas fa-plus mr-2"></i>セットを追加
+            </button>
+          </div>
+
+          <!-- セット履歴 -->
+          <div id="sets-history" class="space-y-2">
+            <!-- セット履歴がここに動的に追加される -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ワークアウト統計 -->
+      <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h4 class="text-lg font-semibold text-gray-800 mb-4">
+          <i class="fas fa-chart-bar text-green-500 mr-2"></i>
+          ワークアウト統計
+        </h4>
+        <div class="grid grid-cols-3 gap-4 text-center">
+          <div>
+            <div class="text-2xl font-bold text-blue-600" id="total-sets">0</div>
+            <div class="text-sm text-gray-500">総セット数</div>
+          </div>
+          <div>
+            <div class="text-2xl font-bold text-green-600" id="total-reps">0</div>
+            <div class="text-sm text-gray-500">総レップ数</div>
+          </div>
+          <div>
+            <div class="text-2xl font-bold text-purple-600" id="total-weight">0</div>
+            <div class="text-sm text-gray-500">総重量(kg)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ワークアウト完了ボタン -->
+      <div class="text-center">
+        <button id="finish-workout-btn" class="bg-red-600 text-white px-8 py-3 rounded-lg hover:bg-red-700 transition-colors text-lg font-semibold">
+          <i class="fas fa-stop mr-2"></i>ワークアウト完了
+        </button>
+      </div>
+    `;
+
+    // イベントリスナーを設定
+    this.setupWorkoutEventListeners();
+  }
+
+  /**
+   * ワークアウトイベントリスナーを設定
+   */
+  setupWorkoutEventListeners() {
+    // エクササイズ完了ボタン
+    const finishExerciseBtn = document.getElementById('finish-exercise-btn');
+    if (finishExerciseBtn) {
+      finishExerciseBtn.addEventListener('click', () => {
+        this.finishCurrentExercise();
+      });
     }
+
+    // セット追加ボタン
+    const addSetBtn = document.getElementById('add-set-btn');
+    if (addSetBtn) {
+      addSetBtn.addEventListener('click', () => {
+        this.addSet();
+      });
+    }
+
+    // ワークアウト完了ボタン
+    const finishWorkoutBtn = document.getElementById('finish-workout-btn');
+    if (finishWorkoutBtn) {
+      finishWorkoutBtn.addEventListener('click', () => {
+        this.finishWorkout();
+      });
+    }
+  }
+
+  /**
+   * エクササイズを開始
+   */
+  startExercise(exerciseName) {
+    this.currentExercise = {
+      name: exerciseName,
+      sets: [],
+      startTime: new Date()
+    };
+    this.currentSet = 0;
+    this.setData = [];
+
+    // 現在のエクササイズセクションを表示
+    const currentExerciseSection = document.getElementById('current-exercise-section');
+    if (currentExerciseSection) {
+      currentExerciseSection.classList.remove('hidden');
+    }
+
+    // エクササイズ名を更新
+    const exerciseNameElement = document.getElementById('current-exercise-name');
+    if (exerciseNameElement) {
+      exerciseNameElement.textContent = exerciseName;
+    }
+
+    showNotification(`${exerciseName}を開始しました`, 'success');
+  }
+
+  /**
+   * セットを追加
+   */
+  addSet() {
+    const repsInput = document.getElementById('reps-input');
+    const weightInput = document.getElementById('weight-input');
+
+    if (!repsInput || !weightInput) return;
+
+    const reps = parseInt(repsInput.value) || 0;
+    const weight = parseFloat(weightInput.value) || 0;
+
+    if (reps === 0) {
+      showNotification('レップ数を入力してください', 'warning');
+      return;
+    }
+
+    const setData = {
+      setNumber: this.currentSet + 1,
+      reps: reps,
+      weight: weight,
+      timestamp: new Date()
+    };
+
+    this.setData.push(setData);
+    this.currentSet++;
+
+    // セット履歴を更新
+    this.updateSetsHistory();
+
+    // ワークアウト統計を更新
+    this.updateWorkoutStats();
+
+    // 入力フィールドをリセット
+    repsInput.value = '10';
+    weightInput.value = '0';
+
+    showNotification(`セット${setData.setNumber}を記録しました`, 'success');
+  }
+
+  /**
+   * セット履歴を更新
+   */
+  updateSetsHistory() {
+    const setsHistory = document.getElementById('sets-history');
+    if (!setsHistory) return;
+
+    setsHistory.innerHTML = this.setData.map(set => `
+      <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+        <div class="flex items-center space-x-4">
+          <span class="text-sm font-medium text-gray-700">セット ${set.setNumber}</span>
+          <span class="text-sm text-gray-600">${set.reps}回</span>
+          <span class="text-sm text-gray-600">${set.weight}kg</span>
+        </div>
+        <div class="text-xs text-gray-500">
+          ${set.timestamp.toLocaleTimeString('ja-JP')}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  /**
+   * ワークアウト統計を更新
+   */
+  updateWorkoutStats() {
+    const totalSets = this.currentWorkout.exercises.reduce((sum, exercise) => sum + exercise.sets.length, 0) + this.setData.length;
+    const totalReps = this.currentWorkout.exercises.reduce((sum, exercise) => 
+      sum + exercise.sets.reduce((setSum, set) => setSum + set.reps, 0), 0) + 
+      this.setData.reduce((sum, set) => sum + set.reps, 0);
+    const totalWeight = this.currentWorkout.exercises.reduce((sum, exercise) => 
+      sum + exercise.sets.reduce((setSum, set) => setSum + (set.weight * set.reps), 0), 0) + 
+      this.setData.reduce((sum, set) => sum + (set.weight * set.reps), 0);
+
+    // 統計を更新
+    const totalSetsElement = document.getElementById('total-sets');
+    const totalRepsElement = document.getElementById('total-reps');
+    const totalWeightElement = document.getElementById('total-weight');
+
+    if (totalSetsElement) totalSetsElement.textContent = totalSets;
+    if (totalRepsElement) totalRepsElement.textContent = totalReps;
+    if (totalWeightElement) totalWeightElement.textContent = totalWeight;
+  }
+
+  /**
+   * 現在のエクササイズを完了
+   */
+  finishCurrentExercise() {
+    if (!this.currentExercise || this.setData.length === 0) {
+      showNotification('セットを記録してください', 'warning');
+      return;
+    }
+
+    // エクササイズデータを保存
+    this.currentExercise.sets = [...this.setData];
+    this.currentExercise.endTime = new Date();
+    this.currentExercise.duration = Math.floor(
+      (this.currentExercise.endTime - this.currentExercise.startTime) / 60000
+    );
+
+    this.currentWorkout.exercises.push({...this.currentExercise});
+
+    // 現在のエクササイズセクションを非表示
+    const currentExerciseSection = document.getElementById('current-exercise-section');
+    if (currentExerciseSection) {
+      currentExerciseSection.classList.add('hidden');
+    }
+
+    // 統計を更新
+    this.updateWorkoutStats();
+
+    showNotification(`${this.currentExercise.name}を完了しました`, 'success');
+
+    // リセット
+    this.currentExercise = null;
+    this.currentSet = 0;
+    this.setData = [];
+  }
+
+  /**
+   * ワークアウトを完了
+   */
+  async finishWorkout() {
+    if (this.currentWorkout.exercises.length === 0) {
+      showNotification('エクササイズを記録してください', 'warning');
+      return;
+    }
+
+    const endTime = new Date();
+    const duration = Math.floor(
+      (endTime - this.currentWorkout.startTime) / 60000
+    );
+
+    this.currentWorkout.endTime = endTime;
+    this.currentWorkout.duration = duration;
+
+    // ワークアウトを保存
+    await this.saveWorkoutToHistory();
+
+    showNotification('ワークアウトを完了しました！', 'success');
+
+    // ページをリセット
+    this.resetWorkoutPage();
+  }
+
+  /**
+   * ワークアウトページをリセット
+   */
+  resetWorkoutPage() {
+    this.currentWorkout = null;
+    this.currentExercise = null;
+    this.currentSet = 0;
+    this.setData = [];
+
+    // タイマーを停止
+    if (this.workoutTimer) {
+      clearInterval(this.workoutTimer);
+      this.workoutTimer = null;
+    }
+
+    // ページをリロード
+    location.reload();
   }
 
   /**
@@ -563,7 +868,7 @@ export class WorkoutPage extends BasePage {
     container.querySelectorAll('.exercise-preset-btn').forEach((btn) => {
       btn.addEventListener('click', () => {
         const exerciseName = btn.dataset.exercise;
-        this.addExerciseToWorkout(exerciseName);
+        this.startExercise(exerciseName);
       });
     });
 
