@@ -65,8 +65,17 @@ export class SupabaseService {
         throw new Error('Supabase configuration not found');
       }
 
+      // Supabaseライブラリの読み込みを待つ
+      await this.waitForSupabaseLibrary();
+
       // CDNから読み込まれたSupabaseライブラリを使用
       if (!window.supabase || !window.supabase.createClient) {
+        console.error('Supabase library not loaded:', {
+          windowSupabase: !!window.supabase,
+          createClient: !!(window.supabase && window.supabase.createClient),
+          userAgent: navigator.userAgent,
+          url: window.location.href
+        });
         throw new Error('Supabase library not loaded from CDN');
       }
 
@@ -107,6 +116,30 @@ export class SupabaseService {
 
       return false;
     }
+  }
+
+  /**
+   * Supabaseライブラリの読み込みを待つ
+   * @returns {Promise<void>}
+   */
+  async waitForSupabaseLibrary() {
+    const maxWaitTime = 5000; // 5秒
+    const checkInterval = 100; // 100ms
+    let elapsedTime = 0;
+
+    console.log('⏳ Waiting for Supabase library to load...');
+
+    while (elapsedTime < maxWaitTime) {
+      if (window.supabase && window.supabase.createClient) {
+        console.log('✅ Supabase library loaded successfully');
+        return;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, checkInterval));
+      elapsedTime += checkInterval;
+    }
+
+    throw new Error('Supabase library loading timeout');
   }
 
   /**
