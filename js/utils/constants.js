@@ -1,9 +1,9 @@
 // constants.js - アプリケーション全体で使用される定数
 
-// Supabase設定
+// Supabase除去済み - localStorageのみ使用
 export const SUPABASE_CONFIG = {
-  url: 'https://mwwlqpokfgduxyjbqoff.supabase.co',
-  key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13d2xxcG9rZmdkdXh5amJxb2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1MTU3MTIsImV4cCI6MjA2ODA5MTcxMn0.0vyxxQ7zBfRKrH-JhpHMor_UvuBbQu3wE9HStGjsfGQ',
+  url: null,
+  key: null,
 };
 
 // 筋肉部位の定義（非推奨：muscleGroupServiceを使用してください）
